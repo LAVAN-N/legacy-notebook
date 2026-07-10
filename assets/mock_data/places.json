@@ -1,0 +1,57 @@
+[
+  {
+    "id": "place_1",
+    "weekdayId": "weekday_4",
+    "name": "Village A",
+    "areaCount": 2,
+    "customerCount": 18,
+    "expectedAmount": 12500,
+    "collectedAmount": 0,
+    "gps": {"latitude": 28.7041, "longitude": 77.1025},
+    "distance": 1.2
+  },
+  {
+    "id": "place_2",
+    "weekdayId": "weekday_4",
+    "name": "Village B",
+    "areaCount": 2,
+    "customerCount": 15,
+    "expectedAmount": 8200,
+    "collectedAmount": 0,
+    "gps": {"latitude": 28.7050, "longitude": 77.1100},
+    "distance": 3.5
+  },
+  {
+    "id": "place_3",
+    "weekdayId": "weekday_4",
+    "name": "Village C",
+    "areaCount": 1,
+    "customerCount": 9,
+    "expectedAmount": 3800,
+    "collectedAmount": 0,
+    "gps": {"latitude": 28.6950, "longitude": 77.0950},
+    "distance": 5.8
+  },
+  {
+    "id": "place_4",
+    "weekdayId": "weekday_1",
+    "name": "North Colony",
+    "areaCount": 2,
+    "customerCount": 20,
+    "expectedAmount": 14200,
+    "collectedAmount": 5600,
+    "gps": {"latitude": 28.7200, "longitude": 77.1200},
+    "distance": 2.1
+  },
+  {
+    "id": "place_5",
+    "weekdayId": "weekday_1",
+    "name": "South Market",
+    "areaCount": 1,
+    "customerCount": 22,
+    "expectedAmount": 10300,
+    "collectedAmount": 2600,
+    "gps": {"latitude": 28.6800, "longitude": 77.0800},
+    "distance": 6.2
+  }
+]

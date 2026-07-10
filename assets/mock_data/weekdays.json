@@ -1,0 +1,79 @@
+[
+  {
+    "id": "weekday_1",
+    "day": "Monday",
+    "dayShort": "Mon",
+    "dayNumber": 1,
+    "placeCount": 3,
+    "areaCount": 7,
+    "customerCount": 42,
+    "expectedAmount": 24500,
+    "collectedAmount": 8200
+  },
+  {
+    "id": "weekday_2",
+    "day": "Tuesday",
+    "dayShort": "Tue",
+    "dayNumber": 2,
+    "placeCount": 2,
+    "areaCount": 5,
+    "customerCount": 38,
+    "expectedAmount": 19800,
+    "collectedAmount": 5400
+  },
+  {
+    "id": "weekday_3",
+    "day": "Wednesday",
+    "dayShort": "Wed",
+    "dayNumber": 3,
+    "placeCount": 4,
+    "areaCount": 9,
+    "customerCount": 56,
+    "expectedAmount": 32100,
+    "collectedAmount": 12300
+  },
+  {
+    "id": "weekday_4",
+    "day": "Thursday",
+    "dayShort": "Thu",
+    "dayNumber": 4,
+    "placeCount": 3,
+    "areaCount": 5,
+    "customerCount": 42,
+    "expectedAmount": 24500,
+    "collectedAmount": 0
+  },
+  {
+    "id": "weekday_5",
+    "day": "Friday",
+    "dayShort": "Fri",
+    "dayNumber": 5,
+    "placeCount": 2,
+    "areaCount": 4,
+    "customerCount": 28,
+    "expectedAmount": 15600,
+    "collectedAmount": 0
+  },
+  {
+    "id": "weekday_6",
+    "day": "Saturday",
+    "dayShort": "Sat",
+    "dayNumber": 6,
+    "placeCount": 3,
+    "areaCount": 6,
+    "customerCount": 35,
+    "expectedAmount": 18900,
+    "collectedAmount": 0
+  },
+  {
+    "id": "weekday_7",
+    "day": "Sunday",
+    "dayShort": "Sun",
+    "dayNumber": 0,
+    "placeCount": 0,
+    "areaCount": 0,
+    "customerCount": 0,
+    "expectedAmount": 0,
+    "collectedAmount": 0
+  }
+]

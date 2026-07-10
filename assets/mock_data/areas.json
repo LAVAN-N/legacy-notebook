@@ -1,0 +1,74 @@
+[
+  {
+    "id": "area_1",
+    "placeId": "place_1",
+    "name": "North Street",
+    "customerCount": 10,
+    "expectedAmount": 7200,
+    "collectedAmount": 0,
+    "gps": {"latitude": 28.7045, "longitude": 77.1030}
+  },
+  {
+    "id": "area_2",
+    "placeId": "place_1",
+    "name": "East Lane",
+    "customerCount": 8,
+    "expectedAmount": 5300,
+    "collectedAmount": 0,
+    "gps": {"latitude": 28.7040, "longitude": 77.1020}
+  },
+  {
+    "id": "area_3",
+    "placeId": "place_2",
+    "name": "Main Road",
+    "customerCount": 9,
+    "expectedAmount": 5100,
+    "collectedAmount": 0,
+    "gps": {"latitude": 28.7052, "longitude": 77.1105}
+  },
+  {
+    "id": "area_4",
+    "placeId": "place_2",
+    "name": "Back Street",
+    "customerCount": 6,
+    "expectedAmount": 3100,
+    "collectedAmount": 0,
+    "gps": {"latitude": 28.7048, "longitude": 77.1095}
+  },
+  {
+    "id": "area_5",
+    "placeId": "place_3",
+    "name": "Center Market",
+    "customerCount": 9,
+    "expectedAmount": 3800,
+    "collectedAmount": 0,
+    "gps": {"latitude": 28.6952, "longitude": 77.0952}
+  },
+  {
+    "id": "area_6",
+    "placeId": "place_4",
+    "name": "West Wing",
+    "customerCount": 11,
+    "expectedAmount": 8200,
+    "collectedAmount": 3800,
+    "gps": {"latitude": 28.7205, "longitude": 77.1205}
+  },
+  {
+    "id": "area_7",
+    "placeId": "place_4",
+    "name": "East Wing",
+    "customerCount": 9,
+    "expectedAmount": 6000,
+    "collectedAmount": 1800,
+    "gps": {"latitude": 28.7195, "longitude": 77.1195}
+  },
+  {
+    "id": "area_8",
+    "placeId": "place_5",
+    "name": "Main Market",
+    "customerCount": 22,
+    "expectedAmount": 10300,
+    "collectedAmount": 2600,
+    "gps": {"latitude": 28.6802, "longitude": 77.0805}
+  }
+]

@@ -1,0 +1,12 @@
+{
+  "id": "user_001",
+  "name": "Ramesh Kumar",
+  "firstName": "Ramesh",
+  "lastName": "Kumar",
+  "phone": "+91 98765 43210",
+  "email": "ramesh@example.com",
+  "role": "collector",
+  "avatar": "RK",
+  "photo": null,
+  "createdAt": "2024-01-15T10:30:00Z"
+}
