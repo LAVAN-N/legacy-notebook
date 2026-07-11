@@ -1,0 +1,14 @@
+{
+  "@@locale": "en",
+  "appTitle": "Field Credit Collection",
+  "dashboard": "Dashboard",
+  "home": "Home",
+  "routes": "Routes",
+  "expected": "Expected",
+  "collected": "Collected",
+  "outstanding": "Outstanding",
+  "collectPayment": "Collect Payment",
+  "newSale": "New Sale",
+  "saveRecord": "Save Visit Record",
+  "carryForward": "Carry Forward"
+}

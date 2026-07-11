@@ -1,0 +1,151 @@
+-- Schema placeholder documenting PostgreSQL schema for Field Credit Collection & Home Appliance Sales.
+-- This schema represents the Supabase backend structure to be created in follow-up updates.
+
+-- 1. Weekdays table
+CREATE TABLE IF NOT EXISTS weekdays (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    sort_order INT NOT NULL
+);
+
+-- 2. Places table
+CREATE TABLE IF NOT EXISTS places (
+    id TEXT PRIMARY KEY,
+    weekday_id TEXT NOT NULL REFERENCES weekdays(id) ON DELETE RESTRICT,
+    name TEXT NOT NULL,
+    UNIQUE(weekday_id, name)
+);
+
+-- 3. Areas table
+CREATE TABLE IF NOT EXISTS areas (
+    id TEXT PRIMARY KEY,
+    place_id TEXT NOT NULL REFERENCES places(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    UNIQUE(place_id, name)
+);
+
+-- 4. Customers table
+CREATE TABLE IF NOT EXISTS customers (
+    id TEXT PRIMARY KEY,
+    customer_code TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    alternate_phone TEXT,
+    address TEXT NOT NULL,
+    landmark TEXT,
+    photo_url TEXT,
+    location_url TEXT,
+    weekday_id TEXT NOT NULL REFERENCES weekdays(id),
+    place_id TEXT NOT NULL REFERENCES places(id),
+    area_id TEXT NOT NULL REFERENCES areas(id),
+    sequence_number INT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('ACTIVE', 'INACTIVE', 'DO_NOT_VISIT')),
+    guardian_name TEXT,
+    dob TEXT,
+    occupation TEXT,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Index for area filtering and sorting sequence number
+CREATE INDEX IF NOT EXISTS idx_customers_area_seq ON customers(area_id, sequence_number);
+
+-- 5. Products table
+CREATE TABLE IF NOT EXISTS products (
+    id TEXT PRIMARY KEY,
+    sku TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    brand TEXT NOT NULL,
+    category TEXT NOT NULL,
+    minimum_stock INT NOT NULL DEFAULT 1,
+    stock INT NOT NULL DEFAULT 0,
+    price INT NOT NULL DEFAULT 0, -- price in rupees
+    image_url TEXT
+);
+
+-- 6. Sales table
+CREATE TABLE IF NOT EXISTS sales (
+    id TEXT PRIMARY KEY,
+    customer_id TEXT NOT NULL REFERENCES customers(id) ON DELETE RESTRICT,
+    sale_datetime TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    sale_type TEXT NOT NULL CHECK (sale_type IN ('READY', 'CREDIT')),
+    total_amount INT NOT NULL CHECK (total_amount >= 0),
+    advance_amount INT NOT NULL CHECK (advance_amount >= 0),
+    financed_amount INT NOT NULL CHECK (financed_amount >= 0),
+    sold_by TEXT NOT NULL,
+    remarks TEXT
+);
+
+-- 7. Sale items table
+CREATE TABLE IF NOT EXISTS sale_items (
+    id TEXT PRIMARY KEY,
+    sale_id TEXT NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
+    product_id TEXT NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
+    quantity INT NOT NULL CHECK (quantity > 0),
+    unit_price INT NOT NULL CHECK (unit_price >= 0),
+    total_price INT NOT NULL CHECK (total_price >= 0)
+);
+
+-- 8. Collections table (PAYMENT, PARTIAL_PAYMENT, CARRY_FORWARD)
+CREATE TABLE IF NOT EXISTS collections (
+    id TEXT PRIMARY KEY,
+    customer_id TEXT NOT NULL REFERENCES customers(id) ON DELETE RESTRICT,
+    visit_datetime TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('PAYMENT', 'PARTIAL_PAYMENT', 'CARRY_FORWARD')),
+    amount INT NOT NULL CHECK (amount >= 0),
+    reason TEXT,
+    collected_by TEXT NOT NULL
+);
+
+-- Indexes for statistics and reports
+CREATE INDEX IF NOT EXISTS idx_sales_customer ON sales(customer_id);
+CREATE INDEX IF NOT EXISTS idx_collections_customer ON collections(customer_id);
+
+-- ─── Database Views ──────────────────────────────────────
+
+-- View 1: customer_outstanding_view
+CREATE OR REPLACE VIEW customer_outstanding_view AS
+WITH sales_sum AS (
+    SELECT customer_id, COALESCE(SUM(financed_amount), 0) AS total_financed
+    FROM sales
+    GROUP BY customer_id
+),
+collections_sum AS (
+    SELECT customer_id, COALESCE(SUM(amount), 0) AS total_collected
+    FROM collections
+    WHERE status IN ('PAYMENT', 'PARTIAL_PAYMENT')
+    GROUP BY customer_id
+)
+SELECT 
+    c.id AS customer_id,
+    c.name,
+    COALESCE(s.total_financed, 0) AS total_financed,
+    COALESCE(col.total_collected, 0) AS total_collected,
+    (COALESCE(s.total_financed, 0) - COALESCE(col.total_collected, 0)) AS outstanding_amount
+FROM customers c
+LEFT JOIN sales_sum s ON s.customer_id = c.id
+LEFT JOIN collections_sum col ON col.customer_id = c.id;
+
+-- View 2: customer_activity_view (unified timeline union view)
+CREATE OR REPLACE VIEW customer_activity_view AS
+SELECT 
+    id,
+    customer_id,
+    visit_datetime AS activity_datetime,
+    'COLLECTION' AS activity_type,
+    status AS details,
+    amount AS transaction_amount,
+    reason AS remarks,
+    collected_by AS handled_by
+FROM collections
+UNION ALL
+SELECT 
+    id,
+    customer_id,
+    sale_datetime AS activity_datetime,
+    'SALE' AS activity_type,
+    sale_type AS details,
+    financed_amount AS transaction_amount,
+    remarks AS remarks,
+    sold_by AS handled_by
+FROM sales;

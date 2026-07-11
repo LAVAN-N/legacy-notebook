@@ -1,0 +1,14 @@
+{
+  "@@locale": "ta",
+  "appTitle": "கடன் வசூல் செயலி",
+  "dashboard": "முகப்பு பலகை",
+  "home": "முகப்பு",
+  "routes": "வழிகள்",
+  "expected": "எதிர்பார்க்கப்படும் தொகை",
+  "collected": "வசூலிக்கப்பட்ட தொகை",
+  "outstanding": "மீதமுள்ள தொகை",
+  "collectPayment": "வசூல் செய்",
+  "newSale": "புதிய விற்பனை",
+  "saveRecord": "பதிவை சேமி",
+  "carryForward": "அடுத்த முறைக்கு தள்ளிவை"
+}
