@@ -8,6 +8,8 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/amount_text.dart';
 import '../../core/widgets/confirm_snackbar.dart';
+import '../../core/router/navigation_shell.dart';
+import '../../core/router/routes.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/haptics.dart';
 import 'controllers/collect_controller.dart';
@@ -60,7 +62,14 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
           );
         },
       );
-      Navigator.pop(context);
+      if (mounted) {
+        final backTarget = context.getBackTarget() ?? Routes.dashboard;
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go(backTarget);
+        }
+      }
     }
   }
 
@@ -81,6 +90,7 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
     final newOutstanding = (currentOutstanding - state.amount).clamp(0, 99999999);
 
     return AppScaffold(
+      showSyncIndicator: false,
       title: Text(
         'New Collection Visit',
         style: AppTypography.headlineMedium.copyWith(color: colors.foreground),

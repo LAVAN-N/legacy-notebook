@@ -19,6 +19,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.muted,
     required this.mutedFg,
     required this.border,
+    required this.destructive,
   });
 
   final Color background;
@@ -34,6 +35,7 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color muted;
   final Color mutedFg;
   final Color border;
+  final Color destructive;
 
   /// Light theme color tokens
   static const light = AppColors(
@@ -50,13 +52,14 @@ class AppColors extends ThemeExtension<AppColors> {
     muted: Color(0xFFEFEBE1),
     mutedFg: Color(0xFF6C6F78),
     border: Color(0xFFE3DED2),
+    destructive: Color(0xFFC0392B), // vermilion destructive action
   );
 
   /// Dark theme color tokens — same hues, lightness flipped
   static const dark = AppColors(
-    background: Color(0xFF121418),
-    foreground: Color(0xFFE8E6E1),
-    surface: Color(0xFF1E2028),
+    background: Color(0xFF0F1417), // per PR-1 spec
+    foreground: Color(0xFFECEEF0), // per PR-1 spec
+    surface: Color(0xFF171D22), // per PR-1 spec
     primary: Color(0xFF3ABDD0), // lighter teal for dark bg
     primaryFg: Color(0xFF0A2A30),
     accent: Color(0xFFE0A850),
@@ -66,7 +69,8 @@ class AppColors extends ThemeExtension<AppColors> {
     danger: Color(0xFFEF5350),
     muted: Color(0xFF2A2D35),
     mutedFg: Color(0xFF9CA3AF),
-    border: Color(0xFF3A3D45),
+    border: Color(0xFF2A3138), // per PR-1 spec
+    destructive: Color(0xFFEF5350), // light red destructive action
   );
 
   @override
@@ -84,6 +88,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? muted,
     Color? mutedFg,
     Color? border,
+    Color? destructive,
   }) {
     return AppColors(
       background: background ?? this.background,
@@ -99,6 +104,7 @@ class AppColors extends ThemeExtension<AppColors> {
       muted: muted ?? this.muted,
       mutedFg: mutedFg ?? this.mutedFg,
       border: border ?? this.border,
+      destructive: destructive ?? this.destructive,
     );
   }
 
@@ -119,6 +125,7 @@ class AppColors extends ThemeExtension<AppColors> {
       muted: Color.lerp(muted, other.muted, t)!,
       mutedFg: Color.lerp(mutedFg, other.mutedFg, t)!,
       border: Color.lerp(border, other.border, t)!,
+      destructive: Color.lerp(destructive, other.destructive, t)!,
     );
   }
 }

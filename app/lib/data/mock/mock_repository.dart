@@ -25,6 +25,8 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     _sales = List.from(mockSalesList);
     _collections = List.from(mockCollectionsList);
     _products = List.from(mockProductsList);
+    _places = List.from(mockPlacesList);
+    _areas = List.from(mockAreasList);
     _syncController();
   }
 
@@ -34,6 +36,8 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   late List<Sale> _sales;
   late List<Collection> _collections;
   late List<Product> _products;
+  late List<Place> _places;
+  late List<Area> _areas;
 
   final _updateController = StreamController<void>.broadcast();
 
@@ -219,6 +223,119 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     }
   }
 
+  /// Add a new customer to the repository.
+  /// If [openingBalance] > 0, creates a synthetic SALE row with [kind=SALE, saleType=CREDIT, total=opening, advance=0, creditAdded=opening].
+  /// Returns the new customer with generated [id].
+  Future<Customer> addCustomer({
+    required String name,
+    required String phone,
+    required String address,
+    required String weekdayId,
+    required String placeId,
+    required String areaId,
+    String? alternatePhone,
+    String? landmark,
+    String? notes,
+    int openingBalance = 0,
+  }) async {
+    // Generate UUID-like ID
+    final customerId = 'c-${DateTime.now().millisecondsSinceEpoch}-${_customers.length + 1}';
+    
+    // Generate unique customer code
+    final nextCode = _customers.length + 1;
+    final customerCode = 'C-${nextCode.toString().padLeft(3, '0')}';
+    
+    // Get the highest sequence number for this area
+    final areaCustomers = _customers.where((c) => c.areaId == areaId).toList();
+    final maxSeq = areaCustomers.isEmpty ? 0 : areaCustomers.map((c) => c.sequenceNumber).reduce((a, b) => a > b ? a : b);
+
+    final newCustomer = Customer(
+      id: customerId,
+      customerCode: customerCode,
+      name: name,
+      phone: phone,
+      alternatePhone: alternatePhone,
+      address: address,
+      landmark: landmark,
+      weekdayId: weekdayId,
+      placeId: placeId,
+      areaId: areaId,
+      sequenceNumber: maxSeq + 1,
+      status: 'ACTIVE',
+      notes: notes,
+    );
+
+    _customers.add(newCustomer);
+
+    // If opening balance > 0, create synthetic SALE
+    if (openingBalance > 0) {
+      final syntheticSale = Sale(
+        id: 's-opening-${DateTime.now().millisecondsSinceEpoch}',
+        customerId: customerId,
+        saleDatetime: DateTime.now(),
+        saleType: 'CREDIT',
+        totalAmount: openingBalance,
+        advanceAmount: 0,
+        financedAmount: openingBalance,
+        soldBy: 'System',
+        remarks: 'Opening balance',
+      );
+      _sales.add(syntheticSale);
+    }
+
+    _ref.read(syncProvider.notifier).incrementPending();
+    AppHaptics.mediumImpact();
+    _syncController();
+
+    return newCustomer;
+  }
+
+  /// Delete a customer (used for UNDO operations).
+  Future<void> undoCustomer(String customerId) async {
+    _customers.removeWhere((c) => c.id == customerId);
+    // Also remove any opening balance sale
+    _sales.removeWhere((s) => s.customerId == customerId && s.remarks == 'Opening balance');
+    _syncController();
+  }
+
+  /// Add a new place to a weekday.
+  Future<Place> addPlace({
+    required String weekdayId,
+    required String name,
+  }) async {
+    final placeId = 'p-${DateTime.now().millisecondsSinceEpoch}';
+    
+    final newPlace = Place(
+      id: placeId,
+      weekdayId: weekdayId,
+      name: name,
+    );
+
+    _places.add(newPlace);
+    _syncController();
+
+    return newPlace;
+  }
+
+  /// Add a new area to a place.
+  Future<Area> addArea({
+    required String placeId,
+    required String name,
+  }) async {
+    final areaId = 'a-${DateTime.now().millisecondsSinceEpoch}';
+    
+    final newArea = Area(
+      id: areaId,
+      placeId: placeId,
+      name: name,
+    );
+
+    _areas.add(newArea);
+    _syncController();
+
+    return newArea;
+  }
+
   // ─── RouteRepository ────────────────────────────────────
 
   @override
@@ -229,22 +346,26 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
 
   @override
   Future<List<Place>> getPlacesByWeekday(String weekdayId) async {
-    return mockPlacesList.where((p) => p.weekdayId == weekdayId).toList();
+    return _places.where((p) => p.weekdayId == weekdayId).toList();
   }
 
   @override
   Stream<List<Place>> watchPlacesByWeekday(String weekdayId) {
-    return Stream.value(mockPlacesList.where((p) => p.weekdayId == weekdayId).toList());
+    return _updateController.stream.map((_) {
+      return _places.where((p) => p.weekdayId == weekdayId).toList();
+    });
   }
 
   @override
   Future<List<Area>> getAreasByPlace(String placeId) async {
-    return mockAreasList.where((a) => a.placeId == placeId).toList();
+    return _areas.where((a) => a.placeId == placeId).toList();
   }
 
   @override
   Stream<List<Area>> watchAreasByPlace(String placeId) {
-    return Stream.value(mockAreasList.where((a) => a.placeId == placeId).toList());
+    return _updateController.stream.map((_) {
+      return _areas.where((a) => a.placeId == placeId).toList();
+    });
   }
 
   @override

@@ -1,0 +1,690 @@
+first run after round 2 build success.
+
+flutter run
+Launching lib\main.dart on 2201116PI in debug mode...
+Running Gradle task 'assembleDebug'...                             98.8s
+√ Built build\app\outputs\flutter-apk\app-debug.apk
+Installing build\app\outputs\flutter-apk\app-debug.apk...           5.1s
+I/FlutterActivityAndFragmentDelegate(26196): If you are attempting to set --enable-dart-profiling via Intent extras to launch a Flutter component outside of using the Flutter CLI, note that support for setting engine flags on Android via Intent will soon be dropped; see https://github.com/flutter/flutter/issues/180686 for more information on this breaking change. To migrate, set --enable-dart-profiling or any other flags specified via Intent extras on the command line instead or see https://github.com/flutter/flutter/blob/main/docs/engine/Flutter-Android-Engine-Flags.md for alternative methods.
+D/FlutterJNI(26196): Beginning load of flutter...
+D/FlutterJNI(26196): flutter (null) was loaded normally!
+I/flutter (26196): [IMPORTANT:flutter/shell/platform/android/android_context_vk_impeller.cc(62)] Using the Impeller rendering backend (Vulkan).
+I/flutter (26196): [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+D/FlutterRenderer(26196): Width is zero. 0,0
+W/Looper  (26196): PerfMonitor looperActivity : package=com.example.legacy_notebook/.MainActivity time=0ms latency=2910ms  procState=-1  historyMsgCount=2 (msgIndex=2 wall=1149ms seq=4 late=214ms h=android.app.ActivityThread$H w=159)
+D/FramePredict(26196): FramePredict init: false
+I/Choreographer(26196): Skipped 211 frames!  The application may be doing too much work on its main thread.
+I/legacy_notebook(26196): Compiler allocated 4936KB to compile void android.view.ViewRootImpl.performTraversals()
+D/FlutterRenderer(26196): Width is zero. 0,0
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/VRI[MainActivity](26196): vri.reportNextDraw android.view.ViewRootImpl.performTraversals:4013 android.view.ViewRootImpl.doTraversal:2725 android.view.ViewRootImpl$TraversalRunnable.run:9812 android.view.Choreographer$CallbackRecord.run:1505 android.view.Choreographer$CallbackRecord.run:1513
+D/SurfaceView(26196): UPDATE null, mIsCastMode = false
+E/libEGL  (26196): pre_cache appList: com.sina.weibo,com.ss.android.article.news,com.taobao.taobao,com.smile.gifmaker,com.ss.android.ugc.aweme,com.tencent.mm,tv.danmaku.bili,,
+E/libEGL  (26196): pre_cache appList: com.sina.weibo,com.ss.android.article.news,com.taobao.taobao,com.smile.gifmaker,com.ss.android.ugc.aweme,com.tencent.mm,tv.danmaku.bili,,
+Syncing files to device 2201116PI...                               205ms
+
+Flutter run key commands.
+r Hot reload.
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/DecorView[](26196): getWindowModeFromSystem  windowmode is 1
+D/DecorView[](26196): updateDecorCaptionStatus windowMode is 1
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/DecorView[](26196): getWindowModeFromSystem  windowmode is 1
+D/DecorView[](26196): updateDecorCaptionStatus windowMode is 1
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/DecorView[](26196): getWindowModeFromSystem  windowmode is 1
+D/DecorView[](26196): updateDecorCaptionStatus windowMode is 1
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/DecorView[](26196): getWindowModeFromSystem  windowmode is 1
+D/DecorView[](26196): updateDecorCaptionStatus windowMode is 1
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/Looper  (26196): PerfMonitor doFrame : time=1ms vsyncFrame=0 latency=395ms procState=-1 historyMsgCount=1
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+I/HandWritingStubImpl(26196): refreshLastKeyboardType: 1
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F....ID 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+I/AssistStructure(26196): Flattened final assist data: 484 bytes, containing 1 windows, 3 views
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/MIUIInput(26196): [KeyEvent] ViewRootImpl windowName 'com.example.legacy_notebook/com.example.legacy_notebook.MainActivity', KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x48, repeatCount=0, eventTime=625661179000000, downTime=625661179000000, deviceId=-1, source=0x101, displayId=-1 }, phoneEventTime=12:38:46.982
+D/MIUIInput(26196): [KeyEvent] ViewRootImpl windowName 'com.example.legacy_notebook/com.example.legacy_notebook.MainActivity', KeyEvent { action=ACTION_UP, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x48, repeatCount=0, eventTime=625661182000000, downTime=625661182000000, deviceId=-1, source=0x101, displayId=-1 }, phoneEventTime=12:38:46.986
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+I/AssistStructure(26196): Flattened final assist data: 480 bytes, containing 1 windows, 3 views
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+I/AssistStructure(26196): Flattened final assist data: 468 bytes, containing 1 windows, 3 views
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/InsetsController(26196): show(ime(), fromIme=true)
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+I/AssistStructure(26196): Flattened final assist data: 496 bytes, containing 1 windows, 3 views
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+I/AssistStructure(26196): Flattened final assist data: 496 bytes, containing 1 windows, 3 views
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+I/AssistStructure(26196): Flattened final assist data: 484 bytes, containing 1 windows, 3 views
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+I/AssistStructure(26196): Flattened final assist data: 504 bytes, containing 1 windows, 3 views
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+E/flutter (26196): [ERROR:flutter/runtime/dart_vm_initializer.cc(40)] Unhandled Exception: Bad state: Cannot use "ref" after the widget was disposed.
+E/flutter (26196): #0      ConsumerStatefulElement._assertNotDisposed (package:flutter_riverpod/src/consumer.dart:550:7)
+E/flutter (26196): #1      ConsumerStatefulElement.read (package:flutter_riverpod/src/consumer.dart:619:5)
+E/flutter (26196): #2      _NewClientScreenState.build.<anonymous closure>.<anonymous closure> (package:legacy_notebook/features/customer/new_client_screen.dart:199:36)
+E/flutter (26196): #3      _SnackBarActionState._handlePressed (package:flutter/src/material/snack_bar.dart:153:21)
+E/flutter (26196): #4      _InkResponseState.handleTap (package:flutter/src/material/ink_well.dart:1224:21)
+E/flutter (26196): #5      GestureRecognizer.invokeCallback (package:flutter/src/gestures/recognizer.dart:345:24)
+E/flutter (26196): #6      TapGestureRecognizer.handleTapUp (package:flutter/src/gestures/tap.dart:758:11)
+E/flutter (26196): #7      BaseTapGestureRecognizer._checkUp (package:flutter/src/gestures/tap.dart:383:5)
+E/flutter (26196): #8      BaseTapGestureRecognizer.acceptGesture (package:flutter/src/gestures/tap.dart:353:7)
+E/flutter (26196): #9      GestureArenaManager.sweep (package:flutter/src/gestures/arena.dart:173:27)
+E/flutter (26196): #10     GestureBinding.handleEvent (package:flutter/src/gestures/binding.dart:532:20)
+E/flutter (26196): #11     GestureBinding.dispatchEvent (package:flutter/src/gestures/binding.dart:498:22)
+E/flutter (26196): #12     RendererBinding.dispatchEvent (package:flutter/src/rendering/binding.dart:473:11)
+E/flutter (26196): #13     GestureBinding._handlePointerEventImmediately (package:flutter/src/gestures/binding.dart:437:7)
+E/flutter (26196): #14     GestureBinding.handlePointerEvent (package:flutter/src/gestures/binding.dart:394:5)
+E/flutter (26196): #15     GestureBinding._flushPointerEventQueue (package:flutter/src/gestures/binding.dart:341:7)
+E/flutter (26196): #16     GestureBinding._handlePointerDataPacket (package:flutter/src/gestures/binding.dart:308:9)
+E/flutter (26196): #17     _invoke1 (dart:ui/hooks.dart:439:13)
+E/flutter (26196): #18     PlatformDispatcher._dispatchPointerDataPacket (dart:ui/platform_dispatcher.dart:470:7)
+E/flutter (26196): #19     _dispatchPointerDataPacket (dart:ui/hooks.dart:374:31)
+E/flutter (26196):
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+I/AssistStructure(26196): Flattened final assist data: 484 bytes, containing 1 windows, 3 views
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+I/AssistStructure(26196): Flattened final assist data: 480 bytes, containing 1 windows, 3 views
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+I/AssistStructure(26196): Flattened final assist data: 468 bytes, containing 1 windows, 3 views
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/InsetsController(26196): show(ime(), fromIme=true)
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+I/AssistStructure(26196): Flattened final assist data: 496 bytes, containing 1 windows, 3 views
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+I/AssistStructure(26196): Flattened final assist data: 496 bytes, containing 1 windows, 3 views
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/InsetsController(26196): show(ime(), fromIme=true)
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+I/AssistStructure(26196): Flattened final assist data: 504 bytes, containing 1 windows, 3 views
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+I/AssistStructure(26196): Flattened final assist data: 488 bytes, containing 1 windows, 3 views
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/InsetsController(26196): show(ime(), fromIme=true)
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+I/AssistStructure(26196): Flattened final assist data: 476 bytes, containing 1 windows, 3 views
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+D/InsetsController(26196): show(ime(), fromIme=true)
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+Another exception was thrown: A RenderFlex overflowed by 23 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 25 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 46 pixels on the right.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+Another exception was thrown: A RenderFlex overflowed by 23 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 25 pixels on the right.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+Another exception was thrown: A RenderFlex overflowed by 46 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 19 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 77 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 23 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 70 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 67 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 42 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 57 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 26 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 4.0 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 52 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 67 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 70 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 23 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 77 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 19 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 46 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 25 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 23 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 67 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 42 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 57 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 26 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 4.0 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 52 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 67 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 23 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 70 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 77 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 46 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 19 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 25 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 23 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 23 pixels on the right.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+Another exception was thrown: A RenderFlex overflowed by 25 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 46 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 19 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 77 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 23 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 70 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 67 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 42 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 57 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 26 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 4.0 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 52 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 67 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 70 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 23 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 77 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 19 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 46 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 25 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 23 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 23 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 25 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 46 pixels on the right.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+Another exception was thrown: A RenderFlex overflowed by 23 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 25 pixels on the right.
+Another exception was thrown: A RenderFlex overflowed by 46 pixels on the right.
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/InputMethodManager(26196): showSoftInput() view=io.flutter.embedding.android.FlutterView{ad56487 VFE...... .F...... 0,0-1080,2356 #1 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+I/AssistStructure(26196): Flattened final assist data: 512 bytes, containing 1 windows, 3 views
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring on
+W/OnBackInvokedCallback(26196): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback(26196): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+D/InsetsController(26196): show(ime(), fromIme=true)
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+E/flutter (26196): [ERROR:flutter/runtime/dart_vm_initializer.cc(40)] Unhandled Exception: 'package:go_router/src/delegate.dart': Failed assertion: line 162 pos 7: 'currentConfiguration.isNotEmpty': You have popped the last page off of the stack, there are no pages left to show
+E/flutter (26196): #0      _AssertionError._doThrowNew (dart:core-patch/errors_patch.dart:67:4)
+E/flutter (26196): #1      _AssertionError._throwNew (dart:core-patch/errors_patch.dart:49:5)
+E/flutter (26196): #2      GoRouterDelegate._debugAssertMatchListNotEmpty (package:go_router/src/delegate.dart:162:7)
+E/flutter (26196): #3      GoRouterDelegate._completeRouteMatch (package:go_router/src/delegate.dart:183:5)
+E/flutter (26196): #4      GoRouterDelegate._handlePopPageWithRouteMatch (package:go_router/src/delegate.dart:141:7)
+E/flutter (26196): #5      _CustomNavigatorState._handlePopPage (package:go_router/src/builder.dart:425:42)
+E/flutter (26196): #6      NavigatorState.pop (package:flutter/src/widgets/navigator.dart:5614:28)
+E/flutter (26196): #7      Navigator.pop (package:flutter/src/widgets/navigator.dart:2777:27)
+E/flutter (26196): #8      _SaleScreenState._onSave (package:legacy_notebook/features/sale/sale_screen.dart:59:17)
+E/flutter (26196): <asynchronous suspension>
+E/flutter (26196):
+Another exception was thrown: 'package:flutter/src/widgets/navigator.dart': Failed assertion:
+line 4100 pos 12: '!_debugLocked': is not true.
+D/InputConnectionAdaptor(26196): The input method toggled cursor monitoring off
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+D/MIUIInput(26196): [KeyEvent] ViewRootImpl windowName 'com.example.legacy_notebook/com.example.legacy_notebook.MainActivity', KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x48, repeatCount=0, eventTime=625899157000000, downTime=625899157000000, deviceId=-1, source=0x101, displayId=-1 }, phoneEventTime=12:42:44.960
+D/MIUIInput(26196): [KeyEvent] ViewRootImpl windowName 'com.example.legacy_notebook/com.example.legacy_notebook.MainActivity', KeyEvent { action=ACTION_UP, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x48, repeatCount=0, eventTime=625899159000000, downTime=625899159000000, deviceId=-1, source=0x101, displayId=-1 }, phoneEventTime=12:42:44.963
+Another exception was thrown: Bad state: No element
+D/DecorView[](26196): onWindowFocusChanged hasWindowFocus false
+W/MiuiMagicPointerUtilsStubHeadImpl(26196): MiuiMagicPointerUtilsStubHeadImpl has been initialized !!
+I/HandWritingStubImpl(26196): getCurrentKeyboardType: 1
+I/FlutterActivityAndFragmentDelegate(26196): If you are attempting to set --enable-dart-profiling via Intent extras to launch a Flutter component outside of using the Flutter CLI, note that support for setting engine flags on Android via Intent will soon be dropped; see https://github.com/flutter/flutter/issues/180686 for more information on this breaking change. To migrate, set --enable-dart-profiling or any other flags specified via Intent extras on the command line instead or see https://github.com/flutter/flutter/blob/main/docs/engine/Flutter-Android-Engine-Flags.md for alternative methods.
+I/AdrenoVK-0(26196): QUALCOMM build          : 3e33337ce3, I07ee46fc66
+I/AdrenoVK-0(26196): Build Date              : 10/08/21
+I/AdrenoVK-0(26196): Shader Compiler Version : EV031.35.01.10
+I/AdrenoVK-0(26196): Local Branch            :
+I/AdrenoVK-0(26196): Remote Branch           :
+I/AdrenoVK-0(26196): Remote Branch           :
+I/AdrenoVK-0(26196): Reconstruct Branch      :
+I/AdrenoVK-0(26196): Build Config            : S P 10.0.7 AArch64
+I/AdrenoVK-0(26196): Driver Path             : /vendor/lib64/hw/vulkan.adreno.so
+I/flutter (26196): [IMPORTANT:flutter/shell/platform/android/android_context_vk_impeller.cc(62)] Using the Impeller rendering backend (Vulkan).
+I/flutter (26196): [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+D/FlutterRenderer(26196): Width is zero. 0,0
+D/IS_CTS_MODE(26196): false
+D/MULTI_WINDOW_ENABLED(26196): false
+D/DecorView[](26196): getWindowModeFromSystem  windowmode is 1
+I/ForceDarkHelperStubImpl(26196): setViewRootImplForceDark: false for com.example.legacy_notebook.MainActivity@1cab5a7, reason: AppDarkModeEnable
+D/DecorView[](26196): getWindowModeFromSystem  windowmode is 1
+D/DecorView[](26196): updateDecorCaptionStatus windowMode is 1
+W/Looper  (26196): PerfMonitor looperActivity : package=com.example.legacy_notebook/.MainActivity time=0ms latency=2021ms  procState=-1  historyMsgCount=1
+I/Choreographer(26196): Skipped 139 frames!  The application may be doing too much work on its main thread.
+D/FlutterRenderer(26196): Width is zero. 0,0
+D/FlutterJNI(26196): Sending viewport metrics to the engine.
+D/VRI[MainActivity](26196): vri.reportNextDraw android.view.ViewRootImpl.performTraversals:4013 android.view.ViewRootImpl.doTraversal:2725 android.view.ViewRootImpl$TraversalRunnable.run:9812 android.view.Choreographer$CallbackRecord.run:1505 android.view.Choreographer$CallbackRecord.run:1513
+D/SurfaceView(26196): UPDATE null, mIsCastMode = false
+W/Looper  (26196): PerfMonitor doFrame : time=118ms vsyncFrame=0 latency=2328ms procState=-1 historyMsgCount=2
+W/legacy_notebook(26196): Cleared Reference was only reachable from finalizer (only reported once)
+Lost connection to device.
+A Dart VM Service on 2201116PI is available at: http://127.0.0.1:62786/ltR5h-YhRxc=/
+The Flutter DevTools debugger and profiler on 2201116PI is available at:
+http://127.0.0.1:62786/ltR5h-YhRxc=/devtools/?uri=ws://127.0.0.1:62786/ltR5h-YhRxc=/ws
+W/Looper  ( 7619): PerfMonitor looperActivity : package=com.example.legacy_notebook/.MainActivity time=0ms latency=3647ms  procState=-1  historyMsgCount=2 (msgIndex=2 wall=1707ms seq=4 late=279ms h=android.app.ActivityThread$H w=159)
+D/FramePredict( 7619): FramePredict init: false
+I/Choreographer( 7619): Skipped 247 frames!  The application may be doing too much work on its main thread.
+D/FlutterRenderer( 7619): Width is zero. 0,0
+I/legacy_notebook( 7619): Compiler allocated 4936KB to compile void android.view.ViewRootImpl.performTraversals()
+E/libEGL  ( 7619): pre_cache appList: com.sina.weibo,com.ss.android.article.news,com.taobao.taobao,com.smile.gifmaker,com.ss.android.ugc.aweme,com.tencent.mm,tv.danmaku.bili,,
+D/FlutterJNI( 7619): Sending viewport metrics to the engine.
+D/VRI[MainActivity]( 7619): vri.reportNextDraw android.view.ViewRootImpl.performTraversals:4013 android.view.ViewRootImpl.doTraversal:2725 android.view.ViewRootImpl$TraversalRunnable.run:9812 android.view.Choreographer$CallbackRecord.run:1505 android.view.Choreographer$CallbackRecord.run:1513
+D/SurfaceView( 7619): UPDATE null, mIsCastMode = false
+E/libEGL  ( 7619): pre_cache appList: com.sina.weibo,com.ss.android.article.news,com.taobao.taobao,com.smile.gifmaker,com.ss.android.ugc.aweme,com.tencent.mm,tv.danmaku.bili,,
+W/Looper  ( 7619): PerfMonitor doFrame : time=984ms vsyncFrame=0 latency=4140ms procState=-1 historyMsgCount=5 (msgIndex=1 wall=1707ms seq=4 late=279ms h=android.app.ActivityThread$H w=159)
+E/libboost( 7619): fail to open node: No such file or directory
+
+══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
+The following assertion was thrown while finalizing the widget tree:
+Multiple widgets used the same GlobalKey.
+The key [GlobalObjectKey int#f0139] was used by multiple widgets. The parents of those widgets were:
+- KeyedSubtree-[GlobalKey#0d72d]
+- KeyedSubtree-[GlobalKey#9cccc]
+A GlobalKey can only be specified on one widget at a time in the widget tree.
+
+When the exception was thrown, this was the stack:
+#0      BuildOwner._debugVerifyGlobalKeyReservation.<anonymous closure>.<anonymous closure>.<anonymous
+closure> (package:flutter/src/widgets/framework.dart:3276:13)
+#1      _LinkedHashMapMixin.forEach (dart:_compact_hash:772:13)
+#2      BuildOwner._debugVerifyGlobalKeyReservation.<anonymous closure>.<anonymous closure>
+(package:flutter/src/widgets/framework.dart:3220:20)
+#3      _LinkedHashMapMixin.forEach (dart:_compact_hash:772:13)
+#4      BuildOwner._debugVerifyGlobalKeyReservation.<anonymous closure>
+(package:flutter/src/widgets/framework.dart:3214:36)
+#5      BuildOwner._debugVerifyGlobalKeyReservation (package:flutter/src/widgets/framework.dart:3284:6)
+#6      BuildOwner.finalizeTree.<anonymous closure> (package:flutter/src/widgets/framework.dart:3347:11)
+#7      BuildOwner.finalizeTree (package:flutter/src/widgets/framework.dart:3434:8)
+#8      WidgetsBinding.drawFrame (package:flutter/src/widgets/binding.dart:1578:19)
+#9      RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:509:5)
+#10     SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#11     SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345:9)
+#12     SchedulerBinding._handleDrawFrame (package:flutter/src/scheduler/binding.dart:1198:5)
+#13     _invoke (dart:ui/hooks.dart:423:13)
+#14     PlatformDispatcher._drawFrame (dart:ui/platform_dispatcher.dart:447:5)
+#15     _drawFrame (dart:ui/hooks.dart:395:31)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+I/Choreographer( 7619): Skipped 95 frames!  The application may be doing too much work on its main thread.
+D/DecorView[]( 7619): getWindowModeFromSystem  windowmode is 1
+D/DecorView[]( 7619): updateDecorCaptionStatus windowMode is 1
+D/FlutterJNI( 7619): Sending viewport metrics to the engine.
+D/VRI[MainActivity]( 7619): vri.reportNextDraw android.view.ViewRootImpl.performTraversals:4013 android.view.ViewRootImpl.doTraversal:2725 android.view.ViewRootImpl$TraversalRunnable.run:9812 android.view.Choreographer$CallbackRecord.run:1505 android.view.Choreographer$CallbackRecord.run:1513
+D/SurfaceView( 7619): UPDATE Surface(name=SurfaceView[com.example.legacy_notebook/com.example.legacy_notebook.MainActivity])/@0xb4fd5f9, mIsProjectionMode = false
+D/VRI[MainActivity]( 7619): vri.Setup new sync id=0 syncSeqId=0
+D/legacy_notebook( 7619): MiuiProcessManagerServiceStub setSchedFifo
+I/MiuiProcessManagerImpl( 7619): setSchedFifo pid:7619, mode:3
+E/perf_hint( 7619): Session creation failed, mPreferredRateNanos: -1
+W/Looper  ( 7619): PerfMonitor doFrame : time=51ms vsyncFrame=0 latency=1592ms procState=-1 historyMsgCount=18 (msgIndex=1 wall=984ms seq=9 late=4140ms h=android.view.Choreographer$FrameHandler c=android.view.Choreographer$FrameDisplayEventReceiver)
+I/OpenGLRenderer( 7619): Davey! duration=1640ms; Flags=1, FrameTimelineVsyncId=221726782, IntendedVsync=626989389662426, Vsync=626990976705256, InputEventId=0, HandleInputStart=626990981567901, AnimationStart=626990981569360, PerformTraversalsStart=626990981569933, DrawStart=626991001730193, FrameDeadline=626989406329092, FrameInterval=626990981429047, FrameStartTime=16705714, SyncQueued=626991003638683, SyncStart=626991003800297, IssueDrawCommandsStart=626991014082797, SwapBuffers=626991027960662, FrameCompleted=626991030176391, DequeueBufferDuration=4627708, QueueBufferDuration=1645625, GpuCompleted=626991029567745, SwapBuffersCompleted=626991030176391, DisplayPresentTime=0, CommandSubmissionCompleted=626991027960662,
+D/VRI[MainActivity]( 7619): vri.reportDrawFinished syncSeqId=0 android.view.ViewRootImpl.lambda$createSyncIfNeeded$4$android-view-ViewRootImpl:4081 android.view.ViewRootImpl$$ExternalSyntheticLambda2.run:6 android.os.Handler.handleCallback:942 android.os.Handler.dispatchMessage:99 android.os.Looper.loopOnce:211
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+D/DecorView[]( 7619): onWindowFocusChanged hasWindowFocus true
+I/HandWritingStubImpl( 7619): refreshLastKeyboardType: 1
+I/HandWritingStubImpl( 7619): getCurrentKeyboardType: 1
+D/FlutterJNI( 7619): Sending viewport metrics to the engine.
+I/HandWritingStubImpl( 7619): getCurrentKeyboardType: 1
+D/FlutterJNI( 7619): Sending viewport metrics to the engine.
+D/ProfileInstaller( 7619): Installing profile for com.example.legacy_notebook
+W/MirrorManager( 7619): this model don't Support
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+W/OnBackInvokedCallback( 7619): OnBackInvokedCallback is not enabled for the application.
+W/OnBackInvokedCallback( 7619): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+D/MIUIInput( 7619): [KeyEvent] ViewRootImpl windowName 'com.example.legacy_notebook/com.example.legacy_notebook.MainActivity', KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x8, repeatCount=0, eventTime=627127839000000, downTime=627127839000000, deviceId=-1, source=0x101, displayId=0 }, phoneEventTime=13:03:13.643
+D/MIUIInput( 7619): [KeyEvent] ViewRootImpl windowName 'com.example.legacy_notebook/com.example.legacy_notebook.MainActivity', KeyEvent { action=ACTION_UP, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x8, repeatCount=0, eventTime=627127839000000, downTime=627127839000000, deviceId=-1, source=0x101, displayId=0 }, phoneEventTime=13:03:13.642
+E/flutter ( 7619): [ERROR:flutter/runtime/dart_vm_initializer.cc(40)] Unhandled Exception: GoError: There is nothing to pop
+E/flutter ( 7619): #0      GoRouterDelegate.pop (package:go_router/src/delegate.dart:101:7)
+E/flutter ( 7619): #1      GoRouter.pop (package:go_router/src/router.dart:504:20)
+E/flutter ( 7619): #2      GoRouterHelper.pop (package:go_router/src/misc/extensions.dart:74:65)
+E/flutter ( 7619): #3      _NewClientScreenState.build.<anonymous closure> (package:legacy_notebook/features/customer/new_client_screen.dart:108:21)
+E/flutter ( 7619): #4      PopScope._callPopInvoked (package:flutter/src/widgets/pop_scope.dart:146:30)
+E/flutter ( 7619): #5      _PopScopeState.onPopInvokedWithResult (package:flutter/src/widgets/pop_scope.dart:181:12)
+E/flutter ( 7619): #6      ModalRoute.onPopInvokedWithResult (package:flutter/src/widgets/routes.dart:2047:16)
+E/flutter ( 7619): #7      NavigatorState.maybePop (package:flutter/src/widgets/navigator.dart:5576:25)
+E/flutter ( 7619): <asynchronous suspension>
+E/flutter ( 7619): #8      GoRouterDelegate.popRoute (package:go_router/src/delegate.dart:60:27)
+E/flutter ( 7619): <asynchronous suspension>
+E/flutter ( 7619): #9      _RouterState._handleRoutePopped.<anonymous closure> (package:flutter/src/widgets/router.dart:813:12)
+E/flutter ( 7619): <asynchronous suspension>
+E/flutter ( 7619): #10     WidgetsBinding.handlePopRoute (package:flutter/src/widgets/binding.dart:1116:13)
+E/flutter ( 7619): <asynchronous suspension>
+E/flutter ( 7619): #11     MethodChannel._handleAsMethodCall (package:flutter/src/services/platform_channel.dart:607:42)
+E/flutter ( 7619): <asynchronous suspension>
+E/flutter ( 7619): #12     _DefaultBinaryMessenger.setMessageHandler.<anonymous closure> (package:flutter/src/services/binding.dart:663:22)
+E/flutter ( 7619): <asynchronous suspension>
+E/flutter ( 7619):
+D/MIUIInput( 7619): [KeyEvent] ViewRootImpl windowName 'com.example.legacy_notebook/com.example.legacy_notebook.MainActivity', KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x8, repeatCount=0, eventTime=627129393000000, downTime=627129393000000, deviceId=-1, source=0x101, displayId=0 }, phoneEventTime=13:03:15.196
+D/MIUIInput( 7619): [KeyEvent] ViewRootImpl windowName 'com.example.legacy_notebook/com.example.legacy_notebook.MainActivity', KeyEvent { action=ACTION_UP, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x8, repeatCount=0, eventTime=627129393000000, downTime=627129393000000, deviceId=-1, source=0x101, displayId=0 }, phoneEventTime=13:03:15.197
+E/flutter ( 7619): [ERROR:flutter/runtime/dart_vm_initializer.cc(40)] Unhandled Exception: GoError: There is nothing to pop
+E/flutter ( 7619): #0      GoRouterDelegate.pop (package:go_router/src/delegate.dart:101:7)
+E/flutter ( 7619): #1      GoRouter.pop (package:go_router/src/router.dart:504:20)
+E/flutter ( 7619): #2      GoRouterHelper.pop (package:go_router/src/misc/extensions.dart:74:65)
+E/flutter ( 7619): #3      _NewClientScreenState.build.<anonymous closure> (package:legacy_notebook/features/customer/new_client_screen.dart:108:21)
+E/flutter ( 7619): #4      PopScope._callPopInvoked (package:flutter/src/widgets/pop_scope.dart:146:30)
+E/flutter ( 7619): #5      _PopScopeState.onPopInvokedWithResult (package:flutter/src/widgets/pop_scope.dart:181:12)
+E/flutter ( 7619): #6      ModalRoute.onPopInvokedWithResult (package:flutter/src/widgets/routes.dart:2047:16)
+E/flutter ( 7619): #7      NavigatorState.maybePop (package:flutter/src/widgets/navigator.dart:5576:25)
+E/flutter ( 7619): <asynchronous suspension>
+E/flutter ( 7619): #8      GoRouterDelegate.popRoute (package:go_router/src/delegate.dart:60:27)
+E/flutter ( 7619): <asynchronous suspension>
+E/flutter ( 7619): #9      _RouterState._handleRoutePopped.<anonymous closure> (package:flutter/src/widgets/router.dart:813:12)
+E/flutter ( 7619): <asynchronous suspension>
+E/flutter ( 7619): #10     WidgetsBinding.handlePopRoute (package:flutter/src/widgets/binding.dart:1116:13)
+E/flutter ( 7619): <asynchronous suspension>
+E/flutter ( 7619): #11     MethodChannel._handleAsMethodCall (package:flutter/src/services/platform_channel.dart:607:42)
+E/flutter ( 7619): <asynchronous suspension>
+E/flutter ( 7619): #12     _DefaultBinaryMessenger.setMessageHandler.<anonymous closure> (package:flutter/src/services/binding.dart:663:22)
+E/flutter ( 7619): <asynchronous suspension>
+E/flutter ( 7619):
+D/DecorView[]( 7619): onWindowFocusChanged hasWindowFocus false
+W/MiuiMagicPointerUtilsStubHeadImpl( 7619): MiuiMagicPointerUtilsStubHeadImpl has been initialized !!
+D/DecorView[]( 7619): onWindowFocusChanged hasWindowFocus false
+Lost connection to device.

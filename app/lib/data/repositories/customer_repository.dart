@@ -17,4 +17,19 @@ abstract class CustomerRepository {
   Future<void> updateCustomerProfile(String id, {String? phone, String? photoUrl, String? locationUrl});
   Future<void> addNominee(String customerId, String name, String phone, String relation);
   Future<void> addProofImage(String customerId, String proofType, String imageUrl);
+  
+  Future<Customer> addCustomer({
+    required String name,
+    required String phone,
+    required String address,
+    required String weekdayId,
+    required String placeId,
+    required String areaId,
+    String? alternatePhone,
+    String? landmark,
+    String? notes,
+    int openingBalance = 0,
+  });
+
+  Future<void> undoCustomer(String customerId);
 }

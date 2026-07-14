@@ -12,14 +12,20 @@ import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/stat_card.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/router/routes.dart';
+import '../../core/router/navigation_shell.dart';
 import '../../data/repositories/route_repository.dart';
 import '../../data/providers.dart';
 import 'controllers/route_controller.dart';
 
 class PlaceScreen extends ConsumerWidget {
-  const PlaceScreen({super.key, required this.placeId});
+  const PlaceScreen({
+    super.key,
+    required this.placeId,
+    this.weekday = 'Monday',
+  });
 
   final String placeId;
+  final String weekday;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -42,10 +48,6 @@ class PlaceScreen extends ConsumerWidget {
         final title = snapshot.data ?? 'Place Route';
 
         return AppScaffold(
-          appBarLeading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.go(Routes.weekday('Thursday')),
-          ),
           title: Text(
             title,
             style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
@@ -62,7 +64,10 @@ class PlaceScreen extends ConsumerWidget {
                   title: 'No Areas',
                   message: 'No collection areas configured for this location.',
                   action: OutlinedButton(
-                    onPressed: () => context.go(Routes.weekday('Thursday')),
+                    onPressed: () {
+                      final target = context.getBackTarget() ?? Routes.dashboard;
+                      context.go(target);
+                    },
                     child: const Text('Back to Weekday'),
                   ),
                 );
@@ -123,7 +128,7 @@ class PlaceScreen extends ConsumerWidget {
 
                           return Card(
                             child: InkWell(
-                              onTap: () => context.go(Routes.area(item.area.id)),
+                              onTap: () => context.go(Routes.area(weekday, placeId, item.area.id)),
                               borderRadius: BorderRadius.circular(AppRadius.lg),
                               child: Padding(
                                 padding: const EdgeInsets.all(AppSpacing.lg),

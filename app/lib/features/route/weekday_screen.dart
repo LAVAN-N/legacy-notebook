@@ -12,6 +12,7 @@ import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/stat_card.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/router/routes.dart';
+import '../../core/router/navigation_shell.dart';
 import 'controllers/route_controller.dart';
 
 class WeekdayScreen extends ConsumerWidget {
@@ -25,10 +26,6 @@ class WeekdayScreen extends ConsumerWidget {
     final placesState = ref.watch(weekdayPlacesProvider(dayName));
 
     return AppScaffold(
-      appBarLeading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => context.go(Routes.dashboard),
-      ),
       title: Text(
         '$dayName Route',
         style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
@@ -46,7 +43,10 @@ class WeekdayScreen extends ConsumerWidget {
               message: 'No collections scheduled for $dayName.',
               icon: Icons.weekend_outlined,
               action: OutlinedButton(
-                onPressed: () => context.go(Routes.dashboard),
+                onPressed: () {
+                  final target = context.getBackTarget() ?? Routes.dashboard;
+                  context.go(target);
+                },
                 child: const Text('Back to Home'),
               ),
             );
@@ -108,7 +108,7 @@ class WeekdayScreen extends ConsumerWidget {
 
                       return Card(
                         child: InkWell(
-                          onTap: () => context.go(Routes.place(item.place.id)),
+                          onTap: () => context.go(Routes.place(dayName, item.place.id)),
                           borderRadius: BorderRadius.circular(AppRadius.lg),
                           child: Padding(
                             padding: const EdgeInsets.all(AppSpacing.lg),

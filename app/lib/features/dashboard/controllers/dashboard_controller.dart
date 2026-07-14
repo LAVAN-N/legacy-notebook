@@ -37,17 +37,21 @@ final dashboardControllerProvider = StateNotifierProvider<DashboardController, A
 
 class DashboardController extends StateNotifier<AsyncValue<DashboardData>> {
   DashboardController(this._ref) : super(const AsyncValue.loading()) {
+    print('[DashboardController] Initializing...');
     _init();
   }
 
   final Ref _ref;
 
   void _init() async {
+    print('[DashboardController] _init() called');
     _ref.listenSelf((previous, next) {}); // Keep listening for changes
-    refresh();
+    await refresh();
+    print('[DashboardController] _init() completed');
   }
 
   Future<void> refresh() async {
+    print('[DashboardController] refresh() started');
     state = const AsyncValue.loading();
     try {
       final routeRepo = _ref.read(routeRepositoryProvider);
@@ -118,7 +122,10 @@ class DashboardController extends StateNotifier<AsyncValue<DashboardData>> {
         recentActivities: trimmedRecent,
         todayPlaces: places,
       ));
+      print('[DashboardController] refresh() completed with data');
     } catch (e, stack) {
+      print('[DashboardController] refresh() ERROR: $e');
+      print('[DashboardController] Stack: $stack');
       state = AsyncValue.error(e, stack);
     }
   }

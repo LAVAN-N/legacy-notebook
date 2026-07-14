@@ -13,14 +13,22 @@ import '../../core/widgets/tag_chip.dart';
 import '../../core/widgets/amount_text.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/router/routes.dart';
+import '../../core/router/navigation_shell.dart';
 import '../../data/repositories/route_repository.dart';
 import '../../data/providers.dart';
 import 'controllers/route_controller.dart';
 
 class AreaScreen extends ConsumerStatefulWidget {
-  const AreaScreen({super.key, required this.areaId});
+  const AreaScreen({
+    super.key,
+    required this.areaId,
+    this.weekday = 'Monday',
+    this.placeId = '',
+  });
 
   final String areaId;
+  final String weekday;
+  final String placeId;
 
   @override
   ConsumerState<AreaScreen> createState() => _AreaScreenState();
@@ -67,10 +75,6 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
         final backPlaceId = area?.placeId ?? 'p-1';
 
         return AppScaffold(
-          appBarLeading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.go(Routes.place(backPlaceId)),
-          ),
           title: Text(
             title,
             style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
@@ -87,7 +91,10 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
                   title: 'No Customers',
                   message: 'No active clients mapped to this collection area.',
                   action: OutlinedButton(
-                    onPressed: () => context.go(Routes.place(backPlaceId)),
+                    onPressed: () {
+                      final target = context.getBackTarget() ?? Routes.dashboard;
+                      context.go(target);
+                    },
                     child: const Text('Back to Place'),
                   ),
                 );
@@ -156,7 +163,7 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
                                 key: ValueKey(item.customer.id),
                                 margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                                 child: InkWell(
-                                  onTap: () => context.go(Routes.customer(item.customer.id)),
+                                  onTap: () => context.go(Routes.customer(widget.weekday, widget.placeId, widget.areaId, item.customer.id)),
                                   borderRadius: BorderRadius.circular(AppRadius.lg),
                                   child: Padding(
                                     padding: const EdgeInsets.all(AppSpacing.lg),

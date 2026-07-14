@@ -3,8 +3,18 @@ import '../models/place.dart';
 import '../models/area.dart';
 import '../models/customer.dart';
 import '../models/product.dart';
+import '../models/category.dart';
 import '../models/sale.dart';
 import '../models/collection.dart';
+import '../models/location.dart';
+import '../models/nominee.dart';
+import '../models/id_proof.dart';
+// Category IDs
+const String katCategoryId = 'cat-kat';
+const String laundryCateg = 'cat-laundry';
+const String audioCategoryId = 'cat-audio';
+const String lightingCategoryId = 'cat-lighting';
+const String coolingCategoryId = 'cat-cooling';
 
 final mockWeekdaysList = [
   const Weekday(id: 'w-1', name: 'Monday', sortOrder: 1),
@@ -16,14 +26,14 @@ final mockWeekdaysList = [
   const Weekday(id: 'w-7', name: 'Sunday', sortOrder: 7),
 ];
 
-final mockPlacesList = [
+final mockPlacesList = <Place>[
   const Place(id: 'p-1', weekdayId: 'w-4', name: 'Melur'), // Thursday Place
   const Place(id: 'p-2', weekdayId: 'w-4', name: 'Othakadai'), // Thursday Place
   const Place(id: 'p-3', weekdayId: 'w-1', name: 'Goripalayam'), // Monday Place
   const Place(id: 'p-4', weekdayId: 'w-2', name: 'Thirunagar'), // Tuesday Place
 ];
 
-final mockAreasList = [
+final mockAreasList = <Area>[
   const Area(id: 'a-1', placeId: 'p-1', name: 'North Street'),
   const Area(id: 'a-2', placeId: 'p-1', name: 'Bazaar Lane'),
   const Area(id: 'a-3', placeId: 'p-2', name: 'NH Colony'),
@@ -32,65 +42,377 @@ final mockAreasList = [
 ];
 
 final mockProductsList = [
+  // Kitchen Appliances (cat-kat)
   const Product(
     id: 'pr-1',
     sku: 'MIX-PRE-3J',
     name: 'Prestige Mixer Grinder 3 Jar',
     brand: 'Prestige',
-    category: 'Kitchen Appliances',
+    categoryId: katCategoryId,
     minimumStock: 5,
     stock: 12,
-    price: 3200,
+    price: 320000,
+    description: 'Heavy-duty mixer grinder with 3 stainless steel jars',
   ),
   const Product(
     id: 'pr-2',
     sku: 'IND-PHI-HD',
     name: 'Philips Induction Cooktop HD4928',
     brand: 'Philips',
-    category: 'Kitchen Appliances',
+    categoryId: katCategoryId,
     minimumStock: 3,
     stock: 8,
-    price: 2800,
+    price: 280000,
+    description: 'Portable induction cooktop with touch controls',
   ),
   const Product(
     id: 'pr-3',
-    sku: 'REF-LG-190L',
-    name: 'LG 190L Single Door Refrigerator',
-    brand: 'LG',
-    category: 'Home Appliances',
-    minimumStock: 2,
-    stock: 4,
-    price: 16500,
+    sku: 'TOA-VID-2S',
+    name: 'Vidiem 2-Slice Toaster',
+    brand: 'Vidiem',
+    categoryId: katCategoryId,
+    minimumStock: 6,
+    stock: 15,
+    price: 95000,
+    description: 'Automatic pop-up toaster with 6 browning levels',
   ),
   const Product(
     id: 'pr-4',
-    sku: 'TV-SAM-32',
-    name: 'Samsung 32-inch Smart LED TV',
-    brand: 'Samsung',
-    category: 'Electronics',
-    minimumStock: 2,
-    stock: 0, // OUT OF STOCK
-    price: 14500,
+    sku: 'KET-BLA-1L',
+    name: 'Black+Decker Electric Kettle 1L',
+    brand: 'Black+Decker',
+    categoryId: katCategoryId,
+    minimumStock: 8,
+    stock: 3,
+    price: 75000,
+    description: 'Stainless steel electric kettle with auto shut-off',
   ),
   const Product(
     id: 'pr-5',
-    sku: 'WM-IFB-7KG',
-    name: 'IFB 7Kg Front Load Washing Machine',
-    brand: 'IFB',
-    category: 'Home Appliances',
-    minimumStock: 1,
-    stock: 3,
-    price: 28500,
+    sku: 'BLE-PR-750',
+    name: 'Preethi Blender 750W',
+    brand: 'Preethi',
+    categoryId: katCategoryId,
+    minimumStock: 4,
+    stock: 0,
+    price: 185000,
+    description: 'Powerful blender for smoothies and juices',
   ),
   const Product(
     id: 'pr-6',
+    sku: 'MIC-IFB-20L',
+    name: 'IFB Microwave Oven 20L',
+    brand: 'IFB',
+    categoryId: katCategoryId,
+    minimumStock: 2,
+    stock: 5,
+    price: 450000,
+    description: 'Convection microwave with multiple cooking modes',
+  ),
+
+  // Laundry (cat-laundry)
+  const Product(
+    id: 'pr-7',
+    sku: 'WM-IFB-7KG',
+    name: 'IFB 7Kg Front Load Washing Machine',
+    brand: 'IFB',
+    categoryId: laundryCateg,
+    minimumStock: 1,
+    stock: 3,
+    price: 2850000,
+    description: 'Front-loading automatic washing machine',
+  ),
+  const Product(
+    id: 'pr-8',
+    sku: 'WM-LG-8KG',
+    name: 'LG 8Kg Fully Automatic Top Load',
+    brand: 'LG',
+    categoryId: laundryCateg,
+    minimumStock: 1,
+    stock: 2,
+    price: 2200000,
+    description: 'Top-loading automatic washing machine with inverter',
+  ),
+  const Product(
+    id: 'pr-9',
+    sku: 'DRY-GODREJ',
+    name: 'Godrej Semi-Auto Washing Machine 6.5Kg',
+    brand: 'Godrej',
+    categoryId: laundryCateg,
+    minimumStock: 2,
+    stock: 8,
+    price: 680000,
+    description: 'Durable semi-automatic washing machine',
+  ),
+  const Product(
+    id: 'pr-10',
     sku: 'IRO-USHA-1K',
     name: 'Usha Dry Iron 1000W',
     brand: 'Usha',
-    category: 'Home Appliances',
+    categoryId: laundryCateg,
     minimumStock: 10,
     stock: 25,
-    price: 850,
+    price: 85000,
+    description: 'Lightweight electric iron for all fabric types',
+  ),
+  const Product(
+    id: 'pr-11',
+    sku: 'STM-PHILIPS-2K',
+    name: 'Philips Steam Iron 2000W',
+    brand: 'Philips',
+    categoryId: laundryCateg,
+    minimumStock: 5,
+    stock: 12,
+    price: 145000,
+    description: 'Steam iron with vertical steaming capability',
+  ),
+  const Product(
+    id: 'pr-12',
+    sku: 'DRY-AGARO',
+    name: 'Agaro Fabric Steamer',
+    brand: 'Agaro',
+    categoryId: laundryCateg,
+    minimumStock: 6,
+    stock: 0,
+    price: 120000,
+    description: 'Handheld fabric steamer for quick touch-ups',
+  ),
+
+  // Home Audio (cat-audio)
+  const Product(
+    id: 'pr-13',
+    sku: 'SPK-BT-30W',
+    name: 'boAt Stone 1200 Bluetooth Speaker 30W',
+    brand: 'boAt',
+    categoryId: audioCategoryId,
+    minimumStock: 8,
+    stock: 18,
+    price: 349000,
+    description: 'Portable Bluetooth speaker with 12-hour battery',
+  ),
+  const Product(
+    id: 'pr-14',
+    sku: 'SPEAKER-JBL',
+    name: 'JBL Go 3 Portable Speaker',
+    brand: 'JBL',
+    categoryId: audioCategoryId,
+    minimumStock: 10,
+    stock: 22,
+    price: 249000,
+    description: 'Compact waterproof speaker with ultra-portable design',
+  ),
+  const Product(
+    id: 'pr-15',
+    sku: 'HP-SONY-WH1000',
+    name: 'Sony WH-CH720N Wireless Headphones',
+    brand: 'Sony',
+    categoryId: audioCategoryId,
+    minimumStock: 5,
+    stock: 9,
+    price: 649000,
+    description: 'Noise-cancelling wireless headphones with 35-hour battery',
+  ),
+  const Product(
+    id: 'pr-16',
+    sku: 'SND-HF-QUICK',
+    name: 'Soundcore Space A40 Earbuds',
+    brand: 'Soundcore',
+    categoryId: audioCategoryId,
+    minimumStock: 12,
+    stock: 4,
+    price: 449000,
+    description: 'True wireless earbuds with active noise cancelling',
+  ),
+  const Product(
+    id: 'pr-17',
+    sku: 'SNDBAR-ONE',
+    name: 'One Plus Soundbar 20W',
+    brand: 'OnePlus',
+    categoryId: audioCategoryId,
+    minimumStock: 3,
+    stock: 0,
+    price: 799000,
+    description: 'Premium soundbar for TV and entertainment',
+  ),
+  const Product(
+    id: 'pr-18',
+    sku: 'MICRO-RODE-USB',
+    name: 'Rode NT-USB Mini Microphone',
+    brand: 'Rode',
+    categoryId: audioCategoryId,
+    minimumStock: 4,
+    stock: 7,
+    price: 89000,
+    description: 'Professional USB microphone for streaming and podcasting',
+  ),
+
+  // Lighting (cat-lighting)
+  const Product(
+    id: 'pr-19',
+    sku: 'LED-PHILIPS-9W',
+    name: 'Philips LED Bulb 9W B22',
+    brand: 'Philips',
+    categoryId: lightingCategoryId,
+    minimumStock: 50,
+    stock: 120,
+    price: 12500,
+    description: 'Energy-efficient LED bulb with 50,000-hour lifespan',
+  ),
+  const Product(
+    id: 'pr-20',
+    sku: 'LED-GODREJ-12W',
+    name: 'Godrej LED Bulb 12W E27',
+    brand: 'Godrej',
+    categoryId: lightingCategoryId,
+    minimumStock: 40,
+    stock: 95,
+    price: 14500,
+    description: '12W LED bulb for bright, efficient lighting',
+  ),
+  const Product(
+    id: 'pr-21',
+    sku: 'STRIP-RGB-5M',
+    name: 'RGB LED Strip Lights 5M',
+    brand: 'Generic',
+    categoryId: lightingCategoryId,
+    minimumStock: 10,
+    stock: 25,
+    price: 89000,
+    description: 'Color-changing LED strip with remote control',
+  ),
+  const Product(
+    id: 'pr-22',
+    sku: 'TUBE-LED-2FT',
+    name: 'LED Tube Light 2ft 18W',
+    brand: 'Surya',
+    categoryId: lightingCategoryId,
+    minimumStock: 15,
+    stock: 8,
+    price: 35000,
+    description: 'Bright T5 LED tube for office and home',
+  ),
+  const Product(
+    id: 'pr-23',
+    sku: 'LAMP-DESK-LED',
+    name: 'LED Desk Lamp 12W',
+    brand: 'Luminous',
+    categoryId: lightingCategoryId,
+    minimumStock: 8,
+    stock: 3,
+    price: 125000,
+    description: 'Adjustable LED desk lamp with dimming feature',
+  ),
+  const Product(
+    id: 'pr-24',
+    sku: 'BULB-SMART-WIZ',
+    name: 'Wipro Smart LED Bulb WiFi',
+    brand: 'Wipro',
+    categoryId: lightingCategoryId,
+    minimumStock: 6,
+    stock: 0,
+    price: 189000,
+    description: 'WiFi-enabled smart bulb with app control',
+  ),
+
+  // Cooling (cat-cooling)
+  const Product(
+    id: 'pr-25',
+    sku: 'FAN-ORIENT-400',
+    name: 'Orient Electric Ceiling Fan 400RPM',
+    brand: 'Orient',
+    categoryId: coolingCategoryId,
+    minimumStock: 5,
+    stock: 11,
+    price: 245000,
+    description: 'Energy-efficient ceiling fan with 3 speed controls',
+  ),
+  const Product(
+    id: 'pr-26',
+    sku: 'FAN-HAVELLS-1200',
+    name: 'Havells Table Fan 1200mm',
+    brand: 'Havells',
+    categoryId: coolingCategoryId,
+    minimumStock: 8,
+    stock: 19,
+    price: 185000,
+    description: 'Portable table fan with metal blades',
+  ),
+  const Product(
+    id: 'pr-27',
+    sku: 'AC-LG-1TON',
+    name: 'LG 1 Ton 3-Star Air Conditioner',
+    brand: 'LG',
+    categoryId: coolingCategoryId,
+    minimumStock: 1,
+    stock: 2,
+    price: 2200000,
+    description: '1 Ton inverter AC with Wi-Fi control',
+  ),
+  const Product(
+    id: 'pr-28',
+    sku: 'AC-CARRIER-1TON',
+    name: 'Carrier 1 Ton 5-Star AC',
+    brand: 'Carrier',
+    categoryId: coolingCategoryId,
+    minimumStock: 1,
+    stock: 1,
+    price: 2650000,
+    description: 'Premium 1-ton air conditioner with eco mode',
+  ),
+  const Product(
+    id: 'pr-29',
+    sku: 'COOLER-BOSS-TOWER',
+    name: 'Boss Tower Air Cooler 45L',
+    brand: 'Boss',
+    categoryId: coolingCategoryId,
+    minimumStock: 3,
+    stock: 0,
+    price: 485000,
+    description: 'Honeycomb cooling air cooler for large rooms',
+  ),
+  const Product(
+    id: 'pr-30',
+    sku: 'FAN-PORTABLE-USB',
+    name: 'Portable USB Fan Mini',
+    brand: 'Generic',
+    categoryId: coolingCategoryId,
+    minimumStock: 20,
+    stock: 45,
+    price: 39000,
+    description: 'Compact USB-powered portable fan',
+  ),
+];
+
+final mockCategoriesList = [
+  const Category(
+    id: katCategoryId,
+    name: 'Kitchen Appliances',
+    icon: 'frying-pan',
+    productCount: 6,
+  ),
+  const Category(
+    id: laundryCateg,
+    name: 'Laundry',
+    icon: 'shirt',
+    productCount: 6,
+  ),
+  const Category(
+    id: audioCategoryId,
+    name: 'Home Audio',
+    icon: 'speaker',
+    productCount: 6,
+  ),
+  const Category(
+    id: lightingCategoryId,
+    name: 'Lighting',
+    icon: 'lightbulb',
+    productCount: 6,
+  ),
+  const Category(
+    id: coolingCategoryId,
+    name: 'Cooling',
+    icon: 'wind',
+    productCount: 6,
   ),
 ];
 
@@ -103,6 +425,15 @@ final mockCustomersList = [
     alternatePhone: '9876543211',
     address: '12, North Street, Melur, Madurai - 625106',
     landmark: 'Near Ganesha Temple',
+    location: Location(lat: 10.0401, lng: 78.3312, label: 'Home'),
+    nominees: [
+      Nominee(id: 'n-1', name: 'Ramanathan', relation: 'Spouse', phone: '9123456789'),
+      Nominee(id: 'n-2', name: 'Karthik', relation: 'Son', phone: '9876543210'),
+    ],
+    idProofs: [
+      IdProof(id: 'id-1', type: 'Aadhaar', number: '1234 5678 9012'),
+      IdProof(id: 'id-2', type: 'Voter', number: 'ABC1234567'),
+    ],
     weekdayId: 'w-4', // Thursday
     placeId: 'p-1', // Melur
     areaId: 'a-1', // North Street
@@ -120,6 +451,10 @@ final mockCustomersList = [
     phone: '9443210987',
     address: '45B, Bazaar Lane, Melur, Madurai - 625106',
     landmark: 'Opposite Government School',
+    location: Location(lat: 10.0415, lng: 78.3350, label: 'Shop'),
+    nominees: [
+      Nominee(id: 'n-3', name: 'Chinnasamy', relation: 'Father'),
+    ],
     weekdayId: 'w-4', // Thursday
     placeId: 'p-1', // Melur
     areaId: 'a-2', // Bazaar Lane
@@ -136,6 +471,11 @@ final mockCustomersList = [
     phone: '9988776655',
     address: '8, NH Colony, Othakadai, Madurai - 625107',
     landmark: 'Beside Post Office',
+    location: Location(lat: 9.9575, lng: 78.1820),
+    nominees: [
+      Nominee(id: 'n-4', name: 'Rajendran', relation: 'Spouse'),
+      Nominee(id: 'n-5', name: 'Kavitha', relation: 'Daughter'),
+    ],
     weekdayId: 'w-4', // Thursday
     placeId: 'p-2', // Othakadai
     areaId: 'a-3', // NH Colony

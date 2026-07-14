@@ -24,12 +24,13 @@ mixin _$Product {
   String get sku => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   String get brand => throw _privateConstructorUsedError;
-  String get category => throw _privateConstructorUsedError;
+  String get categoryId => throw _privateConstructorUsedError;
   int get minimumStock => throw _privateConstructorUsedError;
   int get stock => throw _privateConstructorUsedError; // Current stock quantity
   int get price =>
-      throw _privateConstructorUsedError; // Default sales price (rupees)
+      throw _privateConstructorUsedError; // Price in paise (₹ × 100)
   String? get imageUrl => throw _privateConstructorUsedError;
+  String? get description => throw _privateConstructorUsedError;
 
   /// Serializes this Product to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -50,11 +51,12 @@ abstract class $ProductCopyWith<$Res> {
       String sku,
       String name,
       String brand,
-      String category,
+      String categoryId,
       int minimumStock,
       int stock,
       int price,
-      String? imageUrl});
+      String? imageUrl,
+      String? description});
 }
 
 /// @nodoc
@@ -76,11 +78,12 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
     Object? sku = null,
     Object? name = null,
     Object? brand = null,
-    Object? category = null,
+    Object? categoryId = null,
     Object? minimumStock = null,
     Object? stock = null,
     Object? price = null,
     Object? imageUrl = freezed,
+    Object? description = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -99,9 +102,9 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
           ? _value.brand
           : brand // ignore: cast_nullable_to_non_nullable
               as String,
-      category: null == category
-          ? _value.category
-          : category // ignore: cast_nullable_to_non_nullable
+      categoryId: null == categoryId
+          ? _value.categoryId
+          : categoryId // ignore: cast_nullable_to_non_nullable
               as String,
       minimumStock: null == minimumStock
           ? _value.minimumStock
@@ -119,6 +122,10 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
           ? _value.imageUrl
           : imageUrl // ignore: cast_nullable_to_non_nullable
               as String?,
+      description: freezed == description
+          ? _value.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -135,11 +142,12 @@ abstract class _$$ProductImplCopyWith<$Res> implements $ProductCopyWith<$Res> {
       String sku,
       String name,
       String brand,
-      String category,
+      String categoryId,
       int minimumStock,
       int stock,
       int price,
-      String? imageUrl});
+      String? imageUrl,
+      String? description});
 }
 
 /// @nodoc
@@ -159,11 +167,12 @@ class __$$ProductImplCopyWithImpl<$Res>
     Object? sku = null,
     Object? name = null,
     Object? brand = null,
-    Object? category = null,
+    Object? categoryId = null,
     Object? minimumStock = null,
     Object? stock = null,
     Object? price = null,
     Object? imageUrl = freezed,
+    Object? description = freezed,
   }) {
     return _then(_$ProductImpl(
       id: null == id
@@ -182,9 +191,9 @@ class __$$ProductImplCopyWithImpl<$Res>
           ? _value.brand
           : brand // ignore: cast_nullable_to_non_nullable
               as String,
-      category: null == category
-          ? _value.category
-          : category // ignore: cast_nullable_to_non_nullable
+      categoryId: null == categoryId
+          ? _value.categoryId
+          : categoryId // ignore: cast_nullable_to_non_nullable
               as String,
       minimumStock: null == minimumStock
           ? _value.minimumStock
@@ -202,6 +211,10 @@ class __$$ProductImplCopyWithImpl<$Res>
           ? _value.imageUrl
           : imageUrl // ignore: cast_nullable_to_non_nullable
               as String?,
+      description: freezed == description
+          ? _value.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -214,11 +227,12 @@ class _$ProductImpl implements _Product {
       required this.sku,
       required this.name,
       required this.brand,
-      required this.category,
+      required this.categoryId,
       required this.minimumStock,
       required this.stock,
       required this.price,
-      this.imageUrl});
+      this.imageUrl,
+      this.description});
 
   factory _$ProductImpl.fromJson(Map<String, dynamic> json) =>
       _$$ProductImplFromJson(json);
@@ -232,7 +246,7 @@ class _$ProductImpl implements _Product {
   @override
   final String brand;
   @override
-  final String category;
+  final String categoryId;
   @override
   final int minimumStock;
   @override
@@ -240,13 +254,15 @@ class _$ProductImpl implements _Product {
 // Current stock quantity
   @override
   final int price;
-// Default sales price (rupees)
+// Price in paise (₹ × 100)
   @override
   final String? imageUrl;
+  @override
+  final String? description;
 
   @override
   String toString() {
-    return 'Product(id: $id, sku: $sku, name: $name, brand: $brand, category: $category, minimumStock: $minimumStock, stock: $stock, price: $price, imageUrl: $imageUrl)';
+    return 'Product(id: $id, sku: $sku, name: $name, brand: $brand, categoryId: $categoryId, minimumStock: $minimumStock, stock: $stock, price: $price, imageUrl: $imageUrl, description: $description)';
   }
 
   @override
@@ -258,20 +274,22 @@ class _$ProductImpl implements _Product {
             (identical(other.sku, sku) || other.sku == sku) &&
             (identical(other.name, name) || other.name == name) &&
             (identical(other.brand, brand) || other.brand == brand) &&
-            (identical(other.category, category) ||
-                other.category == category) &&
+            (identical(other.categoryId, categoryId) ||
+                other.categoryId == categoryId) &&
             (identical(other.minimumStock, minimumStock) ||
                 other.minimumStock == minimumStock) &&
             (identical(other.stock, stock) || other.stock == stock) &&
             (identical(other.price, price) || other.price == price) &&
             (identical(other.imageUrl, imageUrl) ||
-                other.imageUrl == imageUrl));
+                other.imageUrl == imageUrl) &&
+            (identical(other.description, description) ||
+                other.description == description));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, sku, name, brand, category,
-      minimumStock, stock, price, imageUrl);
+  int get hashCode => Object.hash(runtimeType, id, sku, name, brand, categoryId,
+      minimumStock, stock, price, imageUrl, description);
 
   /// Create a copy of Product
   /// with the given fields replaced by the non-null parameter values.
@@ -295,11 +313,12 @@ abstract class _Product implements Product {
       required final String sku,
       required final String name,
       required final String brand,
-      required final String category,
+      required final String categoryId,
       required final int minimumStock,
       required final int stock,
       required final int price,
-      final String? imageUrl}) = _$ProductImpl;
+      final String? imageUrl,
+      final String? description}) = _$ProductImpl;
 
   factory _Product.fromJson(Map<String, dynamic> json) = _$ProductImpl.fromJson;
 
@@ -312,15 +331,17 @@ abstract class _Product implements Product {
   @override
   String get brand;
   @override
-  String get category;
+  String get categoryId;
   @override
   int get minimumStock;
   @override
   int get stock; // Current stock quantity
   @override
-  int get price; // Default sales price (rupees)
+  int get price; // Price in paise (₹ × 100)
   @override
   String? get imageUrl;
+  @override
+  String? get description;
 
   /// Create a copy of Product
   /// with the given fields replaced by the non-null parameter values.

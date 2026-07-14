@@ -17,6 +17,17 @@ _$CustomerImpl _$$CustomerImplFromJson(Map<String, dynamic> json) =>
       landmark: json['landmark'] as String?,
       photoUrl: json['photoUrl'] as String?,
       locationUrl: json['locationUrl'] as String?,
+      location: json['location'] == null
+          ? null
+          : Location.fromJson(json['location'] as Map<String, dynamic>),
+      nominees: (json['nominees'] as List<dynamic>?)
+              ?.map((e) => Nominee.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      idProofs: (json['idProofs'] as List<dynamic>?)
+              ?.map((e) => IdProof.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
       weekdayId: json['weekdayId'] as String,
       placeId: json['placeId'] as String,
       areaId: json['areaId'] as String,
@@ -39,6 +50,9 @@ Map<String, dynamic> _$$CustomerImplToJson(_$CustomerImpl instance) =>
       'landmark': instance.landmark,
       'photoUrl': instance.photoUrl,
       'locationUrl': instance.locationUrl,
+      'location': instance.location,
+      'nominees': instance.nominees,
+      'idProofs': instance.idProofs,
       'weekdayId': instance.weekdayId,
       'placeId': instance.placeId,
       'areaId': instance.areaId,

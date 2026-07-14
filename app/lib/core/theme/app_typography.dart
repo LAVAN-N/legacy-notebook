@@ -42,6 +42,12 @@ class AppTypography {
         height: 1.3,
       );
 
+  static TextStyle get headlineSmall => _displayBase.copyWith(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        height: 1.33,
+      );
+
   // ─── Title ─────────────────────────────────────────
   static TextStyle get titleLarge => _displayBase.copyWith(
         fontSize: 17,
@@ -70,6 +76,12 @@ class AppTypography {
 
   static TextStyle get bodyMedium => _displayBase.copyWith(
         fontSize: 15,
+        fontWeight: FontWeight.w400,
+        height: 1.5,
+      );
+
+  static TextStyle get bodySmall => _displayBase.copyWith(
+        fontSize: 13,
         fontWeight: FontWeight.w400,
         height: 1.5,
       );
@@ -132,11 +144,13 @@ class AppTypography {
         displayMedium: displayMedium,
         headlineLarge: headlineLarge,
         headlineMedium: headlineMedium,
+        headlineSmall: headlineSmall,
         titleLarge: titleLarge,
         titleMedium: titleMedium,
         titleSmall: titleSmall,
         bodyLarge: bodyLarge,
         bodyMedium: bodyMedium,
+        bodySmall: bodySmall,
         labelLarge: labelLarge,
         labelMedium: labelMedium,
         labelSmall: labelSmall,

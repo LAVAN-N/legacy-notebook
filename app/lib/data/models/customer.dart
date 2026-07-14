@@ -1,5 +1,9 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'location.dart';
+import 'nominee.dart';
+import 'id_proof.dart';
+
 part 'customer.freezed.dart';
 part 'customer.g.dart';
 
@@ -15,6 +19,9 @@ class Customer with _$Customer {
     String? landmark,
     String? photoUrl,
     String? locationUrl,
+    Location? location,
+    @Default([]) List<Nominee> nominees,
+    @Default([]) List<IdProof> idProofs,
     required String weekdayId,
     required String placeId,
     required String areaId,

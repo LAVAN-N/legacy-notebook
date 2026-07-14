@@ -29,12 +29,12 @@ class QuickActionsRow extends StatelessWidget {
         const SizedBox(width: AppSpacing.md),
         Expanded(
           child: _ActionTile(
-            label: 'New Sale',
+            label: 'New Credit Sale',
             icon: Icons.shopping_bag,
             color: colors.success,
             onTap: () {
-              // Go to the primary customer page to initiate a sale
-              context.go(Routes.customer('c-1'));
+              // Navigate to new client form
+              context.go(Routes.newClient);
             },
           ),
         ),

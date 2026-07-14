@@ -129,15 +129,21 @@ These are promoted from `MISTAKES.md` — if you re-introduce any, that's a repe
 - `useRouter` is a standalone hook, not `Route.useRouter()`.
 - Server functions: `.inputValidator()` **before** `.handler()`; handler body may only reference imports and locals *inside* the handler.
 
-**Flutter app (per `design-skill.md`):**
+**Flutter app (per `design-skill.md` + `specs/`):**
 - No `Colors.*` or hex literals in `features/` — use `AppColors` / `Theme.of(context)`.
 - No `supabase_flutter` import outside `data/repositories/supabase_*` stubs.
 - No screen > 400 LOC — extract widgets.
 - Every list has loading, empty, and error states.
-- No bottom navigation bar in v1.
+- **Bottom nav IS in v1** (4 tabs — see `specs/navigation-shell-spec.md`). This supersedes the older "no bottom nav" rule in `design-skill.md`; do not re-remove it.
 - No modal confirmation dialogs on save — snackbar + UNDO.
 
-**Supabase / Lovable Cloud:**
+**Navigation (both web & Flutter):**
+- The back target of any screen is derived from the **current URL params**, never from `new Date()` / "today". Weekday back-nav must return to the weekday in the URL. (See `specs/navigation-shell-spec.md` §4.)
+- Every screen below Dashboard renders a tappable breadcrumb chain reconstructed from URL params, not from navigation history.
+- Hardware back on the Dashboard route exits the app (double-tap-to-exit); elsewhere it pops to the parent crumb.
+- Bottom-nav tab switches use `replace`, never `push` — must not grow the back stack.
+
+**Supabase:**
 - Every `CREATE TABLE public.*` migration includes `GRANT` statements *before* `ENABLE ROW LEVEL SECURITY`.
 - Roles live in a separate `user_roles` table, checked via a `SECURITY DEFINER` `has_role()` function. Never on `profiles`.
 - Never call `supabaseAdmin` from a client-imported module at top level.

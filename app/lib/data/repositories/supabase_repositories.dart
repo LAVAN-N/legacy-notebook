@@ -45,6 +45,29 @@ class SupabaseCustomerRepository implements CustomerRepository {
 
   @override
   Future<void> addProofImage(String customerId, String proofType, String imageUrl) => throw UnimplementedError('wire in follow-up skill');
+
+  @override
+  Future<Customer> addCustomer({
+    required String name,
+    required String phone,
+    required String address,
+    required String weekdayId,
+    required String placeId,
+    required String areaId,
+    String? alternatePhone,
+    String? landmark,
+    String? notes,
+    int openingBalance = 0,
+  }) async {
+    // TODO: Implement Supabase write
+    throw UnimplementedError('wire in follow-up skill');
+  }
+
+  @override
+  Future<void> undoCustomer(String customerId) async {
+    // TODO: Implement Supabase undo
+    throw UnimplementedError('wire in follow-up skill');
+  }
 }
 
 class SupabaseRouteRepository implements RouteRepository {
@@ -92,6 +115,24 @@ class SupabaseRouteRepository implements RouteRepository {
 
   @override
   Future<int> getActualCollectionForArea(String areaId) => throw UnimplementedError('wire in follow-up skill');
+
+  @override
+  Future<Place> addPlace({
+    required String weekdayId,
+    required String name,
+  }) async {
+    // TODO: Implement Supabase write
+    throw UnimplementedError('wire in follow-up skill');
+  }
+
+  @override
+  Future<Area> addArea({
+    required String placeId,
+    required String name,
+  }) async {
+    // TODO: Implement Supabase write
+    throw UnimplementedError('wire in follow-up skill');
+  }
 }
 
 class SupabaseCollectionRepository implements CollectionRepository {

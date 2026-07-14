@@ -10,11 +10,12 @@ class Product with _$Product {
     required String sku,
     required String name,
     required String brand,
-    required String category,
+    required String categoryId,
     required int minimumStock,
     required int stock, // Current stock quantity
-    required int price, // Default sales price (rupees)
+    required int price, // Price in paise (₹ × 100)
     String? imageUrl,
+    String? description,
   }) = _Product;
 
   factory Product.fromJson(Map<String, dynamic> json) => _$ProductFromJson(json);

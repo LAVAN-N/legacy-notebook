@@ -23,4 +23,14 @@ abstract class RouteRepository {
   Future<int> getActualCollectionForWeekday(String weekdayId);
   Future<int> getActualCollectionForPlace(String placeId);
   Future<int> getActualCollectionForArea(String areaId);
+
+  Future<Place> addPlace({
+    required String weekdayId,
+    required String name,
+  });
+
+  Future<Area> addArea({
+    required String placeId,
+    required String name,
+  });
 }

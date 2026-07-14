@@ -29,6 +29,9 @@ mixin _$Customer {
   String? get landmark => throw _privateConstructorUsedError;
   String? get photoUrl => throw _privateConstructorUsedError;
   String? get locationUrl => throw _privateConstructorUsedError;
+  Location? get location => throw _privateConstructorUsedError;
+  List<Nominee> get nominees => throw _privateConstructorUsedError;
+  List<IdProof> get idProofs => throw _privateConstructorUsedError;
   String get weekdayId => throw _privateConstructorUsedError;
   String get placeId => throw _privateConstructorUsedError;
   String get areaId => throw _privateConstructorUsedError;
@@ -65,6 +68,9 @@ abstract class $CustomerCopyWith<$Res> {
       String? landmark,
       String? photoUrl,
       String? locationUrl,
+      Location? location,
+      List<Nominee> nominees,
+      List<IdProof> idProofs,
       String weekdayId,
       String placeId,
       String areaId,
@@ -74,6 +80,8 @@ abstract class $CustomerCopyWith<$Res> {
       String? dob,
       String? occupation,
       String? notes});
+
+  $LocationCopyWith<$Res>? get location;
 }
 
 /// @nodoc
@@ -100,6 +108,9 @@ class _$CustomerCopyWithImpl<$Res, $Val extends Customer>
     Object? landmark = freezed,
     Object? photoUrl = freezed,
     Object? locationUrl = freezed,
+    Object? location = freezed,
+    Object? nominees = null,
+    Object? idProofs = null,
     Object? weekdayId = null,
     Object? placeId = null,
     Object? areaId = null,
@@ -147,6 +158,18 @@ class _$CustomerCopyWithImpl<$Res, $Val extends Customer>
           ? _value.locationUrl
           : locationUrl // ignore: cast_nullable_to_non_nullable
               as String?,
+      location: freezed == location
+          ? _value.location
+          : location // ignore: cast_nullable_to_non_nullable
+              as Location?,
+      nominees: null == nominees
+          ? _value.nominees
+          : nominees // ignore: cast_nullable_to_non_nullable
+              as List<Nominee>,
+      idProofs: null == idProofs
+          ? _value.idProofs
+          : idProofs // ignore: cast_nullable_to_non_nullable
+              as List<IdProof>,
       weekdayId: null == weekdayId
           ? _value.weekdayId
           : weekdayId // ignore: cast_nullable_to_non_nullable
@@ -185,6 +208,20 @@ class _$CustomerCopyWithImpl<$Res, $Val extends Customer>
               as String?,
     ) as $Val);
   }
+
+  /// Create a copy of Customer
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $LocationCopyWith<$Res>? get location {
+    if (_value.location == null) {
+      return null;
+    }
+
+    return $LocationCopyWith<$Res>(_value.location!, (value) {
+      return _then(_value.copyWith(location: value) as $Val);
+    });
+  }
 }
 
 /// @nodoc
@@ -205,6 +242,9 @@ abstract class _$$CustomerImplCopyWith<$Res>
       String? landmark,
       String? photoUrl,
       String? locationUrl,
+      Location? location,
+      List<Nominee> nominees,
+      List<IdProof> idProofs,
       String weekdayId,
       String placeId,
       String areaId,
@@ -214,6 +254,9 @@ abstract class _$$CustomerImplCopyWith<$Res>
       String? dob,
       String? occupation,
       String? notes});
+
+  @override
+  $LocationCopyWith<$Res>? get location;
 }
 
 /// @nodoc
@@ -238,6 +281,9 @@ class __$$CustomerImplCopyWithImpl<$Res>
     Object? landmark = freezed,
     Object? photoUrl = freezed,
     Object? locationUrl = freezed,
+    Object? location = freezed,
+    Object? nominees = null,
+    Object? idProofs = null,
     Object? weekdayId = null,
     Object? placeId = null,
     Object? areaId = null,
@@ -285,6 +331,18 @@ class __$$CustomerImplCopyWithImpl<$Res>
           ? _value.locationUrl
           : locationUrl // ignore: cast_nullable_to_non_nullable
               as String?,
+      location: freezed == location
+          ? _value.location
+          : location // ignore: cast_nullable_to_non_nullable
+              as Location?,
+      nominees: null == nominees
+          ? _value._nominees
+          : nominees // ignore: cast_nullable_to_non_nullable
+              as List<Nominee>,
+      idProofs: null == idProofs
+          ? _value._idProofs
+          : idProofs // ignore: cast_nullable_to_non_nullable
+              as List<IdProof>,
       weekdayId: null == weekdayId
           ? _value.weekdayId
           : weekdayId // ignore: cast_nullable_to_non_nullable
@@ -338,6 +396,9 @@ class _$CustomerImpl implements _Customer {
       this.landmark,
       this.photoUrl,
       this.locationUrl,
+      this.location,
+      final List<Nominee> nominees = const [],
+      final List<IdProof> idProofs = const [],
       required this.weekdayId,
       required this.placeId,
       required this.areaId,
@@ -346,7 +407,9 @@ class _$CustomerImpl implements _Customer {
       this.guardianName,
       this.dob,
       this.occupation,
-      this.notes});
+      this.notes})
+      : _nominees = nominees,
+        _idProofs = idProofs;
 
   factory _$CustomerImpl.fromJson(Map<String, dynamic> json) =>
       _$$CustomerImplFromJson(json);
@@ -370,6 +433,26 @@ class _$CustomerImpl implements _Customer {
   @override
   final String? locationUrl;
   @override
+  final Location? location;
+  final List<Nominee> _nominees;
+  @override
+  @JsonKey()
+  List<Nominee> get nominees {
+    if (_nominees is EqualUnmodifiableListView) return _nominees;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_nominees);
+  }
+
+  final List<IdProof> _idProofs;
+  @override
+  @JsonKey()
+  List<IdProof> get idProofs {
+    if (_idProofs is EqualUnmodifiableListView) return _idProofs;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_idProofs);
+  }
+
+  @override
   final String weekdayId;
   @override
   final String placeId;
@@ -391,7 +474,7 @@ class _$CustomerImpl implements _Customer {
 
   @override
   String toString() {
-    return 'Customer(id: $id, customerCode: $customerCode, name: $name, phone: $phone, alternatePhone: $alternatePhone, address: $address, landmark: $landmark, photoUrl: $photoUrl, locationUrl: $locationUrl, weekdayId: $weekdayId, placeId: $placeId, areaId: $areaId, sequenceNumber: $sequenceNumber, status: $status, guardianName: $guardianName, dob: $dob, occupation: $occupation, notes: $notes)';
+    return 'Customer(id: $id, customerCode: $customerCode, name: $name, phone: $phone, alternatePhone: $alternatePhone, address: $address, landmark: $landmark, photoUrl: $photoUrl, locationUrl: $locationUrl, location: $location, nominees: $nominees, idProofs: $idProofs, weekdayId: $weekdayId, placeId: $placeId, areaId: $areaId, sequenceNumber: $sequenceNumber, status: $status, guardianName: $guardianName, dob: $dob, occupation: $occupation, notes: $notes)';
   }
 
   @override
@@ -413,6 +496,10 @@ class _$CustomerImpl implements _Customer {
                 other.photoUrl == photoUrl) &&
             (identical(other.locationUrl, locationUrl) ||
                 other.locationUrl == locationUrl) &&
+            (identical(other.location, location) ||
+                other.location == location) &&
+            const DeepCollectionEquality().equals(other._nominees, _nominees) &&
+            const DeepCollectionEquality().equals(other._idProofs, _idProofs) &&
             (identical(other.weekdayId, weekdayId) ||
                 other.weekdayId == weekdayId) &&
             (identical(other.placeId, placeId) || other.placeId == placeId) &&
@@ -430,26 +517,30 @@ class _$CustomerImpl implements _Customer {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      customerCode,
-      name,
-      phone,
-      alternatePhone,
-      address,
-      landmark,
-      photoUrl,
-      locationUrl,
-      weekdayId,
-      placeId,
-      areaId,
-      sequenceNumber,
-      status,
-      guardianName,
-      dob,
-      occupation,
-      notes);
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        id,
+        customerCode,
+        name,
+        phone,
+        alternatePhone,
+        address,
+        landmark,
+        photoUrl,
+        locationUrl,
+        location,
+        const DeepCollectionEquality().hash(_nominees),
+        const DeepCollectionEquality().hash(_idProofs),
+        weekdayId,
+        placeId,
+        areaId,
+        sequenceNumber,
+        status,
+        guardianName,
+        dob,
+        occupation,
+        notes
+      ]);
 
   /// Create a copy of Customer
   /// with the given fields replaced by the non-null parameter values.
@@ -478,6 +569,9 @@ abstract class _Customer implements Customer {
       final String? landmark,
       final String? photoUrl,
       final String? locationUrl,
+      final Location? location,
+      final List<Nominee> nominees,
+      final List<IdProof> idProofs,
       required final String weekdayId,
       required final String placeId,
       required final String areaId,
@@ -509,6 +603,12 @@ abstract class _Customer implements Customer {
   String? get photoUrl;
   @override
   String? get locationUrl;
+  @override
+  Location? get location;
+  @override
+  List<Nominee> get nominees;
+  @override
+  List<IdProof> get idProofs;
   @override
   String get weekdayId;
   @override

@@ -17,9 +17,18 @@ import 'widgets/financial_summary_block.dart';
 import 'widgets/timeline_entry_tile.dart';
 
 class CustomerDetailScreen extends ConsumerWidget {
-  const CustomerDetailScreen({super.key, required this.customerId});
+  const CustomerDetailScreen({
+    super.key, 
+    required this.customerId,
+    this.weekday = 'Monday',
+    this.placeId = '',
+    this.areaId = '',
+  });
 
   final String customerId;
+  final String weekday;
+  final String placeId;
+  final String areaId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,10 +49,6 @@ class CustomerDetailScreen extends ConsumerWidget {
         final timeline = data.timeline;
 
         return AppScaffold(
-          appBarLeading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.go(Routes.area(customer.areaId)),
-          ),
           title: Text(
             customer.name,
             style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
@@ -139,7 +144,7 @@ class CustomerDetailScreen extends ConsumerWidget {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => context.push(Routes.sale(customerId)),
+                    onPressed: () => context.push(Routes.sale(weekday, placeId, areaId, customerId)),
                     icon: const Icon(Icons.shopping_bag),
                     label: const Text('NEW SALE'),
                     style: OutlinedButton.styleFrom(
@@ -151,7 +156,7 @@ class CustomerDetailScreen extends ConsumerWidget {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => context.push(Routes.collect(customerId)),
+                    onPressed: () => context.push(Routes.collect(weekday, placeId, areaId, customerId)),
                     icon: const Icon(Icons.wallet_giftcard),
                     label: const Text('COLLECT'),
                     style: ElevatedButton.styleFrom(

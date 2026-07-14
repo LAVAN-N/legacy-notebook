@@ -26,6 +26,9 @@ dependencies:
   # Fonts & Icons
   google_fonts: ^6.2.1
 
+  # Storage
+  shared_preferences: ^2.2.2
+
   # Utilities
   intl: ^0.20.2
   url_launcher: ^6.2.5
