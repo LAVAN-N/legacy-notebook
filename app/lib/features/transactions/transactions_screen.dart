@@ -36,16 +36,17 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   void _updateFilters({String? kind, String? range, String? q}) {
     final uri = GoRouterState.of(context).uri;
     final newParams = Map<String, String>.from(uri.queryParameters);
-    
+
     if (kind != null) newParams['kind'] = kind;
     if (range != null) newParams['range'] = range;
     if (q != null) newParams['q'] = q;
-    
+
     if (newParams['kind'] == 'All') newParams.remove('kind');
     if (newParams['range'] == 'Today') newParams.remove('range');
     if (newParams['q'] == '') newParams.remove('q');
-    
-    final newUri = uri.replace(queryParameters: newParams.isEmpty ? null : newParams);
+
+    final newUri =
+        uri.replace(queryParameters: newParams.isEmpty ? null : newParams);
     context.go(newUri.toString());
   }
 
@@ -67,18 +68,26 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   children: [
                     Text(
                       'Filters',
-                      style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
+                      style: AppTypography.headlineMedium
+                          .copyWith(color: colors.foreground),
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     Text(
                       'Date range',
-                      style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.w600, color: colors.foreground),
+                      style: AppTypography.titleSmall.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colors.foreground),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Wrap(
                       spacing: AppSpacing.sm,
                       runSpacing: AppSpacing.sm,
-                      children: ['Today', 'This week', 'This month', 'Custom...'].map((range) {
+                      children: [
+                        'Today',
+                        'This week',
+                        'This month',
+                        'Custom...'
+                      ].map((range) {
                         final isSelected = tempRange == range;
                         return FilterChip(
                           label: Text(range),
@@ -91,8 +100,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                           backgroundColor: colors.surface,
                           selectedColor: colors.primary.withOpacity(0.1),
                           labelStyle: TextStyle(
-                            color: isSelected ? colors.primary : colors.foreground,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            color:
+                                isSelected ? colors.primary : colors.foreground,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                         );
                       }).toList(),
@@ -141,10 +153,13 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final uri = GoRouterState.of(context).uri;
     final kindParam = uri.queryParameters['kind'] ?? 'All';
     final rangeParam = uri.queryParameters['range'] ?? 'Today';
-    final hasActiveFilters = kindParam != 'All' || rangeParam != 'Today' || _searchController.text.isNotEmpty;
+    final hasActiveFilters = kindParam != 'All' ||
+        rangeParam != 'Today' ||
+        _searchController.text.isNotEmpty;
 
     // Dummy logic for empty state demonstration
-    final showEmpty = hasActiveFilters && kindParam == 'Carry-forward'; // Just to show empty state
+    final showEmpty = hasActiveFilters &&
+        kindParam == 'Carry-forward'; // Just to show empty state
 
     return AppScaffold(
       title: Text(
@@ -182,7 +197,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Row(
-              children: ['All', 'Payments', 'Partial', 'Carry-forward', 'Sales'].map((kind) {
+              children: ['All', 'Payments', 'Partial', 'Carry-forward', 'Sales']
+                  .map((kind) {
                 final isSelected = kindParam == kind;
                 return Padding(
                   padding: const EdgeInsets.only(right: AppSpacing.sm),
@@ -196,7 +212,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     selectedColor: colors.primary.withOpacity(0.1),
                     labelStyle: TextStyle(
                       color: isSelected ? colors.primary : colors.foreground,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
                 );
@@ -215,18 +232,21 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.search_off, size: 48, color: colors.mutedFg),
+                          Icon(Icons.search_off,
+                              size: 48, color: colors.mutedFg),
                           const SizedBox(height: AppSpacing.md),
                           Text(
                             'No transactions match these filters.',
-                            style: AppTypography.bodyLarge.copyWith(color: colors.foreground),
+                            style: AppTypography.bodyLarge
+                                .copyWith(color: colors.foreground),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           OutlinedButton(
                             onPressed: () {
                               _searchController.clear();
-                              _updateFilters(kind: 'All', range: 'Today', q: '');
+                              _updateFilters(
+                                  kind: 'All', range: 'Today', q: '');
                             },
                             child: const Text('Clear filters'),
                           ),
@@ -236,31 +256,44 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   )
                 : ListView.separated(
                     itemCount: 5,
-                    separatorBuilder: (context, index) => const Divider(height: 1),
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final isSale = index % 3 == 0;
                       final isPartial = index % 3 == 1;
-                      final amount = isSale ? '₹14,500' : (isPartial ? '₹2,000' : '₹5,000');
-                      
+                      final amount = isSale
+                          ? '₹14,500'
+                          : (isPartial ? '₹2,000' : '₹5,000');
+
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: isSale 
-                              ? colors.primary.withOpacity(0.1) 
-                              : (isPartial ? Colors.orange.withOpacity(0.1) : Colors.green.withOpacity(0.1)),
+                          backgroundColor: isSale
+                              ? colors.primary.withOpacity(0.1)
+                              : (isPartial
+                                  ? Colors.orange.withOpacity(0.1)
+                                  : Colors.green.withOpacity(0.1)),
                           child: Icon(
                             isSale ? Icons.shopping_cart : Icons.payments,
-                            color: isSale ? colors.primary : (isPartial ? Colors.orange : Colors.green),
+                            color: isSale
+                                ? colors.primary
+                                : (isPartial ? Colors.orange : Colors.green),
                           ),
                         ),
-                        title: const Text('Lakshmi Priya', style: TextStyle(fontWeight: FontWeight.w600)),
+                        title: const Text('Lakshmi Priya',
+                            style: TextStyle(fontWeight: FontWeight.w600)),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(isSale ? 'Credit sale · 2 items · +₹14,500' : (isPartial ? 'Partial Payment · North St, Melur' : 'Payment · North St, Melur')),
+                            Text(isSale
+                                ? 'Credit sale · 2 items · +₹14,500'
+                                : (isPartial
+                                    ? 'Partial Payment · North St, Melur'
+                                    : 'Payment · North St, Melur')),
                             const SizedBox(height: 4),
                             Text(
                               index == 0 ? '2h ago' : 'Yesterday',
-                              style: AppTypography.bodySmall.copyWith(color: colors.mutedFg),
+                              style: AppTypography.bodySmall
+                                  .copyWith(color: colors.mutedFg),
                             ),
                           ],
                         ),
@@ -278,9 +311,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     },
                   ),
           ),
-          
+
           // Bottom padding for nav
-          const SizedBox(height: 96),
+          const SizedBox(height: AppSpacing.md),
         ],
       ),
     );

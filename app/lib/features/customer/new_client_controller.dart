@@ -7,6 +7,9 @@ import '../../data/repositories/customer_repository.dart';
 import '../../data/repositories/route_repository.dart';
 import '../../data/providers.dart';
 import '../dashboard/controllers/dashboard_controller.dart';
+import '../../data/models/nominee.dart';
+import '../../data/models/id_proof.dart';
+import '../../data/models/location.dart';
 
 class NewClientFormState {
   NewClientFormState({
@@ -19,13 +22,9 @@ class NewClientFormState {
     this.alternatePhone = '',
     this.address = '',
     this.landmark = '',
-    this.nomineeName = '',
-    this.nomineeRelation = '',
-    this.idProofType = '',
-    this.idProofNumber = '',
-    this.openingBalance = 0,
-    this.visitTime = 'Anytime',
-    this.smsReminders = true,
+    this.nominees = const [],
+    this.idProofs = const [],
+    this.location,
     this.errors = const {},
     this.places = const [],
     this.areas = const [],
@@ -41,13 +40,9 @@ class NewClientFormState {
   final String alternatePhone;
   final String address;
   final String landmark;
-  final String nomineeName;
-  final String nomineeRelation;
-  final String idProofType;
-  final String idProofNumber;
-  final int openingBalance;
-  final String visitTime;
-  final bool smsReminders;
+  final List<Nominee> nominees;
+  final List<IdProof> idProofs;
+  final Location? location;
   final Map<String, String> errors;
   final List<Place> places;
   final List<Area> areas;
@@ -63,13 +58,9 @@ class NewClientFormState {
     String? alternatePhone,
     String? address,
     String? landmark,
-    String? nomineeName,
-    String? nomineeRelation,
-    String? idProofType,
-    String? idProofNumber,
-    int? openingBalance,
-    String? visitTime,
-    bool? smsReminders,
+    List<Nominee>? nominees,
+    List<IdProof>? idProofs,
+    Location? location,
     Map<String, String>? errors,
     List<Place>? places,
     List<Area>? areas,
@@ -85,13 +76,9 @@ class NewClientFormState {
       alternatePhone: alternatePhone ?? this.alternatePhone,
       address: address ?? this.address,
       landmark: landmark ?? this.landmark,
-      nomineeName: nomineeName ?? this.nomineeName,
-      nomineeRelation: nomineeRelation ?? this.nomineeRelation,
-      idProofType: idProofType ?? this.idProofType,
-      idProofNumber: idProofNumber ?? this.idProofNumber,
-      openingBalance: openingBalance ?? this.openingBalance,
-      visitTime: visitTime ?? this.visitTime,
-      smsReminders: smsReminders ?? this.smsReminders,
+      nominees: nominees ?? this.nominees,
+      idProofs: idProofs ?? this.idProofs,
+      location: location ?? this.location,
       errors: errors ?? this.errors,
       places: places ?? this.places,
       areas: areas ?? this.areas,
@@ -190,32 +177,55 @@ class NewClientController extends StateNotifier<NewClientFormState> {
     state = state.copyWith(landmark: landmark, errors: {});
   }
 
-  void setNomineeName(String name) {
-    state = state.copyWith(nomineeName: name);
+  void addNominee(Nominee nominee) {
+    if (state.nominees.length >= 3) return;
+    state = state.copyWith(nominees: [...state.nominees, nominee]);
   }
 
-  void setNomineeRelation(String relation) {
-    state = state.copyWith(nomineeRelation: relation);
+  void updateNominee(String id, Nominee updatedNominee) {
+    final newNominees = state.nominees.map((n) => n.id == id ? updatedNominee : n).toList();
+    state = state.copyWith(nominees: newNominees);
   }
 
-  void setIdProofType(String type) {
-    state = state.copyWith(idProofType: type);
+  void removeNominee(String id) {
+    final newNominees = state.nominees.where((n) => n.id != id).toList();
+    state = state.copyWith(nominees: newNominees);
   }
 
-  void setIdProofNumber(String number) {
-    state = state.copyWith(idProofNumber: number);
+  void setLocation(Location? location) {
+    if (location == null) {
+      state = NewClientFormState(
+        weekdayId: state.weekdayId,
+        selectedWeekday: state.selectedWeekday,
+        placeId: state.placeId,
+        areaId: state.areaId,
+        name: state.name,
+        phone: state.phone,
+        alternatePhone: state.alternatePhone,
+        address: state.address,
+        landmark: state.landmark,
+        nominees: state.nominees,
+        idProofs: state.idProofs,
+        location: null,
+        errors: state.errors,
+        places: state.places,
+        areas: state.areas,
+        isLoading: state.isLoading,
+      );
+    } else {
+      state = state.copyWith(location: location);
+    }
   }
 
-  void setOpeningBalance(int amount) {
-    state = state.copyWith(openingBalance: amount, errors: {});
+  void addIdProof(IdProof proof) {
+    if (state.idProofs.length >= 3) return;
+    state = state.copyWith(idProofs: [...state.idProofs, proof]);
   }
 
-  void setVisitTime(String time) {
-    state = state.copyWith(visitTime: time);
-  }
-
-  void toggleSmsReminders(bool value) {
-    state = state.copyWith(smsReminders: value);
+  void removeIdProof(String id) {
+    state = state.copyWith(
+      idProofs: state.idProofs.where((p) => p.id != id).toList(),
+    );
   }
 
   Future<Place?> addNewPlace(String placeName) async {
@@ -288,13 +298,6 @@ class NewClientController extends StateNotifier<NewClientFormState> {
       errors['address'] = 'Address must be ≤ 240 characters';
     }
 
-    // Opening balance
-    if (state.openingBalance < 0) {
-      errors['openingBalance'] = 'Opening balance cannot be negative';
-    } else if (state.openingBalance > 1000000) {
-      errors['openingBalance'] = 'Opening balance cannot exceed ₹10,00,000';
-    }
-
     return errors;
   }
 
@@ -317,10 +320,9 @@ class NewClientController extends StateNotifier<NewClientFormState> {
         weekdayId: state.weekdayId,
         placeId: state.placeId,
         areaId: state.areaId,
-        notes: state.nomineeName.isNotEmpty
-            ? 'Nominee: ${state.nomineeName} (${ state.nomineeRelation})'
-            : null,
-        openingBalance: state.openingBalance,
+        nominees: state.nominees,
+        idProofs: state.idProofs,
+        location: state.location,
       );
 
       state = state.copyWith(isLoading: false);
@@ -357,10 +359,9 @@ class NewClientController extends StateNotifier<NewClientFormState> {
         weekdayId: state.weekdayId,
         placeId: state.placeId,
         areaId: state.areaId,
-        notes: state.nomineeName.isNotEmpty
-            ? 'Nominee: ${state.nomineeName} (${state.nomineeRelation})'
-            : null,
-        openingBalance: state.openingBalance,
+        nominees: state.nominees,
+        idProofs: state.idProofs,
+        location: state.location,
       );
 
       state = state.copyWith(isLoading: false);
@@ -392,7 +393,7 @@ class NewClientController extends StateNotifier<NewClientFormState> {
         state.phone.isNotEmpty ||
         state.address.isNotEmpty ||
         state.placeId.isNotEmpty ||
-        state.openingBalance > 0;
+        state.nominees.isNotEmpty;
   }
 }
 

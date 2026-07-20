@@ -6,6 +6,9 @@ import '../models/place.dart';
 import '../models/area.dart';
 import '../models/collection.dart';
 import '../models/product.dart';
+import '../models/location.dart';
+import '../models/nominee.dart';
+import '../models/id_proof.dart';
 import 'customer_repository.dart';
 import 'route_repository.dart';
 import 'collection_repository.dart';
@@ -58,6 +61,9 @@ class SupabaseCustomerRepository implements CustomerRepository {
     String? landmark,
     String? notes,
     int openingBalance = 0,
+    List<Nominee>? nominees,
+    List<IdProof>? idProofs,
+    Location? location,
   }) async {
     // TODO: Implement Supabase write
     throw UnimplementedError('wire in follow-up skill');

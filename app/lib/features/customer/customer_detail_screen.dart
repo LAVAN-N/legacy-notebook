@@ -82,23 +82,7 @@ class CustomerDetailScreen extends ConsumerWidget {
                   FinancialSummaryBlock(outstanding: outstanding),
                   const SizedBox(height: AppSpacing.lg),
 
-                  // Document / Proof section
-                  Card(
-                    child: ListTile(
-                      leading: Icon(Icons.description, color: colors.primary),
-                      title: Text(
-                        'Upload Identity Proof',
-                        style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                      subtitle: Text(
-                        'Aadhaar, Ration Card or driving license',
-                        style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => _showUploadProofSheet(context, ref),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
+
 
                   // Timeline Section
                   const SectionHeader(title: 'Unified Activity History'),
@@ -241,54 +225,5 @@ class CustomerDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _showUploadProofSheet(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        final colors = context.colors;
-        return Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Select ID Proof Document',
-                style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: Icon(Icons.notes, color: colors.primary),
-                title: const Text('Aadhaar Card'),
-                onTap: () => _uploadProof(context, ref, 'Aadhaar'),
-              ),
-              ListTile(
-                leading: Icon(Icons.description, color: colors.primary),
-                title: const Text('Ration Card'),
-                onTap: () => _uploadProof(context, ref, 'Ration Card'),
-              ),
-              ListTile(
-                leading: Icon(Icons.notes, color: colors.primary),
-                title: const Text('Driving License'),
-                onTap: () => _uploadProof(context, ref, 'Driving License'),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
-  void _uploadProof(BuildContext context, WidgetRef ref, String type) async {
-    Navigator.pop(context);
-    // Mock save image URL
-    await ref
-        .read(customerDetailControllerProvider(customerId).notifier)
-        .addProof(type, 'https://placeholder.com/proof.png');
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Successfully uploaded $type proof copy')),
-    );
-  }
 }

@@ -1,6 +1,9 @@
 import '../models/customer.dart';
 import '../models/outstanding.dart';
 import '../models/activity.dart';
+import '../models/location.dart';
+import '../models/nominee.dart';
+import '../models/id_proof.dart';
 
 abstract class CustomerRepository {
   Stream<List<Customer>> watchCustomersByArea(String areaId);
@@ -29,6 +32,9 @@ abstract class CustomerRepository {
     String? landmark,
     String? notes,
     int openingBalance = 0,
+    List<Nominee>? nominees,
+    List<IdProof>? idProofs,
+    Location? location,
   });
 
   Future<void> undoCustomer(String customerId);

@@ -12,6 +12,9 @@ import '../models/collection.dart';
 import '../models/product.dart';
 import '../models/sale.dart';
 import '../models/sale_item.dart';
+import '../models/location.dart';
+import '../models/nominee.dart';
+import '../models/id_proof.dart';
 import '../repositories/customer_repository.dart';
 import '../repositories/route_repository.dart';
 import '../repositories/collection_repository.dart';
@@ -201,24 +204,41 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
 
   @override
   Future<void> addNominee(String customerId, String name, String phone, String relation) async {
-    // Nominees stored inside mock customer profile json/notes in memory
     final index = _customers.indexWhere((c) => c.id == customerId);
     if (index != -1) {
       final old = _customers[index];
-      final newNotes = '${old.notes ?? ''}\nNominee: $name ($relation, $phone)';
-      _customers[index] = old.copyWith(notes: newNotes);
+      final newNominee = Nominee(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: name,
+        phone: phone,
+        relation: relation,
+      );
+      _customers[index] = old.copyWith(
+        nominees: [...old.nominees, newNominee],
+      );
       _syncController();
     }
   }
 
   @override
   Future<void> addProofImage(String customerId, String proofType, String imageUrl) async {
-    // Proof images stored inside mock customer profile json/notes in memory
     final index = _customers.indexWhere((c) => c.id == customerId);
     if (index != -1) {
       final old = _customers[index];
-      final newNotes = '${old.notes ?? ''}\nProof: $proofType ($imageUrl)';
-      _customers[index] = old.copyWith(notes: newNotes);
+      final newProof = IdProof(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        type: proofType,
+        number: 'DOC-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+        document: IdProofDocument(
+          filename: imageUrl.split('/').last,
+          mimeType: imageUrl.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
+          sizeBytes: 1024 * 500,
+          localUri: imageUrl,
+        ),
+      );
+      _customers[index] = old.copyWith(
+        idProofs: [...old.idProofs, newProof],
+      );
       _syncController();
     }
   }
@@ -226,6 +246,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   /// Add a new customer to the repository.
   /// If [openingBalance] > 0, creates a synthetic SALE row with [kind=SALE, saleType=CREDIT, total=opening, advance=0, creditAdded=opening].
   /// Returns the new customer with generated [id].
+  @override
   Future<Customer> addCustomer({
     required String name,
     required String phone,
@@ -237,6 +258,9 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     String? landmark,
     String? notes,
     int openingBalance = 0,
+    List<Nominee>? nominees,
+    List<IdProof>? idProofs,
+    Location? location,
   }) async {
     // Generate UUID-like ID
     final customerId = 'c-${DateTime.now().millisecondsSinceEpoch}-${_customers.length + 1}';
@@ -263,6 +287,9 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
       sequenceNumber: maxSeq + 1,
       status: 'ACTIVE',
       notes: notes,
+      nominees: nominees ?? const [],
+      idProofs: idProofs ?? const [],
+      location: location,
     );
 
     _customers.add(newCustomer);
@@ -290,7 +317,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     return newCustomer;
   }
 
-  /// Delete a customer (used for UNDO operations).
+  @override
   Future<void> undoCustomer(String customerId) async {
     _customers.removeWhere((c) => c.id == customerId);
     // Also remove any opening balance sale
@@ -298,7 +325,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     _syncController();
   }
 
-  /// Add a new place to a weekday.
+  @override
   Future<Place> addPlace({
     required String weekdayId,
     required String name,
@@ -317,7 +344,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     return newPlace;
   }
 
-  /// Add a new area to a place.
+  @override
   Future<Area> addArea({
     required String placeId,
     required String name,

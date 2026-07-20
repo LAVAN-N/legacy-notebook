@@ -1,123 +1,822 @@
-Analyzing app...                                                
+Analyzing app...
 
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\core\theme\app_theme.dart:87:43 - deprecated_member_use
-   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart'. Try removing the import directive - lib\core\theme\app_typography.dart:1:8 - unnecessary_import
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\core\widgets\app_scaffold.dart:95:46 - deprecated_member_use
-warning - Unused import: '../theme/app_colors.dart'. Try removing the import directive - lib\core\widgets\avatar.dart:3:8 - unused_import
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\core\widgets\empty_state.dart:34:37 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\core\widgets\floating_bottom_nav.dart:39:37 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\core\widgets\floating_bottom_nav.dart:43:39 - deprecated_member_use
-warning - Unused import: '../theme/app_spacing.dart'. Try removing the import directive - lib\core\widgets\section_header.dart:4:8 - unused_import
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\core\widgets\sync_status_indicator.dart:103:37 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\core\widgets\tag_chip.dart:44:29 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\core\widgets\tag_chip.dart:50:29 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\core\widgets\tag_chip.dart:56:29 - deprecated_member_use
-warning - Unused import: '../models/sale_item.dart'. Try removing the import directive - lib\data\mock\mock_repository.dart:14:8 - unused_import
-   info - The member 'addCustomer' overrides an inherited member but isn't annotated with '@override'. Try adding the '@override' annotation - lib\data\mock\mock_repository.dart:229:20 - annotate_overrides
-   info - The member 'undoCustomer' overrides an inherited member but isn't annotated with '@override'. Try adding the '@override' annotation - lib\data\mock\mock_repository.dart:294:16 - annotate_overrides
-   info - The member 'addPlace' overrides an inherited member but isn't annotated with '@override'. Try adding the '@override' annotation - lib\data\mock\mock_repository.dart:302:17 - annotate_overrides
-   info - The member 'addArea' overrides an inherited member but isn't annotated with '@override'. Try adding the '@override' annotation - lib\data\mock\mock_repository.dart:321:16 - annotate_overrides
-warning - Unused import: 'collection.dart'. Try removing the import directive - lib\data\models\activity.dart:2:8 - unused_import
-warning - Unused import: 'sale.dart'. Try removing the import directive - lib\data\models\activity.dart:3:8 - unused_import
-warning - Unused import: 'sale_item.dart'. Try removing the import directive - lib\data\models\activity.dart:4:8 - unused_import
-warning - Unused import: 'repositories/supabase_repositories.dart'. Try removing the import directive - lib\data\providers.dart:7:8 - unused_import
-warning - Unused import: '../models/sale.dart'. Try removing the import directive - lib\data\repositories\sale_repository.dart:1:8 - unused_import
-warning - Unused import: '../models/sale_item.dart'. Try removing the import directive - lib\data\repositories\sale_repository.dart:2:8 - unused_import
-warning - Unused import: 'package:go_router/go_router.dart'. Try removing the import directive - lib\features\collection\collect_screen.dart:3:8 - unused_import
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\collection\collect_screen.dart:300:37 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\collection\collect_screen.dart:356:40 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\collection\collect_screen.dart:439:39 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\collection\collect_screen.dart:470:37 - deprecated_member_use
-warning - Unused import: 'package:flutter/material.dart'. Try removing the import directive - lib\features\collection\controllers\collect_controller.dart:1:8 - unused_import
-warning - Unused import: '/data/repositories/customer_repository.dart'. Try removing the import directive - lib\features\collection\controllers\collect_controller.dart:5:8 - unused_import
-warning - Unused import: '/data/repositories/collection_repository.dart'. Try removing the import directive - lib\features\collection\controllers\collect_controller.dart:6:8 - unused_import
-   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\features\collection\controllers\collect_controller.dart:55:15 - prefer_const_constructors
-warning - Unused import: '../../../data/repositories/customer_repository.dart'. Try removing the import directive - lib\features\customer\controllers\customer_controller.dart:5:8 - unused_import
-warning - Unused import: '../../core/widgets/loading_skeleton.dart'. Try removing the import directive - lib\features\customer\customer_detail_screen.dart:9:8 - unused_import
-   info - Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check - lib\features\customer\customer_detail_screen.dart:74:25 - use_build_context_synchronously
-   info - Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check - lib\features\customer\customer_detail_screen.dart:232:35 - use_build_context_synchronously
-   info - Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check - lib\features\customer\customer_detail_screen.dart:233:42 - use_build_context_synchronously
-   info - Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check - lib\features\customer\customer_detail_screen.dart:294:26 - use_build_context_synchronously
-warning - Unused import: '../../data/models/weekday.dart'. Try removing the import directive - lib\features\customer\new_client_controller.dart:5:8 - unused_import
-   info - 'StateNotifierProviderRef' is deprecated and shouldn't be used. will be removed in 3.0.0. Use Ref instead. Try replacing the use of the deprecated member with the replacement - lib\features\customer\new_client_controller.dart:114:9 - deprecated_member_use
-warning - Unused import: '../../core/utils/formatters.dart'. Try removing the import directive - lib\features\customer\new_client_screen.dart:8:8 - unused_import
-warning - The declaration '_scrollToError' isn't referenced. Try removing the declaration of '_scrollToError' - lib\features\customer\new_client_screen.dart:78:8 - unused_element
-   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\features\customer\new_client_screen.dart:161:44 - use_build_context_synchronously
-   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\features\customer\new_client_screen.dart:179:25 - use_build_context_synchronously
-   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\features\customer\new_client_screen.dart:192:44 - use_build_context_synchronously
-   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\features\customer\new_client_screen.dart:210:25 - use_build_context_synchronously
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\customer\new_client_screen.dart:287:56 - deprecated_member_use
-   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the replacement - lib\features\customer\new_client_screen.dart:314:17 - deprecated_member_use
-   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the replacement - lib\features\customer\new_client_screen.dart:344:17 - deprecated_member_use
-   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the replacement - lib\features\customer\new_client_screen.dart:496:15 - deprecated_member_use
-   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the replacement - lib\features\customer\new_client_screen.dart:516:15 - deprecated_member_use
-warning - The value of the local variable 'colors' isn't used. Try removing the variable or using it - lib\features\customer\new_client_screen.dart:741:11 - unused_local_variable
-warning - The value of the local variable 'colors' isn't used. Try removing the variable or using it - lib\features\customer\new_client_screen.dart:795:11 - unused_local_variable
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\customer\widgets\customer_context_card.dart:75:54 - deprecated_member_use
-warning - Unused import: '../../../core/theme/app_radius.dart'. Try removing the import directive - lib\features\customer\widgets\financial_summary_block.dart:4:8 - unused_import
-warning - Unused import: '../../../core/theme/app_radius.dart'. Try removing the import directive - lib\features\customer\widgets\timeline_entry_tile.dart:3:8 - unused_import
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\customer\widgets\timeline_entry_tile.dart:34:33 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\customer\widgets\timeline_entry_tile.dart:48:33 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\customer\widgets\timeline_entry_tile.dart:62:33 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\customer\widgets\timeline_entry_tile.dart:76:33 - deprecated_member_use
-warning - Unused import: '../../../data/repositories/customer_repository.dart'. Try removing the import directive - lib\features\dashboard\controllers\dashboard_controller.dart:4:8 - unused_import
-warning - Unused import: '../../../data/repositories/route_repository.dart'. Try removing the import directive - lib\features\dashboard\controllers\dashboard_controller.dart:5:8 - unused_import
-   info - 'listenSelf' is deprecated and shouldn't be used. Will be removed in 3.0. Use Notifier.listenSelf instead. Try replacing the use of the deprecated member with the replacement - lib\features\dashboard\controllers\dashboard_controller.dart:46:10 - deprecated_member_use
-   info - Use 'const' for final variables initialized to a constant value. Try replacing 'final' with 'const' - lib\features\dashboard\controllers\dashboard_controller.dart:57:7 - prefer_const_declarations
-   info - Use 'const' for final variables initialized to a constant value. Try replacing 'final' with 'const' - lib\features\dashboard\controllers\dashboard_controller.dart:58:7 - prefer_const_declarations
-   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\features\dashboard\dashboard_screen.dart:46:9 - prefer_const_constructors
-   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\features\dashboard\dashboard_screen.dart:67:26 - use_build_context_synchronously
-   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\features\dashboard\dashboard_screen.dart:223:12 - prefer_const_constructors
-   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\features\dashboard\dashboard_screen.dart:224:14 - prefer_const_constructors
-   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\features\dashboard\dashboard_screen.dart:226:16 - prefer_const_constructors
-   info - Use 'const' literals as arguments to constructors of '@immutable' classes. Try adding 'const' before the literal - lib\features\dashboard\dashboard_screen.dart:227:21 - prefer_const_literals_to_create_immutables
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\dashboard\widgets\hero_outstanding_card.dart:45:35 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\dashboard\widgets\hero_outstanding_card.dart:64:47 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\dashboard\widgets\hero_outstanding_card.dart:80:42 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\dashboard\widgets\hero_outstanding_card.dart:98:39 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\dashboard\widgets\hero_outstanding_card.dart:120:47 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\dashboard\widgets\hero_outstanding_card.dart:138:49 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\dashboard\widgets\hero_outstanding_card.dart:150:45 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\dashboard\widgets\hero_outstanding_card.dart:156:54 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\dashboard\widgets\quick_actions_row.dart:75:32 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\dashboard\widgets\todays_places_list.dart:32:76 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\dashboard\widgets\todays_places_list.dart:68:45 - deprecated_member_use
-warning - Unused import: '../../core/utils/currency_formatter.dart'. Try removing the import directive - lib\features\inventory\inventory_categories_screen.dart:5:8 - unused_import
-   info - Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter - lib\features\inventory\inventory_categories_screen.dart:14:9 - use_super_parameters
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\inventory\inventory_categories_screen.dart:209:41 - deprecated_member_use
-  error - The getter 'mutedForeground' isn't defined for the type 'AppColors'. Try importing the library that defines 'mutedForeground', correcting the name to the name of an existing getter, or defining a getter or field named 'mutedForeground' - lib\features\inventory\inventory_categories_screen.dart:232:33 - undefined_getter
-warning - The declaration 'copyWith' isn't referenced. Try removing the declaration of 'copyWith' - lib\features\inventory\inventory_categories_screen.dart:244:12 - unused_element
-warning - Unused import: 'package:go_router/go_router.dart'. Try removing the import directive - lib\features\inventory\inventory_products_screen.dart:4:8 - unused_import
-   info - Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter - lib\features\inventory\inventory_products_screen.dart:16:9 - use_super_parameters
-warning - The value of the local variable 'theme' isn't used. Try removing the variable or using it - lib\features\inventory\inventory_products_screen.dart:101:11 - unused_local_variable
-   info - Unnecessary use of 'toList' in a spread. Try removing the invocation of 'toList' - lib\features\inventory\inventory_products_screen.dart:175:20 - unnecessary_to_list_in_spreads
-  error - The getter 'secondary' isn't defined for the type 'AppColors'. Try importing the library that defines 'secondary', correcting the name to the name of an existing getter, or defining a getter or field named 'secondary' - lib\features\inventory\inventory_products_screen.dart:300:33 - undefined_getter
-  error - The getter 'mutedForeground' isn't defined for the type 'AppColors'. Try importing the library that defines 'mutedForeground', correcting the name to the name of an existing getter, or defining a getter or field named 'mutedForeground' - lib\features\inventory\inventory_products_screen.dart:325:33 - undefined_getter
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\inventory\inventory_products_screen.dart:344:50 - deprecated_member_use
-   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\features\inventory\inventory_products_screen.dart:411:38 - prefer_const_constructors
-   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\features\inventory\inventory_products_screen.dart:529:35 - prefer_const_constructors
-warning - The value of the local variable 'colors' isn't used. Try removing the variable or using it - lib\features\inventory\inventory_products_screen.dart:557:11 - unused_local_variable
-   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\features\inventory\inventory_products_screen.dart:591:34 - prefer_const_constructors
-   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\features\inventory\inventory_products_screen.dart:673:31 - prefer_const_constructors
-  error - Undefined name 'weekday'. Try correcting the name to one that is defined, or defining the name - lib\features\route\area_screen.dart:79:54 - undefined_identifier
-  error - Undefined name 'weekday'. Try correcting the name to one that is defined, or defining the name - lib\features\route\area_screen.dart:97:62 - undefined_identifier
-   info - 'onReorder' is deprecated and shouldn't be used. Use the onReorderItem callback instead. The onReorderItem callback adjusts the newIndex parameter for a removed item at the oldIndex. This feature was deprecated after v3.41.0-0.0.pre. Try replacing the use of the deprecated member with the replacement - lib\features\route\area_screen.dart:149:29 - deprecated_member_use
-  error - Undefined name 'weekday'. Try correcting the name to one that is defined, or defining the name - lib\features\route\area_screen.dart:166:75 - undefined_identifier
-  error - Undefined name 'placeId'. Try correcting the name to one that is defined, or defining the name - lib\features\route\area_screen.dart:166:84 - undefined_identifier
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\route\area_screen.dart:245:87 - deprecated_member_use
-warning - Unused import: '../../../data/repositories/route_repository.dart'. Try removing the import directive - lib\features\route\controllers\route_controller.dart:6:8 - unused_import
-warning - Unused import: '../../../data/repositories/customer_repository.dart'. Try removing the import directive - lib\features\route\controllers\route_controller.dart:7:8 - unused_import
-warning - Unused import: '../../data/repositories/route_repository.dart'. Try removing the import directive - lib\features\route\place_screen.dart:15:8 - unused_import
-warning - Unused import: '../../../data/repositories/customer_repository.dart'. Try removing the import directive - lib\features\sale\controllers\sale_controller.dart:5:8 - unused_import
-warning - Unused import: '../../../data/repositories/product_repository.dart'. Try removing the import directive - lib\features\sale\controllers\sale_controller.dart:6:8 - unused_import
-warning - Unused import: '../../../data/repositories/sale_repository.dart'. Try removing the import directive - lib\features\sale\controllers\sale_controller.dart:7:8 - unused_import
-   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\features\sale\controllers\sale_controller.dart:76:15 - prefer_const_constructors
-warning - Unused import: 'package:go_router/go_router.dart'. Try removing the import directive - lib\features\sale\sale_screen.dart:3:8 - unused_import
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\sale\sale_screen.dart:131:78 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\sale\sale_screen.dart:232:35 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\sale\sale_screen.dart:278:50 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\sale\sale_screen.dart:279:50 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\sale\sale_screen.dart:318:40 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement - lib\features\sale\sale_screen.dart:390:58 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\core\theme\app_theme.dart:87:43 - deprecated_member_use
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also
+          provided by the import of 'package:flutter/material.dart'. Try removing the
+          import directive - lib\core\theme\app_typography.dart:1:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\core\widgets\app_scaffold.dart:82:63 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\core\widgets\app_scaffold.dart:116:46 - deprecated_member_use
+warning - Unused import: '../theme/app_colors.dart'. Try removing the import directive -
+       lib\core\widgets\avatar.dart:3:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\core\widgets\breadcrumbs_bar.dart:45:44 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\core\widgets\empty_state.dart:34:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\core\widgets\floating_bottom_nav.dart:39:37 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\core\widgets\floating_bottom_nav.dart:43:39 -
+          deprecated_member_use
+warning - Unused import: '../theme/app_spacing.dart'. Try removing the import directive -
+       lib\core\widgets\section_header.dart:4:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\core\widgets\sync_status_indicator.dart:103:37 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\core\widgets\tag_chip.dart:44:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\core\widgets\tag_chip.dart:50:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\core\widgets\tag_chip.dart:56:29 - deprecated_member_use
+warning - Unused import: '../models/sale_item.dart'. Try removing the import directive -
+       lib\data\mock\mock_repository.dart:14:8 - unused_import
+   info - The member 'addCustomer' overrides an inherited member but isn't annotated with
+          '@override'. Try adding the '@override' annotation -
+          lib\data\mock\mock_repository.dart:229:20 - annotate_overrides
+   info - The member 'undoCustomer' overrides an inherited member but isn't annotated with
+          '@override'. Try adding the '@override' annotation -
+          lib\data\mock\mock_repository.dart:294:16 - annotate_overrides
+   info - The member 'addPlace' overrides an inherited member but isn't annotated with
+          '@override'. Try adding the '@override' annotation -
+          lib\data\mock\mock_repository.dart:302:17 - annotate_overrides
+   info - The member 'addArea' overrides an inherited member but isn't annotated with
+          '@override'. Try adding the '@override' annotation -
+          lib\data\mock\mock_repository.dart:321:16 - annotate_overrides
+warning - Unused import: 'collection.dart'. Try removing the import directive -
+       lib\data\models\activity.dart:2:8 - unused_import
+warning - Unused import: 'sale.dart'. Try removing the import directive -
+       lib\data\models\activity.dart:3:8 - unused_import
+warning - Unused import: 'sale_item.dart'. Try removing the import directive -
+       lib\data\models\activity.dart:4:8 - unused_import
+warning - Unused import: 'repositories/supabase_repositories.dart'. Try removing the
+       import directive - lib\data\providers.dart:7:8 - unused_import
+warning - Unused import: '../models/sale.dart'. Try removing the import directive -
+       lib\data\repositories\sale_repository.dart:1:8 - unused_import
+warning - Unused import: '../models/sale_item.dart'. Try removing the import directive -
+       lib\data\repositories\sale_repository.dart:2:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\collection\collect_screen.dart:310:37 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\collection\collect_screen.dart:366:40 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\collection\collect_screen.dart:449:39 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\collection\collect_screen.dart:480:37 -
+          deprecated_member_use
+warning - Unused import: 'package:flutter/material.dart'. Try removing the import
+       directive - lib\features\collection\controllers\collect_controller.dart:1:8 -
+       unused_import
+warning - Unused import: '/data/repositories/customer_repository.dart'. Try removing the
+       import directive - lib\features\collection\controllers\collect_controller.dart:5:8
+       - unused_import
+warning - Unused import: '/data/repositories/collection_repository.dart'. Try removing the
+       import directive - lib\features\collection\controllers\collect_controller.dart:6:8
+       - unused_import
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const'
+          keyword to the constructor invocation -
+          lib\features\collection\controllers\collect_controller.dart:55:15 -
+          prefer_const_constructors
+warning - Unused import: '../../data/repositories/customer_repository.dart'. Try removing
+       the import directive - lib\features\customer\clients_screen.dart:10:8 -
+       unused_import
+warning - The value of the local variable 'repo' isn't used. Try removing the variable or
+       using it - lib\features\customer\clients_screen.dart:35:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\customer\clients_screen.dart:122:63 -
+          deprecated_member_use
+warning - Unused import: '../../../data/repositories/customer_repository.dart'. Try
+       removing the import directive -
+       lib\features\customer\controllers\customer_controller.dart:5:8 - unused_import
+warning - Unused import: '../../core/widgets/loading_skeleton.dart'. Try removing the
+       import directive - lib\features\customer\customer_detail_screen.dart:9:8 -
+       unused_import
+   info - Don't use 'BuildContext's across async gaps. Try rewriting the code to not use
+          the 'BuildContext', or guard the use with a 'mounted' check -
+          lib\features\customer\customer_detail_screen.dart:70:25 -
+          use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps. Try rewriting the code to not use
+          the 'BuildContext', or guard the use with a 'mounted' check -
+          lib\features\customer\customer_detail_screen.dart:212:35 -
+          use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps. Try rewriting the code to not use
+          the 'BuildContext', or guard the use with a 'mounted' check -
+          lib\features\customer\customer_detail_screen.dart:213:42 -
+          use_build_context_synchronously
+  error - The name 'Nominee' isn't a type, so it can't be used as a type argument. Try
+         correcting the name to an existing type, or defining a type named 'Nominee' -
+         lib\features\customer\new_client_controller.dart:40:14 -
+         non_type_as_type_argument
+  error - The name 'IdProof' isn't a type, so it can't be used as a type argument. Try
+         correcting the name to an existing type, or defining a type named 'IdProof' -
+         lib\features\customer\new_client_controller.dart:41:14 -
+         non_type_as_type_argument
+  error - Undefined class 'Location'. Try changing the name to the name of an existing
+         class, or creating a class with the name 'Location' -
+         lib\features\customer\new_client_controller.dart:42:9 - undefined_class
+  error - The name 'Nominee' isn't a type, so it can't be used as a type argument. Try
+         correcting the name to an existing type, or defining a type named 'Nominee' -
+         lib\features\customer\new_client_controller.dart:58:10 -
+         non_type_as_type_argument
+  error - The name 'IdProof' isn't a type, so it can't be used as a type argument. Try
+         correcting the name to an existing type, or defining a type named 'IdProof' -
+         lib\features\customer\new_client_controller.dart:59:10 -
+         non_type_as_type_argument
+  error - Undefined class 'Location'. Try changing the name to the name of an existing
+         class, or creating a class with the name 'Location' -
+         lib\features\customer\new_client_controller.dart:60:5 - undefined_class
+   info - 'StateNotifierProviderRef' is deprecated and shouldn't be used. will be removed
+          in 3.0.0. Use Ref instead. Try replacing the use of the deprecated member with
+          the replacement - lib\features\customer\new_client_controller.dart:98:9 -
+          deprecated_member_use
+  error - Undefined class 'Nominee'. Try changing the name to the name of an existing
+         class, or creating a class with the name 'Nominee' -
+         lib\features\customer\new_client_controller.dart:177:19 - undefined_class
+  error - Undefined class 'Nominee'. Try changing the name to the name of an existing
+         class, or creating a class with the name 'Nominee' -
+         lib\features\customer\new_client_controller.dart:182:33 - undefined_class
+  error - The property 'id' can't be unconditionally accessed because the receiver can be
+         'null'. Try making the access conditional (using '?.') or adding a null check to
+         the target ('!') - lib\features\customer\new_client_controller.dart:183:53 -
+         unchecked_use_of_nullable_value
+  error - The property 'id' can't be unconditionally accessed because the receiver can be
+         'null'. Try making the access conditional (using '?.') or adding a null check to
+         the target ('!') - lib\features\customer\new_client_controller.dart:188:55 -
+         unchecked_use_of_nullable_value
+  error - Undefined class 'Location'. Try changing the name to the name of an existing
+         class, or creating a class with the name 'Location' -
+         lib\features\customer\new_client_controller.dart:192:20 - undefined_class
+  error - Undefined class 'IdProof'. Try changing the name to the name of an existing
+         class, or creating a class with the name 'IdProof' -
+         lib\features\customer\new_client_controller.dart:196:19 - undefined_class
+  error - The property 'id' can't be unconditionally accessed because the receiver can be
+         'null'. Try making the access conditional (using '?.') or adding a null check to
+         the target ('!') - lib\features\customer\new_client_controller.dart:203:47 -
+         unchecked_use_of_nullable_value
+  error - The named parameter 'nominees' isn't defined. Try correcting the name to an
+         existing named parameter's name, or defining a named parameter with the name
+         'nominees' - lib\features\customer\new_client_controller.dart:299:9 -
+         undefined_named_parameter
+  error - The named parameter 'nominees' isn't defined. Try correcting the name to an
+         existing named parameter's name, or defining a named parameter with the name
+         'nominees' - lib\features\customer\new_client_controller.dart:336:9 -
+         undefined_named_parameter
+  error - The named parameter 'idProofs' isn't defined. Try correcting the name to an
+         existing named parameter's name, or defining a named parameter with the name
+         'idProofs' - lib\features\customer\new_client_controller.dart:337:9 -
+         undefined_named_parameter
+  error - The named parameter 'location' isn't defined. Try correcting the name to an
+         existing named parameter's name, or defining a named parameter with the name
+         'location' - lib\features\customer\new_client_controller.dart:338:9 -
+         undefined_named_parameter
+warning - The declaration '_scrollToError' isn't referenced. Try removing the declaration
+       of '_scrollToError' - lib\features\customer\new_client_screen.dart:72:8 -
+       unused_element
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted'
+          check. Guard a 'State.context' use with a 'mounted' check on the State, and
+          other BuildContext use with a 'mounted' check on the BuildContext -
+          lib\features\customer\new_client_screen.dart:167:44 -
+          use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted'
+          check. Guard a 'State.context' use with a 'mounted' check on the State, and
+          other BuildContext use with a 'mounted' check on the BuildContext -
+          lib\features\customer\new_client_screen.dart:183:25 -
+          use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted'
+          check. Guard a 'State.context' use with a 'mounted' check on the State, and
+          other BuildContext use with a 'mounted' check on the BuildContext -
+          lib\features\customer\new_client_screen.dart:200:44 -
+          use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted'
+          check. Guard a 'State.context' use with a 'mounted' check on the State, and
+          other BuildContext use with a 'mounted' check on the BuildContext -
+          lib\features\customer\new_client_screen.dart:216:25 -
+          use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\customer\new_client_screen.dart:293:56 -
+          deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will
+          set the initial value for the form field. This feature was deprecated after
+          v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the
+          replacement - lib\features\customer\new_client_screen.dart:320:17 -
+          deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will
+          set the initial value for the form field. This feature was deprecated after
+          v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the
+          replacement - lib\features\customer\new_client_screen.dart:350:17 -
+          deprecated_member_use
+  error - The method '_LocationBlock' isn't defined for the type
+         '_CustomerDetailsSection'. Try correcting the name to the name of an existing
+         method, or defining a method named '_LocationBlock' -
+         lib\features\customer\new_client_screen.dart:482:13 - undefined_method
+  error - The method '_IdProofsBlock' isn't defined for the type
+         '_CustomerDetailsSection'. Try correcting the name to the name of an existing
+         method, or defining a method named '_IdProofsBlock' -
+         lib\features\customer\new_client_screen.dart:494:13 - undefined_method
+warning - The value of the local variable 'colors' isn't used. Try removing the variable
+       or using it - lib\features\customer\new_client_screen.dart:603:11 -
+       unused_local_variable
+warning - The value of the local variable 'colors' isn't used. Try removing the variable
+       or using it - lib\features\customer\new_client_screen.dart:657:11 -
+       unused_local_variable
+  error - The property 'name' can't be unconditionally accessed because the receiver can
+         be 'null'. Try making the access conditional (using '?.') or adding a null check
+         to the target ('!') - lib\features\customer\new_client_screen.dart:788:33 -
+         unchecked_use_of_nullable_value
+  error - The property 'relation' can't be unconditionally accessed because the receiver
+         can be 'null'. Try making the access conditional (using '?.') or adding a null
+         check to the target ('!') - lib\features\customer\new_client_screen.dart:790:26 -
+         unchecked_use_of_nullable_value
+  error - The property 'phone' can't be unconditionally accessed because the receiver can
+         be 'null'. Try making the access conditional (using '?.') or adding a null check
+         to the target ('!') - lib\features\customer\new_client_screen.dart:790:45 -
+         unchecked_use_of_nullable_value
+  error - The property 'phone' can't be unconditionally accessed because the receiver can
+         be 'null'. Try making the access conditional (using '?.') or adding a null check
+         to the target ('!') - lib\features\customer\new_client_screen.dart:790:64 -
+         unchecked_use_of_nullable_value
+  error - The property 'phone' can't be unconditionally accessed because the receiver can
+         be 'null'. Try making the access conditional (using '?.') or adding a null check
+         to the target ('!') - lib\features\customer\new_client_screen.dart:790:92 -
+         unchecked_use_of_nullable_value
+  error - The argument type 'Object?' can't be assigned to the parameter type 'Nominee?'.
+         - lib\features\customer\new_client_screen.dart:796:35 -
+         argument_type_not_assignable
+  error - The property 'id' can't be unconditionally accessed because the receiver can be
+         'null'. Try making the access conditional (using '?.') or adding a null check to
+         the target ('!') - lib\features\customer\new_client_screen.dart:798:59 -
+         unchecked_use_of_nullable_value
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will
+          set the initial value for the form field. This feature was deprecated after
+          v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the
+          replacement - lib\features\customer\new_client_screen.dart:838:19 -
+          deprecated_member_use
+  error - Classes can't be declared inside other classes. Try moving the class to the
+         top-level - lib\features\customer\new_client_screen.dart:906:1 - class_in_class
+  error - Expected a class member. Try placing this code inside a class member -
+         lib\features\customer\new_client_screen.dart:906:22 - expected_class_member
+   info - The variable name 'StatelessWidget' isn't a lowerCamelCase identifier. Try
+          changing the name to follow the lowerCamelCase style -
+          lib\features\customer\new_client_screen.dart:906:30 -
+          non_constant_identifier_names
+  error - Methods must have an explicit list of parameters. Try adding a parameter list -
+         lib\features\customer\new_client_screen.dart:906:30 - missing_method_parameters
+  error - The name '_LocationBlock' isn't a class. Try correcting the name to match an
+         existing class - lib\features\customer\new_client_screen.dart:907:9 -
+         creation_with_non_type
+   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the
+          built-in `required` keyword to mark a named parameter as required. Try replacing
+          the use of the deprecated member with the replacement -
+          lib\features\customer\new_client_screen.dart:908:5 - deprecated_member_use
+  error - Expected to find ',' - lib\features\customer\new_client_screen.dart:908:14 -
+         expected_token
+  error - The getter 'state' isn't defined for the type '_NomineesBlockState'. Try
+         importing the library that defines 'state', correcting the name to the name of an
+         existing getter, or defining a getter or field named 'state' -
+         lib\features\customer\new_client_screen.dart:908:19 - undefined_getter
+   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the
+          built-in `required` keyword to mark a named parameter as required. Try replacing
+          the use of the deprecated member with the replacement -
+          lib\features\customer\new_client_screen.dart:909:5 - deprecated_member_use
+  error - Expected to find ',' - lib\features\customer\new_client_screen.dart:909:14 -
+         expected_token
+  error - The getter 'controller' isn't defined for the type '_NomineesBlockState'. Try
+         importing the library that defines 'controller', correcting the name to the name
+         of an existing getter, or defining a getter or field named 'controller' -
+         lib\features\customer\new_client_screen.dart:909:19 - undefined_getter
+   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the
+          built-in `required` keyword to mark a named parameter as required. Try replacing
+          the use of the deprecated member with the replacement -
+          lib\features\customer\new_client_screen.dart:910:5 - deprecated_member_use
+  error - Expected to find ',' - lib\features\customer\new_client_screen.dart:910:14 -
+         expected_token
+  error - The getter 'colors' isn't defined for the type '_NomineesBlockState'. Try
+         importing the library that defines 'colors', correcting the name to the name of
+         an existing getter, or defining a getter or field named 'colors' -
+         lib\features\customer\new_client_screen.dart:910:19 - undefined_getter
+warning - The annotation 'override' can only be used on fields, getters, methods, or
+       setters - lib\features\customer\new_client_screen.dart:917:4 -
+       invalid_annotation_target
+warning - The declaration 'build' isn't referenced. Try removing the declaration of
+       'build' - lib\features\customer\new_client_screen.dart:918:10 - unused_element
+  error - The final variable 'colors' can't be read because it's potentially unassigned at
+         this point. Ensure that it is assigned on necessary execution paths -
+         lib\features\customer\new_client_screen.dart:928:89 -
+         read_potentially_unassigned_final
+  error - The final variable 'state' can't be read because it's potentially unassigned at
+         this point. Ensure that it is assigned on necessary execution paths -
+         lib\features\customer\new_client_screen.dart:936:20 -
+         read_potentially_unassigned_final
+  error - The final variable 'colors' can't be read because it's potentially unassigned at
+         this point. Ensure that it is assigned on necessary execution paths -
+         lib\features\customer\new_client_screen.dart:936:45 -
+         read_potentially_unassigned_final
+  error - The final variable 'colors' can't be read because it's potentially unassigned at
+         this point. Ensure that it is assigned on necessary execution paths -
+         lib\features\customer\new_client_screen.dart:936:60 -
+         read_potentially_unassigned_final
+  error - The final variable 'colors' can't be read because it's potentially unassigned at
+         this point. Ensure that it is assigned on necessary execution paths -
+         lib\features\customer\new_client_screen.dart:938:39 -
+         read_potentially_unassigned_final
+  error - The final variable 'state' can't be read because it's potentially unassigned at
+         this point. Ensure that it is assigned on necessary execution paths -
+         lib\features\customer\new_client_screen.dart:941:18 -
+         read_potentially_unassigned_final
+  error - The final variable 'colors' can't be read because it's potentially unassigned at
+         this point. Ensure that it is assigned on necessary execution paths -
+         lib\features\customer\new_client_screen.dart:945:54 -
+         read_potentially_unassigned_final
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\customer\new_client_screen.dart:945:69 -
+          deprecated_member_use
+  error - The final variable 'colors' can't be read because it's potentially unassigned at
+         this point. Ensure that it is assigned on necessary execution paths -
+         lib\features\customer\new_client_screen.dart:947:92 -
+         read_potentially_unassigned_final
+  error - The final variable 'colors' can't be read because it's potentially unassigned at
+         this point. Ensure that it is assigned on necessary execution paths -
+         lib\features\customer\new_client_screen.dart:956:32 -
+         read_potentially_unassigned_final
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\customer\new_client_screen.dart:956:47 -
+          deprecated_member_use
+  error - The final variable 'colors' can't be read because it's potentially unassigned at
+         this point. Ensure that it is assigned on necessary execution paths -
+         lib\features\customer\new_client_screen.dart:960:63 -
+         read_potentially_unassigned_final
+  error - The final variable 'controller' can't be read because it's potentially
+         unassigned at this point. Ensure that it is assigned on necessary execution paths
+         - lib\features\customer\new_client_screen.dart:971:15 -
+         read_potentially_unassigned_final
+  error - Classes can't be declared inside other classes. Try moving the class to the
+         top-level - lib\features\customer\new_client_screen.dart:983:1 - class_in_class
+  error - Expected a class member. Try placing this code inside a class member -
+         lib\features\customer\new_client_screen.dart:983:22 - expected_class_member
+   info - The variable name 'StatefulWidget' isn't a lowerCamelCase identifier. Try
+          changing the name to follow the lowerCamelCase style -
+          lib\features\customer\new_client_screen.dart:983:30 -
+          non_constant_identifier_names
+  error - Methods must have an explicit list of parameters. Try adding a parameter list -
+         lib\features\customer\new_client_screen.dart:983:30 - missing_method_parameters
+  error - The name '_IdProofsBlock' isn't a class. Try correcting the name to match an
+         existing class - lib\features\customer\new_client_screen.dart:984:9 -
+         creation_with_non_type
+   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the
+          built-in `required` keyword to mark a named parameter as required. Try replacing
+          the use of the deprecated member with the replacement -
+          lib\features\customer\new_client_screen.dart:985:5 - deprecated_member_use
+  error - Expected to find ',' - lib\features\customer\new_client_screen.dart:985:14 -
+         expected_token
+  error - The getter 'state' isn't defined for the type '_NomineesBlockState'. Try
+         importing the library that defines 'state', correcting the name to the name of an
+         existing getter, or defining a getter or field named 'state' -
+         lib\features\customer\new_client_screen.dart:985:19 - undefined_getter
+   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the
+          built-in `required` keyword to mark a named parameter as required. Try replacing
+          the use of the deprecated member with the replacement -
+          lib\features\customer\new_client_screen.dart:986:5 - deprecated_member_use
+  error - Expected to find ',' - lib\features\customer\new_client_screen.dart:986:14 -
+         expected_token
+  error - The getter 'controller' isn't defined for the type '_NomineesBlockState'. Try
+         importing the library that defines 'controller', correcting the name to the name
+         of an existing getter, or defining a getter or field named 'controller' -
+         lib\features\customer\new_client_screen.dart:986:19 - undefined_getter
+   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the
+          built-in `required` keyword to mark a named parameter as required. Try replacing
+          the use of the deprecated member with the replacement -
+          lib\features\customer\new_client_screen.dart:987:5 - deprecated_member_use
+  error - Expected to find ',' - lib\features\customer\new_client_screen.dart:987:14 -
+         expected_token
+  error - The getter 'colors' isn't defined for the type '_NomineesBlockState'. Try
+         importing the library that defines 'colors', correcting the name to the name of
+         an existing getter, or defining a getter or field named 'colors' -
+         lib\features\customer\new_client_screen.dart:987:19 - undefined_getter
+warning - The value of the local variable 'state' isn't used. Try removing the variable or
+       using it - lib\features\customer\new_client_screen.dart:990:28 -
+       unused_local_variable
+warning - The value of the local variable 'controller' isn't used. Try removing the
+       variable or using it - lib\features\customer\new_client_screen.dart:991:29 -
+       unused_local_variable
+warning - The value of the local variable 'colors' isn't used. Try removing the variable
+       or using it - lib\features\customer\new_client_screen.dart:992:19 -
+       unused_local_variable
+warning - The annotation 'override' can only be used on fields, getters, methods, or
+       setters - lib\features\customer\new_client_screen.dart:994:4 -
+       invalid_annotation_target
+  error - Undefined class 'State'. Try changing the name to the name of an existing class,
+         or creating a class with the name 'State' -
+         lib\features\customer\new_client_screen.dart:995:3 - undefined_class
+  error - The name '_IdProofsBlock' isn't a type, so it can't be used as a type argument.
+         Try correcting the name to an existing type, or defining a type named
+         '_IdProofsBlock' - lib\features\customer\new_client_screen.dart:995:9 -
+         non_type_as_type_argument
+warning - The declaration 'createState' isn't referenced. Try removing the declaration of
+       'createState' - lib\features\customer\new_client_screen.dart:995:25 -
+       unused_element
+  error - The method '_IdProofsBlockState' isn't defined for the type
+         '_NomineesBlockState'. Try correcting the name to the name of an existing method,
+         or defining a method named '_IdProofsBlockState' -
+         lib\features\customer\new_client_screen.dart:995:42 - undefined_method
+  error - Classes can't be declared inside other classes. Try moving the class to the
+         top-level - lib\features\customer\new_client_screen.dart:998:1 - class_in_class
+  error - Expected a class member. Try placing this code inside a class member -
+         lib\features\customer\new_client_screen.dart:998:27 - expected_class_member
+   info - The variable name 'State' isn't a lowerCamelCase identifier. Try changing the
+          name to follow the lowerCamelCase style -
+          lib\features\customer\new_client_screen.dart:998:35 -
+          non_constant_identifier_names
+  error - Methods must have an explicit list of parameters. Try adding a parameter list -
+         lib\features\customer\new_client_screen.dart:998:35 - missing_method_parameters
+   info - The local variable '_selectedType' starts with an underscore. Try renaming the
+          variable to not start with an underscore -
+          lib\features\customer\new_client_screen.dart:999:11 -
+          no_leading_underscores_for_local_identifiers
+   info - The local variable '_addMockProof' starts with an underscore. Try renaming the
+          variable to not start with an underscore -
+          lib\features\customer\new_client_screen.dart:1001:8 -
+          no_leading_underscores_for_local_identifiers
+warning - The annotation 'override' can only be used on fields, getters, methods, or
+       setters - lib\features\customer\new_client_screen.dart:1018:4 -
+       invalid_annotation_target
+warning - The declaration 'build' isn't referenced. Try removing the declaration of
+       'build' - lib\features\customer\new_client_screen.dart:1019:10 - unused_element
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will
+          set the initial value for the form field. This feature was deprecated after
+          v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the
+          replacement - lib\features\customer\new_client_screen.dart:1029:11 -
+          deprecated_member_use
+  error - The property 'document' can't be unconditionally accessed because the receiver
+         can be 'null'. Try making the access conditional (using '?.') or adding a null
+         check to the target ('!') - lib\features\customer\new_client_screen.dart:1066:33
+         - unchecked_use_of_nullable_value
+  error - The property 'document' can't be unconditionally accessed because the receiver
+         can be 'null'. Try making the access conditional (using '?.') or adding a null
+         check to the target ('!') - lib\features\customer\new_client_screen.dart:1068:31
+         - unchecked_use_of_nullable_value
+  error - The property 'type' can't be unconditionally accessed because the receiver can
+         be 'null'. Try making the access conditional (using '?.') or adding a null check
+         to the target ('!') - lib\features\customer\new_client_screen.dart:1068:55 -
+         unchecked_use_of_nullable_value
+  error - The property 'document' can't be unconditionally accessed because the receiver
+         can be 'null'. Try making the access conditional (using '?.') or adding a null
+         check to the target ('!') - lib\features\customer\new_client_screen.dart:1070:21
+         - unchecked_use_of_nullable_value
+  error - The property 'document' can't be unconditionally accessed because the receiver
+         can be 'null'. Try making the access conditional (using '?.') or adding a null
+         check to the target ('!') - lib\features\customer\new_client_screen.dart:1070:46
+         - unchecked_use_of_nullable_value
+  error - The property 'id' can't be unconditionally accessed because the receiver can be
+         'null'. Try making the access conditional (using '?.') or adding a null check to
+         the target ('!') - lib\features\customer\new_client_screen.dart:1076:57 -
+         unchecked_use_of_nullable_value
+warning - Unused import: '../../../core/theme/app_radius.dart'. Try removing the import
+       directive - lib\features\customer\widgets\customer_context_card.dart:5:8 -
+       unused_import
+warning - Unused import: '../../../data/models/nominee.dart'. Try removing the import
+       directive - lib\features\customer\widgets\customer_context_card.dart:9:8 -
+       unused_import
+warning - Unused import: '../../../data/models/id_proof.dart'. Try removing the import
+       directive - lib\features\customer\widgets\customer_context_card.dart:10:8 -
+       unused_import
+warning - Unused import: '../../../data/models/location.dart'. Try removing the import
+       directive - lib\features\customer\widgets\customer_context_card.dart:11:8 -
+       unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\customer\widgets\customer_context_card.dart:239:47 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\customer\widgets\customer_context_card.dart:243:78 -
+          deprecated_member_use
+warning - Unused import: '../../../core/theme/app_colors.dart'. Try removing the import
+       directive - lib\features\customer\widgets\edit_customer_sheet.dart:3:8 -
+       unused_import
+warning - Unused import: '../../../core/theme/app_spacing.dart'. Try removing the import
+       directive - lib\features\customer\widgets\edit_customer_sheet.dart:5:8 -
+       unused_import
+warning - Unused import: '../../../data/repositories/customer_repository.dart'. Try
+       removing the import directive -
+       lib\features\customer\widgets\edit_customer_sheet.dart:8:8 - unused_import
+warning - The value of the local variable 'repo' isn't used. Try removing the variable or
+       using it - lib\features\customer\widgets\edit_customer_sheet.dart:60:11 -
+       unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\customer\widgets\edit_customer_sheet.dart:125:36 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\customer\widgets\edit_customer_sheet.dart:157:36 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\customer\widgets\edit_customer_sheet.dart:182:36 -
+          deprecated_member_use
+warning - Unused import: '../../../core/theme/app_radius.dart'. Try removing the import
+       directive - lib\features\customer\widgets\financial_summary_block.dart:4:8 -
+       unused_import
+warning - Unused import: '../../../core/theme/app_radius.dart'. Try removing the import
+       directive - lib\features\customer\widgets\timeline_entry_tile.dart:3:8 -
+       unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\customer\widgets\timeline_entry_tile.dart:34:33 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\customer\widgets\timeline_entry_tile.dart:48:33 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\customer\widgets\timeline_entry_tile.dart:62:33 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\customer\widgets\timeline_entry_tile.dart:76:33 -
+          deprecated_member_use
+warning - Unused import: '../../../data/repositories/customer_repository.dart'. Try
+       removing the import directive -
+       lib\features\dashboard\controllers\dashboard_controller.dart:4:8 - unused_import
+warning - Unused import: '../../../data/repositories/route_repository.dart'. Try removing
+       the import directive -
+       lib\features\dashboard\controllers\dashboard_controller.dart:5:8 - unused_import
+   info - Don't invoke 'print' in production code. Try using a logging framework -
+          lib\features\dashboard\controllers\dashboard_controller.dart:40:5 - avoid_print
+   info - Don't invoke 'print' in production code. Try using a logging framework -
+          lib\features\dashboard\controllers\dashboard_controller.dart:47:5 - avoid_print
+   info - 'listenSelf' is deprecated and shouldn't be used. Will be removed in 3.0. Use
+          Notifier.listenSelf instead. Try replacing the use of the deprecated member with
+          the replacement -
+          lib\features\dashboard\controllers\dashboard_controller.dart:48:10 -
+          deprecated_member_use
+   info - Don't invoke 'print' in production code. Try using a logging framework -
+          lib\features\dashboard\controllers\dashboard_controller.dart:50:5 - avoid_print
+   info - Don't invoke 'print' in production code. Try using a logging framework -
+          lib\features\dashboard\controllers\dashboard_controller.dart:54:5 - avoid_print
+   info - Use 'const' for final variables initialized to a constant value. Try replacing
+          'final' with 'const' -
+          lib\features\dashboard\controllers\dashboard_controller.dart:61:7 -
+          prefer_const_declarations
+   info - Use 'const' for final variables initialized to a constant value. Try replacing
+          'final' with 'const' -
+          lib\features\dashboard\controllers\dashboard_controller.dart:62:7 -
+          prefer_const_declarations
+   info - Don't invoke 'print' in production code. Try using a logging framework -
+          lib\features\dashboard\controllers\dashboard_controller.dart:125:7 - avoid_print
+   info - Don't invoke 'print' in production code. Try using a logging framework -
+          lib\features\dashboard\controllers\dashboard_controller.dart:127:7 - avoid_print
+   info - Don't invoke 'print' in production code. Try using a logging framework -
+          lib\features\dashboard\controllers\dashboard_controller.dart:128:7 - avoid_print
+   info - Don't invoke 'print' in production code. Try using a logging framework -
+          lib\features\dashboard\dashboard_screen.dart:36:5 - avoid_print
+   info - Don't invoke 'print' in production code. Try using a logging framework -
+          lib\features\dashboard\dashboard_screen.dart:42:5 - avoid_print
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const'
+          keyword to the constructor invocation -
+          lib\features\dashboard\dashboard_screen.dart:59:9 - prefer_const_constructors
+   info - Don't invoke 'print' in production code. Try using a logging framework -
+          lib\features\dashboard\dashboard_screen.dart:73:5 - avoid_print
+   info - Don't invoke 'print' in production code. Try using a logging framework -
+          lib\features\dashboard\dashboard_screen.dart:95:15 - avoid_print
+   info - Don't invoke 'print' in production code. Try using a logging framework -
+          lib\features\dashboard\dashboard_screen.dart:99:15 - avoid_print
+   info - Don't invoke 'print' in production code. Try using a logging framework -
+          lib\features\dashboard\dashboard_screen.dart:106:15 - avoid_print
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const'
+          keyword to the constructor invocation -
+          lib\features\dashboard\dashboard_screen.dart:253:12 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const'
+          keyword to the constructor invocation -
+          lib\features\dashboard\dashboard_screen.dart:254:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const'
+          keyword to the constructor invocation -
+          lib\features\dashboard\dashboard_screen.dart:256:16 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes. Try
+          adding 'const' before the literal -
+          lib\features\dashboard\dashboard_screen.dart:257:21 -
+          prefer_const_literals_to_create_immutables
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\dashboard\widgets\hero_outstanding_card.dart:45:35 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\dashboard\widgets\hero_outstanding_card.dart:64:47 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\dashboard\widgets\hero_outstanding_card.dart:80:42 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\dashboard\widgets\hero_outstanding_card.dart:98:39 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\dashboard\widgets\hero_outstanding_card.dart:120:47 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\dashboard\widgets\hero_outstanding_card.dart:138:49 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\dashboard\widgets\hero_outstanding_card.dart:150:45 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\dashboard\widgets\hero_outstanding_card.dart:156:54 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\dashboard\widgets\quick_actions_row.dart:75:32 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\dashboard\widgets\todays_places_list.dart:32:76 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\dashboard\widgets\todays_places_list.dart:68:45 -
+          deprecated_member_use
+warning - Unused import: '../../core/utils/currency_formatter.dart'. Try removing the
+       import directive - lib\features\inventory\inventory_categories_screen.dart:5:8 -
+       unused_import
+   info - Parameter 'key' could be a super parameter. Trying converting 'key' to a super
+          parameter - lib\features\inventory\inventory_categories_screen.dart:15:9 -
+          use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\inventory\inventory_categories_screen.dart:214:41 -
+          deprecated_member_use
+warning - The declaration 'copyWith' isn't referenced. Try removing the declaration of
+       'copyWith' - lib\features\inventory\inventory_categories_screen.dart:249:12 -
+       unused_element
+warning - Unused import: 'package:go_router/go_router.dart'. Try removing the import
+       directive - lib\features\inventory\inventory_products_screen.dart:4:8 -
+       unused_import
+   info - Parameter 'key' could be a super parameter. Trying converting 'key' to a super
+          parameter - lib\features\inventory\inventory_products_screen.dart:17:9 -
+          use_super_parameters
+warning - The value of the local variable 'theme' isn't used. Try removing the variable or
+       using it - lib\features\inventory\inventory_products_screen.dart:102:11 -
+       unused_local_variable
+   info - Unnecessary use of 'toList' in a spread. Try removing the invocation of 'toList'
+          - lib\features\inventory\inventory_products_screen.dart:176:20 -
+          unnecessary_to_list_in_spreads
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\inventory\inventory_products_screen.dart:301:41 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\inventory\inventory_products_screen.dart:346:50 -
+          deprecated_member_use
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const'
+          keyword to the constructor invocation -
+          lib\features\inventory\inventory_products_screen.dart:413:38 -
+          prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\inventory\inventory_products_screen.dart:428:57 -
+          deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will
+          set the initial value for the form field. This feature was deprecated after
+          v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the
+          replacement - lib\features\inventory\inventory_products_screen.dart:448:27 -
+          deprecated_member_use
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const'
+          keyword to the constructor invocation -
+          lib\features\inventory\inventory_products_screen.dart:575:35 -
+          prefer_const_constructors
+warning - Unused import: 'package:flutter_riverpod/flutter_riverpod.dart'. Try removing
+       the import directive - lib\features\inventory\widgets\add_product_sheet.dart:2:8 -
+       unused_import
+warning - Unused import: '../../../core/theme/app_spacing.dart'. Try removing the import
+       directive - lib\features\inventory\widgets\add_product_sheet.dart:4:8 -
+       unused_import
+warning - Unused import: '../../../data/models/category.dart'. Try removing the import
+       directive - lib\features\inventory\widgets\add_product_sheet.dart:7:8 -
+       unused_import
+   info - Parameter 'key' could be a super parameter. Trying converting 'key' to a super
+          parameter - lib\features\inventory\widgets\add_product_sheet.dart:20:9 -
+          use_super_parameters
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will
+          set the initial value for the form field. This feature was deprecated after
+          v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the
+          replacement - lib\features\inventory\widgets\add_product_sheet.dart:125:19 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\inventory\widgets\add_product_sheet.dart:215:49 -
+          deprecated_member_use
+warning - Unused import: '../../core/utils/formatters.dart'. Try removing the import
+       directive - lib\features\route\area_screen.dart:14:8 - unused_import
+warning - Unused import: '../../data/repositories/route_repository.dart'. Try removing the
+       import directive - lib\features\route\area_screen.dart:17:8 - unused_import
+warning - The value of the local variable 'backPlaceId' isn't used. Try removing the
+       variable or using it - lib\features\route\area_screen.dart:75:15 -
+       unused_local_variable
+   info - 'onReorder' is deprecated and shouldn't be used. Use the onReorderItem callback
+          instead. The onReorderItem callback adjusts the newIndex parameter for a removed
+          item at the oldIndex. This feature was deprecated after v3.41.0-0.0.pre. Try
+          replacing the use of the deprecated member with the replacement -
+          lib\features\route\area_screen.dart:149:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\route\area_screen.dart:245:87 - deprecated_member_use
+warning - Unused import: '../../../data/repositories/route_repository.dart'. Try removing
+       the import directive - lib\features\route\controllers\route_controller.dart:6:8 -
+       unused_import
+warning - Unused import: '../../../data/repositories/customer_repository.dart'. Try
+       removing the import directive -
+       lib\features\route\controllers\route_controller.dart:7:8 - unused_import
+warning - Unused import: '../../data/repositories/route_repository.dart'. Try removing the
+       import directive - lib\features\route\place_screen.dart:16:8 - unused_import
+warning - Unused import: '../../../data/repositories/customer_repository.dart'. Try
+       removing the import directive -
+       lib\features\sale\controllers\sale_controller.dart:5:8 - unused_import
+warning - Unused import: '../../../data/repositories/product_repository.dart'. Try
+       removing the import directive -
+       lib\features\sale\controllers\sale_controller.dart:6:8 - unused_import
+warning - Unused import: '../../../data/repositories/sale_repository.dart'. Try removing
+       the import directive - lib\features\sale\controllers\sale_controller.dart:7:8 -
+       unused_import
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const'
+          keyword to the constructor invocation -
+          lib\features\sale\controllers\sale_controller.dart:76:15 -
+          prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\sale\sale_screen.dart:150:78 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\sale\sale_screen.dart:251:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\sale\sale_screen.dart:297:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\sale\sale_screen.dart:298:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\sale\sale_screen.dart:337:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\sale\sale_screen.dart:515:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\splash\splash_screen.dart:112:43 -
+          deprecated_member_use
+warning - Unused import: '../../core/router/routes.dart'. Try removing the import
+       directive - lib\features\transactions\transactions_screen.dart:8:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\transactions\transactions_screen.dart:92:57 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\transactions\transactions_screen.dart:196:51 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\transactions\transactions_screen.dart:248:48 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\transactions\transactions_screen.dart:249:60 -
+          deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid
+          precision loss. Try replacing the use of the deprecated member with the
+          replacement - lib\features\transactions\transactions_screen.dart:249:92 -
+          deprecated_member_use
 
-119 issues found. (ran in 1.5s)
+243 issues found. (ran in 62.3s)
