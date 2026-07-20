@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,13 +34,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    print('[DashboardScreen] initState()');
+    developer.log('initState()', name: 'DashboardScreen');
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    print('[DashboardScreen] didChangeDependencies()');
+    developer.log('didChangeDependencies()', name: 'DashboardScreen');
   }
 
   Future<bool> _onWillPop() async {
@@ -56,9 +57,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     _lastBackPress = now;
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Press back again to exit'),
-          duration: const Duration(seconds: 2),
+        const SnackBar(
+          content: Text('Press back again to exit'),
+          duration: Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -70,7 +71,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final dashboardState = ref.watch(dashboardControllerProvider);
-    print('[DashboardScreen] build() - state: ${dashboardState.runtimeType}');
+    developer.log('build() - state: ${dashboardState.runtimeType}', name: 'DashboardScreen');
 
     return BackButtonListener(
       onBackButtonPressed: () async {
@@ -92,18 +93,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           color: colors.primary,
           child: dashboardState.when(
             loading: () {
-              print('[DashboardScreen] showing loading state');
+              developer.log('showing loading state', name: 'DashboardScreen');
               return const _LoadingState();
             },
             error: (err, stack) {
-              print('[DashboardScreen] showing error state: $err');
+              developer.log('showing error state: $err', name: 'DashboardScreen', error: err, stackTrace: stack);
               return ErrorState(
                 message: err.toString(),
                 onRetry: () => ref.read(dashboardControllerProvider.notifier).refresh(),
               );
             },
             data: (data) {
-              print('[DashboardScreen] showing data state with ${data.todayPlaces.length} places');
+              developer.log('showing data state with ${data.todayPlaces.length} places', name: 'DashboardScreen');
               return SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: Padding(
@@ -233,12 +234,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ),
                       // Bottom padding to avoid floating nav overlap
                       const SizedBox(height: 96),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
-        ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -250,25 +251,25 @@ class _LoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return const SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [
-            const LoadingSkeleton(width: double.infinity, height: 48),
-            const SizedBox(height: 16),
-            const LoadingSkeleton(width: double.infinity, height: 260, borderRadius: 24),
-            const SizedBox(height: 16),
-            const Row(
+            LoadingSkeleton(width: double.infinity, height: 48),
+            SizedBox(height: 16),
+            LoadingSkeleton(width: double.infinity, height: 260, borderRadius: 24),
+            SizedBox(height: 16),
+            Row(
               children: [
                 Expanded(child: LoadingSkeleton(width: double.infinity, height: 100)),
                 SizedBox(width: 16),
                 Expanded(child: LoadingSkeleton(width: double.infinity, height: 100)),
               ],
             ),
-            const SizedBox(height: 24),
-            const SkeletonList(itemCount: 3),
-            const SizedBox(height: 96),
+            SizedBox(height: 24),
+            SkeletonList(itemCount: 3),
+            SizedBox(height: 96),
           ],
         ),
       ),

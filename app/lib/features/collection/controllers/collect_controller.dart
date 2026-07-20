@@ -1,9 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '/data/models/customer.dart';
 import '/data/models/outstanding.dart';
-import '/data/repositories/customer_repository.dart';
-import '/data/repositories/collection_repository.dart';
 import '/data/providers.dart';
 
 class CollectScreenState {
@@ -52,8 +49,8 @@ final collectControllerProvider = AutoDisposeStateNotifierProviderFamily<Collect
 
 class CollectController extends StateNotifier<CollectScreenState> {
   CollectController(this._ref, this._customerId)
-      : super(CollectScreenState(
-          customer: const Customer(
+      : super(const CollectScreenState(
+          customer: Customer(
             id: '',
             customerCode: '',
             name: '',
@@ -65,7 +62,7 @@ class CollectController extends StateNotifier<CollectScreenState> {
             sequenceNumber: 0,
             status: 'ACTIVE',
           ),
-          outstanding: const Outstanding(customerId: '', totalFinanced: 0, totalCollected: 0, outstandingAmount: 0),
+          outstanding: Outstanding(customerId: '', totalFinanced: 0, totalCollected: 0, outstandingAmount: 0),
           status: 'PAYMENT',
           amount: 0,
           notes: '',

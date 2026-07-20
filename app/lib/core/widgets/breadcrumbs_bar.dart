@@ -42,7 +42,7 @@ class BreadcrumbsBar extends StatelessWidget {
               child: Text(
                 crumb.label,
                 style: AppTypography.labelSmall.copyWith(
-                  color: colors.foreground.withOpacity(0.8),
+                  color: colors.foreground.withValues(alpha: 0.8),
                   fontWeight: FontWeight.w500,
                 ),
               ),

@@ -1,8 +1,7 @@
+import 'dart:developer' as developer;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/activity.dart';
 import '../../../data/models/place.dart';
-import '../../../data/repositories/customer_repository.dart';
-import '../../../data/repositories/route_repository.dart';
 import '../../../data/providers.dart';
 
 class DashboardData {
@@ -37,29 +36,28 @@ final dashboardControllerProvider = StateNotifierProvider<DashboardController, A
 
 class DashboardController extends StateNotifier<AsyncValue<DashboardData>> {
   DashboardController(this._ref) : super(const AsyncValue.loading()) {
-    print('[DashboardController] Initializing...');
+    developer.log('Initializing...', name: 'DashboardController');
     _init();
   }
 
   final Ref _ref;
 
   void _init() async {
-    print('[DashboardController] _init() called');
-    _ref.listenSelf((previous, next) {}); // Keep listening for changes
+    developer.log('_init() called', name: 'DashboardController');
     await refresh();
-    print('[DashboardController] _init() completed');
+    developer.log('_init() completed', name: 'DashboardController');
   }
 
   Future<void> refresh() async {
-    print('[DashboardController] refresh() started');
+    developer.log('refresh() started', name: 'DashboardController');
     state = const AsyncValue.loading();
     try {
       final routeRepo = _ref.read(routeRepositoryProvider);
       final customerRepo = _ref.read(customerRepositoryProvider);
 
       // We'll seed Melur and Thursday as "today" for demonstration consistency
-      final weekdayId = 'w-4'; // Thursday
-      final weekdayName = 'Thursday';
+      const weekdayId = 'w-4'; // Thursday
+      const weekdayName = 'Thursday';
 
       final places = await routeRepo.getPlacesByWeekday(weekdayId);
       int areaCount = 0;
@@ -122,10 +120,9 @@ class DashboardController extends StateNotifier<AsyncValue<DashboardData>> {
         recentActivities: trimmedRecent,
         todayPlaces: places,
       ));
-      print('[DashboardController] refresh() completed with data');
+      developer.log('refresh() completed with data', name: 'DashboardController');
     } catch (e, stack) {
-      print('[DashboardController] refresh() ERROR: $e');
-      print('[DashboardController] Stack: $stack');
+      developer.log('refresh() ERROR: $e', name: 'DashboardController', error: e, stackTrace: stack);
       state = AsyncValue.error(e, stack);
     }
   }

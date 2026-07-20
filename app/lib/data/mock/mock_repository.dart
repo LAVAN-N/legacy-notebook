@@ -11,7 +11,6 @@ import '../models/area.dart';
 import '../models/collection.dart';
 import '../models/product.dart';
 import '../models/sale.dart';
-import '../models/sale_item.dart';
 import '../models/location.dart';
 import '../models/nominee.dart';
 import '../models/id_proof.dart';
@@ -51,8 +50,10 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   // ─── CustomerRepository ─────────────────────────────────
 
   @override
-  Stream<List<Customer>> watchCustomersByArea(String areaId) {
-    return _updateController.stream.map((_) {
+  Stream<List<Customer>> watchCustomersByArea(String areaId) async* {
+    yield _customers.where((c) => c.areaId == areaId).toList()
+      ..sort((a, b) => a.sequenceNumber.compareTo(b.sequenceNumber));
+    yield* _updateController.stream.map((_) {
       return _customers.where((c) => c.areaId == areaId).toList()
         ..sort((a, b) => a.sequenceNumber.compareTo(b.sequenceNumber));
     });
@@ -74,8 +75,13 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   }
 
   @override
-  Stream<Customer?> watchCustomerById(String id) {
-    return _updateController.stream.map((_) {
+  Stream<Customer?> watchCustomerById(String id) async* {
+    try {
+      yield _customers.firstWhere((c) => c.id == id);
+    } catch (_) {
+      yield null;
+    }
+    yield* _updateController.stream.map((_) {
       try {
         return _customers.firstWhere((c) => c.id == id);
       } catch (_) {
@@ -85,8 +91,9 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   }
 
   @override
-  Stream<Outstanding> watchCustomerOutstanding(String customerId) {
-    return _updateController.stream.map((_) {
+  Stream<Outstanding> watchCustomerOutstanding(String customerId) async* {
+    yield _calculateOutstanding(customerId);
+    yield* _updateController.stream.map((_) {
       return _calculateOutstanding(customerId);
     });
   }
@@ -114,8 +121,9 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   }
 
   @override
-  Stream<List<Activity>> watchCustomerTimeline(String customerId) {
-    return _updateController.stream.map((_) => _buildTimeline(customerId));
+  Stream<List<Activity>> watchCustomerTimeline(String customerId) async* {
+    yield _buildTimeline(customerId);
+    yield* _updateController.stream.map((_) => _buildTimeline(customerId));
   }
 
   @override
@@ -402,8 +410,9 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   }
 
   @override
-  Stream<List<Area>> watchAreasByPlace(String placeId) {
-    return _updateController.stream.map((_) {
+  Stream<List<Area>> watchAreasByPlace(String placeId) async* {
+    yield _areas.where((a) => a.placeId == placeId).toList();
+    yield* _updateController.stream.map((_) {
       return _areas.where((a) => a.placeId == placeId).toList();
     });
   }
@@ -486,8 +495,13 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   // ─── CollectionRepository ───────────────────────────────
 
   @override
-  Stream<List<Collection>> watchCollectionsForCustomerToday(String customerId) {
-    return _updateController.stream.map((_) {
+  Stream<List<Collection>> watchCollectionsForCustomerToday(String customerId) async* {
+    yield _collections.where((col) =>
+        col.customerId == customerId &&
+        col.visitDatetime.day == DateTime.now().day &&
+        col.visitDatetime.month == DateTime.now().month &&
+        col.visitDatetime.year == DateTime.now().year).toList();
+    yield* _updateController.stream.map((_) {
       return _collections.where((col) =>
           col.customerId == customerId &&
           col.visitDatetime.day == DateTime.now().day &&
@@ -543,6 +557,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     required List<Map<String, dynamic>> items,
     required int advanceAmount,
     required String soldBy,
+    int discount = 0,
     String? remarks,
   }) async {
     int total = 0;
@@ -550,7 +565,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
       final qty = item['quantity'] as int;
       final price = item['unitPrice'] as int;
       total += qty * price;
-
+ 
       // Atomic inventory deduction
       final pIndex = _products.indexWhere((p) => p.id == item['productId']);
       if (pIndex != -1) {
@@ -558,15 +573,15 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
         _products[pIndex] = p.copyWith(stock: p.stock - qty);
       }
     }
-
-    final creditAdded = total - advanceAmount;
-
+ 
+    final creditAdded = total - discount - advanceAmount;
+ 
     final sale = Sale(
       id: 's-${DateTime.now().millisecondsSinceEpoch}',
       customerId: customerId,
       saleDatetime: DateTime.now(),
       saleType: creditAdded == 0 ? 'READY' : 'CREDIT',
-      totalAmount: total,
+      totalAmount: total - discount,
       advanceAmount: advanceAmount,
       financedAmount: creditAdded,
       soldBy: soldBy,
@@ -591,8 +606,9 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   Future<List<Product>> getProducts() async => _products;
 
   @override
-  Stream<List<Product>> watchProducts() {
-    return _updateController.stream.map((_) => _products);
+  Stream<List<Product>> watchProducts() async* {
+    yield _products;
+    yield* _updateController.stream.map((_) => _products);
   }
 
   @override
@@ -601,6 +617,46 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
       return _products.firstWhere((p) => p.id == id);
     } catch (_) {
       return null;
+    }
+  }
+
+  @override
+  Future<Product> addProduct({
+    required String name,
+    required String brand,
+    required String sku,
+    required int price,
+    required int stock,
+    required String categoryId,
+    required int minimumStock,
+    String? description,
+    String? imageUrl,
+  }) async {
+    final product = Product(
+      id: 'pr-${DateTime.now().millisecondsSinceEpoch}',
+      sku: sku,
+      name: name,
+      brand: brand,
+      categoryId: categoryId,
+      minimumStock: minimumStock,
+      stock: stock,
+      price: price,
+      imageUrl: imageUrl,
+      description: description,
+    );
+    _products.add(product);
+    _ref.read(syncProvider.notifier).incrementPending();
+    AppHaptics.mediumImpact();
+    _syncController();
+    return product;
+  }
+
+  @override
+  Future<void> updateProduct(Product product) async {
+    final index = _products.indexWhere((p) => p.id == product.id);
+    if (index != -1) {
+      _products[index] = product;
+      _syncController();
     }
   }
 }

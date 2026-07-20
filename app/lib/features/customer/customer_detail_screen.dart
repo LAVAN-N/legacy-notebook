@@ -6,10 +6,8 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_scaffold.dart';
-import '../../core/widgets/loading_skeleton.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/section_header.dart';
-import '../../core/widgets/confirm_snackbar.dart';
 import '../../core/router/routes.dart';
 import 'controllers/customer_controller.dart';
 import 'widgets/customer_context_card.dart';
@@ -143,74 +141,4 @@ class CustomerDetailScreen extends ConsumerWidget {
       },
     );
   }
-
-  void _showAddNomineeSheet(BuildContext context, WidgetRef ref) {
-    final nameController = TextEditingController();
-    final phoneController = TextEditingController();
-    final relationController = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        final colors = context.colors;
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 20,
-            right: 20,
-            top: 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Add Nominee / Guarantor',
-                style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Nominee Name'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(labelText: 'Phone Number'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: relationController,
-                decoration: const InputDecoration(labelText: 'Relationship (e.g. Spouse, Brother)'),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () async {
-                  final name = nameController.text.trim();
-                  final phone = phoneController.text.trim();
-                  final relation = relationController.text.trim();
-
-                  if (name.isNotEmpty && phone.isNotEmpty && relation.isNotEmpty) {
-                    await ref
-                        .read(customerDetailControllerProvider(customerId).notifier)
-                        .addNominee(name, phone, relation);
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Nominee details recorded successfully')),
-                    );
-                  }
-                },
-                child: const Text('SAVE NOMINEE'),
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-
 }

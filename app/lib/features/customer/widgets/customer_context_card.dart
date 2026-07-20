@@ -11,8 +11,6 @@ import '../../../core/widgets/avatar.dart';
 import '../../../core/router/routes.dart';
 import '../../../data/models/customer.dart';
 import '../../../data/models/nominee.dart';
-import '../../../data/models/id_proof.dart';
-import '../../../data/models/location.dart';
 
 class CustomerContextCard extends StatelessWidget {
   const CustomerContextCard({
@@ -118,6 +116,7 @@ class CustomerContextCard extends StatelessWidget {
       case 'ACTIVE':
         return colors.success;
       case 'INACTIVE':
+      case 'DO_NOT_VISIT':
         return colors.danger;
       default:
         return colors.mutedFg;
@@ -147,7 +146,7 @@ class CustomerContextCard extends StatelessWidget {
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        side: BorderSide(color: colors.border.withOpacity(0.4)),
+        side: BorderSide(color: colors.border.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,7 +155,7 @@ class CustomerContextCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              color: colors.primary.withOpacity(0.05),
+              color: colors.primary.withValues(alpha: 0.05),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(AppRadius.lg),
                 topRight: Radius.circular(AppRadius.lg),
@@ -180,7 +179,10 @@ class CustomerContextCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
-                      Row(
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 4,
                         children: [
                           Text(
                             customer.customerCode,
@@ -189,39 +191,47 @@ class CustomerContextCard extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '•',
-                            style: TextStyle(color: colors.border),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(Icons.calendar_today, size: 12, color: colors.mutedFg),
-                          const SizedBox(width: 4),
-                          Text(
-                            _getWeekdayNameById(customer.weekdayId),
-                            style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '•',
-                            style: TextStyle(color: colors.border),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: statusColor.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: statusColor.withOpacity(0.3)),
-                            ),
-                            child: Text(
-                              customer.status,
-                              style: AppTypography.labelSmall.copyWith(
-                                color: statusColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 9,
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '•',
+                                style: TextStyle(color: colors.border),
                               ),
-                            ),
+                              const SizedBox(width: 8),
+                              Icon(Icons.calendar_today, size: 12, color: colors.mutedFg),
+                              const SizedBox(width: 4),
+                              Text(
+                                _getWeekdayNameById(customer.weekdayId),
+                                style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '•',
+                                style: TextStyle(color: colors.border),
+                              ),
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: statusColor.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                                ),
+                                child: Text(
+                                  customer.status.replaceAll('_', ' '),
+                                  style: AppTypography.labelSmall.copyWith(
+                                    color: statusColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 9,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -229,6 +239,8 @@ class CustomerContextCard extends StatelessWidget {
                   ),
                 ),
                 IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
                   icon: Icon(Icons.edit, size: 20, color: colors.primary),
                   onPressed: () {
                     context.push('${Routes.newClient}?source=client_card', extra: customer);
@@ -308,9 +320,9 @@ class CustomerContextCard extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: colors.muted.withOpacity(0.3),
+                      color: colors.muted.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(AppRadius.md),
-                      border: Border.all(color: colors.border.withOpacity(0.3)),
+                      border: Border.all(color: colors.border.withValues(alpha: 0.3)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,10 +368,10 @@ class CustomerContextCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: colors.surface,
                       borderRadius: BorderRadius.circular(AppRadius.md),
-                      border: Border.all(color: colors.border.withOpacity(0.5)),
+                      border: Border.all(color: colors.border.withValues(alpha: 0.5)),
                       boxShadow: [
                         BoxShadow(
-                          color: colors.border.withOpacity(0.1),
+                          color: colors.border.withValues(alpha: 0.1),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -430,9 +442,9 @@ class CustomerContextCard extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
                     decoration: BoxDecoration(
-                      color: colors.muted.withOpacity(0.2),
+                      color: colors.muted.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(AppRadius.md),
-                      border: Border.all(color: colors.border.withOpacity(0.3)),
+                      border: Border.all(color: colors.border.withValues(alpha: 0.3)),
                     ),
                     alignment: Alignment.center,
                     child: Row(
@@ -459,21 +471,21 @@ class CustomerContextCard extends StatelessWidget {
                   ...customer.nominees.map((n) => Card(
                     margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                     elevation: 0,
-                    color: colors.muted.withOpacity(0.25),
+                    color: colors.muted.withValues(alpha: 0.25),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.md),
-                      side: BorderSide(color: colors.border.withOpacity(0.3)),
+                      side: BorderSide(color: colors.border.withValues(alpha: 0.3)),
                     ),
                     child: ListTile(
                       dense: true,
                       contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
                       leading: CircleAvatar(
-                        backgroundColor: colors.primary.withOpacity(0.1),
+                        backgroundColor: colors.primary.withValues(alpha: 0.1),
                         radius: 16,
                         child: Icon(Icons.person, size: 16, color: colors.primary),
                       ),
                       title: Text(n.name, style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
-                      subtitle: Text('${n.relation ?? 'Nominee'}${n.phone != null ? ' · ${n.phone}' : ''}${n.dob != null && n.dob!.isNotEmpty ? ' · DOB: ${n.dob}' : ''}', style: AppTypography.labelSmall),
+                      subtitle: Text('${n.relation ?? 'Nominee'}${n.phone != null ? ' · ${n.phone}' : ''}', style: AppTypography.labelSmall),
                       trailing: n.phone != null
                           ? IconButton(
                               icon: const Icon(Icons.phone_in_talk, size: 16),
@@ -499,10 +511,10 @@ class CustomerContextCard extends StatelessWidget {
                       return Card(
                         margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                         elevation: 0,
-                        color: colors.muted.withOpacity(0.15),
+                        color: colors.muted.withValues(alpha: 0.15),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.md),
-                          side: BorderSide(color: colors.border.withOpacity(0.3)),
+                          side: BorderSide(color: colors.border.withValues(alpha: 0.3)),
                         ),
                         child: Theme(
                           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -631,7 +643,7 @@ class CustomerContextCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(item.icon, size: 16, color: colors.mutedFg.withOpacity(0.8)),
+                Icon(item.icon, size: 16, color: colors.mutedFg.withValues(alpha: 0.8)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -674,14 +686,14 @@ class CustomerContextCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
         decoration: BoxDecoration(
-          color: colors.primary.withOpacity(0.04),
+          color: colors.primary.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: colors.primary.withOpacity(0.15)),
+          border: Border.all(color: colors.primary.withValues(alpha: 0.15)),
         ),
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: colors.primary.withOpacity(0.1),
+              backgroundColor: colors.primary.withValues(alpha: 0.1),
               radius: 14,
               child: Icon(icon, size: 14, color: colors.primary),
             ),

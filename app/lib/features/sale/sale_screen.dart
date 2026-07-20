@@ -13,6 +13,7 @@ import '../../core/router/routes.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/haptics.dart';
 import '../../data/models/product.dart';
+import '../../data/mock/mock_data.dart';
 
 import 'controllers/sale_controller.dart';
 
@@ -123,7 +124,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                   ),
                 ),
                 TextButton.icon(
-                  onPressed: () => _showProductPicker(context, state.catalog),
+                  onPressed: () => _showProductPicker(state.catalog),
                   icon: const Icon(Icons.add, size: 16),
                   label: const Text('ADD ITEM'),
                 ),
@@ -144,7 +145,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                 alignment: Alignment.center,
                 child: Column(
                   children: [
-                    Icon(Icons.shopping_bag, size: 36, color: colors.mutedFg.withOpacity(0.5)),
+                    Icon(Icons.shopping_bag, size: 36, color: colors.mutedFg.withValues(alpha: 0.5)),
                     const SizedBox(height: 8),
                     Text(
                       'No products added yet',
@@ -169,14 +170,14 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                         style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.w700),
                       ),
                       subtitle: Text(
-                        '${rupees(item.product.price)} x ${item.quantity}',
+                        '${rupees(item.price ~/ 100)} x ${item.quantity}',
                         style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            rupees(item.subtotal),
+                            rupees(item.subtotal ~/ 100),
                             style: AppTypography.currencySmall.copyWith(color: colors.foreground),
                           ),
                           const SizedBox(width: AppSpacing.sm),
@@ -215,13 +216,55 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
               keyboardType: TextInputType.number,
               style: AppTypography.currencyMedium.copyWith(color: colors.foreground),
               onChanged: (val) {
-                final adv = int.tryParse(val) ?? 0;
+                String sanitized = val.replaceAll(RegExp(r'^0+'), '');
+                if (sanitized.isEmpty) {
+                  sanitized = '0';
+                }
+                if (sanitized != val) {
+                  _advanceController.value = TextEditingValue(
+                    text: sanitized,
+                    selection: TextSelection.collapsed(offset: sanitized.length),
+                  );
+                }
+                final adv = int.tryParse(sanitized) ?? 0;
                 ref.read(saleControllerProvider(widget.customerId).notifier).updateAdvance(adv);
               },
               decoration: const InputDecoration(
                 prefixText: '₹ ',
                 hintText: 'Enter cash down payment collected',
               ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            Row(
+              children: [
+                Checkbox(
+                  value: state.isDiscounted,
+                  activeColor: colors.primary,
+                  onChanged: (val) {
+                    if (val != null) {
+                      ref
+                          .read(saleControllerProvider(widget.customerId).notifier)
+                          .toggleDiscounted(val);
+                    }
+                  },
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Discounted Ready Cash Sale',
+                        style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      Text(
+                        'Overrides the total price to match the down payment (zero credit).',
+                        style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: AppSpacing.lg),
 
@@ -245,7 +288,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
 
             // Financial Summary Block
             Card(
-              color: colors.muted.withOpacity(0.4),
+              color: colors.muted.withValues(alpha: 0.4),
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
@@ -266,6 +309,24 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                         AmountText(amount: totalSale, style: AppTypography.currencySmall),
                       ],
                     ),
+                    if (state.discountAmount > 0) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Discount Applied', style: AppTypography.bodyMedium.copyWith(color: colors.warning)),
+                          Text('- ${rupees(state.discountAmount)}', style: AppTypography.currencySmall.copyWith(color: colors.warning)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Discounted Price', style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                          AmountText(amount: state.finalAmount, style: AppTypography.currencySmall.copyWith(fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -291,8 +352,8 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: state.saleType == 'READY'
-                                ? colors.success.withOpacity(0.12)
-                                : colors.warning.withOpacity(0.12),
+                                ? colors.success.withValues(alpha: 0.12)
+                                : colors.warning.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(AppRadius.sm),
                           ),
                           child: Text(
@@ -331,7 +392,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: colors.danger.withOpacity(0.12),
+                  color: colors.danger.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
                 child: Text(
@@ -356,7 +417,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
     );
   }
 
-  void _showProductPicker(BuildContext context, List<Product> products) async {
+  void _showProductPicker(List<Product> products) async {
     final selectedProduct = await showModalBottomSheet<Product>(
       context: context,
       isScrollControlled: true,
@@ -369,11 +430,11 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
     );
 
     if (selectedProduct != null && mounted) {
-      _showLineItemEditor(context, selectedProduct);
+      _showLineItemEditor(selectedProduct);
     }
   }
 
-  void _showLineItemEditor(BuildContext context, Product product) {
+  void _showLineItemEditor(Product product) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -405,11 +466,15 @@ class _ProductPickerSheet extends StatefulWidget {
 
 class _ProductPickerSheetState extends State<_ProductPickerSheet> {
   String _searchQuery = '';
+  final Set<String> _selectedCategoryIds = {};
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final filtered = widget.products.where((p) {
+      if (_selectedCategoryIds.isNotEmpty && !_selectedCategoryIds.contains(p.categoryId)) {
+        return false;
+      }
       final q = _searchQuery.toLowerCase();
       return p.name.toLowerCase().contains(q) || 
              p.brand.toLowerCase().contains(q) || 
@@ -452,7 +517,80 @@ class _ProductPickerSheetState extends State<_ProductPickerSheet> {
                 onChanged: (val) => setState(() => _searchQuery = val),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 40,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: FilterChip(
+                      label: const Text('All'),
+                      selected: _selectedCategoryIds.isEmpty,
+                      onSelected: (selected) {
+                        if (selected) {
+                          setState(() {
+                            _selectedCategoryIds.clear();
+                          });
+                        }
+                      },
+                      selectedColor: colors.primary.withValues(alpha: 0.12),
+                      checkmarkColor: colors.primary,
+                      showCheckmark: true,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color: _selectedCategoryIds.isEmpty ? colors.primary : colors.border,
+                          width: 1,
+                        ),
+                      ),
+                      labelStyle: TextStyle(
+                        color: _selectedCategoryIds.isEmpty ? colors.primary : colors.mutedFg,
+                        fontWeight: _selectedCategoryIds.isEmpty ? FontWeight.w600 : FontWeight.normal,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  ...mockCategoriesList.map((c) {
+                    final isSelected = _selectedCategoryIds.contains(c.id);
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: FilterChip(
+                        label: Text(c.name),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _selectedCategoryIds.add(c.id);
+                            } else {
+                              _selectedCategoryIds.remove(c.id);
+                            }
+                          });
+                        },
+                        selectedColor: colors.primary.withValues(alpha: 0.12),
+                        checkmarkColor: colors.primary,
+                        showCheckmark: true,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(
+                            color: isSelected ? colors.primary : colors.border,
+                            width: 1,
+                          ),
+                        ),
+                        labelStyle: TextStyle(
+                          color: isSelected ? colors.primary : colors.mutedFg,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                          fontSize: 13,
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
             Expanded(
               child: ListView.separated(
                 controller: scrollController,
@@ -498,7 +636,7 @@ class _ProductPickerSheetState extends State<_ProductPickerSheet> {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  rupees(product.price),
+                                  rupees(product.price ~/ 100),
                                   style: AppTypography.currencySmall.copyWith(
                                     color: outOfStock ? colors.mutedFg : colors.primary,
                                   ),
@@ -508,7 +646,7 @@ class _ProductPickerSheetState extends State<_ProductPickerSheet> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: colors.danger.withOpacity(0.12),
+                                      color: colors.danger.withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
@@ -633,7 +771,7 @@ class _LineItemEditorSheetState extends State<_LineItemEditorSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Line total:', style: AppTypography.labelLarge),
-              Text(rupees((total * 100).round()), style: AppTypography.titleMedium.copyWith(color: colors.primary)),
+              Text(rupees(total.round()), style: AppTypography.titleMedium.copyWith(color: colors.primary)),
             ],
           ),
           const SizedBox(height: 24),
@@ -647,6 +785,9 @@ class _LineItemEditorSheetState extends State<_LineItemEditorSheet> {
               ),
               const SizedBox(width: 8),
               FilledButton(
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(120, 48),
+                ),
                 onPressed: () => widget.onSave(_quantity, currentPrice),
                 child: const Text('Save item'),
               ),

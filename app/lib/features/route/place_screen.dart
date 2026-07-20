@@ -13,7 +13,6 @@ import '../../core/widgets/stat_card.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/router/routes.dart';
 import '../../core/router/navigation_shell.dart';
-import '../../data/repositories/route_repository.dart';
 import '../../data/providers.dart';
 import 'controllers/route_controller.dart';
 

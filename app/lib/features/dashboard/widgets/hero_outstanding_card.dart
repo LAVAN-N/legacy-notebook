@@ -42,7 +42,7 @@ class HeroOutstandingCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.xl),
         boxShadow: [
           BoxShadow(
-            color: colors.primary.withOpacity(0.3),
+            color: colors.primary.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -61,7 +61,7 @@ class HeroOutstandingCard extends StatelessWidget {
                   Text(
                     "Today's Route",
                     style: AppTypography.labelMedium.copyWith(
-                      color: colors.primaryFg.withOpacity(0.7),
+                      color: colors.primaryFg.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
@@ -77,7 +77,7 @@ class HeroOutstandingCard extends StatelessWidget {
               if (pendingVisits > 0)
                 Container(
                   decoration: BoxDecoration(
-                    color: colors.accent.withOpacity(0.2),
+                    color: colors.accent.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -95,7 +95,7 @@ class HeroOutstandingCard extends StatelessWidget {
           Text(
             'Expected Collection',
             style: AppTypography.labelMedium.copyWith(
-              color: colors.primaryFg.withOpacity(0.7),
+              color: colors.primaryFg.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -117,7 +117,7 @@ class HeroOutstandingCard extends StatelessWidget {
                   Text(
                     'Collected: ${rupees(collectedAmount)}',
                     style: AppTypography.labelSmall.copyWith(
-                      color: colors.primaryFg.withOpacity(0.8),
+                      color: colors.primaryFg.withValues(alpha: 0.8),
                     ),
                   ),
                   Text(
@@ -135,7 +135,7 @@ class HeroOutstandingCard extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 8,
-                  backgroundColor: Colors.white.withOpacity(0.15),
+                  backgroundColor: Colors.white.withValues(alpha: 0.15),
                   color: colors.accent,
                 ),
               ),
@@ -147,13 +147,13 @@ class HeroOutstandingCard extends StatelessWidget {
             icon: const Icon(Icons.navigation_outlined, color: Colors.white),
             label: const Text('START COLLECTION'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.2),
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
               foregroundColor: Colors.white,
               minimumSize: const Size.fromHeight(56),
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.lg),
-                side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
               ),
             ),
           ),

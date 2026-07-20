@@ -79,7 +79,7 @@ class _AppScaffoldState extends State<AppScaffold> {
 
     final appBarBackground = widget.blendHeader && !_isScrolled
         ? colors.background
-        : (widget.blendHeader && _isScrolled ? colors.surface.withOpacity(0.85) : colors.surface);
+        : (widget.blendHeader && _isScrolled ? colors.surface.withValues(alpha: 0.85) : colors.surface);
     final appBarElevation = widget.blendHeader && !_isScrolled ? 0.0 : 1.0;
     final showBorder = widget.blendHeader && _isScrolled;
 
@@ -113,7 +113,7 @@ class _AppScaffoldState extends State<AppScaffold> {
                       preferredSize: const Size.fromHeight(1),
                       child: Container(
                         height: 1,
-                        color: colors.border.withOpacity(0.3),
+                        color: colors.border.withValues(alpha: 0.3),
                       ),
                     )
                   : null,

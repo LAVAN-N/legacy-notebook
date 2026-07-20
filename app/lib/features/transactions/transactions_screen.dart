@@ -5,7 +5,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_scaffold.dart';
-import '../../core/router/routes.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
@@ -98,7 +97,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                             }
                           },
                           backgroundColor: colors.surface,
-                          selectedColor: colors.primary.withOpacity(0.1),
+                          selectedColor: colors.primary.withValues(alpha: 0.1),
                           labelStyle: TextStyle(
                             color:
                                 isSelected ? colors.primary : colors.foreground,
@@ -209,7 +208,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       if (selected) _updateFilters(kind: kind);
                     },
                     backgroundColor: colors.surface,
-                    selectedColor: colors.primary.withOpacity(0.1),
+                    selectedColor: colors.primary.withValues(alpha: 0.1),
                     labelStyle: TextStyle(
                       color: isSelected ? colors.primary : colors.foreground,
                       fontWeight:
@@ -268,10 +267,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundColor: isSale
-                              ? colors.primary.withOpacity(0.1)
+                              ? colors.primary.withValues(alpha: 0.1)
                               : (isPartial
-                                  ? Colors.orange.withOpacity(0.1)
-                                  : Colors.green.withOpacity(0.1)),
+                                  ? Colors.orange.withValues(alpha: 0.1)
+                                  : Colors.green.withValues(alpha: 0.1)),
                           child: Icon(
                             isSale ? Icons.shopping_cart : Icons.payments,
                             color: isSale

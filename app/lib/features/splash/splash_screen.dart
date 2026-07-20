@@ -109,7 +109,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
-                  color: colors.primaryFg.withOpacity(0.8),
+                  color: colors.primaryFg.withValues(alpha: 0.8),
                   letterSpacing: 0.2,
                 ),
               ),

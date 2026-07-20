@@ -41,19 +41,19 @@ class TagChip extends StatelessWidget {
         typeIcon = Icon(Icons.hourglass_empty, size: 14, color: fg);
         break;
       case TagType.inProgress:
-        bg = colors.warning.withOpacity(0.12);
+        bg = colors.warning.withValues(alpha: 0.12);
         fg = colors.warning;
         label = 'In Progress';
         typeIcon = Icon(Icons.play_circle_outline, size: 14, color: fg);
         break;
       case TagType.done:
-        bg = colors.success.withOpacity(0.12);
+        bg = colors.success.withValues(alpha: 0.12);
         fg = colors.success;
         label = 'Collected';
         typeIcon = Icon(Icons.check_circle_outline, size: 14, color: fg);
         break;
       case TagType.partial:
-        bg = colors.primary.withOpacity(0.12);
+        bg = colors.primary.withValues(alpha: 0.12);
         fg = colors.primary;
         label = 'Partial';
         typeIcon = Icon(Icons.pie_chart_outline, size: 14, color: fg);

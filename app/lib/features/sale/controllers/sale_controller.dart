@@ -2,9 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/customer.dart';
 import '../../../data/models/outstanding.dart';
 import '../../../data/models/product.dart';
-import '../../../data/repositories/customer_repository.dart';
-import '../../../data/repositories/product_repository.dart';
-import '../../../data/repositories/sale_repository.dart';
 import '../../../data/providers.dart';
 
 class SaleItemInput {
@@ -28,6 +25,7 @@ class SaleScreenState {
     required this.catalog,
     required this.lineItems,
     required this.advanceAmount,
+    required this.isDiscounted,
     required this.remarks,
     required this.errorMessage,
     required this.isSaving,
@@ -38,12 +36,15 @@ class SaleScreenState {
   final List<Product> catalog;
   final List<SaleItemInput> lineItems;
   final int advanceAmount;
+  final bool isDiscounted;
   final String remarks;
   final String? errorMessage;
   final bool isSaving;
 
-  int get totalAmount => lineItems.fold<int>(0, (sum, item) => sum + item.subtotal);
-  int get creditAdded => (totalAmount - advanceAmount).clamp(0, 9999999);
+  int get totalAmount => lineItems.fold<int>(0, (sum, item) => sum + item.subtotal) ~/ 100;
+  int get finalAmount => isDiscounted ? advanceAmount : totalAmount;
+  int get discountAmount => isDiscounted ? (totalAmount - advanceAmount).clamp(0, totalAmount) : 0;
+  int get creditAdded => isDiscounted ? 0 : (totalAmount - advanceAmount).clamp(0, 9999999);
   String get saleType => creditAdded == 0 ? 'READY' : 'CREDIT';
 
   SaleScreenState copyWith({
@@ -52,6 +53,7 @@ class SaleScreenState {
     List<Product>? catalog,
     List<SaleItemInput>? lineItems,
     int? advanceAmount,
+    bool? isDiscounted,
     String? remarks,
     String? errorMessage,
     bool? isSaving,
@@ -62,6 +64,7 @@ class SaleScreenState {
       catalog: catalog ?? this.catalog,
       lineItems: lineItems ?? this.lineItems,
       advanceAmount: advanceAmount ?? this.advanceAmount,
+      isDiscounted: isDiscounted ?? this.isDiscounted,
       remarks: remarks ?? this.remarks,
       errorMessage: errorMessage, // Nullable override
       isSaving: isSaving ?? this.isSaving,
@@ -75,8 +78,8 @@ final saleControllerProvider = AutoDisposeStateNotifierProviderFamily<SaleContro
 
 class SaleController extends StateNotifier<SaleScreenState> {
   SaleController(this._ref, this._customerId)
-      : super(SaleScreenState(
-          customer: const Customer(
+      : super(const SaleScreenState(
+          customer: Customer(
             id: '',
             customerCode: '',
             name: '',
@@ -88,15 +91,29 @@ class SaleController extends StateNotifier<SaleScreenState> {
             sequenceNumber: 0,
             status: 'ACTIVE',
           ),
-          outstanding: const Outstanding(customerId: '', totalFinanced: 0, totalCollected: 0, outstandingAmount: 0),
+          outstanding: Outstanding(customerId: '', totalFinanced: 0, totalCollected: 0, outstandingAmount: 0),
           catalog: [],
           lineItems: [],
           advanceAmount: 0,
+          isDiscounted: false,
           remarks: '',
           errorMessage: null,
           isSaving: false,
         )) {
     _init();
+
+    // Reactively listen to the products stream provider for catalog updates
+    _ref.listen<AsyncValue<List<Product>>>(
+      productsStreamProvider,
+      (previous, next) {
+        next.whenOrNull(
+          data: (products) {
+            state = state.copyWith(catalog: products);
+          },
+        );
+      },
+      fireImmediately: true,
+    );
   }
 
   final Ref _ref;
@@ -108,13 +125,13 @@ class SaleController extends StateNotifier<SaleScreenState> {
 
     final customer = await customerRepo.getCustomerById(_customerId);
     final outstanding = await customerRepo.getCustomerOutstanding(_customerId);
-    final catalog = await productRepo.getProducts();
+    final products = await productRepo.getProducts();
 
     if (customer != null) {
       state = state.copyWith(
         customer: customer,
         outstanding: outstanding,
-        catalog: catalog,
+        catalog: products,
       );
     }
   }
@@ -193,6 +210,13 @@ class SaleController extends StateNotifier<SaleScreenState> {
     );
   }
 
+  void toggleDiscounted(bool isDiscounted) {
+    state = state.copyWith(
+      isDiscounted: isDiscounted,
+      errorMessage: null,
+    );
+  }
+
   void updateRemarks(String remarks) {
     state = state.copyWith(remarks: remarks);
   }
@@ -218,13 +242,14 @@ class SaleController extends StateNotifier<SaleScreenState> {
       final mappedItems = state.lineItems.map((item) => {
         'productId': item.product.id,
         'quantity': item.quantity,
-        'unitPrice': item.price,
+        'unitPrice': item.price ~/ 100,
       }).toList();
 
       await saleRepo.saveSale(
         customerId: _customerId,
         items: mappedItems,
         advanceAmount: state.advanceAmount,
+        discount: state.discountAmount,
         soldBy: 'Ramesh (Collector)',
         remarks: state.remarks.isNotEmpty ? state.remarks : null,
       );

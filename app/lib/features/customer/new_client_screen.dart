@@ -15,7 +15,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_scaffold.dart';
-import '../../core/utils/formatters.dart';
 import '../../core/router/routes.dart';
 import '../../data/providers.dart';
 import '../../data/models/nominee.dart';
@@ -134,11 +133,6 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
     }
   }
 
-  void _scrollToError(String fieldKey) {
-    // Scroll to first error field (simple implementation)
-    // In a real app, you'd use Scrollable.ensureVisible or similar
-  }
-
   void _handleBack() async {
     final isDirty = ref.read(newClientControllerProvider.notifier).isDirty;
     if (isDirty) {
@@ -235,84 +229,82 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
                   isEditing: widget.customer != null,
                   onCreateAndSale: () async {
                     final customer = await controller.createAndSale();
-                    if (customer != null && mounted) {
-                      // Capture ref dependencies before showing snackbar
-                      final repository = ref.read(customerRepositoryProvider);
-                      final notifier =
-                          ref.read(newClientControllerProvider.notifier);
+                    if (customer == null) return;
+                    if (!context.mounted) return;
 
-                      // Show snackbar
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Customer added · UNDO'),
-                          action: SnackBarAction(
-                            label: 'UNDO',
-                            onPressed: () async {
-                              await repository.undoCustomer(customer.id);
-                              notifier.resetForm();
-                            },
-                          ),
-                          duration: const Duration(seconds: 3),
-                          behavior: SnackBarBehavior.floating,
+                    // Capture ref dependencies before showing snackbar
+                    final repository = ref.read(customerRepositoryProvider);
+                    final notifier =
+                        ref.read(newClientControllerProvider.notifier);
+
+                    // Show snackbar
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Customer added · UNDO'),
+                        action: SnackBarAction(
+                          label: 'UNDO',
+                          onPressed: () async {
+                            await repository.undoCustomer(customer.id);
+                            notifier.resetForm();
+                          },
                         ),
-                      );
-                      // Navigate to sale screen
-                      if (mounted) {
-                        context.go('${Routes.sale(
-                          formState.selectedWeekday,
-                          formState.placeId,
-                          formState.areaId,
-                          customer.id,
-                        )}?source=create');
-                      }
-                    }
+                        duration: const Duration(seconds: 3),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                    // Navigate to sale screen
+                    context.go('${Routes.sale(
+                      formState.selectedWeekday,
+                      formState.placeId,
+                      formState.areaId,
+                      customer.id,
+                    )}?source=create');
                   },
                   onCreateOnly: () async {
                     final customer = await controller.createOnly();
-                    if (customer != null && mounted) {
-                      if (widget.customer != null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content:
-                                Text('Customer details updated successfully'),
-                            duration: Duration(seconds: 2),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                        Navigator.pop(context);
-                        return;
-                      }
+                    if (customer == null) return;
+                    if (!context.mounted) return;
 
-                      // Capture ref dependencies before showing snackbar
-                      final repository = ref.read(customerRepositoryProvider);
-                      final notifier =
-                          ref.read(newClientControllerProvider.notifier);
-
-                      // Show snackbar
+                    if (widget.customer != null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Customer added · UNDO'),
-                          action: SnackBarAction(
-                            label: 'UNDO',
-                            onPressed: () async {
-                              await repository.undoCustomer(customer.id);
-                              notifier.resetForm();
-                            },
-                          ),
-                          duration: const Duration(seconds: 3),
+                        const SnackBar(
+                          content:
+                              Text('Customer details updated successfully'),
+                          duration: Duration(seconds: 2),
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
-                      // Navigate to customer detail
-                      if (mounted) {
-                        context.go(Routes.customer(
-                          formState.selectedWeekday,
-                          formState.placeId,
-                          formState.areaId,
-                          customer.id,
-                        ));
-                      }
+                      Navigator.pop(context);
+                      return;
                     }
+
+                    // Capture ref dependencies before showing snackbar
+                    final repository = ref.read(customerRepositoryProvider);
+                    final notifier =
+                        ref.read(newClientControllerProvider.notifier);
+
+                    // Show snackbar
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Customer added · UNDO'),
+                        action: SnackBarAction(
+                          label: 'UNDO',
+                          onPressed: () async {
+                            await repository.undoCustomer(customer.id);
+                            notifier.resetForm();
+                          },
+                        ),
+                        duration: const Duration(seconds: 3),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                    // Navigate to customer detail
+                    context.go(Routes.customer(
+                      formState.selectedWeekday,
+                      formState.placeId,
+                      formState.areaId,
+                      customer.id,
+                    ));
                   },
                   colors: colors,
                 ),
@@ -446,7 +438,7 @@ class _RouteSectionState extends State<_RouteSection> {
                     .copyWith(color: widget.colors.mutedFg)),
             const SizedBox(height: AppSpacing.sm),
             DropdownButtonFormField<String>(
-              value: widget.state.placeId.isEmpty ? null : widget.state.placeId,
+              initialValue: widget.state.placeId.isEmpty ? null : widget.state.placeId,
               dropdownColor: widget.colors.surface,
               icon:
                   Icon(Icons.keyboard_arrow_down, color: widget.colors.mutedFg),
@@ -526,7 +518,7 @@ class _RouteSectionState extends State<_RouteSection> {
                     .copyWith(color: widget.colors.mutedFg)),
             const SizedBox(height: AppSpacing.sm),
             DropdownButtonFormField<String>(
-              value: widget.state.areaId.isEmpty ? null : widget.state.areaId,
+              initialValue: widget.state.areaId.isEmpty ? null : widget.state.areaId,
               dropdownColor: widget.colors.surface,
               icon:
                   Icon(Icons.keyboard_arrow_down, color: widget.colors.mutedFg),
@@ -990,8 +982,6 @@ class _AddPlaceSheetState extends State<_AddPlaceSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-
     return Padding(
       padding:
           EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
@@ -1046,8 +1036,6 @@ class _AddAreaSheetState extends State<_AddAreaSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-
     return Padding(
       padding:
           EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
@@ -1180,7 +1168,7 @@ class _NomineesBlockState extends State<_NomineesBlock> {
                             .copyWith(color: widget.colors.mutedFg)),
                     const SizedBox(height: AppSpacing.xs),
                     DropdownButtonFormField<String>(
-                      value: rel,
+                      initialValue: rel,
                       dropdownColor: widget.colors.surface,
                       icon: Icon(Icons.keyboard_arrow_down,
                           color: widget.colors.mutedFg),
@@ -1355,7 +1343,7 @@ class _NomineesBlockState extends State<_NomineesBlock> {
                       style: AppTypography.bodyMedium
                           .copyWith(fontWeight: FontWeight.bold)),
                   subtitle: Text(
-                    '${n.relation ?? ''}${n.phone != null && n.phone!.isNotEmpty ? ' · ${n.phone}' : ''}${n.dob != null && n.dob!.isNotEmpty ? ' · DOB: ${n.dob}' : ''}',
+                    '${n.relation ?? ''}${n.phone != null && n.phone!.isNotEmpty ? ' · ${n.phone}' : ''}',
                     style:
                         AppTypography.bodySmall.copyWith(color: colors.mutedFg),
                   ),
@@ -2442,7 +2430,7 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
             style: AppTypography.labelSmall.copyWith(color: colors.mutedFg)),
         const SizedBox(height: AppSpacing.xs),
         DropdownButtonFormField<String>(
-          value: _selectedType,
+          initialValue: _selectedType,
           dropdownColor: colors.surface,
           icon: Icon(Icons.keyboard_arrow_down, color: colors.mutedFg),
           hint: Text('Select proof type',

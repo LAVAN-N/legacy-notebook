@@ -1,7 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'collection.dart';
-import 'sale.dart';
-import 'sale_item.dart';
 
 part 'activity.freezed.dart';
 part 'activity.g.dart';

@@ -29,7 +29,7 @@ class TodaysPlacesList extends StatelessWidget {
         alignment: Alignment.center,
         child: Column(
           children: [
-            Icon(Icons.home_work_outlined, size: 48, color: colors.mutedFg.withOpacity(0.5)),
+            Icon(Icons.home_work_outlined, size: 48, color: colors.mutedFg.withValues(alpha: 0.5)),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'No Places Today',
@@ -65,7 +65,7 @@ class TodaysPlacesList extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: colors.primary.withOpacity(0.1),
+                      color: colors.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,

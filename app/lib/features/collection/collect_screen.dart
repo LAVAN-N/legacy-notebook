@@ -307,7 +307,7 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
             // Live Outstanding Preview block
             if (state.status != 'CARRY_FORWARD') ...[
               Card(
-                color: colors.muted.withOpacity(0.4),
+                color: colors.muted.withValues(alpha: 0.4),
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
@@ -363,7 +363,7 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: colors.danger.withOpacity(0.12),
+                  color: colors.danger.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
                 child: Text(
@@ -446,7 +446,7 @@ class _QuickAmountChip extends StatelessWidget {
     return ActionChip(
       label: Text(label),
       labelStyle: AppTypography.labelSmall.copyWith(color: colors.primary),
-      backgroundColor: colors.primary.withOpacity(0.08),
+      backgroundColor: colors.primary.withValues(alpha: 0.08),
       onPressed: () {
         AppHaptics.selectionClick();
         onTap();
@@ -477,7 +477,7 @@ class _QuickReasonChip extends StatelessWidget {
         AppHaptics.selectionClick();
         onTap();
       },
-      selectedColor: colors.primary.withOpacity(0.15),
+      selectedColor: colors.primary.withValues(alpha: 0.15),
       labelStyle: AppTypography.labelSmall.copyWith(
         color: isSelected ? colors.primary : colors.mutedFg,
         fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,

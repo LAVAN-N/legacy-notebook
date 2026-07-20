@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/customer.dart';
 import '../../data/models/place.dart';
 import '../../data/models/area.dart';
-import '../../data/models/weekday.dart';
 import '../../data/repositories/customer_repository.dart';
 import '../../data/repositories/route_repository.dart';
 import '../../data/providers.dart';
@@ -115,7 +114,7 @@ class NewClientController extends StateNotifier<NewClientFormState> {
 
   final CustomerRepository customerRepo;
   final RouteRepository routeRepo;
-  final StateNotifierProviderRef ref;
+  final Ref ref;
 
   Future<void> _initialize() async {
     // Initialize with today's weekday

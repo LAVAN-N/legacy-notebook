@@ -3,8 +3,6 @@ import '../../../data/models/place.dart';
 import '../../../data/models/area.dart';
 import '../../../data/models/customer.dart';
 import '../../../data/models/outstanding.dart';
-import '../../../data/repositories/route_repository.dart';
-import '../../../data/repositories/customer_repository.dart';
 import '../../../data/providers.dart';
 
 // Place with computed route status

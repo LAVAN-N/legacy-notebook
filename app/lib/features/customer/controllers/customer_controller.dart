@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/customer.dart';
 import '../../../data/models/outstanding.dart';
 import '../../../data/models/activity.dart';
-import '../../../data/repositories/customer_repository.dart';
 import '../../../data/providers.dart';
 
 class CustomerDetailData {

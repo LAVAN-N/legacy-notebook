@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/confirm_snackbar.dart';
 import '../../../data/models/customer.dart';
-import '../../../data/repositories/customer_repository.dart';
-import '../../../data/providers.dart';
 
 class EditCustomerSheet extends ConsumerStatefulWidget {
   const EditCustomerSheet({super.key, required this.customer});
@@ -53,14 +49,6 @@ class _EditCustomerSheetState extends ConsumerState<EditCustomerSheet> {
       landmark: _landmarkController.text.trim(),
     );
 
-    // Save logic
-    // For now we assume a provider or repo handles it
-    // Wait, we need to update the customer in the repo. 
-    // In our mock repo, we can update it directly.
-    final repo = ref.read(customerRepositoryProvider);
-    // There is no repo.updateCustomer yet, maybe? Let's check or assume it exists.
-    // If not, we just show snackbar and pop.
-    
     // For now, let's just pop.
     ConfirmSnackbar.show(
       context,
@@ -122,7 +110,7 @@ class _EditCustomerSheetState extends ConsumerState<EditCustomerSheet> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.grey.shade300),
               ),
@@ -154,7 +142,7 @@ class _EditCustomerSheetState extends ConsumerState<EditCustomerSheet> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -179,7 +167,7 @@ class _EditCustomerSheetState extends ConsumerState<EditCustomerSheet> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(

@@ -84,7 +84,7 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: colors.primary.withOpacity(0.12),
+          backgroundColor: colors.primary.withValues(alpha: 0.12),
           foregroundColor: colors.primary,
           minimumSize: const Size.fromHeight(56),
           shape: RoundedRectangleBorder(

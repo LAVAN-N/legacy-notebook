@@ -176,6 +176,7 @@ class SupabaseSaleRepository implements SaleRepository {
     required List<Map<String, dynamic>> items,
     required int advanceAmount,
     required String soldBy,
+    int discount = 0,
     String? remarks,
   }) => throw UnimplementedError('wire in follow-up skill');
 
@@ -192,4 +193,20 @@ class SupabaseProductRepository implements ProductRepository {
 
   @override
   Future<Product?> getProductById(String id) => throw UnimplementedError('wire in follow-up skill');
+
+  @override
+  Future<Product> addProduct({
+    required String name,
+    required String brand,
+    required String sku,
+    required int price,
+    required int stock,
+    required String categoryId,
+    required int minimumStock,
+    String? description,
+    String? imageUrl,
+  }) => throw UnimplementedError('wire in follow-up skill');
+
+  @override
+  Future<void> updateProduct(Product product) => throw UnimplementedError('wire in follow-up skill');
 }

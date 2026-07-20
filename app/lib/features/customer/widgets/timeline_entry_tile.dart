@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
@@ -31,7 +30,7 @@ class TimelineEntryTile extends StatelessWidget {
       payment: (id, at, amount, note, collectorName) {
         icon = Icons.check_circle_outline;
         iconColor = colors.success;
-        iconBg = colors.success.withOpacity(0.1);
+        iconBg = colors.success.withValues(alpha: 0.1);
         title = customTitle ?? 'Full Payment';
         subtitle = '${dateShort(at)} · By $collectorName';
         if (note != null && note.isNotEmpty) {
@@ -45,7 +44,7 @@ class TimelineEntryTile extends StatelessWidget {
       partialPayment: (id, at, amount, note, collectorName) {
         icon = Icons.pie_chart_outline;
         iconColor = colors.primary;
-        iconBg = colors.primary.withOpacity(0.1);
+        iconBg = colors.primary.withValues(alpha: 0.1);
         title = customTitle ?? 'Partial Payment';
         subtitle = '${dateShort(at)} · By $collectorName';
         if (note.isNotEmpty) {
@@ -59,7 +58,7 @@ class TimelineEntryTile extends StatelessWidget {
       carryForward: (id, at, note, collectorName) {
         icon = Icons.arrow_forward;
         iconColor = colors.warning;
-        iconBg = colors.warning.withOpacity(0.1);
+        iconBg = colors.warning.withValues(alpha: 0.1);
         title = customTitle ?? 'Carry Forward';
         subtitle = '${dateShort(at)} · By $collectorName';
         if (note.isNotEmpty) {
@@ -73,7 +72,7 @@ class TimelineEntryTile extends StatelessWidget {
       sale: (id, at, items, total, advance, creditAdded, saleType, collectorName, note) {
         icon = Icons.shopping_bag_outlined;
         iconColor = colors.primary;
-        iconBg = colors.primary.withOpacity(0.1);
+        iconBg = colors.primary.withValues(alpha: 0.1);
         title = customTitle ?? '${saleType == 'CREDIT' ? 'Credit' : 'Ready'} Sale';
         subtitle = '${dateShort(at)} · By $collectorName';
 

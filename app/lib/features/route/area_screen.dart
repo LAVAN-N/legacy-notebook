@@ -11,10 +11,8 @@ import '../../core/widgets/error_state.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/tag_chip.dart';
 import '../../core/widgets/amount_text.dart';
-import '../../core/utils/formatters.dart';
 import '../../core/router/routes.dart';
 import '../../core/router/navigation_shell.dart';
-import '../../data/repositories/route_repository.dart';
 import '../../data/providers.dart';
 import 'controllers/route_controller.dart';
 
@@ -72,7 +70,6 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
       builder: (context, snapshot) {
         final area = snapshot.data;
         final title = area?.name ?? 'Area Customers';
-        final backPlaceId = area?.placeId ?? 'p-1';
 
         return AppScaffold(
           title: Text(
@@ -146,8 +143,7 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
                             icon: Icons.person_search_outlined,
                           )
                         : ReorderableListView.builder(
-                            onReorder: (oldIdx, newIdx) {
-                              if (newIdx > oldIdx) newIdx--;
+                            onReorderItem: (oldIdx, newIdx) {
                               final list = List<CustomerProgress>.from(filtered);
                               final item = list.removeAt(oldIdx);
                               list.insert(newIdx, item);
@@ -242,7 +238,7 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
                                         ),
                                         const SizedBox(width: AppSpacing.sm),
                                         // Drag handler icon
-                                        Icon(Icons.drag_handle, color: colors.mutedFg.withOpacity(0.5), size: 20),
+                                        Icon(Icons.drag_handle, color: colors.mutedFg.withValues(alpha: 0.5), size: 20),
                                       ],
                                     ),
                                   ),

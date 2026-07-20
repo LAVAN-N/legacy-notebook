@@ -7,8 +7,6 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/router/routes.dart';
 import '../../data/models/customer.dart';
-import '../../data/repositories/customer_repository.dart';
-import '../../data/providers.dart';
 import '../../data/mock/mock_data.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/empty_state.dart';
@@ -28,11 +26,6 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    
-    // In a real app we'd have a dedicated controller for this screen to fetch 
-    // all customers and compute outstanding. Since we are using mock data directly
-    // for this quick implementation, we can read it from the provider.
-    final repo = ref.watch(customerRepositoryProvider);
     
     return AppScaffold(
       title: Text('Clients', style: AppTypography.headlineMedium.copyWith(color: colors.foreground)),
@@ -119,7 +112,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                           
                           return ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: colors.primary.withOpacity(0.1),
+                              backgroundColor: colors.primary.withValues(alpha: 0.1),
                               child: Text(
                                 c.name.substring(0, 1).toUpperCase(),
                                 style: TextStyle(color: colors.primary),

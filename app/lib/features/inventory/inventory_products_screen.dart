@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/utils/currency_formatter.dart';
 import '../../core/theme/app_colors.dart';
@@ -9,15 +8,16 @@ import '../../core/widgets/app_scaffold.dart';
 import '../../data/mock/mock_data.dart';
 import '../../data/models/product.dart';
 import '../../data/models/category.dart';
+import '../../data/providers.dart';
 import 'widgets/add_product_sheet.dart';
 
 class InventoryProductsScreen extends ConsumerStatefulWidget {
   final String categoryId;
 
   const InventoryProductsScreen({
-    Key? key,
+    super.key,
     required this.categoryId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<InventoryProductsScreen> createState() =>
@@ -30,7 +30,6 @@ class _InventoryProductsScreenState
   String _filterType = 'All';
   String _sortType = 'Newest';
   String? _expandedProductId;
-  late List<Product> _displayProducts;
   late Category _category;
 
   @override
@@ -38,11 +37,35 @@ class _InventoryProductsScreenState
     super.initState();
     _category = mockCategoriesList
         .firstWhere((c) => c.id == widget.categoryId);
-    _updateDisplay();
   }
 
-  void _updateDisplay() {
-    var products = mockProductsList
+  String _getStockStatus(Product product) {
+    if (product.stock == 0) {
+      return 'Out of stock';
+    } else if (product.stock <= product.minimumStock) {
+      return 'Low stock';
+    }
+    return 'In stock';
+  }
+
+  Color _getStockColor(Product product) {
+    if (product.stock == 0) {
+      return Colors.red;
+    } else if (product.stock <= product.minimumStock) {
+      return Colors.amber;
+    }
+    return Colors.green;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>()!;
+
+    final productsAsync = ref.watch(productsStreamProvider);
+    final allProducts = productsAsync.value ?? [];
+
+    var products = allProducts
         .where((p) => p.categoryId == widget.categoryId)
         .toList();
 
@@ -84,34 +107,14 @@ class _InventoryProductsScreenState
         break;
     }
 
-    setState(() {
-      _displayProducts = products;
-    });
-  }
-
-  String _getStockStatus(Product product) {
-    if (product.stock == 0) {
-      return 'Out of stock';
-    } else if (product.stock <= product.minimumStock) {
-      return 'Low stock';
+    Product? expandedProduct;
+    if (_expandedProductId != null) {
+      try {
+        expandedProduct = allProducts.firstWhere((p) => p.id == _expandedProductId);
+      } catch (_) {
+        expandedProduct = null;
+      }
     }
-    return 'In stock';
-  }
-
-  Color _getStockColor(Product product) {
-    final theme = Theme.of(context);
-    if (product.stock == 0) {
-      return Colors.red;
-    } else if (product.stock <= product.minimumStock) {
-      return Colors.amber;
-    }
-    return Colors.green;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>()!;
 
     return AppScaffold(
       blendHeader: true,
@@ -133,7 +136,6 @@ class _InventoryProductsScreenState
               onChanged: (value) {
                 setState(() {
                   _searchQuery = value;
-                  _updateDisplay();
                 });
               },
               decoration: InputDecoration(
@@ -168,12 +170,11 @@ class _InventoryProductsScreenState
                       onSelected: (selected) {
                         setState(() {
                           _filterType = filter;
-                          _updateDisplay();
                         });
                       },
                     ),
                   );
-                }).toList(),
+                }),
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
                   child: PopupMenuButton<String>(
@@ -181,7 +182,6 @@ class _InventoryProductsScreenState
                     onSelected: (value) {
                       setState(() {
                         _sortType = value;
-                        _updateDisplay();
                       });
                     },
                     itemBuilder: (BuildContext context) {
@@ -221,21 +221,22 @@ class _InventoryProductsScreenState
                           mainAxisSpacing: 12,
                           mainAxisExtent: 280,
                         ),
-                        itemCount: _displayProducts.length,
+                        itemCount: products.length,
                         itemBuilder: (context, index) {
                           return _buildProductCard(
                             context,
-                            _displayProducts[index],
+                            products[index],
                             colors,
                             isBlurred: true,
                           );
                         },
                       ),
                       // Expanded card overlay
-                      _buildExpandedProductCard(context),
+                      if (expandedProduct != null)
+                        _buildExpandedProductCard(context, expandedProduct),
                     ],
                   )
-                : _displayProducts.isEmpty
+                : products.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -259,11 +260,11 @@ class _InventoryProductsScreenState
                           mainAxisSpacing: 12,
                           mainAxisExtent: 280,
                         ),
-                        itemCount: _displayProducts.length,
+                        itemCount: products.length,
                         itemBuilder: (context, index) {
                           return _buildProductCard(
                             context,
-                            _displayProducts[index],
+                            products[index],
                             colors,
                             isBlurred: false,
                           );
@@ -298,7 +299,7 @@ class _InventoryProductsScreenState
                 width: double.infinity,
                 constraints: const BoxConstraints(minHeight: 120),
                 decoration: BoxDecoration(
-                  color: colors.primary.withOpacity(0.1),
+                  color: colors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
@@ -343,7 +344,7 @@ class _InventoryProductsScreenState
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getStockColor(product).withOpacity(0.2),
+                  color: _getStockColor(product).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -368,11 +369,9 @@ class _InventoryProductsScreenState
         : card;
   }
 
-  Widget _buildExpandedProductCard(BuildContext context) {
+  Widget _buildExpandedProductCard(BuildContext context, Product product) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
-    final product = _displayProducts
-        .firstWhere((p) => p.id == _expandedProductId);
 
     return GestureDetector(
       onTap: () {
@@ -410,7 +409,7 @@ class _InventoryProductsScreenState
                                   _expandedProductId = null;
                                 });
                               },
-                              child: Icon(Icons.close),
+                              child: const Icon(Icons.close),
                             ),
                           ],
                         ),
@@ -425,7 +424,7 @@ class _InventoryProductsScreenState
                                 width: 100,
                                 height: 100,
                                 decoration: BoxDecoration(
-                                  color: colors.primary.withOpacity(0.1),
+                                  color: colors.primary.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(Icons.inventory_2, size: 40, color: colors.primary),
@@ -445,7 +444,7 @@ class _InventoryProductsScreenState
                         const SizedBox(height: 16),
                         
                         DropdownButtonFormField<String>(
-                          value: product.categoryId,
+                          initialValue: product.categoryId,
                           decoration: InputDecoration(
                             labelText: 'Category',
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -570,10 +569,13 @@ class _InventoryProductsScreenState
                             ),
                             const SizedBox(width: 8),
                             FilledButton(
+                              style: FilledButton.styleFrom(
+                                minimumSize: const Size(120, 48),
+                              ),
                               onPressed: () {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: const Text(
+                                  const SnackBar(
+                                    content: Text(
                                         'Product saved · UNDO'),
                                     behavior: SnackBarBehavior.floating,
                                   ),

@@ -100,7 +100,7 @@ class SyncStatusIndicator extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: colors.warning.withOpacity(0.15),
+              color: colors.warning.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: Text(

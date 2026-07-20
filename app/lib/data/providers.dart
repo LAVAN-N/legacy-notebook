@@ -4,8 +4,8 @@ import 'repositories/collection_repository.dart';
 import 'repositories/route_repository.dart';
 import 'repositories/sale_repository.dart';
 import 'repositories/product_repository.dart';
-import 'repositories/supabase_repositories.dart';
 import 'mock/mock_repository.dart';
+import 'models/product.dart';
 
 /// Customer Repository Provider
 final customerRepositoryProvider = Provider<CustomerRepository>((ref) {
@@ -30,6 +30,12 @@ final saleRepositoryProvider = Provider<SaleRepository>((ref) {
 /// Product Repository Provider
 final productRepositoryProvider = Provider<ProductRepository>((ref) {
   return ref.watch(mockRepositoryProvider);
+});
+
+/// Products Stream Provider
+final productsStreamProvider = StreamProvider<List<Product>>((ref) {
+  final repo = ref.watch(productRepositoryProvider);
+  return repo.watchProducts();
 });
 
 /// Mock Repository Provider (for development/testing)
