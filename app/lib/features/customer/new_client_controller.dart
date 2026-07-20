@@ -31,6 +31,9 @@ class NewClientFormState {
     this.places = const [],
     this.areas = const [],
     this.isLoading = false,
+    this.dob = '',
+    this.occupation = '',
+    this.notes = '',
   });
 
   final String? editingCustomerId;
@@ -50,6 +53,9 @@ class NewClientFormState {
   final List<Place> places;
   final List<Area> areas;
   final bool isLoading;
+  final String dob;
+  final String occupation;
+  final String notes;
 
   NewClientFormState copyWith({
     String? editingCustomerId,
@@ -69,6 +75,9 @@ class NewClientFormState {
     List<Place>? places,
     List<Area>? areas,
     bool? isLoading,
+    String? dob,
+    String? occupation,
+    String? notes,
   }) {
     return NewClientFormState(
       editingCustomerId: editingCustomerId ?? this.editingCustomerId,
@@ -88,6 +97,9 @@ class NewClientFormState {
       places: places ?? this.places,
       areas: areas ?? this.areas,
       isLoading: isLoading ?? this.isLoading,
+      dob: dob ?? this.dob,
+      occupation: occupation ?? this.occupation,
+      notes: notes ?? this.notes,
     );
   }
 }
@@ -180,6 +192,18 @@ class NewClientController extends StateNotifier<NewClientFormState> {
 
   void setLandmark(String landmark) {
     state = state.copyWith(landmark: landmark, errors: {});
+  }
+
+  void setDob(String dob) {
+    state = state.copyWith(dob: dob, errors: {});
+  }
+
+  void setOccupation(String occupation) {
+    state = state.copyWith(occupation: occupation, errors: {});
+  }
+
+  void setNotes(String notes) {
+    state = state.copyWith(notes: notes, errors: {});
   }
 
   void addNominee(Nominee nominee) {
@@ -303,6 +327,10 @@ class NewClientController extends StateNotifier<NewClientFormState> {
       errors['address'] = 'Address must be ≤ 240 characters';
     }
 
+    if (state.dob.isEmpty) {
+      errors['dob'] = 'Date of birth is required';
+    }
+
     return errors;
   }
 
@@ -337,6 +365,9 @@ class NewClientController extends StateNotifier<NewClientFormState> {
       location: customer.location,
       places: places,
       areas: areas,
+      dob: customer.dob ?? '',
+      occupation: customer.occupation ?? '',
+      notes: customer.notes ?? '',
     );
   }
 
@@ -368,6 +399,9 @@ class NewClientController extends StateNotifier<NewClientFormState> {
           nominees: state.nominees,
           idProofs: state.idProofs,
           location: state.location,
+          dob: state.dob.isNotEmpty ? state.dob : null,
+          occupation: state.occupation.isNotEmpty ? state.occupation : null,
+          notes: state.notes.isNotEmpty ? state.notes : null,
         );
         await customerRepo.updateCustomer(customer);
       } else {
@@ -383,6 +417,9 @@ class NewClientController extends StateNotifier<NewClientFormState> {
           nominees: state.nominees,
           idProofs: state.idProofs,
           location: state.location,
+          notes: state.notes.isNotEmpty ? state.notes : null,
+          dob: state.dob.isNotEmpty ? state.dob : null,
+          occupation: state.occupation.isNotEmpty ? state.occupation : null,
         );
       }
 
@@ -430,6 +467,9 @@ class NewClientController extends StateNotifier<NewClientFormState> {
           nominees: state.nominees,
           idProofs: state.idProofs,
           location: state.location,
+          dob: state.dob.isNotEmpty ? state.dob : null,
+          occupation: state.occupation.isNotEmpty ? state.occupation : null,
+          notes: state.notes.isNotEmpty ? state.notes : null,
         );
         await customerRepo.updateCustomer(customer);
       } else {
@@ -445,6 +485,9 @@ class NewClientController extends StateNotifier<NewClientFormState> {
           nominees: state.nominees,
           idProofs: state.idProofs,
           location: state.location,
+          notes: state.notes.isNotEmpty ? state.notes : null,
+          dob: state.dob.isNotEmpty ? state.dob : null,
+          occupation: state.occupation.isNotEmpty ? state.occupation : null,
         );
       }
 

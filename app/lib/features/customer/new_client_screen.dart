@@ -24,7 +24,6 @@ import '../../data/models/id_proof.dart';
 import '../../data/models/customer.dart';
 import 'new_client_controller.dart';
 
-
 class NewClientScreen extends ConsumerStatefulWidget {
   const NewClientScreen({super.key, this.customer});
 
@@ -38,8 +37,11 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
   late TextEditingController _alternatePhoneController;
+  late TextEditingController _occupationController;
+  late TextEditingController _dobController;
   late TextEditingController _addressController;
   late TextEditingController _landmarkController;
+  late TextEditingController _notesController;
   late TextEditingController _placeNameController;
   late TextEditingController _areaNameController;
 
@@ -47,17 +49,28 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.customer?.name ?? '');
-    _phoneController = TextEditingController(text: widget.customer?.phone ?? '');
-    _alternatePhoneController = TextEditingController(text: widget.customer?.alternatePhone ?? '');
-    _addressController = TextEditingController(text: widget.customer?.address ?? '');
-    _landmarkController = TextEditingController(text: widget.customer?.landmark ?? '');
+    _phoneController =
+        TextEditingController(text: widget.customer?.phone ?? '');
+    _alternatePhoneController =
+        TextEditingController(text: widget.customer?.alternatePhone ?? '');
+    _occupationController =
+        TextEditingController(text: widget.customer?.occupation ?? '');
+    _dobController = TextEditingController(text: widget.customer?.dob ?? '');
+    _addressController =
+        TextEditingController(text: widget.customer?.address ?? '');
+    _landmarkController =
+        TextEditingController(text: widget.customer?.landmark ?? '');
+    _notesController =
+        TextEditingController(text: widget.customer?.notes ?? '');
     _placeNameController = TextEditingController();
     _areaNameController = TextEditingController();
 
     if (widget.customer != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          ref.read(newClientControllerProvider.notifier).prepopulateForm(widget.customer!);
+          ref
+              .read(newClientControllerProvider.notifier)
+              .prepopulateForm(widget.customer!);
         }
       });
     } else {
@@ -74,8 +87,11 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
     _nameController.dispose();
     _phoneController.dispose();
     _alternatePhoneController.dispose();
+    _occupationController.dispose();
+    _dobController.dispose();
     _addressController.dispose();
     _landmarkController.dispose();
+    _notesController.dispose();
     _placeNameController.dispose();
     _areaNameController.dispose();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -84,7 +100,6 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
     super.dispose();
   }
 
-
   void _showAddPlaceSheet() async {
     final result = await showModalBottomSheet<String>(
       context: context,
@@ -92,9 +107,13 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
       isScrollControlled: true,
     );
     if (result != null && result.trim().isNotEmpty && mounted) {
-      final newPlace = await ref.read(newClientControllerProvider.notifier).addNewPlace(result.trim());
+      final newPlace = await ref
+          .read(newClientControllerProvider.notifier)
+          .addNewPlace(result.trim());
       if (newPlace != null) {
-        await ref.read(newClientControllerProvider.notifier).setPlace(newPlace.id);
+        await ref
+            .read(newClientControllerProvider.notifier)
+            .setPlace(newPlace.id);
       }
     }
   }
@@ -106,7 +125,9 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
       isScrollControlled: true,
     );
     if (result != null && result.trim().isNotEmpty && mounted) {
-      final newArea = await ref.read(newClientControllerProvider.notifier).addNewArea(result.trim());
+      final newArea = await ref
+          .read(newClientControllerProvider.notifier)
+          .addNewArea(result.trim());
       if (newArea != null) {
         ref.read(newClientControllerProvider.notifier).setArea(newArea.id);
       }
@@ -174,7 +195,8 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: _handleBack,
         ),
-        title: Text(widget.customer != null ? 'Edit Client' : 'New Credit Sale'),
+        title:
+            Text(widget.customer != null ? 'Edit Client' : 'New Credit Sale'),
         body: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -197,8 +219,11 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
                   nameController: _nameController,
                   phoneController: _phoneController,
                   alternatePhoneController: _alternatePhoneController,
+                  occupationController: _occupationController,
+                  dobController: _dobController,
                   addressController: _addressController,
                   landmarkController: _landmarkController,
+                  notesController: _notesController,
                   controller: controller,
                   colors: colors,
                 ),
@@ -213,8 +238,9 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
                     if (customer != null && mounted) {
                       // Capture ref dependencies before showing snackbar
                       final repository = ref.read(customerRepositoryProvider);
-                      final notifier = ref.read(newClientControllerProvider.notifier);
-                      
+                      final notifier =
+                          ref.read(newClientControllerProvider.notifier);
+
                       // Show snackbar
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -247,7 +273,8 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
                       if (widget.customer != null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Customer details updated successfully'),
+                            content:
+                                Text('Customer details updated successfully'),
                             duration: Duration(seconds: 2),
                             behavior: SnackBarBehavior.floating,
                           ),
@@ -258,8 +285,9 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
 
                       // Capture ref dependencies before showing snackbar
                       final repository = ref.read(customerRepositoryProvider);
-                      final notifier = ref.read(newClientControllerProvider.notifier);
-                      
+                      final notifier =
+                          ref.read(newClientControllerProvider.notifier);
+
                       // Show snackbar
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -321,7 +349,15 @@ class _RouteSection extends StatefulWidget {
 class _RouteSectionState extends State<_RouteSection> {
   @override
   Widget build(BuildContext context) {
-    final weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    final weekdayNames = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday'
+    ];
 
     return Card(
       child: Padding(
@@ -339,7 +375,9 @@ class _RouteSectionState extends State<_RouteSection> {
             const SizedBox(height: AppSpacing.md),
 
             // Weekday Chips
-            Text('Weekday *', style: AppTypography.labelSmall.copyWith(color: widget.colors.mutedFg)),
+            Text('Weekday *',
+                style: AppTypography.labelSmall
+                    .copyWith(color: widget.colors.mutedFg)),
             const SizedBox(height: AppSpacing.sm),
             Wrap(
               spacing: 8.0,
@@ -349,35 +387,41 @@ class _RouteSectionState extends State<_RouteSection> {
                 final shortName = day.substring(0, 3).toUpperCase();
                 return InkWell(
                   onTap: () async {
-                    await widget.controller.setWeekday(widget.controller.getWeekdayIdByName(day), day);
+                    await widget.controller.setWeekday(
+                        widget.controller.getWeekdayIdByName(day), day);
                   },
                   borderRadius: BorderRadius.circular(10),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: isSelected 
-                          ? widget.colors.primary 
+                      color: isSelected
+                          ? widget.colors.primary
                           : widget.colors.surface,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: isSelected 
-                            ? widget.colors.primary 
+                        color: isSelected
+                            ? widget.colors.primary
                             : widget.colors.border,
                         width: 1.5,
                       ),
-                      boxShadow: isSelected ? [
-                        BoxShadow(
-                          color: widget.colors.primary.withValues(alpha: 0.3),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        )
-                      ] : [],
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: widget.colors.primary
+                                    .withValues(alpha: 0.3),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              )
+                            ]
+                          : [],
                     ),
                     child: Text(
                       shortName,
                       style: AppTypography.labelSmall.copyWith(
-                        color: isSelected ? Colors.white : widget.colors.mutedFg,
+                        color:
+                            isSelected ? Colors.white : widget.colors.mutedFg,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.0,
                       ),
@@ -390,31 +434,37 @@ class _RouteSectionState extends State<_RouteSection> {
               const SizedBox(height: AppSpacing.sm),
               Text(
                 widget.state.errors['weekday']!,
-                style: AppTypography.bodySmall.copyWith(color: widget.colors.destructive),
+                style: AppTypography.bodySmall
+                    .copyWith(color: widget.colors.destructive),
               ),
             ],
             const SizedBox(height: AppSpacing.lg),
 
             // Place Dropdown
-            Text('Place *', style: AppTypography.labelSmall.copyWith(color: widget.colors.mutedFg)),
+            Text('Place *',
+                style: AppTypography.labelSmall
+                    .copyWith(color: widget.colors.mutedFg)),
             const SizedBox(height: AppSpacing.sm),
             DropdownButtonFormField<String>(
               value: widget.state.placeId.isEmpty ? null : widget.state.placeId,
               dropdownColor: widget.colors.surface,
-              icon: Icon(Icons.keyboard_arrow_down, color: widget.colors.mutedFg),
+              icon:
+                  Icon(Icons.keyboard_arrow_down, color: widget.colors.mutedFg),
               items: [
                 ...widget.state.places.map((p) => DropdownMenuItem(
                       value: p.id,
                       child: Text(
                         p.name,
-                        style: TextStyle(color: widget.colors.foreground, fontSize: 14),
+                        style: TextStyle(
+                            color: widget.colors.foreground, fontSize: 14),
                       ),
                     )),
                 DropdownMenuItem(
                   value: 'add_new_place',
                   child: Row(
                     children: [
-                      Icon(Icons.add_circle_outline, color: widget.colors.primary, size: 18),
+                      Icon(Icons.add_circle_outline,
+                          color: widget.colors.primary, size: 18),
                       const SizedBox(width: 8),
                       Text(
                         'Add new place...',
@@ -436,53 +486,65 @@ class _RouteSectionState extends State<_RouteSection> {
                 }
               },
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.place_outlined, color: widget.colors.primary),
+                prefixIcon:
+                    Icon(Icons.place_outlined, color: widget.colors.primary),
                 hintText: 'Select a place',
-                hintStyle: TextStyle(color: widget.colors.mutedFg, fontSize: 14),
+                hintStyle:
+                    TextStyle(color: widget.colors.mutedFg, fontSize: 14),
                 errorText: widget.state.errors['place'],
                 filled: true,
                 fillColor: widget.colors.surface,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: widget.colors.border, width: 1.5),
+                  borderSide:
+                      BorderSide(color: widget.colors.border, width: 1.5),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: widget.colors.primary, width: 2),
+                  borderSide:
+                      BorderSide(color: widget.colors.primary, width: 2),
                 ),
                 errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: widget.colors.destructive, width: 1.5),
+                  borderSide:
+                      BorderSide(color: widget.colors.destructive, width: 1.5),
                 ),
                 focusedErrorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: widget.colors.destructive, width: 2),
+                  borderSide:
+                      BorderSide(color: widget.colors.destructive, width: 2),
                 ),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
 
             // Area Dropdown
-            Text('Area *', style: AppTypography.labelSmall.copyWith(color: widget.colors.mutedFg)),
+            Text('Area *',
+                style: AppTypography.labelSmall
+                    .copyWith(color: widget.colors.mutedFg)),
             const SizedBox(height: AppSpacing.sm),
             DropdownButtonFormField<String>(
               value: widget.state.areaId.isEmpty ? null : widget.state.areaId,
               dropdownColor: widget.colors.surface,
-              icon: Icon(Icons.keyboard_arrow_down, color: widget.colors.mutedFg),
+              icon:
+                  Icon(Icons.keyboard_arrow_down, color: widget.colors.mutedFg),
               items: [
                 ...widget.state.areas.map((a) => DropdownMenuItem(
                       value: a.id,
                       child: Text(
                         a.name,
-                        style: TextStyle(color: widget.colors.foreground, fontSize: 14),
+                        style: TextStyle(
+                            color: widget.colors.foreground, fontSize: 14),
                       ),
                     )),
                 DropdownMenuItem(
                   value: 'add_new_area',
                   child: Row(
                     children: [
-                      Icon(Icons.add_circle_outline, color: widget.colors.primary, size: 18),
+                      Icon(Icons.add_circle_outline,
+                          color: widget.colors.primary, size: 18),
                       const SizedBox(width: 8),
                       Text(
                         'Add new area...',
@@ -504,28 +566,35 @@ class _RouteSectionState extends State<_RouteSection> {
                 }
               },
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.explore_outlined, color: widget.colors.primary),
+                prefixIcon:
+                    Icon(Icons.explore_outlined, color: widget.colors.primary),
                 hintText: 'Select an area',
-                hintStyle: TextStyle(color: widget.colors.mutedFg, fontSize: 14),
+                hintStyle:
+                    TextStyle(color: widget.colors.mutedFg, fontSize: 14),
                 errorText: widget.state.errors['area'],
                 filled: true,
                 fillColor: widget.colors.surface,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: widget.colors.border, width: 1.5),
+                  borderSide:
+                      BorderSide(color: widget.colors.border, width: 1.5),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: widget.colors.primary, width: 2),
+                  borderSide:
+                      BorderSide(color: widget.colors.primary, width: 2),
                 ),
                 errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: widget.colors.destructive, width: 1.5),
+                  borderSide:
+                      BorderSide(color: widget.colors.destructive, width: 1.5),
                 ),
                 focusedErrorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: widget.colors.destructive, width: 2),
+                  borderSide:
+                      BorderSide(color: widget.colors.destructive, width: 2),
                 ),
               ),
             ),
@@ -533,7 +602,8 @@ class _RouteSectionState extends State<_RouteSection> {
               const SizedBox(height: AppSpacing.sm),
               Text(
                 widget.state.errors['area']!,
-                style: AppTypography.bodySmall.copyWith(color: widget.colors.destructive),
+                style: AppTypography.bodySmall
+                    .copyWith(color: widget.colors.destructive),
               ),
             ],
           ],
@@ -550,8 +620,11 @@ class _CustomerDetailsSection extends StatelessWidget {
     required this.nameController,
     required this.phoneController,
     required this.alternatePhoneController,
+    required this.occupationController,
+    required this.dobController,
     required this.addressController,
     required this.landmarkController,
+    required this.notesController,
     required this.controller,
     required this.colors,
   });
@@ -560,10 +633,31 @@ class _CustomerDetailsSection extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController phoneController;
   final TextEditingController alternatePhoneController;
+  final TextEditingController occupationController;
+  final TextEditingController dobController;
   final TextEditingController addressController;
   final TextEditingController landmarkController;
+  final TextEditingController notesController;
   final NewClientController controller;
   final AppColors colors;
+
+  void _selectDate(BuildContext context, TextEditingController textController,
+      Function(String) onDateSelected) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      final day = picked.day.toString().padLeft(2, '0');
+      final month = picked.month.toString().padLeft(2, '0');
+      final year = picked.year.toString();
+      final dateStr = '$day/$month/$year';
+      textController.text = dateStr;
+      onDateSelected(dateStr);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -594,32 +688,68 @@ class _CustomerDetailsSection extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
 
-            // Phone
+            // Phone | Alternate Phone in row
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    label: 'Phone *',
+                    controller: phoneController,
+                    onChanged: controller.setPhone,
+                    errorText: state.errors['phone'],
+                    hintText: 'e.g., 98765 43210',
+                    keyboardType: TextInputType.phone,
+                    maxLength: 14,
+                    colors: colors,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: _buildTextField(
+                    label: 'Alternate phone',
+                    controller: alternatePhoneController,
+                    onChanged: controller.setAlternatePhone,
+                    hintText: '(optional)',
+                    keyboardType: TextInputType.phone,
+                    maxLength: 14,
+                    colors: colors,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // Date of birth (mandatory)
+            _buildDateField(
+              label: 'Date of birth *',
+              controller: dobController,
+              onChanged: controller.setDob,
+              errorText: state.errors['dob'],
+              hintText: 'DD/MM/YYYY',
+              colors: colors,
+              onCalendarTap: () =>
+                  _selectDate(context, dobController, controller.setDob),
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // Occupation (single row)
             _buildTextField(
-              label: 'Phone *',
-              controller: phoneController,
-              onChanged: controller.setPhone,
-              errorText: state.errors['phone'],
-              hintText: 'e.g., 98765 43210',
-              keyboardType: TextInputType.phone,
-              maxLength: 14,
+              label: 'Occupation',
+              controller: occupationController,
+              onChanged: controller.setOccupation,
+              hintText: 'e.g., Engineer',
+              maxLength: 60,
               colors: colors,
             ),
             const SizedBox(height: AppSpacing.md),
 
-            // Alternate Phone
-            _buildTextField(
-              label: 'Alternate phone',
-              controller: alternatePhoneController,
-              onChanged: controller.setAlternatePhone,
-              hintText: '(optional)',
-              keyboardType: TextInputType.phone,
-              maxLength: 14,
-              colors: colors,
-            ),
+            // Location block
+            _LocationBlock(
+                state: state, controller: controller, colors: colors),
             const SizedBox(height: AppSpacing.md),
 
-            // Address
+            // Address (with Autofill check button in header)
             _buildTextField(
               label: 'Address *',
               controller: addressController,
@@ -629,6 +759,31 @@ class _CustomerDetailsSection extends StatelessWidget {
               maxLines: 3,
               maxLength: 240,
               colors: colors,
+              trailingLabelAction: (state.location != null &&
+                      state.location!.label != null &&
+                      state.location!.label!.isNotEmpty)
+                  ? TextButton.icon(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      icon: Icon(Icons.autorenew,
+                          size: 14, color: colors.primary),
+                      label: Text(
+                        'Autofill from Map',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: colors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                        ),
+                      ),
+                      onPressed: () {
+                        addressController.text = state.location!.label ?? '';
+                        controller.setAddress(state.location!.label ?? '');
+                      },
+                    )
+                  : null,
             ),
             const SizedBox(height: AppSpacing.md),
 
@@ -643,10 +798,6 @@ class _CustomerDetailsSection extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
 
-            // Location block
-            _LocationBlock(state: state, controller: controller, colors: colors),
-            const SizedBox(height: AppSpacing.md),
-            
             // Nominees block
             _NomineesBlock(
               state: state,
@@ -656,12 +807,60 @@ class _CustomerDetailsSection extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
 
             // ID Proofs block
-            _IdProofsBlock(state: state, controller: controller, colors: colors),
+            _IdProofsBlock(
+                state: state, controller: controller, colors: colors),
+            const SizedBox(height: AppSpacing.md),
 
+            // Remarks/Notes at the end
+            _buildTextField(
+              label: 'Remarks',
+              controller: notesController,
+              onChanged: controller.setNotes,
+              hintText: 'Enter any remarks...',
+              maxLines: 3,
+              maxLength: 500,
+              colors: colors,
+            ),
             const SizedBox(height: AppSpacing.sm),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDateField({
+    required String label,
+    required TextEditingController controller,
+    required Function(String) onChanged,
+    required VoidCallback onCalendarTap,
+    String? errorText,
+    String? hintText,
+    required AppColors colors,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: AppTypography.labelSmall.copyWith(color: colors.mutedFg)),
+        const SizedBox(height: AppSpacing.sm),
+        TextField(
+          controller: controller,
+          onChanged: onChanged,
+          keyboardType: TextInputType.datetime,
+          decoration: InputDecoration(
+            hintText: hintText ?? 'DD/MM/YYYY',
+            errorText: errorText,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            suffixIcon: IconButton(
+              icon: Icon(Icons.calendar_today_outlined,
+                  color: colors.primary, size: 20),
+              onPressed: onCalendarTap,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -676,11 +875,20 @@ class _CustomerDetailsSection extends StatelessWidget {
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
     required AppColors colors,
+    Widget? trailingLabelAction,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.labelSmall.copyWith(color: colors.mutedFg)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label,
+                style:
+                    AppTypography.labelSmall.copyWith(color: colors.mutedFg)),
+            if (trailingLabelAction != null) trailingLabelAction,
+          ],
+        ),
         const SizedBox(height: AppSpacing.sm),
         TextField(
           controller: controller,
@@ -693,14 +901,14 @@ class _CustomerDetailsSection extends StatelessWidget {
             hintText: hintText,
             errorText: errorText,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
         ),
       ],
     );
   }
 }
-
 
 // ─── Action Buttons ─────────────────────────────────────
 class _ActionButtons extends StatelessWidget {
@@ -785,7 +993,8 @@ class _AddPlaceSheetState extends State<_AddPlaceSheet> {
     final colors = context.colors;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -797,7 +1006,8 @@ class _AddPlaceSheetState extends State<_AddPlaceSheet> {
               controller: widget.controller,
               decoration: InputDecoration(
                 hintText: 'Place name',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -839,7 +1049,8 @@ class _AddAreaSheetState extends State<_AddAreaSheet> {
     final colors = context.colors;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -851,7 +1062,8 @@ class _AddAreaSheetState extends State<_AddAreaSheet> {
               controller: widget.controller,
               decoration: InputDecoration(
                 hintText: 'Area name',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -891,7 +1103,7 @@ class _NomineesBlockState extends State<_NomineesBlock> {
     final isEditing = nominee != null;
     final nameCtrl = TextEditingController(text: nominee?.name ?? '');
     final phoneCtrl = TextEditingController(text: nominee?.phone ?? '');
-    
+
     final standardRelations = ['Spouse', 'Parent', 'Child', 'Sibling'];
     String rel;
     final customRelCtrl = TextEditingController();
@@ -922,7 +1134,8 @@ class _NomineesBlockState extends State<_NomineesBlock> {
               child: Container(
                 decoration: BoxDecoration(
                   color: widget.colors.background,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(16)),
                 ),
                 padding: const EdgeInsets.all(AppSpacing.md),
                 child: Column(
@@ -934,7 +1147,8 @@ class _NomineesBlockState extends State<_NomineesBlock> {
                       children: [
                         Text(
                           isEditing ? 'Edit Nominee' : 'Add Nominee',
-                          style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                          style: AppTypography.titleMedium
+                              .copyWith(fontWeight: FontWeight.bold),
                         ),
                         IconButton(
                           icon: const Icon(Icons.close),
@@ -944,29 +1158,39 @@ class _NomineesBlockState extends State<_NomineesBlock> {
                     ),
                     const Divider(),
                     const SizedBox(height: AppSpacing.sm),
-                    Text('Name *', style: AppTypography.labelSmall.copyWith(color: widget.colors.mutedFg)),
+                    Text('Name *',
+                        style: AppTypography.labelSmall
+                            .copyWith(color: widget.colors.mutedFg)),
                     const SizedBox(height: AppSpacing.xs),
                     TextField(
                       controller: nameCtrl,
                       maxLength: 60,
                       decoration: InputDecoration(
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
                         hintText: 'Enter nominee name',
                       ),
                       onChanged: (_) => setModalState(() {}),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    Text('Relation *', style: AppTypography.labelSmall.copyWith(color: widget.colors.mutedFg)),
+                    Text('Relation *',
+                        style: AppTypography.labelSmall
+                            .copyWith(color: widget.colors.mutedFg)),
                     const SizedBox(height: AppSpacing.xs),
                     DropdownButtonFormField<String>(
                       value: rel,
                       dropdownColor: widget.colors.surface,
-                      icon: Icon(Icons.keyboard_arrow_down, color: widget.colors.mutedFg),
+                      icon: Icon(Icons.keyboard_arrow_down,
+                          color: widget.colors.mutedFg),
                       items: ['Spouse', 'Parent', 'Child', 'Sibling', 'Other']
                           .map((e) => DropdownMenuItem(
                                 value: e,
-                                child: Text(e, style: TextStyle(color: widget.colors.foreground, fontSize: 14)),
+                                child: Text(e,
+                                    style: TextStyle(
+                                        color: widget.colors.foreground,
+                                        fontSize: 14)),
                               ))
                           .toList(),
                       onChanged: (val) {
@@ -977,45 +1201,57 @@ class _NomineesBlockState extends State<_NomineesBlock> {
                         }
                       },
                       decoration: InputDecoration(
-                        prefixIcon: Icon(Icons.people_outline, color: widget.colors.primary),
+                        prefixIcon: Icon(Icons.people_outline,
+                            color: widget.colors.primary),
                         filled: true,
                         fillColor: widget.colors.surface,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: widget.colors.border, width: 1.5),
+                          borderSide: BorderSide(
+                              color: widget.colors.border, width: 1.5),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: widget.colors.primary, width: 2),
+                          borderSide: BorderSide(
+                              color: widget.colors.primary, width: 2),
                         ),
                       ),
                     ),
                     if (rel == 'Other') ...[
                       const SizedBox(height: AppSpacing.sm),
-                      Text('Specify Relationship *', style: AppTypography.labelSmall.copyWith(color: widget.colors.mutedFg)),
+                      Text('Specify Relationship *',
+                          style: AppTypography.labelSmall
+                              .copyWith(color: widget.colors.mutedFg)),
                       const SizedBox(height: AppSpacing.xs),
                       TextField(
                         controller: customRelCtrl,
                         maxLength: 30,
                         decoration: InputDecoration(
                           hintText: 'e.g., Grandparent',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
                         ),
                         onChanged: (_) => setModalState(() {}),
                       ),
                     ],
                     const SizedBox(height: AppSpacing.md),
-                    Text('Phone', style: AppTypography.labelSmall.copyWith(color: widget.colors.mutedFg)),
+                    Text('Phone',
+                        style: AppTypography.labelSmall
+                            .copyWith(color: widget.colors.mutedFg)),
                     const SizedBox(height: AppSpacing.xs),
                     TextField(
                       controller: phoneCtrl,
                       keyboardType: TextInputType.phone,
                       maxLength: 14,
                       decoration: InputDecoration(
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
                         hintText: 'Enter phone number (optional)',
                       ),
                     ),
@@ -1032,19 +1268,30 @@ class _NomineesBlockState extends State<_NomineesBlock> {
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         ElevatedButton(
-                          onPressed: nameCtrl.text.trim().isNotEmpty && (rel != 'Other' || customRelCtrl.text.trim().isNotEmpty)
+                          onPressed: nameCtrl.text.trim().isNotEmpty &&
+                                  (rel != 'Other' ||
+                                      customRelCtrl.text.trim().isNotEmpty)
                               ? () {
-                                  final chosenRelation = rel == 'Other' 
-                                      ? (customRelCtrl.text.trim().isEmpty ? 'Other' : customRelCtrl.text.trim())
+                                  final chosenRelation = rel == 'Other'
+                                      ? (customRelCtrl.text.trim().isEmpty
+                                          ? 'Other'
+                                          : customRelCtrl.text.trim())
                                       : rel;
                                   final n = Nominee(
-                                    id: nominee?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+                                    id: nominee?.id ??
+                                        DateTime.now()
+                                            .millisecondsSinceEpoch
+                                            .toString(),
                                     name: nameCtrl.text.trim(),
-                                    phone: phoneCtrl.text.trim().isEmpty ? null : phoneCtrl.text.trim(),
+                                    phone: phoneCtrl.text.trim().isEmpty
+                                        ? null
+                                        : phoneCtrl.text.trim(),
                                     relation: chosenRelation,
+                                    dob: null,
                                   );
                                   if (nominee != null) {
-                                    widget.controller.updateNominee(nominee.id, n);
+                                    widget.controller
+                                        .updateNominee(nominee.id, n);
                                   } else {
                                     widget.controller.addNominee(n);
                                   }
@@ -1074,22 +1321,26 @@ class _NomineesBlockState extends State<_NomineesBlock> {
   Widget build(BuildContext context) {
     final colors = widget.colors;
     final nominees = widget.state.nominees;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Nominees', style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold)),
+            Text('Nominees',
+                style: AppTypography.labelLarge
+                    .copyWith(fontWeight: FontWeight.bold)),
             Text(
-              nominees.isEmpty ? 'No nominees added.' : '${nominees.length} of 3 added.',
+              nominees.isEmpty
+                  ? 'No nominees added.'
+                  : '${nominees.length} of 3 added.',
               style: AppTypography.bodySmall.copyWith(color: colors.mutedFg),
             ),
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        
+
         // List of chips/cards
         if (nominees.isNotEmpty) ...[
           ...nominees.map((n) => Card(
@@ -1100,10 +1351,13 @@ class _NomineesBlockState extends State<_NomineesBlock> {
                   side: BorderSide(color: colors.border),
                 ),
                 child: ListTile(
-                  title: Text(n.name, style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+                  title: Text(n.name,
+                      style: AppTypography.bodyMedium
+                          .copyWith(fontWeight: FontWeight.bold)),
                   subtitle: Text(
-                    '${n.relation ?? ''}${n.phone != null && n.phone!.isNotEmpty ? ' · ${n.phone}' : ''}',
-                    style: AppTypography.bodySmall.copyWith(color: colors.mutedFg),
+                    '${n.relation ?? ''}${n.phone != null && n.phone!.isNotEmpty ? ' · ${n.phone}' : ''}${n.dob != null && n.dob!.isNotEmpty ? ' · DOB: ${n.dob}' : ''}',
+                    style:
+                        AppTypography.bodySmall.copyWith(color: colors.mutedFg),
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1114,7 +1368,8 @@ class _NomineesBlockState extends State<_NomineesBlock> {
                         tooltip: 'Edit Nominee',
                       ),
                       IconButton(
-                        icon: Icon(Icons.delete, size: 20, color: colors.destructive),
+                        icon: Icon(Icons.delete,
+                            size: 20, color: colors.destructive),
                         onPressed: () => widget.controller.removeNominee(n.id),
                         tooltip: 'Remove Nominee',
                       ),
@@ -1138,7 +1393,8 @@ class _NomineesBlockState extends State<_NomineesBlock> {
             ),
           )
         else
-          Text('Maximum 3 nominees.', style: AppTypography.bodySmall.copyWith(color: colors.mutedFg)),
+          Text('Maximum 3 nominees.',
+              style: AppTypography.bodySmall.copyWith(color: colors.mutedFg)),
       ],
     );
   }
@@ -1185,17 +1441,20 @@ class _LocationBlockState extends State<_LocationBlock> {
   Future<void> _reverseGeocodeInline(LatLng latLng) async {
     _lastGeocodedLocation = latLng;
     try {
-      List<gc.Placemark> placemarks = await gc.placemarkFromCoordinates(
-        latLng.latitude,
-        latLng.longitude,
-      ).timeout(const Duration(seconds: 4));
+      List<gc.Placemark> placemarks = await gc
+          .placemarkFromCoordinates(
+            latLng.latitude,
+            latLng.longitude,
+          )
+          .timeout(const Duration(seconds: 4));
       if (placemarks.isNotEmpty) {
         final p = placemarks.first;
         final addressParts = [
           if (p.street != null && p.street!.isNotEmpty) p.street,
           if (p.subLocality != null && p.subLocality!.isNotEmpty) p.subLocality,
           if (p.locality != null && p.locality!.isNotEmpty) p.locality,
-          if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty) p.administrativeArea,
+          if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty)
+            p.administrativeArea,
           if (p.postalCode != null && p.postalCode!.isNotEmpty) p.postalCode,
           if (p.country != null && p.country!.isNotEmpty) p.country,
         ];
@@ -1208,14 +1467,16 @@ class _LocationBlockState extends State<_LocationBlock> {
         widget.controller.setLocation(Location(
           lat: double.parse(latLng.latitude.toStringAsFixed(6)),
           lng: double.parse(latLng.longitude.toStringAsFixed(6)),
-          label: 'Pinned Location (${latLng.latitude.toStringAsFixed(4)}, ${latLng.longitude.toStringAsFixed(4)})',
+          label:
+              'Pinned Location (${latLng.latitude.toStringAsFixed(4)}, ${latLng.longitude.toStringAsFixed(4)})',
         ));
       }
     } catch (_) {
       widget.controller.setLocation(Location(
         lat: double.parse(latLng.latitude.toStringAsFixed(6)),
         lng: double.parse(latLng.longitude.toStringAsFixed(6)),
-        label: 'Pinned Location (${latLng.latitude.toStringAsFixed(4)}, ${latLng.longitude.toStringAsFixed(4)})',
+        label:
+            'Pinned Location (${latLng.latitude.toStringAsFixed(4)}, ${latLng.longitude.toStringAsFixed(4)})',
       ));
     }
   }
@@ -1255,7 +1516,8 @@ class _LocationBlockState extends State<_LocationBlock> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Location permission is permanently denied. Please enable it in settings.'),
+              content: const Text(
+                  'Location permission is permanently denied. Please enable it in settings.'),
               action: SnackBarAction(
                 label: 'Settings',
                 onPressed: () => ph.openAppSettings(),
@@ -1273,7 +1535,8 @@ class _LocationBlockState extends State<_LocationBlock> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: const Text('GPS/Location services are disabled on the device.'),
+                content: const Text(
+                    'GPS/Location services are disabled on the device.'),
                 action: SnackBarAction(
                   label: 'Enable',
                   onPressed: () => Geolocator.openLocationSettings(),
@@ -1368,22 +1631,23 @@ class _LocationBlockState extends State<_LocationBlock> {
               children: [
                 Icon(Icons.map_outlined, size: 20, color: colors.primary),
                 const SizedBox(width: AppSpacing.sm),
-                Text('LOCATION', style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold)),
+                Text('LOCATION',
+                    style: AppTypography.labelLarge
+                        .copyWith(fontWeight: FontWeight.bold)),
               ],
             ),
             // Location Status Badge
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: hasLocation 
-                    ? colors.primary.withValues(alpha: 0.1) 
+                color: hasLocation
+                    ? colors.primary.withValues(alpha: 0.1)
                     : colors.muted,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: hasLocation 
-                      ? colors.primary.withValues(alpha: 0.3) 
-                      : colors.border
-                ),
+                    color: hasLocation
+                        ? colors.primary.withValues(alpha: 0.3)
+                        : colors.border),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1420,7 +1684,9 @@ class _LocationBlockState extends State<_LocationBlock> {
             color: colors.muted,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: hasLocation ? colors.primary.withValues(alpha: 0.5) : colors.border,
+              color: hasLocation
+                  ? colors.primary.withValues(alpha: 0.5)
+                  : colors.border,
               width: hasLocation ? 2 : 1,
             ),
             boxShadow: [
@@ -1488,7 +1754,8 @@ class _LocationBlockState extends State<_LocationBlock> {
                         color: Colors.black.withValues(alpha: 0.15),
                         child: Center(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
                             decoration: BoxDecoration(
                               color: Colors.black.withValues(alpha: 0.8),
                               borderRadius: BorderRadius.circular(20),
@@ -1496,7 +1763,8 @@ class _LocationBlockState extends State<_LocationBlock> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.touch_app, color: Colors.white, size: 18),
+                                const Icon(Icons.touch_app,
+                                    color: Colors.white, size: 18),
                                 const SizedBox(width: 8),
                                 Text(
                                   'Tap to interact with map',
@@ -1527,11 +1795,13 @@ class _LocationBlockState extends State<_LocationBlock> {
                         },
                         borderRadius: BorderRadius.circular(20),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.lock_outline, color: Colors.white, size: 14),
+                              const Icon(Icons.lock_outline,
+                                  color: Colors.white, size: 14),
                               const SizedBox(width: 4),
                               Text(
                                 'Lock Scroll',
@@ -1580,37 +1850,42 @@ class _LocationBlockState extends State<_LocationBlock> {
                   ),
 
                 // Top Hint Banner
-                if (!hasLocation)
-                  Positioned(
-                    top: 10,
-                    left: 10,
-                    right: 10,
-                    child: IgnorePointer(
-                      child: AnimatedOpacity(
-                        opacity: 0.9,
-                        duration: const Duration(milliseconds: 300),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.7),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.touch_app, color: Colors.white, size: 14),
-                              const SizedBox(width: 6),
-                              const Text(
-                                'Tap map or use GPS to pin client location',
-                                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                // if (!hasLocation)
+                //   Positioned(
+                //     top: 10,
+                //     left: 10,
+                //     right: 10,
+                //     child: IgnorePointer(
+                //       child: AnimatedOpacity(
+                //         opacity: 0.9,
+                //         duration: const Duration(milliseconds: 300),
+                //         child: Container(
+                //           padding: const EdgeInsets.symmetric(
+                //               horizontal: 10, vertical: 6),
+                //           decoration: BoxDecoration(
+                //             color: Colors.black.withValues(alpha: 0.7),
+                //             borderRadius: BorderRadius.circular(20),
+                //           ),
+                //           child: Row(
+                //             mainAxisSize: MainAxisSize.min,
+                //             mainAxisAlignment: MainAxisAlignment.center,
+                //             children: [
+                //               const Icon(Icons.touch_app,
+                //                   color: Colors.white, size: 14),
+                //               const SizedBox(width: 6),
+                //               const Text(
+                //                 'Tap map or use GPS to pin client location',
+                //                 style: TextStyle(
+                //                     color: Colors.white,
+                //                     fontSize: 10,
+                //                     fontWeight: FontWeight.w500),
+                //               ),
+                //             ],
+                //           ),
+                //         ),
+                //       ),
+                //     ),
+                //   ),
 
                 // GPS Target Action Button Overlay (Bottom Left)
                 Positioned(
@@ -1715,7 +1990,8 @@ class _LocationBlockState extends State<_LocationBlock> {
                       children: [
                         InkWell(
                           onTap: () {
-                            _mapController?.animateCamera(CameraUpdate.zoomIn());
+                            _mapController
+                                ?.animateCamera(CameraUpdate.zoomIn());
                           },
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(8),
@@ -1733,7 +2009,8 @@ class _LocationBlockState extends State<_LocationBlock> {
                         ),
                         InkWell(
                           onTap: () {
-                            _mapController?.animateCamera(CameraUpdate.zoomOut());
+                            _mapController
+                                ?.animateCamera(CameraUpdate.zoomOut());
                           },
                           borderRadius: const BorderRadius.only(
                             bottomLeft: Radius.circular(8),
@@ -1763,17 +2040,16 @@ class _LocationBlockState extends State<_LocationBlock> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: colors.surface,
-                    border: Border.all(color: colors.border),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.02),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      )
-                    ]
-                  ),
+                      color: colors.surface,
+                      border: Border.all(color: colors.border),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.02),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        )
+                      ]),
                   child: Row(
                     children: [
                       Container(
@@ -1782,7 +2058,8 @@ class _LocationBlockState extends State<_LocationBlock> {
                           color: colors.destructive.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(Icons.location_on, color: colors.destructive, size: 20),
+                        child: Icon(Icons.location_on,
+                            color: colors.destructive, size: 20),
                       ),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
@@ -1798,7 +2075,8 @@ class _LocationBlockState extends State<_LocationBlock> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                             if (location.label != null && location.label!.isNotEmpty) ...[
+                            if (location.label != null &&
+                                location.label!.isNotEmpty) ...[
                               Text(
                                 location.label!,
                                 style: AppTypography.bodyMedium.copyWith(
@@ -1824,7 +2102,8 @@ class _LocationBlockState extends State<_LocationBlock> {
                       Column(
                         children: [
                           IconButton(
-                            icon: Icon(Icons.clear, color: colors.destructive, size: 20),
+                            icon: Icon(Icons.clear,
+                                color: colors.destructive, size: 20),
                             onPressed: () {
                               widget.controller.setLocation(null);
                               setState(() {
@@ -1834,12 +2113,13 @@ class _LocationBlockState extends State<_LocationBlock> {
                             tooltip: 'Clear location',
                           ),
                           IconButton(
-                            icon: Icon(Icons.open_in_new, color: colors.primary, size: 20),
+                            icon: Icon(Icons.open_in_new,
+                                color: colors.primary, size: 20),
                             onPressed: () async {
                               final url = Uri.parse(
-                                'https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}'
-                              );
-                              if (await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                                  'https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}');
+                              if (await launchUrl(url,
+                                  mode: LaunchMode.externalApplication)) {
                                 // opened
                               }
                             },
@@ -1853,11 +2133,13 @@ class _LocationBlockState extends State<_LocationBlock> {
               : Container(
                   key: const ValueKey('no_location'),
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
                   decoration: BoxDecoration(
                     color: colors.muted.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: colors.border, style: BorderStyle.solid),
+                    border: Border.all(
+                        color: colors.border, style: BorderStyle.solid),
                   ),
                   child: Row(
                     children: [
@@ -1866,7 +2148,8 @@ class _LocationBlockState extends State<_LocationBlock> {
                       Expanded(
                         child: Text(
                           'No location pinned yet. Tap on the satellite map or use the GPS button to set the client\'s location.',
-                          style: AppTypography.bodySmall.copyWith(color: colors.mutedFg),
+                          style: AppTypography.bodySmall
+                              .copyWith(color: colors.mutedFg),
                         ),
                       ),
                     ],
@@ -1918,7 +2201,8 @@ class _IdProofsBlock extends StatefulWidget {
 class _IdProofsBlockState extends State<_IdProofsBlock> {
   String? _selectedType;
 
-  Future<void> _processPickedFile(String path, String filename, int sizeBytes) async {
+  Future<void> _processPickedFile(
+      String path, String filename, int sizeBytes) async {
     String mimeType = 'image/jpeg';
     if (filename.toLowerCase().endsWith('.pdf')) {
       mimeType = 'application/pdf';
@@ -1929,7 +2213,8 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
     final proof = IdProof(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       type: _selectedType!,
-      number: 'DOC-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+      number:
+          'DOC-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
       document: IdProofDocument(
         filename: filename,
         mimeType: mimeType,
@@ -1988,7 +2273,8 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
                   children: [
                     Text(
                       'Choose Upload Method',
-                      style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                      style: AppTypography.titleMedium
+                          .copyWith(fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -1996,7 +2282,8 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
               const SizedBox(height: 12),
               ListTile(
                 leading: Icon(Icons.camera_alt, color: colors.primary),
-                title: const Text('Take Photo', style: TextStyle(fontWeight: FontWeight.w500)),
+                title: const Text('Take Photo',
+                    style: TextStyle(fontWeight: FontWeight.w500)),
                 onTap: () async {
                   Navigator.pop(context);
                   try {
@@ -2007,7 +2294,8 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
                     );
                     if (image != null) {
                       final sizeBytes = await image.length();
-                      await _processPickedFile(image.path, image.name, sizeBytes);
+                      await _processPickedFile(
+                          image.path, image.name, sizeBytes);
                     }
                   } catch (e) {
                     _showErrorSnackBar(e);
@@ -2016,7 +2304,8 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
               ),
               ListTile(
                 leading: Icon(Icons.photo_library, color: colors.primary),
-                title: const Text('Choose from Gallery', style: TextStyle(fontWeight: FontWeight.w500)),
+                title: const Text('Choose from Gallery',
+                    style: TextStyle(fontWeight: FontWeight.w500)),
                 onTap: () async {
                   Navigator.pop(context);
                   try {
@@ -2027,7 +2316,8 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
                     );
                     if (image != null) {
                       final sizeBytes = await image.length();
-                      await _processPickedFile(image.path, image.name, sizeBytes);
+                      await _processPickedFile(
+                          image.path, image.name, sizeBytes);
                     }
                   } catch (e) {
                     _showErrorSnackBar(e);
@@ -2036,17 +2326,20 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
               ),
               ListTile(
                 leading: Icon(Icons.file_present, color: colors.primary),
-                title: const Text('Select Document (PDF / Image)', style: TextStyle(fontWeight: FontWeight.w500)),
+                title: const Text('Select Document (PDF / Image)',
+                    style: TextStyle(fontWeight: FontWeight.w500)),
                 onTap: () async {
                   Navigator.pop(context);
                   try {
-                    FilePickerResult? result = await FilePicker.platform.pickFiles(
+                    FilePickerResult? result =
+                        await FilePicker.platform.pickFiles(
                       type: FileType.custom,
                       allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
                     );
                     if (result != null && result.files.single.path != null) {
                       final file = result.files.single;
-                      await _processPickedFile(file.path!, file.name, file.size);
+                      await _processPickedFile(
+                          file.path!, file.name, file.size);
                     }
                   } catch (e) {
                     _showErrorSnackBar(e);
@@ -2065,20 +2358,22 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
     final doc = p.document;
     if (doc == null || doc.localUri.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No document file associated with this ID proof')),
+        const SnackBar(
+            content: Text('No document file associated with this ID proof')),
       );
       return;
     }
 
     try {
       final fileUri = Uri.parse(doc.localUri);
-      
+
       if (doc.mimeType.startsWith('image/')) {
         showDialog(
           context: context,
           builder: (context) => Dialog(
             backgroundColor: widget.colors.background,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -2106,7 +2401,8 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
                           return Center(
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
-                              child: Text('Could not load image file: $error', style: AppTypography.bodyMedium),
+                              child: Text('Could not load image file: $error',
+                                  style: AppTypography.bodyMedium),
                             ),
                           );
                         },
@@ -2119,7 +2415,8 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
           ),
         );
       } else {
-        final launched = await launchUrl(fileUri, mode: LaunchMode.externalApplication);
+        final launched =
+            await launchUrl(fileUri, mode: LaunchMode.externalApplication);
         if (!launched) {
           throw 'Could not launch URL';
         }
@@ -2141,13 +2438,15 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('ID Proofs Type', style: AppTypography.labelSmall.copyWith(color: colors.mutedFg)),
+        Text('ID Proofs Type',
+            style: AppTypography.labelSmall.copyWith(color: colors.mutedFg)),
         const SizedBox(height: AppSpacing.xs),
         DropdownButtonFormField<String>(
           value: _selectedType,
           dropdownColor: colors.surface,
           icon: Icon(Icons.keyboard_arrow_down, color: colors.mutedFg),
-          hint: Text('Select proof type', style: TextStyle(color: colors.mutedFg, fontSize: 14)),
+          hint: Text('Select proof type',
+              style: TextStyle(color: colors.mutedFg, fontSize: 14)),
           items: ['Aadhaar', 'Voter', 'DL', 'PAN', 'Other']
               .map((e) => DropdownMenuItem(
                     value: e,
@@ -2160,7 +2459,9 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
                         });
                       }
                     },
-                    child: Text(e, style: TextStyle(color: colors.foreground, fontSize: 14)),
+                    child: Text(e,
+                        style:
+                            TextStyle(color: colors.foreground, fontSize: 14)),
                   ))
               .toList(),
           onChanged: (val) {
@@ -2176,7 +2477,8 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
             prefixIcon: Icon(Icons.badge_outlined, color: colors.primary),
             filled: true,
             fillColor: colors.surface,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: colors.border, width: 1.5),
@@ -2188,56 +2490,69 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        
-        Text('ID Proofs', style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold)),
+        Text('ID Proofs',
+            style:
+                AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: AppSpacing.sm),
-        
         if (proofs.isEmpty)
-          Text('No ID proofs uploaded.', style: AppTypography.bodySmall.copyWith(color: colors.mutedFg))
+          Text('No ID proofs uploaded.',
+              style: AppTypography.bodySmall.copyWith(color: colors.mutedFg))
         else
           Column(
-            children: proofs.map((p) => Card(
-              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                side: BorderSide(color: colors.border),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: ListTile(
-                leading: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: colors.muted,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(p.document?.mimeType == 'application/pdf' ? Icons.picture_as_pdf : Icons.image, color: colors.mutedFg),
-                ),
-                title: Text(p.document?.filename ?? p.type, style: AppTypography.bodyMedium),
-                subtitle: Text(
-                  p.document != null ? '${(p.document!.sizeBytes / 1024).toStringAsFixed(1)} KB' : '',
-                  style: AppTypography.bodySmall.copyWith(color: colors.mutedFg),
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.visibility, size: 20, color: colors.primary),
-                      onPressed: () => _viewIdProof(p),
-                      tooltip: 'View ID Proof',
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete, size: 20, color: colors.destructive),
-                      onPressed: () => widget.controller.removeIdProof(p.id),
-                      tooltip: 'Remove ID Proof',
-                    ),
-                  ],
-                ),
-              ),
-            )).toList(),
+            children: proofs
+                .map((p) => Card(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        side: BorderSide(color: colors.border),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ListTile(
+                        leading: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: colors.muted,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                              p.document?.mimeType == 'application/pdf'
+                                  ? Icons.picture_as_pdf
+                                  : Icons.image,
+                              color: colors.mutedFg),
+                        ),
+                        title: Text(p.document?.filename ?? p.type,
+                            style: AppTypography.bodyMedium),
+                        subtitle: Text(
+                          p.document != null
+                              ? '${(p.document!.sizeBytes / 1024).toStringAsFixed(1)} KB'
+                              : '',
+                          style: AppTypography.bodySmall
+                              .copyWith(color: colors.mutedFg),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.visibility,
+                                  size: 20, color: colors.primary),
+                              onPressed: () => _viewIdProof(p),
+                              tooltip: 'View ID Proof',
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete,
+                                  size: 20, color: colors.destructive),
+                              onPressed: () =>
+                                  widget.controller.removeIdProof(p.id),
+                              tooltip: 'Remove ID Proof',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ))
+                .toList(),
           ),
         const SizedBox(height: AppSpacing.md),
-        
         if (proofs.length < 3)
           SizedBox(
             width: double.infinity,
@@ -2248,7 +2563,8 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
             ),
           )
         else
-          Text('Maximum 3 files allowed.', style: AppTypography.bodySmall.copyWith(color: colors.mutedFg)),
+          Text('Maximum 3 files allowed.',
+              style: AppTypography.bodySmall.copyWith(color: colors.mutedFg)),
       ],
     );
   }
@@ -2283,7 +2599,8 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
   void initState() {
     super.initState();
     if (widget.initialLocation != null) {
-      _tempLocation = LatLng(widget.initialLocation!.lat, widget.initialLocation!.lng);
+      _tempLocation =
+          LatLng(widget.initialLocation!.lat, widget.initialLocation!.lng);
       _reverseGeocode(_tempLocation!);
     } else {
       _tempLocation = null;
@@ -2315,7 +2632,8 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
           if (p.street != null && p.street!.isNotEmpty) p.street,
           if (p.subLocality != null && p.subLocality!.isNotEmpty) p.subLocality,
           if (p.locality != null && p.locality!.isNotEmpty) p.locality,
-          if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty) p.administrativeArea,
+          if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty)
+            p.administrativeArea,
           if (p.postalCode != null && p.postalCode!.isNotEmpty) p.postalCode,
           if (p.country != null && p.country!.isNotEmpty) p.country,
         ];
@@ -2324,12 +2642,14 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
         });
       } else {
         setState(() {
-          _tempAddress = '${latLng.latitude.toStringAsFixed(6)}, ${latLng.longitude.toStringAsFixed(6)}';
+          _tempAddress =
+              '${latLng.latitude.toStringAsFixed(6)}, ${latLng.longitude.toStringAsFixed(6)}';
         });
       }
     } catch (e) {
       setState(() {
-        _tempAddress = '${latLng.latitude.toStringAsFixed(6)}, ${latLng.longitude.toStringAsFixed(6)}';
+        _tempAddress =
+            '${latLng.latitude.toStringAsFixed(6)}, ${latLng.longitude.toStringAsFixed(6)}';
       });
     }
   }
@@ -2356,7 +2676,8 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No coordinates found for this location.')),
+            const SnackBar(
+                content: Text('No coordinates found for this location.')),
           );
         }
       }
@@ -2381,7 +2702,8 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('GPS/Location services are disabled on the device.'),
+              content: const Text(
+                  'GPS/Location services are disabled on the device.'),
               action: SnackBarAction(
                 label: 'Enable',
                 onPressed: () => Geolocator.openLocationSettings(),
@@ -2526,7 +2848,8 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
               child: SafeArea(
                 bottom: false,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 12.0),
                   child: Container(
                     height: 52,
                     decoration: BoxDecoration(
@@ -2563,7 +2886,8 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
                                 fontSize: 14,
                               ),
                               border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                              contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 14),
                             ),
                           ),
                         ),
@@ -2589,7 +2913,8 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
                                 )
                               : const Icon(Icons.search),
                           color: colors.primary,
-                          onPressed: () => _searchAddress(_searchController.text),
+                          onPressed: () =>
+                              _searchAddress(_searchController.text),
                         ),
                         const SizedBox(width: 8),
                       ],
@@ -2622,7 +2947,7 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
                       : const Icon(Icons.gps_fixed),
                 ),
                 const SizedBox(height: 12),
-                
+
                 // Zoom Controls
                 Container(
                   decoration: BoxDecoration(
@@ -2643,7 +2968,8 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
                         icon: const Icon(Icons.add, size: 20),
                         color: colors.foreground,
                         onPressed: () {
-                          _dialogMapController?.animateCamera(CameraUpdate.zoomIn());
+                          _dialogMapController
+                              ?.animateCamera(CameraUpdate.zoomIn());
                         },
                       ),
                       Container(width: 20, height: 1, color: colors.border),
@@ -2651,7 +2977,8 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
                         icon: const Icon(Icons.remove, size: 20),
                         color: colors.foreground,
                         onPressed: () {
-                          _dialogMapController?.animateCamera(CameraUpdate.zoomOut());
+                          _dialogMapController
+                              ?.animateCamera(CameraUpdate.zoomOut());
                         },
                       ),
                     ],
@@ -2692,7 +3019,8 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.location_on, color: colors.destructive, size: 28),
+                          Icon(Icons.location_on,
+                              color: colors.destructive, size: 28),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -2709,7 +3037,9 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  _tempAddress.isNotEmpty ? _tempAddress : 'Fetching address...',
+                                  _tempAddress.isNotEmpty
+                                      ? _tempAddress
+                                      : 'Fetching address...',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
@@ -2737,10 +3067,12 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
                         onPressed: hasPin
                             ? () {
                                 widget.onLocationSelected(Location(
-                                  lat: double.parse(_tempLocation!.latitude.toStringAsFixed(6)),
-                                  lng: double.parse(_tempLocation!.longitude.toStringAsFixed(6)),
-                                  label: _tempAddress.isNotEmpty 
-                                      ? _tempAddress 
+                                  lat: double.parse(_tempLocation!.latitude
+                                      .toStringAsFixed(6)),
+                                  lng: double.parse(_tempLocation!.longitude
+                                      .toStringAsFixed(6)),
+                                  label: _tempAddress.isNotEmpty
+                                      ? _tempAddress
                                       : 'Pinned Location (${_tempLocation!.latitude.toStringAsFixed(4)}, ${_tempLocation!.longitude.toStringAsFixed(4)})',
                                 ));
                                 Navigator.of(context).pop();
@@ -2774,6 +3106,3 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
     );
   }
 }
-
-
-

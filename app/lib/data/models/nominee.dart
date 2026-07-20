@@ -10,6 +10,7 @@ class Nominee with _$Nominee {
     required String name,
     String? relation,
     String? phone,
+    String? dob,
   }) = _Nominee;
 
   factory Nominee.fromJson(Map<String, dynamic> json) => _$NomineeFromJson(json);

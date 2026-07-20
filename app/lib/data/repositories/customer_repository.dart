@@ -31,6 +31,8 @@ abstract class CustomerRepository {
     String? alternatePhone,
     String? landmark,
     String? notes,
+    String? dob,
+    String? occupation,
     int openingBalance = 0,
     List<Nominee>? nominees,
     List<IdProof>? idProofs,
