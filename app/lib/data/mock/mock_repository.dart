@@ -326,6 +326,15 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   }
 
   @override
+  Future<void> updateCustomer(Customer customer) async {
+    final index = _customers.indexWhere((c) => c.id == customer.id);
+    if (index != -1) {
+      _customers[index] = customer;
+      _syncController();
+    }
+  }
+
+  @override
   Future<Place> addPlace({
     required String weekdayId,
     required String name,

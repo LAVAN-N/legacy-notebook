@@ -134,7 +134,7 @@ class _AppScaffoldState extends State<AppScaffold> {
       floatingActionButton: widget.floatingActionButton,
     );
 
-    if (backTarget != null) {
+    if (backTarget != null && widget.appBarLeading == null) {
       return BackButtonListener(
         onBackButtonPressed: () async {
           context.go(backTarget);

@@ -13,7 +13,7 @@ import '../../core/router/routes.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/haptics.dart';
 import '../../data/models/product.dart';
-import '../customer/widgets/edit_customer_sheet.dart';
+
 import 'controllers/sale_controller.dart';
 
 class SaleScreen extends ConsumerStatefulWidget {
@@ -104,11 +104,8 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                 ),
                 trailing: const Icon(Icons.edit, size: 20),
                 onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    builder: (context) => EditCustomerSheet(customer: state.customer),
-                  );
+                  final sourceParam = GoRouterState.of(context).uri.queryParameters['source'] ?? '';
+                  context.push('${Routes.newClient}?source=sale&parent_source=$sourceParam', extra: state.customer);
                 },
               ),
             ),
@@ -359,18 +356,21 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
     );
   }
 
-  void _showProductPicker(BuildContext context, List<Product> products) {
-    showModalBottomSheet(
+  void _showProductPicker(BuildContext context, List<Product> products) async {
+    final selectedProduct = await showModalBottomSheet<Product>(
       context: context,
       isScrollControlled: true,
       builder: (context) => _ProductPickerSheet(
         products: products,
         onProductSelected: (product) {
-          Navigator.pop(context); // Close picker
-          _showLineItemEditor(context, product);
+          Navigator.pop(context, product); // Close picker and return product
         },
       ),
     );
+
+    if (selectedProduct != null && mounted) {
+      _showLineItemEditor(context, selectedProduct);
+    }
   }
 
   void _showLineItemEditor(BuildContext context, Product product) {
@@ -380,17 +380,13 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
       builder: (context) => _LineItemEditorSheet(
         product: product,
         onSave: (quantity, unitPrice) {
-          // add to sale controller with custom price/quantity
-          final notifier = ref.read(saleControllerProvider(widget.customerId).notifier);
-          // currently addProduct only takes product, but we need custom quantity/price!
-          // We will call addProduct multiple times or we need to update SaleController.
-          // For now, let's just add it (if the controller supports custom items, we'd use that).
-          // Actually, SaleController `addProduct` adds 1 quantity at default price.
-          // Let's loop for quantity for now since the controller might not support custom line items yet.
-          for(int i=0; i<quantity; i++) {
-             notifier.addProduct(product); // Temporary workaround until controller is updated
-          }
-          Navigator.pop(context);
+          Navigator.pop(context); // Close editor sheet first
+          final priceInPaise = (unitPrice * 100).round();
+          ref.read(saleControllerProvider(widget.customerId).notifier).addProduct(
+            product,
+            quantity: quantity,
+            price: priceInPaise,
+          );
         },
       ),
     );

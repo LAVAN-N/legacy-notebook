@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'routes.dart';
+import '../../data/models/customer.dart';
+
 
 // Import Screens
 import '../../features/dashboard/dashboard_screen.dart';
@@ -118,7 +120,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: Routes.newClient,
-        builder: (context, state) => const NewClientScreen(),
+        builder: (context, state) {
+          final customer = state.extra as Customer?;
+          return NewClientScreen(customer: customer);
+        },
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

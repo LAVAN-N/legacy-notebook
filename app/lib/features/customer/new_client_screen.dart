@@ -21,10 +21,14 @@ import '../../data/providers.dart';
 import '../../data/models/nominee.dart';
 import '../../data/models/location.dart';
 import '../../data/models/id_proof.dart';
+import '../../data/models/customer.dart';
 import 'new_client_controller.dart';
 
+
 class NewClientScreen extends ConsumerStatefulWidget {
-  const NewClientScreen({super.key});
+  const NewClientScreen({super.key, this.customer});
+
+  final Customer? customer;
 
   @override
   ConsumerState<NewClientScreen> createState() => _NewClientScreenState();
@@ -42,13 +46,27 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController();
-    _phoneController = TextEditingController();
-    _alternatePhoneController = TextEditingController();
-    _addressController = TextEditingController();
-    _landmarkController = TextEditingController();
+    _nameController = TextEditingController(text: widget.customer?.name ?? '');
+    _phoneController = TextEditingController(text: widget.customer?.phone ?? '');
+    _alternatePhoneController = TextEditingController(text: widget.customer?.alternatePhone ?? '');
+    _addressController = TextEditingController(text: widget.customer?.address ?? '');
+    _landmarkController = TextEditingController(text: widget.customer?.landmark ?? '');
     _placeNameController = TextEditingController();
     _areaNameController = TextEditingController();
+
+    if (widget.customer != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(newClientControllerProvider.notifier).prepopulateForm(widget.customer!);
+        }
+      });
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(newClientControllerProvider.notifier).resetForm();
+        }
+      });
+    }
   }
 
   @override
@@ -60,8 +78,12 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
     _landmarkController.dispose();
     _placeNameController.dispose();
     _areaNameController.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(newClientControllerProvider.notifier).resetForm();
+    });
     super.dispose();
   }
+
 
   void _showAddPlaceSheet() async {
     final result = await showModalBottomSheet<String>(
@@ -96,6 +118,45 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
     // In a real app, you'd use Scrollable.ensureVisible or similar
   }
 
+  void _handleBack() async {
+    final isDirty = ref.read(newClientControllerProvider.notifier).isDirty;
+    if (isDirty) {
+      final shouldDiscard = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Discard Changes'),
+          content: Text(widget.customer != null
+              ? 'Are you sure you want to discard your changes?'
+              : 'Are you sure you want to discard this customer?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Yes'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldDiscard == true) {
+        _exitScreen();
+      }
+    } else {
+      _exitScreen();
+    }
+  }
+
+  void _exitScreen() {
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    } else {
+      context.go(Routes.dashboard);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -104,48 +165,16 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
 
     return BackButtonListener(
       onBackButtonPressed: () async {
-        if (controller.isDirty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Discard new customer?'),
-              action: SnackBarAction(
-                label: 'UNDO',
-                onPressed: () {
-                  // Stay on form, snackbar auto-dismisses
-                },
-              ),
-              duration: const Duration(seconds: 3),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        } else {
-          context.go(Routes.dashboard);
-        }
+        _handleBack();
         return true;
       },
       child: AppScaffold(
         showSyncIndicator: false,
         appBarLeading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (controller.isDirty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Discard new customer?'),
-                  action: SnackBarAction(
-                    label: 'UNDO',
-                    onPressed: () {},
-                  ),
-                  duration: const Duration(seconds: 3),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            } else {
-              context.go(Routes.dashboard);
-            }
-          },
+          onPressed: _handleBack,
         ),
-        title: const Text('New Credit Sale'),
+        title: Text(widget.customer != null ? 'Edit Client' : 'New Credit Sale'),
         body: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -178,6 +207,7 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
                 // Action Buttons
                 _ActionButtons(
                   isLoading: formState.isLoading,
+                  isEditing: widget.customer != null,
                   onCreateAndSale: () async {
                     final customer = await controller.createAndSale();
                     if (customer != null && mounted) {
@@ -202,18 +232,30 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
                       );
                       // Navigate to sale screen
                       if (mounted) {
-                        context.go(Routes.sale(
+                        context.go('${Routes.sale(
                           formState.selectedWeekday,
                           formState.placeId,
                           formState.areaId,
                           customer.id,
-                        ));
+                        )}?source=create');
                       }
                     }
                   },
                   onCreateOnly: () async {
                     final customer = await controller.createOnly();
                     if (customer != null && mounted) {
+                      if (widget.customer != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Customer details updated successfully'),
+                            duration: Duration(seconds: 2),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        Navigator.pop(context);
+                        return;
+                      }
+
                       // Capture ref dependencies before showing snackbar
                       final repository = ref.read(customerRepositoryProvider);
                       final notifier = ref.read(newClientControllerProvider.notifier);
@@ -667,15 +709,32 @@ class _ActionButtons extends StatelessWidget {
     required this.onCreateAndSale,
     required this.onCreateOnly,
     required this.colors,
+    this.isEditing = false,
   });
 
   final bool isLoading;
   final VoidCallback onCreateAndSale;
   final VoidCallback onCreateOnly;
   final AppColors colors;
+  final bool isEditing;
 
   @override
   Widget build(BuildContext context) {
+    if (isEditing) {
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: isLoading ? null : onCreateOnly,
+          child: isLoading
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Save changes'),
+        ),
+      );
+    }
     return Column(
       children: [
         SizedBox(
@@ -832,7 +891,22 @@ class _NomineesBlockState extends State<_NomineesBlock> {
     final isEditing = nominee != null;
     final nameCtrl = TextEditingController(text: nominee?.name ?? '');
     final phoneCtrl = TextEditingController(text: nominee?.phone ?? '');
-    String rel = nominee?.relation ?? 'Spouse';
+    
+    final standardRelations = ['Spouse', 'Parent', 'Child', 'Sibling'];
+    String rel;
+    final customRelCtrl = TextEditingController();
+
+    if (nominee != null) {
+      final String relationVal = nominee.relation ?? 'Spouse';
+      if (standardRelations.contains(relationVal)) {
+        rel = relationVal;
+      } else {
+        rel = 'Other';
+        customRelCtrl.text = relationVal;
+      }
+    } else {
+      rel = 'Spouse';
+    }
 
     showModalBottomSheet(
       context: context,
@@ -885,29 +959,53 @@ class _NomineesBlockState extends State<_NomineesBlock> {
                     const SizedBox(height: AppSpacing.sm),
                     Text('Relation *', style: AppTypography.labelSmall.copyWith(color: widget.colors.mutedFg)),
                     const SizedBox(height: AppSpacing.xs),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: widget.colors.border),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: rel,
-                          isExpanded: true,
-                          items: ['Spouse', 'Parent', 'Child', 'Sibling', 'Other']
-                              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                              .toList(),
-                          onChanged: (val) {
-                            if (val != null) {
-                              setModalState(() {
-                                rel = val;
-                              });
-                            }
-                          },
+                    DropdownButtonFormField<String>(
+                      value: rel,
+                      dropdownColor: widget.colors.surface,
+                      icon: Icon(Icons.keyboard_arrow_down, color: widget.colors.mutedFg),
+                      items: ['Spouse', 'Parent', 'Child', 'Sibling', 'Other']
+                          .map((e) => DropdownMenuItem(
+                                value: e,
+                                child: Text(e, style: TextStyle(color: widget.colors.foreground, fontSize: 14)),
+                              ))
+                          .toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          setModalState(() {
+                            rel = val;
+                          });
+                        }
+                      },
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.people_outline, color: widget.colors.primary),
+                        filled: true,
+                        fillColor: widget.colors.surface,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: widget.colors.border, width: 1.5),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: widget.colors.primary, width: 2),
                         ),
                       ),
                     ),
+                    if (rel == 'Other') ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      Text('Specify Relationship *', style: AppTypography.labelSmall.copyWith(color: widget.colors.mutedFg)),
+                      const SizedBox(height: AppSpacing.xs),
+                      TextField(
+                        controller: customRelCtrl,
+                        maxLength: 30,
+                        decoration: InputDecoration(
+                          hintText: 'e.g., Grandparent',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        onChanged: (_) => setModalState(() {}),
+                      ),
+                    ],
                     const SizedBox(height: AppSpacing.md),
                     Text('Phone', style: AppTypography.labelSmall.copyWith(color: widget.colors.mutedFg)),
                     const SizedBox(height: AppSpacing.xs),
@@ -934,16 +1032,19 @@ class _NomineesBlockState extends State<_NomineesBlock> {
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         ElevatedButton(
-                          onPressed: nameCtrl.text.trim().isNotEmpty
+                          onPressed: nameCtrl.text.trim().isNotEmpty && (rel != 'Other' || customRelCtrl.text.trim().isNotEmpty)
                               ? () {
+                                  final chosenRelation = rel == 'Other' 
+                                      ? (customRelCtrl.text.trim().isEmpty ? 'Other' : customRelCtrl.text.trim())
+                                      : rel;
                                   final n = Nominee(
                                     id: nominee?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
                                     name: nameCtrl.text.trim(),
                                     phone: phoneCtrl.text.trim().isEmpty ? null : phoneCtrl.text.trim(),
-                                    relation: rel,
+                                    relation: chosenRelation,
                                   );
-                                  if (isEditing) {
-                                    widget.controller.updateNominee(nominee!.id, n);
+                                  if (nominee != null) {
+                                    widget.controller.updateNominee(nominee.id, n);
                                   } else {
                                     widget.controller.addNominee(n);
                                   }
@@ -1065,8 +1166,14 @@ class _LocationBlockState extends State<_LocationBlock> {
   LatLng? _cameraCenter;
   bool _userInteracted = false;
   LatLng? _lastGeocodedLocation;
+  bool _mapUnlocked = false;
 
   void _updateInlineLocation(LatLng target) {
+    if (_lastGeocodedLocation != null &&
+        (_lastGeocodedLocation!.latitude - target.latitude).abs() < 0.0001 &&
+        (_lastGeocodedLocation!.longitude - target.longitude).abs() < 0.0001) {
+      return;
+    }
     widget.controller.setLocation(Location(
       lat: double.parse(target.latitude.toStringAsFixed(6)),
       lng: double.parse(target.longitude.toStringAsFixed(6)),
@@ -1076,17 +1183,12 @@ class _LocationBlockState extends State<_LocationBlock> {
   }
 
   Future<void> _reverseGeocodeInline(LatLng latLng) async {
-    if (_lastGeocodedLocation != null &&
-        (_lastGeocodedLocation!.latitude - latLng.latitude).abs() < 0.00001 &&
-        (_lastGeocodedLocation!.longitude - latLng.longitude).abs() < 0.00001) {
-      return;
-    }
     _lastGeocodedLocation = latLng;
     try {
       List<gc.Placemark> placemarks = await gc.placemarkFromCoordinates(
         latLng.latitude,
         latLng.longitude,
-      );
+      ).timeout(const Duration(seconds: 4));
       if (placemarks.isNotEmpty) {
         final p = placemarks.first;
         final addressParts = [
@@ -1101,6 +1203,12 @@ class _LocationBlockState extends State<_LocationBlock> {
           lat: double.parse(latLng.latitude.toStringAsFixed(6)),
           lng: double.parse(latLng.longitude.toStringAsFixed(6)),
           label: addressParts.join(', '),
+        ));
+      } else {
+        widget.controller.setLocation(Location(
+          lat: double.parse(latLng.latitude.toStringAsFixed(6)),
+          lng: double.parse(latLng.longitude.toStringAsFixed(6)),
+          label: 'Pinned Location (${latLng.latitude.toStringAsFixed(4)}, ${latLng.longitude.toStringAsFixed(4)})',
         ));
       }
     } catch (_) {
@@ -1329,7 +1437,9 @@ class _LocationBlockState extends State<_LocationBlock> {
               children: [
                 Listener(
                   onPointerDown: (_) {
-                    _userInteracted = true;
+                    if (_mapUnlocked) {
+                      _userInteracted = true;
+                    }
                   },
                   child: GoogleMap(
                     initialCameraPosition: CameraPosition(
@@ -1340,24 +1450,103 @@ class _LocationBlockState extends State<_LocationBlock> {
                     myLocationEnabled: true,
                     myLocationButtonEnabled: false,
                     zoomControlsEnabled: false,
-                    gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                      Factory<OneSequenceGestureRecognizer>(
-                        () => EagerGestureRecognizer(),
-                      ),
-                    },
+                    gestureRecognizers: _mapUnlocked
+                        ? <Factory<OneSequenceGestureRecognizer>>{
+                            Factory<OneSequenceGestureRecognizer>(
+                              () => EagerGestureRecognizer(),
+                            ),
+                          }
+                        : const <Factory<OneSequenceGestureRecognizer>>{},
                     onMapCreated: (mapController) {
                       _mapController = mapController;
+                    },
+                    onCameraMoveStarted: () {
+                      if (_mapUnlocked) {
+                        _userInteracted = true;
+                      }
                     },
                     onCameraMove: (position) {
                       _cameraCenter = position.target;
                     },
                     onCameraIdle: () {
                       if (_userInteracted && _cameraCenter != null) {
+                        _userInteracted = false;
                         _updateInlineLocation(_cameraCenter!);
                       }
                     },
                   ),
                 ),
+                if (!_mapUnlocked)
+                  Positioned.fill(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _mapUnlocked = true;
+                        });
+                      },
+                      child: Container(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.8),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.touch_app, color: Colors.white, size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Tap to interact with map',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (_mapUnlocked)
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Material(
+                      color: Colors.black.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(20),
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _mapUnlocked = false;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(20),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.lock_outline, color: Colors.white, size: 14),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Lock Scroll',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
 
                 // Fixed pin overlay at the center of the inline map preview
                 if (hasLocation)
@@ -1638,6 +1827,9 @@ class _LocationBlockState extends State<_LocationBlock> {
                             icon: Icon(Icons.clear, color: colors.destructive, size: 20),
                             onPressed: () {
                               widget.controller.setLocation(null);
+                              setState(() {
+                                _mapUnlocked = false;
+                              });
                             },
                             tooltip: 'Clear location',
                           ),
@@ -1686,6 +1878,9 @@ class _LocationBlockState extends State<_LocationBlock> {
   }
 
   void _openCloserViewDialog(BuildContext context) {
+    setState(() {
+      _userInteracted = false;
+    });
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -1952,15 +2147,30 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
           value: _selectedType,
           dropdownColor: colors.surface,
           icon: Icon(Icons.keyboard_arrow_down, color: colors.mutedFg),
-          hint: Text('Select a proof', style: TextStyle(color: colors.mutedFg, fontSize: 14)),
+          hint: Text('Select proof type', style: TextStyle(color: colors.mutedFg, fontSize: 14)),
           items: ['Aadhaar', 'Voter', 'DL', 'PAN', 'Other']
               .map((e) => DropdownMenuItem(
                     value: e,
+                    onTap: () {
+                      if (_selectedType == e) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          setState(() {
+                            _selectedType = null;
+                          });
+                        });
+                      }
+                    },
                     child: Text(e, style: TextStyle(color: colors.foreground, fontSize: 14)),
                   ))
               .toList(),
           onChanged: (val) {
-            setState(() => _selectedType = val);
+            setState(() {
+              if (_selectedType == val) {
+                _selectedType = null;
+              } else {
+                _selectedType = val;
+              }
+            });
           },
           decoration: InputDecoration(
             prefixIcon: Icon(Icons.badge_outlined, color: colors.primary),

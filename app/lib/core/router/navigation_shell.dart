@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/floating_bottom_nav.dart';
 import 'routes.dart';
+import '../../data/models/customer.dart';
 
 /// Represents a breadcrumb in the navigation hierarchy
 class BreadcrumbItem {
@@ -11,13 +12,110 @@ class BreadcrumbItem {
   BreadcrumbItem({required this.label, this.route});
 }
 
+String _getWeekdayNameById(String id) {
+  final map = {
+    'w-1': 'Monday',
+    'w-2': 'Tuesday',
+    'w-3': 'Wednesday',
+    'w-4': 'Thursday',
+    'w-5': 'Friday',
+    'w-6': 'Saturday',
+    'w-7': 'Sunday',
+  };
+  return map[id] ?? 'Monday';
+}
+
 /// Builds breadcrumb list from current route
 List<BreadcrumbItem> _buildBreadcrumbs(GoRouterState state) {
   final path = state.uri.path;
   final params = state.pathParameters;
+  final queryParams = state.uri.queryParameters;
 
-  if (path == Routes.dashboard || path == '/inventory' || path == '/transactions' || path == '/profile' || path.contains('/sale') || path.contains('/collect')) {
+  if (path == Routes.dashboard ||
+      path == '/inventory' ||
+      path == '/transactions' ||
+      path == '/profile' ||
+      path.contains('/collect')) {
     return [];
+  }
+
+  // 1. Create & Edit Client Form
+  if (path == Routes.newClient) {
+    final customer = state.extra as Customer?;
+    if (customer == null) {
+      // Create Client
+      return [
+        BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
+        BreadcrumbItem(label: 'Client'),
+      ];
+    } else {
+      // Edit Client
+      final source = queryParams['source'] ?? '';
+      final parentSource = queryParams['parent_source'] ?? '';
+      if (source == 'sale') {
+        final day = _getWeekdayNameById(customer.weekdayId);
+        final clientRoute = Routes.customer(day, customer.placeId, customer.areaId, customer.id);
+        final saleRoute = '${Routes.sale(day, customer.placeId, customer.areaId, customer.id)}?source=$parentSource';
+        
+        if (parentSource == 'create') {
+          return [
+            BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
+            BreadcrumbItem(label: 'Client', route: clientRoute),
+            BreadcrumbItem(label: 'New Sale', route: saleRoute),
+            BreadcrumbItem(label: 'Edit'),
+          ];
+        } else {
+          return [
+            BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
+            BreadcrumbItem(label: day, route: Routes.weekday(day)),
+            BreadcrumbItem(label: 'Place ${customer.placeId}', route: Routes.place(day, customer.placeId)),
+            BreadcrumbItem(label: 'Area ${customer.areaId}', route: Routes.area(day, customer.placeId, customer.areaId)),
+            BreadcrumbItem(label: 'Client ${customer.id}', route: clientRoute),
+            BreadcrumbItem(label: 'New Sale', route: saleRoute),
+            BreadcrumbItem(label: 'Edit'),
+          ];
+        }
+      } else {
+        // Edit from client card
+        final day = _getWeekdayNameById(customer.weekdayId);
+        final clientRoute = Routes.customer(day, customer.placeId, customer.areaId, customer.id);
+        return [
+          BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
+          BreadcrumbItem(label: day, route: Routes.weekday(day)),
+          BreadcrumbItem(label: 'Place ${customer.placeId}', route: Routes.place(day, customer.placeId)),
+          BreadcrumbItem(label: 'Area ${customer.areaId}', route: Routes.area(day, customer.placeId, customer.areaId)),
+          BreadcrumbItem(label: 'Client ${customer.id}', route: clientRoute),
+          BreadcrumbItem(label: 'Edit'),
+        ];
+      }
+    }
+  }
+
+  // 2. New Sale
+  if (path.contains('/sale')) {
+    final day = params['day'] ?? 'Monday';
+    final placeId = params['placeId'] ?? '';
+    final areaId = params['areaId'] ?? '';
+    final customerId = params['customerId'] ?? '';
+    final source = queryParams['source'] ?? '';
+    
+    if (source == 'create') {
+      return [
+        BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
+        BreadcrumbItem(label: 'Client', route: Routes.customer(day, placeId, areaId, customerId)),
+        BreadcrumbItem(label: 'New Sale'),
+      ];
+    } else {
+      // Follows along its previous screen (client details: Dashboard -> Day -> Place -> Area -> Client -> New Sale)
+      return [
+        BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
+        BreadcrumbItem(label: day, route: Routes.weekday(day)),
+        BreadcrumbItem(label: 'Place $placeId', route: Routes.place(day, placeId)),
+        BreadcrumbItem(label: 'Area $areaId', route: Routes.area(day, placeId, areaId)),
+        BreadcrumbItem(label: 'Client $customerId', route: Routes.customer(day, placeId, areaId, customerId)),
+        BreadcrumbItem(label: 'New Sale'),
+      ];
+    }
   }
 
   final breadcrumbs = [BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard)];

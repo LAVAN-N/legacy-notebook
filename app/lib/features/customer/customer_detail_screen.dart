@@ -62,19 +62,6 @@ class CustomerDetailScreen extends ConsumerWidget {
                   // Identity Block
                   CustomerContextCard(
                     customer: customer,
-                    onEditPhone: (newPhone) async {
-                      await ref
-                          .read(customerDetailControllerProvider(customerId).notifier)
-                          .updatePhone(newPhone);
-                      ConfirmSnackbar.show(
-                        context,
-                        message: 'Phone number updated successfully',
-                        onUndo: () => ref
-                            .read(customerDetailControllerProvider(customerId).notifier)
-                            .updatePhone(customer.phone),
-                      );
-                    },
-                    onAddNominee: () => _showAddNomineeSheet(context, ref),
                   ),
                   const SizedBox(height: AppSpacing.lg),
 

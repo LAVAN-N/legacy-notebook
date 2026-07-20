@@ -11,12 +11,14 @@ class SaleItemInput {
   SaleItemInput({
     required this.product,
     required this.quantity,
-  });
+    int? customPrice,
+  }) : price = customPrice ?? product.price;
 
   final Product product;
   int quantity;
+  int price;
 
-  int get subtotal => product.price * quantity;
+  int get subtotal => price * quantity;
 }
 
 class SaleScreenState {
@@ -117,7 +119,8 @@ class SaleController extends StateNotifier<SaleScreenState> {
     }
   }
 
-  void addProduct(Product product) {
+  void addProduct(Product product, {int? quantity, int? price}) {
+    final qty = quantity ?? 1;
     if (product.stock <= 0) {
       state = state.copyWith(errorMessage: 'Cannot add ${product.name}: Out of Stock');
       return;
@@ -128,13 +131,25 @@ class SaleController extends StateNotifier<SaleScreenState> {
     final list = List<SaleItemInput>.from(state.lineItems);
     if (existingIndex != -1) {
       final existingItem = list[existingIndex];
-      if (existingItem.quantity >= product.stock) {
+      final newQty = existingItem.quantity + qty;
+      if (newQty > product.stock) {
         state = state.copyWith(errorMessage: 'Cannot add more: Max available stock reached');
         return;
       }
-      existingItem.quantity++;
+      existingItem.quantity = newQty;
+      if (price != null) {
+        existingItem.price = price;
+      }
     } else {
-      list.add(SaleItemInput(product: product, quantity: 1));
+      if (qty > product.stock) {
+        state = state.copyWith(errorMessage: 'Cannot add more: Max available stock reached');
+        return;
+      }
+      list.add(SaleItemInput(
+        product: product,
+        quantity: qty,
+        customPrice: price,
+      ));
     }
 
     state = state.copyWith(lineItems: list, errorMessage: null);
@@ -203,7 +218,7 @@ class SaleController extends StateNotifier<SaleScreenState> {
       final mappedItems = state.lineItems.map((item) => {
         'productId': item.product.id,
         'quantity': item.quantity,
-        'unitPrice': item.product.price,
+        'unitPrice': item.price,
       }).toList();
 
       await saleRepo.saveSale(

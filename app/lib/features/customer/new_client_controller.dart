@@ -10,9 +10,11 @@ import '../dashboard/controllers/dashboard_controller.dart';
 import '../../data/models/nominee.dart';
 import '../../data/models/id_proof.dart';
 import '../../data/models/location.dart';
+import 'controllers/customer_controller.dart';
 
 class NewClientFormState {
   NewClientFormState({
+    this.editingCustomerId,
     this.weekdayId = '',
     this.selectedWeekday = '',
     this.placeId = '',
@@ -31,6 +33,7 @@ class NewClientFormState {
     this.isLoading = false,
   });
 
+  final String? editingCustomerId;
   final String weekdayId;
   final String selectedWeekday;
   final String placeId;
@@ -49,6 +52,7 @@ class NewClientFormState {
   final bool isLoading;
 
   NewClientFormState copyWith({
+    String? editingCustomerId,
     String? weekdayId,
     String? selectedWeekday,
     String? placeId,
@@ -67,6 +71,7 @@ class NewClientFormState {
     bool? isLoading,
   }) {
     return NewClientFormState(
+      editingCustomerId: editingCustomerId ?? this.editingCustomerId,
       weekdayId: weekdayId ?? this.weekdayId,
       selectedWeekday: selectedWeekday ?? this.selectedWeekday,
       placeId: placeId ?? this.placeId,
@@ -301,6 +306,40 @@ class NewClientController extends StateNotifier<NewClientFormState> {
     return errors;
   }
 
+  Future<void> prepopulateForm(Customer customer) async {
+    final places = await routeRepo.getPlacesByWeekday(customer.weekdayId);
+    final areas = await routeRepo.getAreasByPlace(customer.placeId);
+
+    final map = {
+      'w-1': 'Monday',
+      'w-2': 'Tuesday',
+      'w-3': 'Wednesday',
+      'w-4': 'Thursday',
+      'w-5': 'Friday',
+      'w-6': 'Saturday',
+      'w-7': 'Sunday',
+    };
+    final weekdayName = map[customer.weekdayId] ?? 'Monday';
+
+    state = NewClientFormState(
+      editingCustomerId: customer.id,
+      weekdayId: customer.weekdayId,
+      selectedWeekday: weekdayName,
+      placeId: customer.placeId,
+      areaId: customer.areaId,
+      name: customer.name,
+      phone: customer.phone,
+      alternatePhone: customer.alternatePhone ?? '',
+      address: customer.address,
+      landmark: customer.landmark ?? '',
+      nominees: customer.nominees,
+      idProofs: customer.idProofs,
+      location: customer.location,
+      places: places,
+      areas: areas,
+    );
+  }
+
   Future<Customer?> createAndSale() async {
     final errors = _validate();
     if (errors.isNotEmpty) {
@@ -311,24 +350,47 @@ class NewClientController extends StateNotifier<NewClientFormState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      final customer = await customerRepo.addCustomer(
-        name: state.name,
-        phone: state.phone.replaceAll(RegExp(r'\D'), ''),
-        alternatePhone: state.alternatePhone.isNotEmpty ? state.alternatePhone : null,
-        address: state.address,
-        landmark: state.landmark.isNotEmpty ? state.landmark : null,
-        weekdayId: state.weekdayId,
-        placeId: state.placeId,
-        areaId: state.areaId,
-        nominees: state.nominees,
-        idProofs: state.idProofs,
-        location: state.location,
-      );
+      Customer customer;
+      if (state.editingCustomerId != null) {
+        final existing = await customerRepo.getCustomerById(state.editingCustomerId!);
+        if (existing == null) {
+          throw Exception('Customer not found');
+        }
+        customer = existing.copyWith(
+          name: state.name,
+          phone: state.phone.replaceAll(RegExp(r'\D'), ''),
+          alternatePhone: state.alternatePhone.isNotEmpty ? state.alternatePhone : null,
+          address: state.address,
+          landmark: state.landmark.isNotEmpty ? state.landmark : null,
+          weekdayId: state.weekdayId,
+          placeId: state.placeId,
+          areaId: state.areaId,
+          nominees: state.nominees,
+          idProofs: state.idProofs,
+          location: state.location,
+        );
+        await customerRepo.updateCustomer(customer);
+      } else {
+        customer = await customerRepo.addCustomer(
+          name: state.name,
+          phone: state.phone.replaceAll(RegExp(r'\D'), ''),
+          alternatePhone: state.alternatePhone.isNotEmpty ? state.alternatePhone : null,
+          address: state.address,
+          landmark: state.landmark.isNotEmpty ? state.landmark : null,
+          weekdayId: state.weekdayId,
+          placeId: state.placeId,
+          areaId: state.areaId,
+          nominees: state.nominees,
+          idProofs: state.idProofs,
+          location: state.location,
+        );
+      }
 
       state = state.copyWith(isLoading: false);
       
       // Invalidate dashboard controller to refresh data
       ref.invalidate(dashboardControllerProvider);
+      ref.invalidate(customerDetailControllerProvider(customer.id));
       
       return customer;
     } catch (e) {
@@ -350,24 +412,47 @@ class NewClientController extends StateNotifier<NewClientFormState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      final customer = await customerRepo.addCustomer(
-        name: state.name,
-        phone: state.phone.replaceAll(RegExp(r'\D'), ''),
-        alternatePhone: state.alternatePhone.isNotEmpty ? state.alternatePhone : null,
-        address: state.address,
-        landmark: state.landmark.isNotEmpty ? state.landmark : null,
-        weekdayId: state.weekdayId,
-        placeId: state.placeId,
-        areaId: state.areaId,
-        nominees: state.nominees,
-        idProofs: state.idProofs,
-        location: state.location,
-      );
+      Customer customer;
+      if (state.editingCustomerId != null) {
+        final existing = await customerRepo.getCustomerById(state.editingCustomerId!);
+        if (existing == null) {
+          throw Exception('Customer not found');
+        }
+        customer = existing.copyWith(
+          name: state.name,
+          phone: state.phone.replaceAll(RegExp(r'\D'), ''),
+          alternatePhone: state.alternatePhone.isNotEmpty ? state.alternatePhone : null,
+          address: state.address,
+          landmark: state.landmark.isNotEmpty ? state.landmark : null,
+          weekdayId: state.weekdayId,
+          placeId: state.placeId,
+          areaId: state.areaId,
+          nominees: state.nominees,
+          idProofs: state.idProofs,
+          location: state.location,
+        );
+        await customerRepo.updateCustomer(customer);
+      } else {
+        customer = await customerRepo.addCustomer(
+          name: state.name,
+          phone: state.phone.replaceAll(RegExp(r'\D'), ''),
+          alternatePhone: state.alternatePhone.isNotEmpty ? state.alternatePhone : null,
+          address: state.address,
+          landmark: state.landmark.isNotEmpty ? state.landmark : null,
+          weekdayId: state.weekdayId,
+          placeId: state.placeId,
+          areaId: state.areaId,
+          nominees: state.nominees,
+          idProofs: state.idProofs,
+          location: state.location,
+        );
+      }
 
       state = state.copyWith(isLoading: false);
       
       // Invalidate dashboard controller to refresh data
       ref.invalidate(dashboardControllerProvider);
+      ref.invalidate(customerDetailControllerProvider(customer.id));
       
       return customer;
     } catch (e) {
@@ -378,6 +463,7 @@ class NewClientController extends StateNotifier<NewClientFormState> {
       return null;
     }
   }
+
 
   void saveFormState() {
     // Preserve form state for UNDO (state is already preserved by StateNotifier)

@@ -70,6 +70,12 @@ class SupabaseCustomerRepository implements CustomerRepository {
   }
 
   @override
+  Future<void> updateCustomer(Customer customer) async {
+    // TODO: Implement Supabase update
+    throw UnimplementedError('wire in follow-up skill');
+  }
+
+  @override
   Future<void> undoCustomer(String customerId) async {
     // TODO: Implement Supabase undo
     throw UnimplementedError('wire in follow-up skill');

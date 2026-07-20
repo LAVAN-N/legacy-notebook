@@ -37,5 +37,6 @@ abstract class CustomerRepository {
     Location? location,
   });
 
+  Future<void> updateCustomer(Customer customer);
   Future<void> undoCustomer(String customerId);
 }
