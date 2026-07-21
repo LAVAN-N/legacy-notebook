@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -31,6 +32,13 @@ class _InventoryCategoriesScreenState
       'speaker': Icons.speaker,
       'lightbulb': Icons.lightbulb,
       'wind': Icons.air,
+      'shopping-bag': Icons.shopping_bag,
+      'phone': Icons.phone_android,
+      'laptop': Icons.laptop,
+      'chair': Icons.chair,
+      'tv': Icons.tv,
+      'book': Icons.book,
+      'toy': Icons.toys,
     };
     return iconMap[iconName] ?? Icons.inventory_2;
   }
@@ -143,43 +151,73 @@ class _InventoryCategoriesScreenState
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: Text(
-              '${displayCategories.length} categories · ${displayProducts.length} products',
+              _searchQuery.isNotEmpty
+                  ? '${displayProducts.length} matching products found'
+                  : '${displayCategories.length} categories · ${displayProducts.length} products',
               style: theme.textTheme.bodySmall,
             ),
           ),
 
-          // Grid
+          // Grid of Categories or Products
           Expanded(
-            child: displayCategories.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.inbox,
-                            size: 48, color: colors.mutedFg),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No categories found',
-                          style: theme.textTheme.bodyLarge,
+            child: _searchQuery.isNotEmpty
+                ? (displayProducts.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.search_off, size: 48, color: colors.mutedFg),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No products found matching "$_searchQuery"',
+                              style: theme.textTheme.bodyLarge,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  )
-                : GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 1,
-                    ),
-                    itemCount: displayCategories.length,
-                    itemBuilder: (context, index) {
-                      final category = displayCategories[index];
-                      return _buildCategoryCard(context, category, colors);
-                    },
-                  ),
+                      )
+                    : GridView.builder(
+                        padding: const EdgeInsets.all(16),
+                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 200,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          mainAxisExtent: 280,
+                        ),
+                        itemCount: displayProducts.length,
+                        itemBuilder: (context, index) {
+                          final product = displayProducts[index];
+                          return _buildProductCard(context, product, colors);
+                        },
+                      ))
+                : (displayCategories.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.inbox, size: 48, color: colors.mutedFg),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No categories found',
+                              style: theme.textTheme.bodyLarge,
+                            ),
+                          ],
+                        ),
+                      )
+                    : GridView.builder(
+                        padding: const EdgeInsets.all(16),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 1,
+                        ),
+                        itemCount: displayCategories.length,
+                        itemBuilder: (context, index) {
+                          final category = displayCategories[index];
+                          return _buildCategoryCard(context, category, colors);
+                        },
+                      )),
           ),
         ],
       ),
@@ -236,5 +274,108 @@ class _InventoryCategoriesScreenState
       ),
     );
   }
-}
 
+  Widget _buildProductCard(BuildContext context, Product product, AppColors colors) {
+    final theme = Theme.of(context);
+    final category = mockCategoriesList.firstWhere(
+      (c) => c.id == product.categoryId, 
+      orElse: () => const Category(id: '', name: 'Unknown', icon: '')
+    );
+
+    return Card(
+      child: InkWell(
+        onTap: () {
+          context.go('${Routes.inventoryCategory(product.categoryId)}?productId=${product.id}');
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Image placeholder
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: colors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    image: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                        ? (product.imageUrl!.startsWith('assets/')
+                            ? DecorationImage(
+                                image: AssetImage(product.imageUrl!),
+                                fit: BoxFit.cover,
+                              )
+                            : (product.imageUrl!.startsWith('http')
+                                ? DecorationImage(
+                                    image: NetworkImage(product.imageUrl!),
+                                    fit: BoxFit.cover,
+                                  )
+                                : DecorationImage(
+                                    image: FileImage(File(product.imageUrl!)),
+                                    fit: BoxFit.cover,
+                                  )))
+                        : null,
+                  ),
+                  child: product.imageUrl == null || product.imageUrl!.isEmpty
+                      ? Center(
+                          child: Icon(
+                            Icons.inventory_2,
+                            color: colors.primary,
+                            size: 40,
+                          ),
+                        )
+                      : null,
+                ),
+              ),
+              const SizedBox(height: 6),
+              // Category tag
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: colors.muted.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  category.name,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colors.mutedFg,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              // Name
+              Text(
+                product.name,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              // Brand
+              Text(
+                product.brand,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors.mutedFg,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              // Price
+              Text(
+                '₹ ${(product.price / 100).toStringAsFixed(2)}',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: colors.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
