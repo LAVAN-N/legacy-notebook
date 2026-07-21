@@ -81,19 +81,28 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
           c.phone.contains(q) ||
           c.address.toLowerCase().contains(q);
 
-      if (!matchesSearch) return false;
+      if (!matchesSearch) {
+        return false;
+      }
 
       // Status filter
       final out = getOutstanding(c.id);
-      if (_selectedStatus == 'Outstanding' && out <= 0) return false;
-      if (_selectedStatus == 'Settled' && out > 0) return false;
+      if (_selectedStatus == 'Outstanding' && out <= 0) {
+        return false;
+      }
+      if (_selectedStatus == 'Settled' && out > 0) {
+        return false;
+      }
 
       // Weekday filter
-      if (_selectedWeekday != null && c.weekdayId != _selectedWeekday)
+      if (_selectedWeekday != null && c.weekdayId != _selectedWeekday) {
         return false;
+      }
 
       // Place filter
-      if (_selectedPlace != null && c.placeId != _selectedPlace) return false;
+      if (_selectedPlace != null && c.placeId != _selectedPlace) {
+        return false;
+      }
 
       return true;
     }).toList();

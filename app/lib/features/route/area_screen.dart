@@ -44,9 +44,12 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
 
   TagType _determineTagType(CustomerProgress item) {
     if (item.isVisitedToday) {
-      if (item.lastCollectionStatus == 'PAYMENT') return TagType.done;
-      if (item.lastCollectionStatus == 'PARTIAL_PAYMENT')
+      if (item.lastCollectionStatus == 'PAYMENT') {
+        return TagType.done;
+      }
+      if (item.lastCollectionStatus == 'PARTIAL_PAYMENT') {
         return TagType.partial;
+      }
       return TagType.carryForward;
     }
     return item.outstanding.outstandingAmount > 0
