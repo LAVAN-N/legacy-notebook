@@ -432,9 +432,40 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                onTap: () {
+                  if (_priceController.text == '0') {
+                    _priceController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _priceController.text.length),
+                    );
+                  }
+                },
+                onChanged: (val) {
+                  String cleaned = val.replaceAll(RegExp(r'[^0-9.]'), '');
+                  final dotIndex = cleaned.indexOf('.');
+                  if (dotIndex != -1) {
+                    cleaned = cleaned.substring(0, dotIndex + 1) + 
+                              cleaned.substring(dotIndex + 1).replaceAll('.', '');
+                  }
+                  if (cleaned.startsWith('0') && cleaned.length > 1 && cleaned[1] != '.') {
+                    cleaned = cleaned.replaceFirst(RegExp(r'^0+'), '');
+                    if (cleaned.isEmpty) {
+                      cleaned = '0';
+                    } else if (cleaned.startsWith('.')) {
+                      cleaned = '0$cleaned';
+                    }
+                  }
+                  if (cleaned != val) {
+                    _priceController.value = TextEditingValue(
+                      text: cleaned,
+                      selection: TextSelection.collapsed(offset: cleaned.length),
+                    );
+                  }
+                },
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) return 'Price is required';
-                  if (double.tryParse(val) == null) return 'Enter a valid number';
+                  final parsed = double.tryParse(val);
+                  if (parsed == null) return 'Enter a valid number';
+                  if (parsed < 0) return 'Price cannot be negative';
                   return null;
                 },
               ),
@@ -452,9 +483,31 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       keyboardType: TextInputType.number,
+                      onTap: () {
+                        if (_stockController.text == '0') {
+                          _stockController.selection = TextSelection.fromPosition(
+                            TextPosition(offset: _stockController.text.length),
+                          );
+                        }
+                      },
+                      onChanged: (val) {
+                        String sanitized = val.replaceAll(RegExp(r'[^0-9]'), '');
+                        sanitized = sanitized.replaceAll(RegExp(r'^0+'), '');
+                        if (sanitized.isEmpty) {
+                          sanitized = '0';
+                        }
+                        if (sanitized != val) {
+                          _stockController.value = TextEditingValue(
+                            text: sanitized,
+                            selection: TextSelection.collapsed(offset: sanitized.length),
+                          );
+                        }
+                      },
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) return 'Stock is required';
-                        if (int.tryParse(val) == null) return 'Enter a valid integer';
+                        final parsed = int.tryParse(val);
+                        if (parsed == null) return 'Enter a valid integer';
+                        if (parsed < 0) return 'Stock cannot be negative';
                         return null;
                       },
                     ),
@@ -503,9 +556,31 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       keyboardType: TextInputType.number,
+                      onTap: () {
+                        if (_minStockController.text == '0') {
+                          _minStockController.selection = TextSelection.fromPosition(
+                            TextPosition(offset: _minStockController.text.length),
+                          );
+                        }
+                      },
+                      onChanged: (val) {
+                        String sanitized = val.replaceAll(RegExp(r'[^0-9]'), '');
+                        sanitized = sanitized.replaceAll(RegExp(r'^0+'), '');
+                        if (sanitized.isEmpty) {
+                          sanitized = '0';
+                        }
+                        if (sanitized != val) {
+                          _minStockController.value = TextEditingValue(
+                            text: sanitized,
+                            selection: TextSelection.collapsed(offset: sanitized.length),
+                          );
+                        }
+                      },
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) return 'Min stock is required';
-                        if (int.tryParse(val) == null) return 'Enter a valid integer';
+                        final parsed = int.tryParse(val);
+                        if (parsed == null) return 'Enter a valid integer';
+                        if (parsed < 0) return 'Min stock cannot be negative';
                         return null;
                       },
                     ),
@@ -990,9 +1065,40 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                onTap: () {
+                  if (_priceController.text == '0') {
+                    _priceController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _priceController.text.length),
+                    );
+                  }
+                },
+                onChanged: (val) {
+                  String cleaned = val.replaceAll(RegExp(r'[^0-9.]'), '');
+                  final dotIndex = cleaned.indexOf('.');
+                  if (dotIndex != -1) {
+                    cleaned = cleaned.substring(0, dotIndex + 1) + 
+                              cleaned.substring(dotIndex + 1).replaceAll('.', '');
+                  }
+                  if (cleaned.startsWith('0') && cleaned.length > 1 && cleaned[1] != '.') {
+                    cleaned = cleaned.replaceFirst(RegExp(r'^0+'), '');
+                    if (cleaned.isEmpty) {
+                      cleaned = '0';
+                    } else if (cleaned.startsWith('.')) {
+                      cleaned = '0$cleaned';
+                    }
+                  }
+                  if (cleaned != val) {
+                    _priceController.value = TextEditingValue(
+                      text: cleaned,
+                      selection: TextSelection.collapsed(offset: cleaned.length),
+                    );
+                  }
+                },
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) return 'Price is required';
-                  if (double.tryParse(val) == null) return 'Enter a valid number';
+                  final parsed = double.tryParse(val);
+                  if (parsed == null) return 'Enter a valid number';
+                  if (parsed < 0) return 'Price cannot be negative';
                   return null;
                 },
               ),
@@ -1010,9 +1116,31 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       keyboardType: TextInputType.number,
+                      onTap: () {
+                        if (_stockController.text == '0') {
+                          _stockController.selection = TextSelection.fromPosition(
+                            TextPosition(offset: _stockController.text.length),
+                          );
+                        }
+                      },
+                      onChanged: (val) {
+                        String sanitized = val.replaceAll(RegExp(r'[^0-9]'), '');
+                        sanitized = sanitized.replaceAll(RegExp(r'^0+'), '');
+                        if (sanitized.isEmpty) {
+                          sanitized = '0';
+                        }
+                        if (sanitized != val) {
+                          _stockController.value = TextEditingValue(
+                            text: sanitized,
+                            selection: TextSelection.collapsed(offset: sanitized.length),
+                          );
+                        }
+                      },
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) return 'Stock is required';
-                        if (int.tryParse(val) == null) return 'Enter a valid integer';
+                        final parsed = int.tryParse(val);
+                        if (parsed == null) return 'Enter a valid integer';
+                        if (parsed < 0) return 'Stock cannot be negative';
                         return null;
                       },
                     ),
@@ -1061,9 +1189,31 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       keyboardType: TextInputType.number,
+                      onTap: () {
+                        if (_minimumStockController.text == '0') {
+                          _minimumStockController.selection = TextSelection.fromPosition(
+                            TextPosition(offset: _minimumStockController.text.length),
+                          );
+                        }
+                      },
+                      onChanged: (val) {
+                        String sanitized = val.replaceAll(RegExp(r'[^0-9]'), '');
+                        sanitized = sanitized.replaceAll(RegExp(r'^0+'), '');
+                        if (sanitized.isEmpty) {
+                          sanitized = '0';
+                        }
+                        if (sanitized != val) {
+                          _minimumStockController.value = TextEditingValue(
+                            text: sanitized,
+                            selection: TextSelection.collapsed(offset: sanitized.length),
+                          );
+                        }
+                      },
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) return 'Min stock is required';
-                        if (int.tryParse(val) == null) return 'Enter a valid integer';
+                        final parsed = int.tryParse(val);
+                        if (parsed == null) return 'Enter a valid integer';
+                        if (parsed < 0) return 'Min stock cannot be negative';
                         return null;
                       },
                     ),

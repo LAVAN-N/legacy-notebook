@@ -200,7 +200,9 @@ class SaleController extends StateNotifier<SaleScreenState> {
 
   void updateAdvance(int advance) {
     String? error;
-    if (advance > state.totalAmount) {
+    if (advance < 0) {
+      error = 'Advance cannot be negative';
+    } else if (advance > state.totalAmount) {
       error = 'Advance paid cannot exceed total purchase value!';
     }
 
@@ -226,6 +228,11 @@ class SaleController extends StateNotifier<SaleScreenState> {
 
     if (state.lineItems.isEmpty) {
       state = state.copyWith(errorMessage: 'Please add at least one item to purchase.');
+      return false;
+    }
+
+    if (state.advanceAmount < 0) {
+      state = state.copyWith(errorMessage: 'Advance amount cannot be negative.');
       return false;
     }
 

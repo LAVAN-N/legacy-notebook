@@ -211,12 +211,22 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
               style: AppTypography.labelMedium.copyWith(color: colors.mutedFg),
             ),
             const SizedBox(height: AppSpacing.sm),
-            TextField(
+             TextField(
               controller: _advanceController,
               keyboardType: TextInputType.number,
               style: AppTypography.currencyMedium.copyWith(color: colors.foreground),
+              onTap: () {
+                if (_advanceController.text == '0') {
+                  _advanceController.selection = TextSelection.fromPosition(
+                    TextPosition(offset: _advanceController.text.length),
+                  );
+                }
+              },
               onChanged: (val) {
-                String sanitized = val.replaceAll(RegExp(r'^0+'), '');
+                // Strip negative signs and non-numeric characters
+                String sanitized = val.replaceAll(RegExp(r'[^0-9]'), '');
+                // Strip leading zeros
+                sanitized = sanitized.replaceAll(RegExp(r'^0+'), '');
                 if (sanitized.isEmpty) {
                   sanitized = '0';
                 }
@@ -755,8 +765,42 @@ class _LineItemEditorSheetState extends State<_LineItemEditorSheet> {
             decoration: InputDecoration(
               labelText: 'Unit price (₹)',
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              errorText: (double.tryParse(_priceController.text) == null)
+                  ? 'Enter a valid price'
+                  : (double.tryParse(_priceController.text)! < 0)
+                      ? 'Price cannot be negative'
+                      : null,
             ),
-            onChanged: (_) => setState(() {}),
+            onTap: () {
+              if (_priceController.text == '0') {
+                _priceController.selection = TextSelection.fromPosition(
+                  TextPosition(offset: _priceController.text.length),
+                );
+              }
+            },
+            onChanged: (val) {
+              String cleaned = val.replaceAll(RegExp(r'[^0-9.]'), '');
+              final dotIndex = cleaned.indexOf('.');
+              if (dotIndex != -1) {
+                cleaned = cleaned.substring(0, dotIndex + 1) + 
+                          cleaned.substring(dotIndex + 1).replaceAll('.', '');
+              }
+              if (cleaned.startsWith('0') && cleaned.length > 1 && cleaned[1] != '.') {
+                cleaned = cleaned.replaceFirst(RegExp(r'^0+'), '');
+                if (cleaned.isEmpty) {
+                  cleaned = '0';
+                } else if (cleaned.startsWith('.')) {
+                  cleaned = '0$cleaned';
+                }
+              }
+              if (cleaned != val) {
+                _priceController.value = TextEditingValue(
+                  text: cleaned,
+                  selection: TextSelection.collapsed(offset: cleaned.length),
+                );
+              }
+              setState(() {});
+            },
           ),
           if (isEdited) ...[
             const SizedBox(height: 4),
@@ -788,7 +832,9 @@ class _LineItemEditorSheetState extends State<_LineItemEditorSheet> {
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(120, 48),
                 ),
-                onPressed: () => widget.onSave(_quantity, currentPrice),
+                onPressed: (double.tryParse(_priceController.text) == null || double.tryParse(_priceController.text)! < 0)
+                    ? null
+                    : () => widget.onSave(_quantity, currentPrice),
                 child: const Text('Save item'),
               ),
             ],

@@ -108,7 +108,9 @@ class CollectController extends StateNotifier<CollectScreenState> {
 
   void updateAmount(int amount) {
     String? error;
-    if (state.status == 'PAYMENT' && amount > state.outstanding.outstandingAmount) {
+    if (amount < 0) {
+      error = 'Amount cannot be negative';
+    } else if (state.status == 'PAYMENT' && amount > state.outstanding.outstandingAmount) {
       error = 'Payment exceeds outstanding balance!';
     }
     state = state.copyWith(
@@ -125,6 +127,10 @@ class CollectController extends StateNotifier<CollectScreenState> {
     if (state.isSaving) return false;
 
     // Validations
+    if (state.amount < 0) {
+      state = state.copyWith(errorMessage: 'Collection amount cannot be negative');
+      return false;
+    }
     if (state.status == 'PARTIAL_PAYMENT' && state.amount <= 0) {
       state = state.copyWith(errorMessage: 'Partial payment amount must be greater than 0');
       return false;

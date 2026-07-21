@@ -166,8 +166,28 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
                 controller: _amountController,
                 keyboardType: TextInputType.number,
                 style: AppTypography.currencyMedium.copyWith(color: colors.foreground),
+                onTap: () {
+                  if (_amountController.text == '0') {
+                    _amountController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _amountController.text.length),
+                    );
+                  }
+                },
                 onChanged: (val) {
-                  final amt = int.tryParse(val) ?? 0;
+                  // Strip negative signs and non-numeric characters
+                  String sanitized = val.replaceAll(RegExp(r'[^0-9]'), '');
+                  // Strip leading zeros
+                  sanitized = sanitized.replaceAll(RegExp(r'^0+'), '');
+                  if (sanitized.isEmpty) {
+                    sanitized = '0';
+                  }
+                  if (sanitized != val) {
+                    _amountController.value = TextEditingValue(
+                      text: sanitized,
+                      selection: TextSelection.collapsed(offset: sanitized.length),
+                    );
+                  }
+                  final amt = int.tryParse(sanitized) ?? 0;
                   ref.read(collectControllerProvider(widget.customerId).notifier).updateAmount(amt);
                 },
                 decoration: const InputDecoration(
