@@ -56,6 +56,47 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
   final _minStockController = TextEditingController(text: '5');
   final _descriptionController = TextEditingController();
 
+  bool get _isDirty {
+    if (_nameController.text.isNotEmpty ||
+        _brandController.text.isNotEmpty ||
+        _skuController.text.isNotEmpty ||
+        _priceController.text.isNotEmpty ||
+        (_stockController.text != '0' && _stockController.text.isNotEmpty) ||
+        _descriptionController.text.isNotEmpty ||
+        _imagePath != null) {
+      return true;
+    }
+    return false;
+  }
+
+  void _handleBack() async {
+    if (_isDirty) {
+      final shouldDiscard = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Discard Changes'),
+          content: const Text('Are you sure you want to discard this product?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Yes'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldDiscard == true && mounted) {
+        Navigator.pop(context);
+      }
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -114,8 +155,8 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
               const SizedBox(height: 12),
               ListTile(
                 leading: Icon(Icons.camera_alt, color: colors.primary),
-                title: const Text('Take Photo',
-                    style: TextStyle(fontWeight: FontWeight.w500)),
+                title: Text('Take Photo',
+                    style: AppTypography.bodyLarge.copyWith(color: colors.foreground, fontWeight: FontWeight.w500)),
                 onTap: () async {
                   navigator.pop();
                   try {
@@ -158,8 +199,8 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
               ),
               ListTile(
                 leading: Icon(Icons.photo_library, color: colors.primary),
-                title: const Text('Choose from Gallery',
-                    style: TextStyle(fontWeight: FontWeight.w500)),
+                title: Text('Choose from Gallery',
+                    style: AppTypography.bodyLarge.copyWith(color: colors.foreground, fontWeight: FontWeight.w500)),
                 onTap: () async {
                   navigator.pop();
                   try {
@@ -189,8 +230,8 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
               ),
               ListTile(
                 leading: Icon(Icons.file_present, color: colors.primary),
-                title: const Text('Select File',
-                    style: TextStyle(fontWeight: FontWeight.w500)),
+                title: Text('Select File',
+                    style: AppTypography.bodyLarge.copyWith(color: colors.foreground, fontWeight: FontWeight.w500)),
                 onTap: () async {
                   navigator.pop();
                   try {
@@ -264,49 +305,55 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
     
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.background,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: colors.border,
-                    borderRadius: BorderRadius.circular(2),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleBack();
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: colors.background,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 16,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: colors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Add Product',
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
+                const SizedBox(height: 16),
+                
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Add Product',
+                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      onPressed: _handleBack,
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
               const Divider(),
               const SizedBox(height: 16),
 
@@ -385,7 +432,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                   child: TextButton.icon(
                     onPressed: () => setState(() => _imagePath = null),
                     icon: Icon(Icons.delete_outline, size: 14, color: colors.danger),
-                    label: Text('Remove photo', style: TextStyle(color: colors.danger)),
+                    label: Text('Remove photo', style: AppTypography.labelLarge.copyWith(color: colors.danger)),
                   ),
                 ),
               ],
@@ -632,7 +679,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: _handleBack,
                     child: const Text('Cancel'),
                   ),
                   const SizedBox(width: 12),
@@ -658,7 +705,9 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                         final stock = int.tryParse(_stockController.text) ?? 0;
                         final minimumStock = int.tryParse(_minStockController.text) ?? 0;
                         final categoryId = _selectedCategoryId!;
-                        final description = _descriptionController.text.trim();
+                        final description = _descriptionController.text.trim().isEmpty 
+                            ? null 
+                            : _descriptionController.text.trim();
 
                         final navigator = Navigator.of(context);
                         final messenger = ScaffoldMessenger.of(context);
@@ -672,7 +721,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                             stock: stock,
                             categoryId: categoryId,
                             minimumStock: minimumStock,
-                            description: description.isEmpty ? null : description,
+                            description: description,
                             imageUrl: _imagePath,
                           );
                           navigator.pop();
@@ -696,6 +745,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
             ],
           ),
         ),
+      ),
       ),
     );
   }
@@ -721,6 +771,49 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
   late final TextEditingController _stockController;
   late final TextEditingController _minimumStockController;
   late final TextEditingController _descriptionController;
+
+  bool get _isDirty {
+    if (_nameController.text != widget.product.name ||
+        _brandController.text != widget.product.brand ||
+        _skuController.text != widget.product.sku ||
+        _priceController.text != (widget.product.price / 100).toString() ||
+        _stockController.text != widget.product.stock.toString() ||
+        _minimumStockController.text != widget.product.minimumStock.toString() ||
+        _descriptionController.text != (widget.product.description ?? '') ||
+        _imagePath != widget.product.imageUrl ||
+        _selectedCategoryId != widget.product.categoryId) {
+      return true;
+    }
+    return false;
+  }
+
+  void _handleBack() async {
+    if (_isDirty) {
+      final shouldDiscard = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Discard Changes'),
+          content: const Text('Are you sure you want to discard your edits?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Yes'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldDiscard == true && mounted) {
+        Navigator.pop(context);
+      }
+    } else {
+      Navigator.pop(context);
+    }
+  }
 
   @override
   void initState() {
@@ -788,8 +881,8 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
               const SizedBox(height: 12),
               ListTile(
                 leading: Icon(Icons.camera_alt, color: colors.primary),
-                title: const Text('Take Photo',
-                    style: TextStyle(fontWeight: FontWeight.w500)),
+                title: Text('Take Photo',
+                    style: AppTypography.bodyLarge.copyWith(color: colors.foreground, fontWeight: FontWeight.w500)),
                 onTap: () async {
                   navigator.pop();
                   try {
@@ -832,8 +925,8 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
               ),
               ListTile(
                 leading: Icon(Icons.photo_library, color: colors.primary),
-                title: const Text('Choose from Gallery',
-                    style: TextStyle(fontWeight: FontWeight.w500)),
+                title: Text('Choose from Gallery',
+                    style: AppTypography.bodyLarge.copyWith(color: colors.foreground, fontWeight: FontWeight.w500)),
                 onTap: () async {
                   navigator.pop();
                   try {
@@ -863,8 +956,8 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
               ),
               ListTile(
                 leading: Icon(Icons.file_present, color: colors.primary),
-                title: const Text('Select File',
-                    style: TextStyle(fontWeight: FontWeight.w500)),
+                title: Text('Select File',
+                    style: AppTypography.bodyLarge.copyWith(color: colors.foreground, fontWeight: FontWeight.w500)),
                 onTap: () async {
                   navigator.pop();
                   try {
@@ -905,49 +998,55 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
     
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.background,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: colors.border,
-                    borderRadius: BorderRadius.circular(2),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleBack();
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: colors.background,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 16,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: colors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Edit Product',
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
+                const SizedBox(height: 16),
+                
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Edit Product',
+                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      onPressed: _handleBack,
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
               const Divider(),
               const SizedBox(height: 16),
 
@@ -1018,7 +1117,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                   child: TextButton.icon(
                     onPressed: () => setState(() => _imagePath = null),
                     icon: Icon(Icons.delete_outline, size: 14, color: colors.danger),
-                    label: Text('Remove photo', style: TextStyle(color: colors.danger)),
+                    label: Text('Remove photo', style: AppTypography.labelLarge.copyWith(color: colors.danger)),
                   ),
                 ),
               ],
@@ -1265,7 +1364,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: _handleBack,
                     child: const Text('Cancel'),
                   ),
                   const SizedBox(width: 12),
@@ -1290,10 +1389,10 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                               : _descriptionController.text.trim(),
                           imageUrl: _imagePath,
                         );
-
+ 
                         final navigator = Navigator.of(context);
                         final messenger = ScaffoldMessenger.of(context);
-
+ 
                         try {
                           await repo.updateProduct(updated);
                           navigator.pop();
@@ -1318,6 +1417,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
           ),
         ),
       ),
+      ),
     );
   }
 }
@@ -1338,6 +1438,38 @@ class _AddCategoryDialogContent extends StatefulWidget {
 class _AddCategoryDialogContentState extends State<_AddCategoryDialogContent> {
   final _nameController = TextEditingController();
   String _selectedIconName = 'frying-pan';
+
+  bool get _isDirty {
+    return _nameController.text.isNotEmpty;
+  }
+
+  void _handleBack() async {
+    if (_isDirty) {
+      final shouldDiscard = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Discard Changes'),
+          content: const Text('Are you sure you want to discard this category?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Yes'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldDiscard == true && mounted) {
+        Navigator.pop(context);
+      }
+    } else {
+      Navigator.pop(context);
+    }
+  }
 
   final List<Map<String, dynamic>> _availableIcons = [
     {'name': 'frying-pan', 'icon': Icons.kitchen, 'keywords': 'kitchen food frying pan cook pot'},
@@ -1362,14 +1494,20 @@ class _AddCategoryDialogContentState extends State<_AddCategoryDialogContent> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: Column(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleBack();
+      },
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 24,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1441,7 +1579,7 @@ class _AddCategoryDialogContentState extends State<_AddCategoryDialogContent> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: _handleBack,
                 child: const Text('Cancel'),
               ),
               const SizedBox(width: 8),
@@ -1470,6 +1608,7 @@ class _AddCategoryDialogContentState extends State<_AddCategoryDialogContent> {
             ],
           ),
         ],
+      ),
       ),
     );
   }
@@ -1540,7 +1679,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text('Capture Product Photo', style: TextStyle(color: Colors.white)),
+        title: Text('Capture Product Photo', style: AppTypography.titleMedium.copyWith(color: Colors.white)),
       ),
       body: _error != null
           ? Center(
@@ -1551,7 +1690,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen> {
                   children: [
                     Text(
                       _error!,
-                      style: const TextStyle(color: Colors.red, fontSize: 16),
+                      style: AppTypography.bodyLarge.copyWith(color: Colors.red),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
@@ -1794,7 +1933,7 @@ class _PhotoCropDialogState extends State<PhotoCropDialog> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text('Crop Product Photo', style: TextStyle(color: Colors.white)),
+        title: Text('Crop Product Photo', style: AppTypography.titleMedium.copyWith(color: Colors.white)),
         actions: [
           IconButton(
             icon: const Icon(Icons.check, color: Colors.green),

@@ -135,10 +135,11 @@ class _AppScaffoldState extends State<AppScaffold> {
     );
 
     if (backTarget != null && widget.appBarLeading == null) {
-      return BackButtonListener(
-        onBackButtonPressed: () async {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
           context.go(backTarget);
-          return true;
         },
         child: scaffoldContent,
       );

@@ -178,10 +178,11 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
     final formState = ref.watch(newClientControllerProvider);
     final controller = ref.read(newClientControllerProvider.notifier);
 
-    return BackButtonListener(
-      onBackButtonPressed: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
         _handleBack();
-        return true;
       },
       child: AppScaffold(
         showSyncIndicator: false,

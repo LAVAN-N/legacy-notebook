@@ -16,7 +16,7 @@ import 'widgets/timeline_entry_tile.dart';
 
 class CustomerDetailScreen extends ConsumerWidget {
   const CustomerDetailScreen({
-    super.key, 
+    super.key,
     required this.customerId,
     this.weekday = 'Monday',
     this.placeId = '',
@@ -34,11 +34,13 @@ class CustomerDetailScreen extends ConsumerWidget {
     final detailState = ref.watch(customerDetailControllerProvider(customerId));
 
     return detailState.when(
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (err, stack) => Scaffold(
         body: ErrorState(
           message: err.toString(),
-          onRetry: () => ref.refresh(customerDetailControllerProvider(customerId)),
+          onRetry: () =>
+              ref.refresh(customerDetailControllerProvider(customerId)),
         ),
       ),
       data: (data) {
@@ -47,9 +49,11 @@ class CustomerDetailScreen extends ConsumerWidget {
         final timeline = data.timeline;
 
         return AppScaffold(
+          blendHeader: true,
           title: Text(
             customer.name,
-            style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
+            style:
+                AppTypography.headlineMedium.copyWith(color: colors.foreground),
           ),
           body: SingleChildScrollView(
             child: Padding(
@@ -67,8 +71,6 @@ class CustomerDetailScreen extends ConsumerWidget {
                   FinancialSummaryBlock(outstanding: outstanding),
                   const SizedBox(height: AppSpacing.lg),
 
-
-
                   // Timeline Section
                   const SectionHeader(title: 'Unified Activity History'),
                   const SizedBox(height: AppSpacing.sm),
@@ -83,7 +85,8 @@ class CustomerDetailScreen extends ConsumerWidget {
                       alignment: Alignment.center,
                       child: Text(
                         'No activities recorded yet.',
-                        style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg),
+                        style: AppTypography.bodyMedium
+                            .copyWith(color: colors.mutedFg),
                       ),
                     )
                   else
@@ -98,7 +101,8 @@ class CustomerDetailScreen extends ConsumerWidget {
                         },
                       ),
                     ),
-                  const SizedBox(height: 80), // spacer for sticky bottom actions
+                  const SizedBox(
+                      height: 80), // spacer for sticky bottom actions
                 ],
               ),
             ),
@@ -113,7 +117,14 @@ class CustomerDetailScreen extends ConsumerWidget {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => context.push(Routes.sale(weekday, placeId, areaId, customerId)),
+                    onPressed: () {
+                      final source = GoRouterState.of(context)
+                          .uri
+                          .queryParameters['source'];
+                      final suffix = source != null ? '?source=$source' : '';
+                      context.push(
+                          '${Routes.sale(weekday, placeId, areaId, customerId)}$suffix');
+                    },
                     icon: const Icon(Icons.shopping_bag),
                     label: const Text('NEW SALE'),
                     style: OutlinedButton.styleFrom(
@@ -125,7 +136,14 @@ class CustomerDetailScreen extends ConsumerWidget {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => context.push(Routes.collect(weekday, placeId, areaId, customerId)),
+                    onPressed: () {
+                      final source = GoRouterState.of(context)
+                          .uri
+                          .queryParameters['source'];
+                      final suffix = source != null ? '?source=$source' : '';
+                      context.push(
+                          '${Routes.collect(weekday, placeId, areaId, customerId)}$suffix');
+                    },
                     icon: const Icon(Icons.wallet_giftcard),
                     label: const Text('COLLECT'),
                     style: ElevatedButton.styleFrom(

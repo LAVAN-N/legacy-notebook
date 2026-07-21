@@ -30,6 +30,57 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
   final TextEditingController _advanceController = TextEditingController();
   final TextEditingController _remarksController = TextEditingController();
 
+  bool get _isDirty {
+    final state = ref.read(saleControllerProvider(widget.customerId));
+    if (state.lineItems.isNotEmpty) {
+      return true;
+    }
+    if (_advanceController.text != '0' && _advanceController.text.isNotEmpty) {
+      return true;
+    }
+    if (_remarksController.text.isNotEmpty) {
+      return true;
+    }
+    return false;
+  }
+
+  void _handleBack() async {
+    if (_isDirty) {
+      final shouldDiscard = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Discard Changes'),
+          content: const Text('Are you sure you want to discard this sale record?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Yes'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldDiscard == true) {
+        _exitScreen();
+      }
+    } else {
+      _exitScreen();
+    }
+  }
+
+  void _exitScreen() {
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    } else {
+      final backTarget = context.getBackTarget() ?? Routes.dashboard;
+      context.go(backTarget);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -61,12 +112,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
         },
       );
       if (mounted) {
-        final backTarget = context.getBackTarget() ?? Routes.dashboard;
-        if (context.canPop()) {
-          context.pop();
-        } else {
-          context.go(backTarget);
-        }
+        _exitScreen();
       }
     }
   }
@@ -81,12 +127,22 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
     final currentOutstanding = state.outstanding.outstandingAmount;
     final nextOutstanding = currentOutstanding + creditAdded;
 
-    return AppScaffold(
-      showSyncIndicator: false,
-      title: Text(
-        'Record Home Appliance Sale',
-        style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
-      ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleBack();
+      },
+      child: AppScaffold(
+        showSyncIndicator: false,
+        appBarLeading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _handleBack,
+        ),
+        title: Text(
+          'Record Home Appliance Sale',
+          style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
+        ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -423,6 +479,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
             const SizedBox(height: 20),
           ],
         ),
+      ),
       ),
     );
   }

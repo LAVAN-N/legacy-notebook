@@ -6,10 +6,8 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/router/routes.dart';
-import '../../data/models/customer.dart';
-import '../../data/mock/mock_data.dart';
 import '../../core/utils/formatters.dart';
-import '../../core/widgets/empty_state.dart';
+import '../../data/providers.dart';
 
 class ClientsScreen extends ConsumerStatefulWidget {
   const ClientsScreen({super.key});
@@ -21,122 +19,690 @@ class ClientsScreen extends ConsumerStatefulWidget {
 class _ClientsScreenState extends ConsumerState<ClientsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  String _selectedFilter = 'All';
+  String _selectedStatus = 'All';
+  String? _selectedWeekday;
+  String? _selectedPlace;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    
-    return AppScaffold(
-      title: Text('Clients', style: AppTypography.headlineMedium.copyWith(color: colors.foreground)),
-      body: FutureBuilder<List<Customer>>(
-        // For the sake of the mock, we fetch all
-        future: Future.value(mockCustomersList), 
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          
-          List<Customer> allCustomers = snapshot.data ?? [];
-          
-          // Filter logic
-          var filtered = allCustomers.where((c) {
-            final q = _searchQuery.toLowerCase();
-            final matchesSearch = c.name.toLowerCase().contains(q) || c.phone.contains(q) || c.address.toLowerCase().contains(q);
-            
-            if (!matchesSearch) return false;
-            if (_selectedFilter == 'All') return true;
-            if (_selectedFilter == 'Has outstanding') {
-              // we don't have outstanding data immediately available on customer object unless we join sales/collections.
-              // For UI demonstration, we'll just show them all.
-              return true;
-            }
-            // Weekday filter
-            // Here we'd map weekdayId to actual name, but we skip for brevity
-            return true;
-          }).toList();
 
-          return Column(
-            children: [
-              // Search
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search by name, phone, or address',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  onChanged: (val) => setState(() => _searchQuery = val),
-                ),
-              ),
-              
-              // Filters
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: Row(
-                  children: ['All', 'Has outstanding', 'Monday', 'Thursday'].map((filter) {
-                    final isSelected = _selectedFilter == filter;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: FilterChip(
-                        label: Text(filter),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          if (selected) setState(() => _selectedFilter = filter);
-                        },
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              
-              // List
-              Expanded(
-                child: filtered.isEmpty 
-                    ? const EmptyState(
-                        title: 'No clients found',
-                        message: 'Try adjusting your search or filters.',
-                        icon: Icons.people_outline,
-                      )
-                    : ListView.separated(
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
-                        itemBuilder: (context, index) {
-                          final c = filtered[index];
-                          // Dummy outstanding calculation for UI
-                          final out = index % 2 == 0 ? 150000 : 0;
-                          
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: colors.primary.withValues(alpha: 0.1),
-                              child: Text(
-                                c.name.substring(0, 1).toUpperCase(),
-                                style: TextStyle(color: colors.primary),
-                              ),
-                            ),
-                            title: Text(c.name, style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.w600)),
-                            subtitle: Text('Place ${c.placeId} · Area ${c.areaId}', style: AppTypography.labelSmall.copyWith(color: colors.mutedFg)),
-                            trailing: Text(
-                              rupees(out),
-                              style: AppTypography.currencySmall.copyWith(
-                                color: out > 0 ? colors.danger : colors.mutedFg,
-                              ),
-                            ),
-                            onTap: () {
-                              context.push(Routes.customer('Monday', c.placeId, c.areaId, c.id));
-                            },
-                          );
-                        },
-                      ),
-              ),
-            ],
-          );
-        },
+    final customersAsync = ref.watch(customersStreamProvider);
+    final salesAsync = ref.watch(salesStreamProvider);
+    final collectionsAsync = ref.watch(collectionsStreamProvider);
+
+    if (customersAsync.isLoading ||
+        salesAsync.isLoading ||
+        collectionsAsync.isLoading) {
+      return AppScaffold(
+        blendHeader: true,
+        title: Text('Clients',
+            style: AppTypography.headlineMedium
+                .copyWith(color: colors.foreground)),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final allCustomers = customersAsync.value ?? [];
+    final allSales = salesAsync.value ?? [];
+    final allCollections = collectionsAsync.value ?? [];
+
+    // Helper to calculate outstanding
+    int getOutstanding(String customerId) {
+      final customerSales = allSales.where((s) => s.customerId == customerId);
+      final customerCollections =
+          allCollections.where((col) => col.customerId == customerId);
+      final totalFinanced =
+          customerSales.fold<int>(0, (sum, s) => sum + s.financedAmount);
+      final totalCollected =
+          customerCollections.fold<int>(0, (sum, col) => sum + col.amount);
+      return totalFinanced - totalCollected;
+    }
+
+    // Dynamic stats
+    int totalOutstanding = 0;
+    for (final c in allCustomers) {
+      final out = getOutstanding(c.id);
+      if (out > 0) {
+        totalOutstanding += out;
+      }
+    }
+
+    // Filter logic
+    final filtered = allCustomers.where((c) {
+      final q = _searchQuery.toLowerCase();
+      final matchesSearch = c.name.toLowerCase().contains(q) ||
+          c.phone.contains(q) ||
+          c.address.toLowerCase().contains(q);
+
+      if (!matchesSearch) return false;
+
+      // Status filter
+      final out = getOutstanding(c.id);
+      if (_selectedStatus == 'Outstanding' && out <= 0) return false;
+      if (_selectedStatus == 'Settled' && out > 0) return false;
+
+      // Weekday filter
+      if (_selectedWeekday != null && c.weekdayId != _selectedWeekday)
+        return false;
+
+      // Place filter
+      if (_selectedPlace != null && c.placeId != _selectedPlace) return false;
+
+      return true;
+    }).toList();
+
+    // Get unique weekdays represented by clients to show relevant filters
+    final weekdaysWithClients =
+        allCustomers.map((c) => c.weekdayId).toSet().toList();
+    weekdaysWithClients.sort((a, b) {
+      final daysOrder = [
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+        'Sunday'
+      ];
+      return daysOrder.indexOf(a).compareTo(daysOrder.indexOf(b));
+    });
+
+    // Get unique places represented by clients
+    final placesWithClients =
+        allCustomers.map((c) => c.placeId).toSet().toList();
+    placesWithClients.sort();
+
+    final statusOptions = ['All', 'Outstanding', 'Settled'];
+
+    return AppScaffold(
+      blendHeader: true,
+      title: Text(
+        'Clients',
+        style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push(Routes.newClient),
+        backgroundColor: colors.primary,
+        foregroundColor: colors.primaryFg,
+        icon: const Icon(Icons.person_add_alt_1_rounded),
+        label: const Text('New Client'),
+      ),
+      body: Column(
+        children: [
+          // Stats row
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: colors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: colors.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Total Clients',
+                          style: AppTypography.labelMedium
+                              .copyWith(color: colors.mutedFg),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          '${allCustomers.length}',
+                          style: AppTypography.currencyMedium
+                              .copyWith(color: colors.foreground),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: colors.danger.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                          color: colors.danger.withValues(alpha: 0.15)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.error_outline_rounded,
+                                color: colors.danger, size: 16),
+                            const SizedBox(width: AppSpacing.xs),
+                            Text(
+                              'Outstanding',
+                              style: AppTypography.labelMedium
+                                  .copyWith(color: colors.mutedFg),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          rupees(totalOutstanding),
+                          style: AppTypography.currencyMedium
+                              .copyWith(color: colors.danger),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (val) => setState(() => _searchQuery = val),
+              decoration: InputDecoration(
+                hintText: 'Search by name, phone, or address...',
+                prefixIcon: Icon(Icons.search, color: colors.mutedFg),
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_searchQuery.isNotEmpty)
+                      IconButton(
+                        icon: Icon(Icons.clear, color: colors.mutedFg),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.filter_list_rounded,
+                        color:
+                            _selectedWeekday != null || _selectedPlace != null
+                                ? colors.primary
+                                : colors.mutedFg,
+                      ),
+                      onPressed: () => _showFiltersSheet(
+                          context, weekdaysWithClients, placesWithClients),
+                    ),
+                  ],
+                ),
+                filled: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.primary, width: 1.5),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+            ),
+          ),
+
+          // Filters row
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: Row(
+              children: statusOptions.map((status) {
+                final isSelected = _selectedStatus == status;
+                return Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.sm),
+                  child: FilterChip(
+                    label: Text(status),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (selected) setState(() => _selectedStatus = status);
+                    },
+                    backgroundColor: colors.surface,
+                    selectedColor: colors.primary.withValues(alpha: 0.15),
+                    checkmarkColor: colors.primary,
+                    side: BorderSide(
+                      color: isSelected ? colors.primary : colors.border,
+                    ),
+                    labelStyle: TextStyle(
+                      color: isSelected ? colors.primary : colors.mutedFg,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.md),
+
+          // List or Empty State
+          Expanded(
+            child: filtered.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.xxl),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.people_outline_rounded,
+                              size: 56, color: colors.mutedFg),
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            'No clients found',
+                            style: AppTypography.bodyLarge.copyWith(
+                              color: colors.foreground,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            'Try adjusting your search or filters.',
+                            style: AppTypography.bodySmall
+                                .copyWith(color: colors.mutedFg),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : ListView.separated(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    itemCount: filtered.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: AppSpacing.sm),
+                    itemBuilder: (context, index) {
+                      final c = filtered[index];
+                      final out = getOutstanding(c.id);
+
+                      return Card(
+                        elevation: 0,
+                        margin: EdgeInsets.zero,
+                        color: colors.surface,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(color: colors.border),
+                        ),
+                        child: InkWell(
+                          onTap: () {
+                            context.push(
+                              '${Routes.customer(
+                                c.weekdayId,
+                                c.placeId,
+                                c.areaId,
+                                c.id,
+                              )}?source=clients',
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Row(
+                              children: [
+                                Stack(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 24,
+                                      backgroundColor: colors.primary
+                                          .withValues(alpha: 0.08),
+                                      child: Text(
+                                        c.name.isNotEmpty
+                                            ? c.name
+                                                .substring(0, 1)
+                                                .toUpperCase()
+                                            : '?',
+                                        style: TextStyle(
+                                          color: colors.primary,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                    ),
+                                    if (out > 0)
+                                      Positioned(
+                                        right: 0,
+                                        top: 0,
+                                        child: Container(
+                                          width: 12,
+                                          height: 12,
+                                          decoration: BoxDecoration(
+                                            color: colors.danger,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                                color: colors.surface,
+                                                width: 2),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        c.name,
+                                        style:
+                                            AppTypography.labelLarge.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color: colors.foreground,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Place ${c.placeId} · Area ${c.areaId}',
+                                        style: AppTypography.bodySmall.copyWith(
+                                          color: colors.mutedFg,
+                                        ),
+                                      ),
+                                      if (c.phone.isNotEmpty) ...[
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Icon(Icons.phone_rounded,
+                                                size: 12,
+                                                color: colors.mutedFg),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              c.phone,
+                                              style: AppTypography.labelSmall
+                                                  .copyWith(
+                                                color: colors.mutedFg,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      rupees(out),
+                                      style:
+                                          AppTypography.currencySmall.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: out > 0
+                                            ? colors.danger
+                                            : colors.mutedFg,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: out > 0
+                                            ? colors.danger
+                                                .withValues(alpha: 0.08)
+                                            : colors.success
+                                                .withValues(alpha: 0.08),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        out > 0 ? 'Pending' : 'Settled',
+                                        style:
+                                            AppTypography.labelSmall.copyWith(
+                                          color: out > 0
+                                              ? colors.danger
+                                              : colors.success,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+
+          const SizedBox(height: AppSpacing.md),
+        ],
+      ),
+    );
+  }
+
+  void _showFiltersSheet(
+    BuildContext context,
+    List<String> weekdays,
+    List<String> places,
+  ) {
+    final colors = context.colors;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: colors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Filter Clients',
+                        style: AppTypography.titleMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colors.foreground,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedWeekday = null;
+                            _selectedPlace = null;
+                          });
+                          setModalState(() {});
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Reset'),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  const SizedBox(height: AppSpacing.sm),
+
+                  // Weekday Filter
+                  Text(
+                    'Weekday',
+                    style: AppTypography.labelLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colors.foreground,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: ChoiceChip(
+                            label: const Text('Any'),
+                            selected: _selectedWeekday == null,
+                            onSelected: (selected) {
+                              if (selected) {
+                                setState(() => _selectedWeekday = null);
+                                setModalState(() {});
+                              }
+                            },
+                            backgroundColor: colors.surface,
+                            selectedColor:
+                                colors.primary.withValues(alpha: 0.15),
+                            checkmarkColor: colors.primary,
+                            side: BorderSide(
+                              color: _selectedWeekday == null
+                                  ? colors.primary
+                                  : colors.border,
+                            ),
+                            labelStyle: TextStyle(
+                              color: _selectedWeekday == null
+                                  ? colors.primary
+                                  : colors.mutedFg,
+                            ),
+                          ),
+                        ),
+                        ...weekdays.map((day) {
+                          final isSelected = _selectedWeekday == day;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: ChoiceChip(
+                              label: Text(day),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setState(() {
+                                  _selectedWeekday = selected ? day : null;
+                                });
+                                setModalState(() {});
+                              },
+                              backgroundColor: colors.surface,
+                              selectedColor:
+                                  colors.primary.withValues(alpha: 0.15),
+                              checkmarkColor: colors.primary,
+                              side: BorderSide(
+                                color:
+                                    isSelected ? colors.primary : colors.border,
+                              ),
+                              labelStyle: TextStyle(
+                                color: isSelected
+                                    ? colors.primary
+                                    : colors.mutedFg,
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Place Filter
+                  Text(
+                    'Place',
+                    style: AppTypography.labelLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colors.foreground,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: ChoiceChip(
+                            label: const Text('Any'),
+                            selected: _selectedPlace == null,
+                            onSelected: (selected) {
+                              if (selected) {
+                                setState(() => _selectedPlace = null);
+                                setModalState(() {});
+                              }
+                            },
+                            backgroundColor: colors.surface,
+                            selectedColor:
+                                colors.primary.withValues(alpha: 0.15),
+                            checkmarkColor: colors.primary,
+                            side: BorderSide(
+                              color: _selectedPlace == null
+                                  ? colors.primary
+                                  : colors.border,
+                            ),
+                            labelStyle: TextStyle(
+                              color: _selectedPlace == null
+                                  ? colors.primary
+                                  : colors.mutedFg,
+                            ),
+                          ),
+                        ),
+                        ...places.map((place) {
+                          final isSelected = _selectedPlace == place;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: ChoiceChip(
+                              label: Text('Place $place'),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setState(() {
+                                  _selectedPlace = selected ? place : null;
+                                });
+                                setModalState(() {});
+                              },
+                              backgroundColor: colors.surface,
+                              selectedColor:
+                                  colors.primary.withValues(alpha: 0.15),
+                              checkmarkColor: colors.primary,
+                              side: BorderSide(
+                                color:
+                                    isSelected ? colors.primary : colors.border,
+                              ),
+                              labelStyle: TextStyle(
+                                color: isSelected
+                                    ? colors.primary
+                                    : colors.mutedFg,
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colors.primary,
+                        foregroundColor: colors.primaryFg,
+                      ),
+                      child: const Text('Apply Filters'),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

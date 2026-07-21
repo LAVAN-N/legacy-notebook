@@ -1,4 +1,7 @@
+import '../models/sale.dart';
+
 abstract class SaleRepository {
+  Stream<List<Sale>> watchAllSales();
   Future<void> saveSale({
     required String customerId,
     required List<Map<String, dynamic>> items, // Each contains: 'productId', 'quantity', 'unitPrice'

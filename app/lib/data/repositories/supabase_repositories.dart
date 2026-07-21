@@ -6,6 +6,7 @@ import '../models/place.dart';
 import '../models/area.dart';
 import '../models/collection.dart';
 import '../models/product.dart';
+import '../models/sale.dart';
 import '../models/location.dart';
 import '../models/nominee.dart';
 import '../models/id_proof.dart';
@@ -16,6 +17,12 @@ import 'sale_repository.dart';
 import 'product_repository.dart';
 
 class SupabaseCustomerRepository implements CustomerRepository {
+  @override
+  Stream<List<Customer>> watchAllCustomers() => throw UnimplementedError('wire in follow-up skill');
+
+  @override
+  Future<List<Customer>> getAllCustomers() => throw UnimplementedError('wire in follow-up skill');
+
   @override
   Stream<List<Customer>> watchCustomersByArea(String areaId) => throw UnimplementedError('wire in follow-up skill');
 
@@ -151,6 +158,9 @@ class SupabaseRouteRepository implements RouteRepository {
 
 class SupabaseCollectionRepository implements CollectionRepository {
   @override
+  Stream<List<Collection>> watchAllCollections() => throw UnimplementedError('wire in follow-up skill');
+
+  @override
   Stream<List<Collection>> watchCollectionsForCustomerToday(String customerId) => throw UnimplementedError('wire in follow-up skill');
 
   @override
@@ -170,6 +180,9 @@ class SupabaseCollectionRepository implements CollectionRepository {
 }
 
 class SupabaseSaleRepository implements SaleRepository {
+  @override
+  Stream<List<Sale>> watchAllSales() => throw UnimplementedError('wire in follow-up skill');
+
   @override
   Future<void> saveSale({
     required String customerId,

@@ -6,6 +6,8 @@ import '../models/nominee.dart';
 import '../models/id_proof.dart';
 
 abstract class CustomerRepository {
+  Stream<List<Customer>> watchAllCustomers();
+  Future<List<Customer>> getAllCustomers();
   Stream<List<Customer>> watchCustomersByArea(String areaId);
   Future<List<Customer>> getCustomersByArea(String areaId);
   Future<Customer?> getCustomerById(String id);

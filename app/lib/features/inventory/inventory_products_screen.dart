@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/currency_formatter.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../data/mock/mock_data.dart';
 import '../../data/models/product.dart';
@@ -36,38 +37,29 @@ class _InventoryProductsScreenState
   @override
   void initState() {
     super.initState();
-    _category = mockCategoriesList
-        .firstWhere((c) => c.id == widget.categoryId,
-            orElse: () => Category(id: widget.categoryId, name: 'Products', icon: ''));
-            
+    _category = mockCategoriesList.firstWhere((c) => c.id == widget.categoryId,
+        orElse: () =>
+            Category(id: widget.categoryId, name: 'Products', icon: ''));
+
     if (widget.initialProductId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final productsAsync = ref.read(productsStreamProvider);
         final allProducts = productsAsync.value ?? [];
         try {
-          final product = allProducts.firstWhere((p) => p.id == widget.initialProductId);
+          final product =
+              allProducts.firstWhere((p) => p.id == widget.initialProductId);
           showEditProductSheet(context, product);
         } catch (_) {}
       });
     }
   }
-
-  String _getStockStatus(Product product) {
+  Color _getStockColor(Product product, AppColors colors) {
     if (product.stock == 0) {
-      return 'Out of stock';
+      return colors.danger;
     } else if (product.stock <= product.minimumStock) {
-      return 'Low stock';
+      return colors.warning;
     }
-    return 'In stock';
-  }
-
-  Color _getStockColor(Product product) {
-    if (product.stock == 0) {
-      return Colors.red;
-    } else if (product.stock <= product.minimumStock) {
-      return Colors.amber;
-    }
-    return Colors.green;
+    return colors.success;
   }
 
   @override
@@ -78,16 +70,16 @@ class _InventoryProductsScreenState
     final productsAsync = ref.watch(productsStreamProvider);
     final allProducts = productsAsync.value ?? [];
 
-    var products = allProducts
-        .where((p) => p.categoryId == widget.categoryId)
-        .toList();
+    var products =
+        allProducts.where((p) => p.categoryId == widget.categoryId).toList();
 
     // Apply stock filter
     if (_filterType == 'In stock') {
       products = products.where((p) => p.stock > p.minimumStock).toList();
     } else if (_filterType == 'Low stock') {
-      products =
-          products.where((p) => p.stock > 0 && p.stock <= p.minimumStock).toList();
+      products = products
+          .where((p) => p.stock > 0 && p.stock <= p.minimumStock)
+          .toList();
     } else if (_filterType == 'Out of stock') {
       products = products.where((p) => p.stock == 0).toList();
     }
@@ -122,12 +114,18 @@ class _InventoryProductsScreenState
 
     return AppScaffold(
       blendHeader: true,
-      title: Text(_category.name),
-      floatingActionButton: FloatingActionButton(
+      title: Text(
+        _category.name,
+        style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           showAddProductSheet(context, initialCategoryId: widget.categoryId);
         },
-        child: const Icon(Icons.add),
+        backgroundColor: colors.primary,
+        foregroundColor: colors.primaryFg,
+        icon: const Icon(Icons.add_box_rounded),
+        label: const Text('Add Product'),
       ),
       body: Column(
         children: [
@@ -142,9 +140,19 @@ class _InventoryProductsScreenState
               },
               decoration: InputDecoration(
                 hintText: 'Search products...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: Icon(Icons.search, color: colors.mutedFg),
+                filled: true,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.primary, width: 1.5),
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               ),
@@ -167,13 +175,26 @@ class _InventoryProductsScreenState
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: FilterChip(
-                      label: Text(filter),
+                      label: Text(
+                        filter,
+                        style: AppTypography.labelMedium.copyWith(
+                          color: isSelected ? colors.primary : colors.mutedFg,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                      ),
                       selected: isSelected,
                       onSelected: (selected) {
                         setState(() {
                           _filterType = filter;
                         });
                       },
+                      selectedColor: colors.primary.withValues(alpha: 0.15),
+                      backgroundColor: colors.surface,
+                      checkmarkColor: colors.primary,
+                      side: BorderSide(
+                        color: isSelected ? colors.primary : colors.border,
+                      ),
                     ),
                   );
                 }),
@@ -195,12 +216,25 @@ class _InventoryProductsScreenState
                       ].map((String choice) {
                         return PopupMenuItem<String>(
                           value: choice,
-                          child: Text(choice),
+                          child: Text(
+                            choice,
+                            style: AppTypography.bodyMedium.copyWith(color: colors.foreground),
+                          ),
                         );
                       }).toList();
                     },
                     child: Chip(
-                      label: Text('Sort: $_sortType'),
+                      label: Text(
+                        'Sort: $_sortType',
+                        style: AppTypography.labelMedium.copyWith(
+                          color: colors.foreground,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      backgroundColor: colors.surface,
+                      side: BorderSide(color: colors.border),
+                      deleteIcon: Icon(Icons.arrow_drop_down,
+                          color: colors.mutedFg, size: 18),
                       onDeleted: () {},
                     ),
                   ),
@@ -216,12 +250,11 @@ class _InventoryProductsScreenState
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.inbox,
-                            size: 48, color: colors.mutedFg),
+                        Icon(Icons.inbox, size: 48, color: colors.mutedFg),
                         const SizedBox(height: 16),
                         Text(
                           'No products found',
-                          style: theme.textTheme.bodyLarge,
+                          style: AppTypography.bodyLarge.copyWith(color: colors.foreground),
                         ),
                       ],
                     ),
@@ -250,9 +283,8 @@ class _InventoryProductsScreenState
     );
   }
 
-  Widget _buildProductCard(BuildContext context, Product product, AppColors colors) {
-    final theme = Theme.of(context);
-
+  Widget _buildProductCard(
+      BuildContext context, Product product, AppColors colors) {
     return Card(
       child: InkWell(
         onTap: () {
@@ -270,7 +302,8 @@ class _InventoryProductsScreenState
                   decoration: BoxDecoration(
                     color: colors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    image: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                    image: product.imageUrl != null &&
+                            product.imageUrl!.isNotEmpty
                         ? (product.imageUrl!.startsWith('assets/')
                             ? DecorationImage(
                                 image: AssetImage(product.imageUrl!),
@@ -302,8 +335,9 @@ class _InventoryProductsScreenState
               // Name
               Text(
                 product.name,
-                style: theme.textTheme.bodyMedium?.copyWith(
+                style: AppTypography.bodyMedium.copyWith(
                   fontWeight: FontWeight.w600,
+                  color: colors.foreground,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -312,36 +346,40 @@ class _InventoryProductsScreenState
               // Brand
               Text(
                 product.brand,
-                style: theme.textTheme.bodySmall?.copyWith(
+                style: AppTypography.bodySmall.copyWith(
                   color: colors.mutedFg,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 6),
-              // Price
-              Text(
-                CurrencyFormatter.format(product.price),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: colors.primary,
-                ),
-              ),
-              const SizedBox(height: 6),
-              // Stock badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _getStockColor(product).withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  _getStockStatus(product),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: _getStockColor(product),
-                    fontWeight: FontWeight.w600,
+              // Price and Stock badge Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    CurrencyFormatter.format(product.price),
+                    style: AppTypography.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colors.primary,
+                    ),
                   ),
-                ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _getStockColor(product, colors),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '${product.stock}/${product.minimumStock}',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

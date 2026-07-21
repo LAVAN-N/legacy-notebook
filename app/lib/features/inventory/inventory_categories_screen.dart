@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/router/routes.dart';
 import '../../data/mock/mock_data.dart';
@@ -41,6 +42,14 @@ class _InventoryCategoriesScreenState
       'toy': Icons.toys,
     };
     return iconMap[iconName] ?? Icons.inventory_2;
+  }
+  Color _getStockColor(Product product, AppColors colors) {
+    if (product.stock == 0) {
+      return colors.danger;
+    } else if (product.stock <= product.minimumStock) {
+      return colors.warning;
+    }
+    return colors.success;
   }
 
   @override
@@ -81,15 +90,13 @@ class _InventoryCategoriesScreenState
               c.name.toLowerCase().contains(query) ||
               displayProducts.any((p) => p.categoryId == c.id))
           .map((c) {
-            final count = displayProducts.where((p) => p.categoryId == c.id).length;
-            return c.copyWith(productCount: count);
-          })
-          .toList();
+        final count = displayProducts.where((p) => p.categoryId == c.id).length;
+        return c.copyWith(productCount: count);
+      }).toList();
     } else {
       displayProducts = filteredProducts;
       displayCategories = mockCategoriesList.map((c) {
-        final count =
-            displayProducts.where((p) => p.categoryId == c.id).length;
+        final count = displayProducts.where((p) => p.categoryId == c.id).length;
         return c.copyWith(productCount: count);
       }).toList();
     }
@@ -97,9 +104,12 @@ class _InventoryCategoriesScreenState
     return AppScaffold(
       blendHeader: true,
       title: const Text('Inventory'),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => showAddProductSheet(context),
-        child: const Icon(Icons.add),
+        backgroundColor: colors.primary,
+        foregroundColor: colors.primaryFg,
+        icon: const Icon(Icons.add_box_rounded),
+        label: const Text('Add Product'),
       ),
       body: Column(
         children: [
@@ -114,9 +124,19 @@ class _InventoryCategoriesScreenState
               },
               decoration: InputDecoration(
                 hintText: 'Search categories, products...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: Icon(Icons.search, color: colors.mutedFg),
+                filled: true,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.primary, width: 1.5),
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               ),
@@ -134,13 +154,26 @@ class _InventoryCategoriesScreenState
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
-                    label: Text(filter),
+                    label: Text(
+                      filter,
+                      style: AppTypography.labelMedium.copyWith(
+                        color: isSelected ? colors.primary : colors.mutedFg,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.normal,
+                      ),
+                    ),
                     selected: isSelected,
                     onSelected: (selected) {
                       setState(() {
                         _filterType = filter;
                       });
                     },
+                    selectedColor: colors.primary.withValues(alpha: 0.15),
+                    backgroundColor: colors.surface,
+                    checkmarkColor: colors.primary,
+                    side: BorderSide(
+                      color: isSelected ? colors.primary : colors.border,
+                    ),
                   ),
                 );
               }).toList(),
@@ -154,7 +187,7 @@ class _InventoryCategoriesScreenState
               _searchQuery.isNotEmpty
                   ? '${displayProducts.length} matching products found'
                   : '${displayCategories.length} categories · ${displayProducts.length} products',
-              style: theme.textTheme.bodySmall,
+              style: AppTypography.bodySmall.copyWith(color: colors.mutedFg),
             ),
           ),
 
@@ -166,18 +199,20 @@ class _InventoryCategoriesScreenState
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.search_off, size: 48, color: colors.mutedFg),
+                            Icon(Icons.search_off,
+                                size: 48, color: colors.mutedFg),
                             const SizedBox(height: 16),
                             Text(
                               'No products found matching "$_searchQuery"',
-                              style: theme.textTheme.bodyLarge,
+                              style: AppTypography.bodyLarge.copyWith(color: colors.foreground),
                             ),
                           ],
                         ),
                       )
                     : GridView.builder(
                         padding: const EdgeInsets.all(16),
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                        gridDelegate:
+                            const SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: 200,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
@@ -198,7 +233,7 @@ class _InventoryCategoriesScreenState
                             const SizedBox(height: 16),
                             Text(
                               'No categories found',
-                              style: theme.textTheme.bodyLarge,
+                              style: AppTypography.bodyLarge.copyWith(color: colors.foreground),
                             ),
                           ],
                         ),
@@ -226,8 +261,6 @@ class _InventoryCategoriesScreenState
 
   Widget _buildCategoryCard(
       BuildContext context, Category category, AppColors colors) {
-    final theme = Theme.of(context);
-
     return GestureDetector(
       onTap: () {
         context.go(Routes.inventoryCategory(category.id));
@@ -255,8 +288,9 @@ class _InventoryCategoriesScreenState
               Text(
                 category.name,
                 textAlign: TextAlign.center,
-                style: theme.textTheme.titleSmall?.copyWith(
+                style: AppTypography.titleSmall.copyWith(
                   fontWeight: FontWeight.w600,
+                  color: colors.foreground,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -264,7 +298,7 @@ class _InventoryCategoriesScreenState
               const SizedBox(height: 4),
               Text(
                 '${category.productCount} products',
-                style: theme.textTheme.bodySmall?.copyWith(
+                style: AppTypography.bodySmall.copyWith(
                   color: colors.mutedFg,
                 ),
               ),
@@ -275,17 +309,17 @@ class _InventoryCategoriesScreenState
     );
   }
 
-  Widget _buildProductCard(BuildContext context, Product product, AppColors colors) {
-    final theme = Theme.of(context);
+  Widget _buildProductCard(
+      BuildContext context, Product product, AppColors colors) {
     final category = mockCategoriesList.firstWhere(
-      (c) => c.id == product.categoryId, 
-      orElse: () => const Category(id: '', name: 'Unknown', icon: '')
-    );
+        (c) => c.id == product.categoryId,
+        orElse: () => const Category(id: '', name: 'Unknown', icon: ''));
 
     return Card(
       child: InkWell(
         onTap: () {
-          context.go('${Routes.inventoryCategory(product.categoryId)}?productId=${product.id}');
+          context.go(
+              '${Routes.inventoryCategory(product.categoryId)}?productId=${product.id}');
         },
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -299,7 +333,8 @@ class _InventoryCategoriesScreenState
                   decoration: BoxDecoration(
                     color: colors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    image: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                    image: product.imageUrl != null &&
+                            product.imageUrl!.isNotEmpty
                         ? (product.imageUrl!.startsWith('assets/')
                             ? DecorationImage(
                                 image: AssetImage(product.imageUrl!),
@@ -337,7 +372,7 @@ class _InventoryCategoriesScreenState
                 ),
                 child: Text(
                   category.name,
-                  style: theme.textTheme.labelSmall?.copyWith(
+                  style: AppTypography.labelSmall.copyWith(
                     color: colors.mutedFg,
                     fontWeight: FontWeight.w600,
                   ),
@@ -347,8 +382,9 @@ class _InventoryCategoriesScreenState
               // Name
               Text(
                 product.name,
-                style: theme.textTheme.bodyMedium?.copyWith(
+                style: AppTypography.bodyMedium.copyWith(
                   fontWeight: FontWeight.w600,
+                  color: colors.foreground,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -357,20 +393,40 @@ class _InventoryCategoriesScreenState
               // Brand
               Text(
                 product.brand,
-                style: theme.textTheme.bodySmall?.copyWith(
+                style: AppTypography.bodySmall.copyWith(
                   color: colors.mutedFg,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
-              // Price
-              Text(
-                '₹ ${(product.price / 100).toStringAsFixed(2)}',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: colors.primary,
-                ),
+              // Price and Stock badge Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    '₹ ${(product.price / 100).toStringAsFixed(2)}',
+                    style: AppTypography.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colors.primary,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _getStockColor(product, colors),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '${product.stock}/${product.minimumStock}',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

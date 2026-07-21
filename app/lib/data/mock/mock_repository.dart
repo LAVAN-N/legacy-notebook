@@ -50,6 +50,17 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   // ─── CustomerRepository ─────────────────────────────────
 
   @override
+  Stream<List<Customer>> watchAllCustomers() async* {
+    yield _customers;
+    yield* _updateController.stream.map((_) => _customers);
+  }
+
+  @override
+  Future<List<Customer>> getAllCustomers() async {
+    return _customers;
+  }
+
+  @override
   Stream<List<Customer>> watchCustomersByArea(String areaId) async* {
     yield _customers.where((c) => c.areaId == areaId).toList()
       ..sort((a, b) => a.sequenceNumber.compareTo(b.sequenceNumber));
@@ -495,6 +506,12 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   // ─── CollectionRepository ───────────────────────────────
 
   @override
+  Stream<List<Collection>> watchAllCollections() async* {
+    yield _collections;
+    yield* _updateController.stream.map((_) => _collections);
+  }
+
+  @override
   Stream<List<Collection>> watchCollectionsForCustomerToday(String customerId) async* {
     yield _collections.where((col) =>
         col.customerId == customerId &&
@@ -550,6 +567,12 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   }
 
   // ─── SaleRepository ─────────────────────────────────────
+
+  @override
+  Stream<List<Sale>> watchAllSales() async* {
+    yield _sales;
+    yield* _updateController.stream.map((_) => _sales);
+  }
 
   @override
   Future<void> saveSale({

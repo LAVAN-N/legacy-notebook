@@ -32,7 +32,10 @@ class PlaceScreen extends ConsumerWidget {
     final areasState = ref.watch(placeAreasProvider(placeId));
 
     // Get the place details from the repository sync-cache for the screen title
-    final placeName = ref.watch(routeRepositoryProvider).watchPlacesByWeekday('w-4').map((list) {
+    final placeName = ref
+        .watch(routeRepositoryProvider)
+        .watchPlacesByWeekday('w-4')
+        .map((list) {
       try {
         return list.firstWhere((p) => p.id == placeId).name;
       } catch (_) {
@@ -47,9 +50,11 @@ class PlaceScreen extends ConsumerWidget {
         final title = snapshot.data ?? 'Place Route';
 
         return AppScaffold(
+          blendHeader: true,
           title: Text(
             title,
-            style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
+            style:
+                AppTypography.headlineMedium.copyWith(color: colors.foreground),
           ),
           body: areasState.when(
             loading: () => const _LoadingState(),
@@ -64,7 +69,8 @@ class PlaceScreen extends ConsumerWidget {
                   message: 'No collection areas configured for this location.',
                   action: OutlinedButton(
                     onPressed: () {
-                      final target = context.getBackTarget() ?? Routes.dashboard;
+                      final target =
+                          context.getBackTarget() ?? Routes.dashboard;
                       context.go(target);
                     },
                     child: const Text('Back to Weekday'),
@@ -72,9 +78,12 @@ class PlaceScreen extends ConsumerWidget {
                 );
               }
 
-              final totalExpected = areas.fold<int>(0, (sum, a) => sum + a.expectedAmount);
-              final totalCollected = areas.fold<int>(0, (sum, a) => sum + a.collectedAmount);
-              final totalCustomers = areas.fold<int>(0, (sum, a) => sum + a.customerCount);
+              final totalExpected =
+                  areas.fold<int>(0, (sum, a) => sum + a.expectedAmount);
+              final totalCollected =
+                  areas.fold<int>(0, (sum, a) => sum + a.collectedAmount);
+              final totalCustomers =
+                  areas.fold<int>(0, (sum, a) => sum + a.customerCount);
 
               return SingleChildScrollView(
                 child: Padding(
@@ -117,17 +126,20 @@ class PlaceScreen extends ConsumerWidget {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: areas.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(height: AppSpacing.sm),
                         itemBuilder: (context, index) {
                           final item = areas[index];
                           final progress = item.expectedAmount > 0
-                              ? (item.collectedAmount / item.expectedAmount).clamp(0.0, 1.0)
+                              ? (item.collectedAmount / item.expectedAmount)
+                                  .clamp(0.0, 1.0)
                               : 0.0;
                           final percent = (progress * 100).toInt();
 
                           return Card(
                             child: InkWell(
-                              onTap: () => context.go(Routes.area(weekday, placeId, item.area.id)),
+                              onTap: () => context.go(
+                                  Routes.area(weekday, placeId, item.area.id)),
                               borderRadius: BorderRadius.circular(AppRadius.lg),
                               child: Padding(
                                 padding: const EdgeInsets.all(AppSpacing.lg),
@@ -135,18 +147,21 @@ class PlaceScreen extends ConsumerWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           item.area.name,
-                                          style: AppTypography.titleSmall.copyWith(
+                                          style:
+                                              AppTypography.titleSmall.copyWith(
                                             color: colors.foreground,
                                             fontWeight: FontWeight.w700,
                                           ),
                                         ),
                                         Text(
                                           '${item.customerCount} Clients',
-                                          style: AppTypography.labelSmall.copyWith(
+                                          style:
+                                              AppTypography.labelSmall.copyWith(
                                             color: colors.mutedFg,
                                           ),
                                         ),
@@ -154,17 +169,20 @@ class PlaceScreen extends ConsumerWidget {
                                     ),
                                     const SizedBox(height: AppSpacing.md),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           'Collected: ${rupees(item.collectedAmount)} / ${rupees(item.expectedAmount)}',
-                                          style: AppTypography.labelSmall.copyWith(
+                                          style:
+                                              AppTypography.labelSmall.copyWith(
                                             color: colors.mutedFg,
                                           ),
                                         ),
                                         Text(
                                           '$percent%',
-                                          style: AppTypography.labelSmall.copyWith(
+                                          style:
+                                              AppTypography.labelSmall.copyWith(
                                             color: colors.primary,
                                             fontWeight: FontWeight.w700,
                                           ),
@@ -173,7 +191,8 @@ class PlaceScreen extends ConsumerWidget {
                                     ),
                                     const SizedBox(height: 8),
                                     ClipRRect(
-                                      borderRadius: BorderRadius.circular(AppRadius.full),
+                                      borderRadius:
+                                          BorderRadius.circular(AppRadius.full),
                                       child: LinearProgressIndicator(
                                         value: progress,
                                         minHeight: 6,
@@ -211,9 +230,11 @@ class _LoadingState extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: LoadingSkeleton(width: double.infinity, height: 100)),
+              Expanded(
+                  child: LoadingSkeleton(width: double.infinity, height: 100)),
               SizedBox(width: 16),
-              Expanded(child: LoadingSkeleton(width: double.infinity, height: 100)),
+              Expanded(
+                  child: LoadingSkeleton(width: double.infinity, height: 100)),
             ],
           ),
           SizedBox(height: 24),

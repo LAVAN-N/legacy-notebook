@@ -27,6 +27,57 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
+  bool get _isDirty {
+    final state = ref.read(collectControllerProvider(widget.customerId));
+    if (state.status != 'PAYMENT') {
+      return true;
+    }
+    if (_amountController.text != '0' && _amountController.text.isNotEmpty) {
+      return true;
+    }
+    if (_notesController.text.isNotEmpty) {
+      return true;
+    }
+    return false;
+  }
+
+  void _handleBack() async {
+    if (_isDirty) {
+      final shouldDiscard = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Discard Changes'),
+          content: const Text('Are you sure you want to discard this visit record?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Yes'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldDiscard == true) {
+        _exitScreen();
+      }
+    } else {
+      _exitScreen();
+    }
+  }
+
+  void _exitScreen() {
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    } else {
+      final backTarget = context.getBackTarget() ?? Routes.dashboard;
+      context.go(backTarget);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -63,12 +114,7 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
         },
       );
       if (mounted) {
-        final backTarget = context.getBackTarget() ?? Routes.dashboard;
-        if (context.canPop()) {
-          context.pop();
-        } else {
-          context.go(backTarget);
-        }
+        _exitScreen();
       }
     }
   }
@@ -89,20 +135,30 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
     final currentOutstanding = state.outstanding.outstandingAmount;
     final newOutstanding = (currentOutstanding - state.amount).clamp(0, 99999999);
 
-    return AppScaffold(
-      showSyncIndicator: false,
-      title: Text(
-        'New Collection Visit',
-        style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Client card strip
-            Card(
-              child: ListTile(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleBack();
+      },
+      child: AppScaffold(
+        showSyncIndicator: false,
+        appBarLeading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _handleBack,
+        ),
+        title: Text(
+          'New Collection Visit',
+          style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Client card strip
+              Card(
+                child: ListTile(
                 title: Text(
                   state.customer.name,
                   style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.w700),
@@ -404,6 +460,7 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
             const SizedBox(height: 20),
           ],
         ),
+      ),
       ),
     );
   }

@@ -73,13 +73,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final dashboardState = ref.watch(dashboardControllerProvider);
     developer.log('build() - state: ${dashboardState.runtimeType}', name: 'DashboardScreen');
 
-    return BackButtonListener(
-      onBackButtonPressed: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
         final shouldExit = await _onWillPop();
-        if (shouldExit && mounted) {
+        if (shouldExit && context.mounted) {
           SystemNavigator.pop();
         }
-        return true;
       },
       child: AppScaffold(
         blendHeader: true,

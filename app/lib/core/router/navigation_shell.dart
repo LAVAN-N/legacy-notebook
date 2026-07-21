@@ -99,7 +99,21 @@ List<BreadcrumbItem> _buildBreadcrumbs(GoRouterState state) {
     final customerId = params['customerId'] ?? '';
     final source = queryParams['source'] ?? '';
     
-    if (source == 'create') {
+    if (source == 'transactions') {
+      return [
+        BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
+        BreadcrumbItem(label: 'Transactions', route: '/transactions'),
+        BreadcrumbItem(label: 'Client $customerId', route: '${Routes.customer(day, placeId, areaId, customerId)}?source=transactions'),
+        BreadcrumbItem(label: 'New Sale'),
+      ];
+    } else if (source == 'clients') {
+      return [
+        BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
+        BreadcrumbItem(label: 'Clients', route: '/profile'),
+        BreadcrumbItem(label: 'Client $customerId', route: '${Routes.customer(day, placeId, areaId, customerId)}?source=clients'),
+        BreadcrumbItem(label: 'New Sale'),
+      ];
+    } else if (source == 'create') {
       return [
         BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
         BreadcrumbItem(label: 'Client', route: Routes.customer(day, placeId, areaId, customerId)),
@@ -156,6 +170,20 @@ List<BreadcrumbItem> _buildBreadcrumbs(GoRouterState state) {
   }
 
   if (path.contains('/customer/')) {
+    final source = state.uri.queryParameters['source'];
+    if (source == 'transactions') {
+      return [
+        BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
+        BreadcrumbItem(label: 'Transactions', route: '/transactions'),
+        BreadcrumbItem(label: 'Client ${params['customerId'] ?? ''}'),
+      ];
+    } else if (source == 'clients') {
+      return [
+        BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
+        BreadcrumbItem(label: 'Clients', route: '/profile'),
+        BreadcrumbItem(label: 'Client ${params['customerId'] ?? ''}'),
+      ];
+    }
     final customerId = params['customerId'] ?? '';
     breadcrumbs.add(BreadcrumbItem(
       label: 'Client $customerId',
@@ -186,14 +214,23 @@ String? _computeBackTarget(GoRouterState state) {
   }
 
   if (path.contains('/sale') || path.contains('/collect')) {
-    return Routes.customer(
+    final source = state.uri.queryParameters['source'];
+    final suffix = source != null ? '?source=$source' : '';
+    final customerRoute = Routes.customer(
       params['day'] ?? 'Monday',
       params['placeId'] ?? '',
       params['areaId'] ?? '',
       params['customerId'] ?? '',
     );
+    return '$customerRoute$suffix';
   }
   if (path.contains('/customer/')) {
+    final source = state.uri.queryParameters['source'];
+    if (source == 'transactions') {
+      return '/transactions';
+    } else if (source == 'clients') {
+      return '/profile';
+    }
     return Routes.area(
       params['day'] ?? 'Monday',
       params['placeId'] ?? '',
@@ -271,8 +308,9 @@ class NavigationShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final selectedIndex = _getSelectedIndex(context);
     final showBottomNav = _shouldShowBottomNav(context);
+    final backTarget = context.getBackTarget();
 
-    return Scaffold(
+    final scaffold = Scaffold(
       body: child,
       bottomNavigationBar: showBottomNav
           ? FloatingBottomNav(
@@ -281,6 +319,19 @@ class NavigationShell extends StatelessWidget {
             )
           : null,
     );
+
+    if (backTarget != null) {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          context.go(backTarget);
+        },
+        child: scaffold,
+      );
+    }
+
+    return scaffold;
   }
 }
 

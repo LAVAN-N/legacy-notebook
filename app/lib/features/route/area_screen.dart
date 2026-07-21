@@ -45,10 +45,13 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
   TagType _determineTagType(CustomerProgress item) {
     if (item.isVisitedToday) {
       if (item.lastCollectionStatus == 'PAYMENT') return TagType.done;
-      if (item.lastCollectionStatus == 'PARTIAL_PAYMENT') return TagType.partial;
+      if (item.lastCollectionStatus == 'PARTIAL_PAYMENT')
+        return TagType.partial;
       return TagType.carryForward;
     }
-    return item.outstanding.outstandingAmount > 0 ? TagType.pending : TagType.noOutstanding;
+    return item.outstanding.outstandingAmount > 0
+        ? TagType.pending
+        : TagType.noOutstanding;
   }
 
   @override
@@ -57,7 +60,8 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
     final customersState = ref.watch(areaCustomersProvider(widget.areaId));
 
     // Get the place ID for the back button and the area details for the title
-    final areaData = ref.watch(routeRepositoryProvider).watchAreasByPlace('p-1').map((list) {
+    final areaData =
+        ref.watch(routeRepositoryProvider).watchAreasByPlace('p-1').map((list) {
       try {
         return list.firstWhere((a) => a.id == widget.areaId);
       } catch (_) {
@@ -72,9 +76,11 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
         final title = area?.name ?? 'Area Customers';
 
         return AppScaffold(
+          blendHeader: true,
           title: Text(
             title,
-            style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
+            style:
+                AppTypography.headlineMedium.copyWith(color: colors.foreground),
           ),
           body: customersState.when(
             loading: () => const _LoadingState(),
@@ -89,7 +95,8 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
                   message: 'No active clients mapped to this collection area.',
                   action: OutlinedButton(
                     onPressed: () {
-                      final target = context.getBackTarget() ?? Routes.dashboard;
+                      final target =
+                          context.getBackTarget() ?? Routes.dashboard;
                       context.go(target);
                     },
                     child: const Text('Back to Place'),
@@ -118,7 +125,8 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
                       },
                       decoration: InputDecoration(
                         hintText: 'Search by client name or ID...',
-                        prefixIcon: Icon(Icons.search, color: colors.mutedFg, size: 20),
+                        prefixIcon:
+                            Icon(Icons.search, color: colors.mutedFg, size: 20),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
                                 icon: const Icon(Icons.clear),
@@ -139,17 +147,23 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
                     child: filtered.isEmpty
                         ? const EmptyState(
                             title: 'No matches found',
-                            message: 'Try checking spellings or inputting another name.',
+                            message:
+                                'Try checking spellings or inputting another name.',
                             icon: Icons.person_search_outlined,
                           )
                         : ReorderableListView.builder(
                             onReorderItem: (oldIdx, newIdx) {
-                              final list = List<CustomerProgress>.from(filtered);
+                              final list =
+                                  List<CustomerProgress>.from(filtered);
                               final item = list.removeAt(oldIdx);
                               list.insert(newIdx, item);
-                              ref.read(areaCustomersProvider(widget.areaId).notifier).reorderSequence(list);
+                              ref
+                                  .read(areaCustomersProvider(widget.areaId)
+                                      .notifier)
+                                  .reorderSequence(list);
                             },
-                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.lg),
                             itemCount: filtered.length,
                             itemBuilder: (context, index) {
                               final item = filtered[index];
@@ -157,12 +171,19 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
 
                               return Card(
                                 key: ValueKey(item.customer.id),
-                                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                                margin: const EdgeInsets.only(
+                                    bottom: AppSpacing.sm),
                                 child: InkWell(
-                                  onTap: () => context.go(Routes.customer(widget.weekday, widget.placeId, widget.areaId, item.customer.id)),
-                                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                                  onTap: () => context.go(Routes.customer(
+                                      widget.weekday,
+                                      widget.placeId,
+                                      widget.areaId,
+                                      item.customer.id)),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.lg),
                                   child: Padding(
-                                    padding: const EdgeInsets.all(AppSpacing.lg),
+                                    padding:
+                                        const EdgeInsets.all(AppSpacing.lg),
                                     child: Row(
                                       children: [
                                         // Sequence badge
@@ -175,8 +196,10 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
                                           ),
                                           alignment: Alignment.center,
                                           child: Text(
-                                            item.customer.sequenceNumber.toString(),
-                                            style: AppTypography.labelLarge.copyWith(
+                                            item.customer.sequenceNumber
+                                                .toString(),
+                                            style: AppTypography.labelLarge
+                                                .copyWith(
                                               color: colors.mutedFg,
                                             ),
                                           ),
@@ -186,19 +209,25 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
                                         // Customer details
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Row(
                                                 children: [
                                                   Expanded(
                                                     child: Text(
                                                       item.customer.name,
-                                                      style: AppTypography.titleSmall.copyWith(
-                                                        color: colors.foreground,
-                                                        fontWeight: FontWeight.w700,
+                                                      style: AppTypography
+                                                          .titleSmall
+                                                          .copyWith(
+                                                        color:
+                                                            colors.foreground,
+                                                        fontWeight:
+                                                            FontWeight.w700,
                                                       ),
                                                       maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                     ),
                                                   ),
                                                   const SizedBox(width: 8),
@@ -207,28 +236,41 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
                                               ),
                                               const SizedBox(height: 4),
                                               Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
                                                 children: [
                                                   Text(
                                                     item.customer.customerCode,
-                                                    style: AppTypography.labelSmall.copyWith(
+                                                    style: AppTypography
+                                                        .labelSmall
+                                                        .copyWith(
                                                       color: colors.mutedFg,
                                                     ),
                                                   ),
-                                                  if (item.outstanding.outstandingAmount > 0)
+                                                  if (item.outstanding
+                                                          .outstandingAmount >
+                                                      0)
                                                     AmountText(
-                                                      amount: item.outstanding.outstandingAmount,
-                                                      style: AppTypography.currencySmall.copyWith(
+                                                      amount: item.outstanding
+                                                          .outstandingAmount,
+                                                      style: AppTypography
+                                                          .currencySmall
+                                                          .copyWith(
                                                         color: colors.danger,
-                                                        fontWeight: FontWeight.w700,
+                                                        fontWeight:
+                                                            FontWeight.w700,
                                                       ),
                                                     )
                                                   else
                                                     Text(
                                                       'Paid Up',
-                                                      style: AppTypography.labelSmall.copyWith(
+                                                      style: AppTypography
+                                                          .labelSmall
+                                                          .copyWith(
                                                         color: colors.success,
-                                                        fontWeight: FontWeight.w700,
+                                                        fontWeight:
+                                                            FontWeight.w700,
                                                       ),
                                                     ),
                                                 ],
@@ -238,7 +280,10 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
                                         ),
                                         const SizedBox(width: AppSpacing.sm),
                                         // Drag handler icon
-                                        Icon(Icons.drag_handle, color: colors.mutedFg.withValues(alpha: 0.5), size: 20),
+                                        Icon(Icons.drag_handle,
+                                            color: colors.mutedFg
+                                                .withValues(alpha: 0.5),
+                                            size: 20),
                                       ],
                                     ),
                                   ),
