@@ -92,3 +92,47 @@ Read before starting. Never edit past entries.
 - **Rule for next agent:** NEVER rely on `PopScope` to prevent app closure in a flat `GoRouter` setup (where `context.go` replaces the stack). ALWAYS use `BackButtonListener` if you need to intercept hardware back to execute a custom `context.go()`.
 - **Guardrail:** Grep search for `PopScope` in `lib/`. It should not be used for root-level navigation interception.
 
+---
+
+### 2026-07-22 · BuildContext across async gaps (`use_build_context_synchronously`)
+
+- **Context:** Dismissing the transaction filters bottom sheet after picking a custom date range in `_selectCustomDateRange(context).then(...)`.
+- **Mistake:** Calling `context.pop()` inside an asynchronous callback closure without checking if the widget/context is still mounted.
+- **Root cause:** Forgot that async gaps invalidate raw `BuildContext` references.
+- **Fix applied:** Added `&& context.mounted` check before calling `context.pop()`.
+- **Rule for next agent:** ALWAYS check `context.mounted` before accessing or executing operations on `BuildContext` inside any asynchronous callback (e.g., `Future.then`, `await`).
+- **Guardrail:** `flutter analyze` will fail with a `use_build_context_synchronously` lint warning if this is violated.
+
+---
+
+### 2026-07-22 · Bottom layout overflow when keyboard is open
+
+- **Context:** Displaying empty states in `clients_screen.dart` and `transactions_screen.dart`.
+- **Mistake:** Placing a fixed-height layout column with large vertical padding (`AppSpacing.xxl`) inside an `Expanded` widget. When the soft keyboard opens, it reduces available screen height and causes a `BOTTOM OVERFLOWED` layout error.
+- **Root cause:** Assuming the empty state widget would always have enough screen height.
+- **Fix applied:** Wrapped the empty state's inner container in a `SingleChildScrollView` and reduced vertical padding.
+- **Rule for next agent:** ALWAYS wrap empty state layouts in a `SingleChildScrollView` or a scrollable widget if they contain vertical text, icons, and buttons that could overflow when the keyboard is open.
+- **Guardrail:** Verify layout responsiveness under different keyboard states during review.
+
+---
+
+### 2026-07-22 · GridView.builder parameters & Theme colors extension
+
+- **Context:** Implementing `CustomCalendarView` and dialog pop-up inside customer details card view.
+- **Mistake:** (1) Attempted to pass `crossAxisCount` directly to `GridView.builder` (which is only valid in `GridView.count`), causing compilation failure. (2) Used `Theme.of(context).colors` instead of the extension getter `context.colors` on `BuildContext`.
+- **Root cause:** Mixing up parameters of different `GridView` constructors and assuming the custom theme extension was on `ThemeData` instead of `BuildContext`.
+- **Fix applied:** Changed `GridView.builder` to include a `gridDelegate` with `SliverGridDelegateWithFixedCrossAxisCount` and changed `Theme.of(context).colors` to `context.colors`.
+- **Rule for next agent:** ALWAYS pass `gridDelegate` to `GridView.builder` for grids, and use the `context.colors` extension for app palette.
+- **Guardrail:** Run `flutter analyze` immediately after writing layout structures to verify parameter availability and extension getters.
+
+---
+
+### 2026-07-22 · Integrating Complete Project Knowledge Base into AGENTS.md
+
+- **Context:** Ensuring project context is fully loaded at the start of every session without manual read operations.
+- **Mistake:** Requiring agents to perform multiple file reads (`knowledge/*.md`) at the beginning of each session.
+- **Root cause:** Domain knowledge, workflows, and database schema were dispersed across multiple markdown files.
+- **Fix applied:** Integrated the compiled, token-efficient, and complete knowledge base (business model, route hierarchy, enums, database schema tables, views, and core workflows) directly at the end of `AGENTS.md`. Since `AGENTS.md` is automatically loaded by the system as a `RULE`, this guarantees that every new agent session has full context on start.
+- **Rule for next agent:** ALWAYS keep the integrated knowledge base in `AGENTS.md` updated when database schemas or business workflows evolve.
+- **Guardrail:** Validate that new project rules or schema changes are added to both `/knowledge` files and the integrated knowledge base in `AGENTS.md`.
+

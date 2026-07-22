@@ -118,11 +118,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: context.colors.background,
+      backgroundColor: context.colors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (BuildContext sheetContext) {
         String tempRange = currentRange;
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (context, setModalState) {
             final colors = context.colors;
             return SafeArea(
               child: Padding(
@@ -131,99 +134,132 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Filters',
-                      style: AppTypography.headlineMedium
-                          .copyWith(color: colors.foreground),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Filter Transactions',
+                          style: AppTypography.titleMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colors.foreground,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedDateRange = null;
+                            });
+                            _updateFilters(range: 'Today', kind: 'All');
+                            context.pop();
+                          },
+                          child: const Text('Reset'),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: AppSpacing.lg),
-                    Text(
-                      'Date range',
-                      style: AppTypography.titleSmall.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: colors.foreground),
-                    ),
+                    const Divider(),
                     const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Date Range',
+                      style: AppTypography.labelLarge.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colors.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
                     Wrap(
                       spacing: AppSpacing.sm,
                       runSpacing: AppSpacing.sm,
                       children: [
-                        'Today',
-                        'This week',
-                        'This month',
-                        'Custom...'
-                      ].map((range) {
-                        final isSelected = tempRange == range;
-                        return FilterChip(
-                          label: Text(range),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            if (selected) {
-                              if (range == 'Custom...') {
+                        ...['Today', 'This week', 'This month'].map((range) {
+                          final isSelected = tempRange == range &&
+                              _selectedDateRange == null;
+                          return FilterChip(
+                            label: Text(range),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              if (selected) {
+                                setState(() {
+                                  _selectedDateRange = null;
+                                });
+                                _updateFilters(range: range);
+                                context.pop();
+                              }
+                            },
+                            backgroundColor: colors.surface,
+                            selectedColor:
+                                colors.primary.withValues(alpha: 0.15),
+                            checkmarkColor: colors.primary,
+                            side: BorderSide(
+                              color: isSelected ? colors.primary : colors.border,
+                            ),
+                            labelStyle: TextStyle(
+                              color: isSelected
+                                  ? colors.primary
+                                  : colors.foreground,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          );
+                        }),
+                        Builder(
+                          builder: (context) {
+                            final isCustom = tempRange == 'Custom...' ||
+                                _selectedDateRange != null;
+                            final customLabel = (_selectedDateRange != null &&
+                                    isCustom)
+                                ? '${dateShort(_selectedDateRange!.start)} - ${dateShort(_selectedDateRange!.end)}'
+                                : 'Custom';
+                            return ActionChip(
+                              avatar: Icon(
+                                Icons.edit_calendar_rounded,
+                                size: 16,
+                                color: isCustom
+                                    ? colors.primary
+                                    : colors.mutedFg,
+                              ),
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(customLabel),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.edit_rounded,
+                                    size: 14,
+                                    color: isCustom
+                                        ? colors.primary
+                                        : colors.mutedFg,
+                                  ),
+                                ],
+                              ),
+                              backgroundColor: isCustom
+                                  ? colors.primary.withValues(alpha: 0.15)
+                                  : colors.surface,
+                              side: BorderSide(
+                                color:
+                                    isCustom ? colors.primary : colors.border,
+                              ),
+                              labelStyle: TextStyle(
+                                color: isCustom
+                                    ? colors.primary
+                                    : colors.foreground,
+                                fontWeight: isCustom
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                              onPressed: () {
                                 _selectCustomDateRange(context).then((_) {
-                                  if (_selectedDateRange != null) {
-                                    setState(() => tempRange = 'Custom...');
+                                  if (_selectedDateRange != null && context.mounted) {
+                                    context.pop();
                                   }
                                 });
-                              } else {
-                                setState(() => tempRange = range);
-                              }
-                            }
+                              },
+                            );
                           },
-                          backgroundColor: colors.surface,
-                          selectedColor: colors.primary.withValues(alpha: 0.1),
-                          labelStyle: TextStyle(
-                            color:
-                                isSelected ? colors.primary : colors.foreground,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    if (tempRange == 'Custom...' &&
-                        _selectedDateRange != null) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        'Selected: ${dateShort(_selectedDateRange!.start)} - ${dateShort(_selectedDateRange!.end)}',
-                        style: AppTypography.bodySmall.copyWith(
-                            color: colors.primary, fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                    const SizedBox(height: AppSpacing.xl),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextButton(
-                            onPressed: () {
-                              _selectedDateRange = null;
-                              _updateFilters(range: 'Today', kind: 'All');
-                              context.pop();
-                            },
-                            child: const Text('Reset'),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _updateFilters(range: tempRange);
-                              context.pop();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: colors.primary,
-                              foregroundColor: colors.primaryFg,
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: AppSpacing.md),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8)),
-                            ),
-                            child: const Text('Apply'),
-                          ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: AppSpacing.md),
                   ],
                 ),
               ),
@@ -571,40 +607,45 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           // List or Empty State
           Expanded(
             child: filtered.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xxl),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.search_off_rounded,
-                              size: 56, color: colors.mutedFg),
-                          const SizedBox(height: AppSpacing.md),
-                          Text(
-                            'No transactions match these filters.',
-                            style: AppTypography.bodyLarge.copyWith(
-                                color: colors.foreground,
-                                fontWeight: FontWeight.w600),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            'Try cleaning up search or active filters.',
-                            style: AppTypography.bodySmall
-                                .copyWith(color: colors.mutedFg),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          OutlinedButton(
-                            onPressed: () {
-                              _searchController.clear();
-                              _selectedDateRange = null;
-                              _updateFilters(
-                                  kind: 'All', range: 'Today', q: '');
-                            },
-                            child: const Text('Clear filters'),
-                          ),
-                        ],
+                ? SingleChildScrollView(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xxl,
+                          vertical: AppSpacing.md,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.search_off_rounded,
+                                size: 56, color: colors.mutedFg),
+                            const SizedBox(height: AppSpacing.md),
+                            Text(
+                              'No transactions match these filters.',
+                              style: AppTypography.bodyLarge.copyWith(
+                                  color: colors.foreground,
+                                  fontWeight: FontWeight.w600),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              'Try cleaning up search or active filters.',
+                              style: AppTypography.bodySmall
+                                  .copyWith(color: colors.mutedFg),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            OutlinedButton(
+                              onPressed: () {
+                                _searchController.clear();
+                                _selectedDateRange = null;
+                                _updateFilters(
+                                    kind: 'All', range: 'Today', q: '');
+                              },
+                              child: const Text('Clear filters'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   )

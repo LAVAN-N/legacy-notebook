@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "dart-sdk": {
+      "command": "dart",
+      "args": ["mcp-server"],
+      "description": "Built-in Dart SDK MCP server (requires Dart 3.9+)"
+    },
+    "dart-npm": {
+      "command": "npx",
+      "args": ["-y", "@egyleader/dart-mcp-server"],
+      "description": "NPM-based Dart/Flutter MCP server tool"
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_radius.dart';
@@ -9,12 +10,15 @@ import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/router/routes.dart';
+import '../../data/models/activity.dart';
 import 'controllers/customer_controller.dart';
 import 'widgets/customer_context_card.dart';
 import 'widgets/financial_summary_block.dart';
 import 'widgets/timeline_entry_tile.dart';
+import 'widgets/purchased_product_card.dart';
+import 'widgets/custom_calendar_view.dart';
 
-class CustomerDetailScreen extends ConsumerWidget {
+class CustomerDetailScreen extends ConsumerStatefulWidget {
   const CustomerDetailScreen({
     super.key,
     required this.customerId,
@@ -29,9 +33,112 @@ class CustomerDetailScreen extends ConsumerWidget {
   final String areaId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CustomerDetailScreen> createState() => _CustomerDetailScreenState();
+}
+
+class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
+  bool _isCalendarView = false;
+  int _activityLimit = 5;
+
+  void _showActivityDetailsPopUp(DateTime date, List<Activity> activities) {
     final colors = context.colors;
-    final detailState = ref.watch(customerDetailControllerProvider(customerId));
+    final dateStr = DateFormat('EEEE, dd MMMM yyyy').format(date);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+          ),
+          elevation: 8,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            constraints: const BoxConstraints(maxHeight: 500),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              border: Border.all(color: colors.border.withValues(alpha: 0.5)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Pop-up header
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Activities',
+                              style: AppTypography.titleLarge.copyWith(
+                                color: colors.foreground,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              dateStr,
+                              style: AppTypography.labelSmall.copyWith(
+                                color: colors.mutedFg,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(context).pop(),
+                        color: colors.mutedFg,
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                
+                // Activities List
+                Flexible(
+                  child: activities.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.all(AppSpacing.xl),
+                          child: Center(
+                            child: Text(
+                              'No activities on this date.',
+                              style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg),
+                            ),
+                          ),
+                        )
+                      : ListView.separated(
+                          shrinkWrap: true,
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          itemCount: activities.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+                          itemBuilder: (context, index) {
+                            return Card(
+                              elevation: 2,
+                              margin: EdgeInsets.zero,
+                              child: TimelineEntryTile(activity: activities[index]),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final detailState = ref.watch(customerDetailControllerProvider(widget.customerId));
 
     return detailState.when(
       loading: () =>
@@ -40,13 +147,39 @@ class CustomerDetailScreen extends ConsumerWidget {
         body: ErrorState(
           message: err.toString(),
           onRetry: () =>
-              ref.refresh(customerDetailControllerProvider(customerId)),
+              ref.refresh(customerDetailControllerProvider(widget.customerId)),
         ),
       ),
       data: (data) {
         final customer = data.customer;
         final outstanding = data.outstanding;
         final timeline = data.timeline;
+
+        // Extract purchased products from timeline sale activities
+        final purchasedProducts = <_PurchasedProduct>[];
+        for (final activity in timeline) {
+          if (activity is SaleActivity) {
+            for (final item in activity.items) {
+              purchasedProducts.add(_PurchasedProduct(
+                productName: item.productName,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                purchaseDate: activity.at,
+                saleType: activity.saleType,
+              ));
+            }
+          }
+        }
+
+        // Group activities by date for calendar view
+        final activitiesByDate = <DateTime, List<Activity>>{};
+        for (final activity in timeline) {
+          final dateOnly = DateTime(activity.at.year, activity.at.month, activity.at.day);
+          activitiesByDate.putIfAbsent(dateOnly, () => []).add(activity);
+        }
+
+        final visibleTimeline = timeline.take(_activityLimit).toList();
+        final hasMore = timeline.length > _activityLimit;
 
         return AppScaffold(
           blendHeader: true,
@@ -71,36 +204,153 @@ class CustomerDetailScreen extends ConsumerWidget {
                   FinancialSummaryBlock(outstanding: outstanding),
                   const SizedBox(height: AppSpacing.lg),
 
-                  // Timeline Section
-                  const SectionHeader(title: 'Unified Activity History'),
+                  // Purchased Products Section
+                  const SectionHeader(title: 'Purchased Products'),
                   const SizedBox(height: AppSpacing.sm),
 
-                  if (timeline.isEmpty)
+                  if (purchasedProducts.isEmpty)
                     Container(
+                      width: double.infinity,
                       decoration: BoxDecoration(
                         color: colors.surface,
                         borderRadius: BorderRadius.circular(AppRadius.lg),
+                        border: Border.all(color: colors.border.withValues(alpha: 0.5)),
                       ),
-                      padding: const EdgeInsets.all(AppSpacing.xxl),
+                      padding: const EdgeInsets.all(AppSpacing.xl),
                       alignment: Alignment.center,
                       child: Text(
-                        'No activities recorded yet.',
+                        'No products purchased yet.',
                         style: AppTypography.bodyMedium
                             .copyWith(color: colors.mutedFg),
                       ),
                     )
                   else
-                    Card(
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: timeline.length,
-                        separatorBuilder: (_, __) => const Divider(),
+                    SizedBox(
+                      height: 140,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: purchasedProducts.length,
                         itemBuilder: (context, index) {
-                          return TimelineEntryTile(activity: timeline[index]);
+                          final prod = purchasedProducts[index];
+                          return PurchasedProductCard(
+                            productName: prod.productName,
+                            quantity: prod.quantity,
+                            unitPrice: prod.unitPrice,
+                            purchaseDate: prod.purchaseDate,
+                            saleType: prod.saleType,
+                          );
                         },
                       ),
                     ),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // Timeline Section Header with Toggle
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const SectionHeader(title: 'Unified Activity History'),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: colors.muted.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onTap: () => setState(() => _isCalendarView = false),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: !_isCalendarView ? colors.primary : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(AppRadius.md),
+                                ),
+                                child: Icon(
+                                  Icons.list,
+                                  size: 16,
+                                  color: !_isCalendarView ? colors.primaryFg : colors.mutedFg,
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => setState(() => _isCalendarView = true),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: _isCalendarView ? colors.primary : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(AppRadius.md),
+                                ),
+                                child: Icon(
+                                  Icons.calendar_today,
+                                  size: 16,
+                                  color: _isCalendarView ? colors.primaryFg : colors.mutedFg,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+
+                  if (_isCalendarView)
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: CustomCalendarView(
+                          activitiesByDate: activitiesByDate,
+                          onDateTapped: (date, activities) {
+                            _showActivityDetailsPopUp(date, activities);
+                          },
+                        ),
+                      ),
+                    )
+                  else ...[
+                    if (timeline.isEmpty)
+                      Container(
+                        decoration: BoxDecoration(
+                          color: colors.surface,
+                          borderRadius: BorderRadius.circular(AppRadius.lg),
+                        ),
+                        padding: const EdgeInsets.all(AppSpacing.xxl),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'No activities recorded yet.',
+                          style: AppTypography.bodyMedium
+                              .copyWith(color: colors.mutedFg),
+                        ),
+                      )
+                    else
+                      Card(
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: visibleTimeline.length,
+                          separatorBuilder: (_, __) => const Divider(),
+                          itemBuilder: (context, index) {
+                            return TimelineEntryTile(activity: visibleTimeline[index]);
+                          },
+                        ),
+                      ),
+                    if (hasMore) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      Center(
+                        child: TextButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _activityLimit += 10;
+                            });
+                          },
+                          icon: const Icon(Icons.add),
+                          label: const Text('LOAD MORE'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: colors.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                   const SizedBox(
                       height: 80), // spacer for sticky bottom actions
                 ],
@@ -123,7 +373,7 @@ class CustomerDetailScreen extends ConsumerWidget {
                           .queryParameters['source'];
                       final suffix = source != null ? '?source=$source' : '';
                       context.push(
-                          '${Routes.sale(weekday, placeId, areaId, customerId)}$suffix');
+                          '${Routes.sale(widget.weekday, widget.placeId, widget.areaId, widget.customerId)}$suffix');
                     },
                     icon: const Icon(Icons.shopping_bag),
                     label: const Text('NEW SALE'),
@@ -136,14 +386,16 @@ class CustomerDetailScreen extends ConsumerWidget {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      final source = GoRouterState.of(context)
-                          .uri
-                          .queryParameters['source'];
-                      final suffix = source != null ? '?source=$source' : '';
-                      context.push(
-                          '${Routes.collect(weekday, placeId, areaId, customerId)}$suffix');
-                    },
+                    onPressed: outstanding.outstandingAmount <= 0
+                        ? null
+                        : () {
+                            final source = GoRouterState.of(context)
+                                .uri
+                                .queryParameters['source'];
+                            final suffix = source != null ? '?source=$source' : '';
+                            context.push(
+                                '${Routes.collect(widget.weekday, widget.placeId, widget.areaId, widget.customerId)}$suffix');
+                          },
                     icon: const Icon(Icons.wallet_giftcard),
                     label: const Text('COLLECT'),
                     style: ElevatedButton.styleFrom(
@@ -159,4 +411,20 @@ class CustomerDetailScreen extends ConsumerWidget {
       },
     );
   }
+}
+
+class _PurchasedProduct {
+  const _PurchasedProduct({
+    required this.productName,
+    required this.quantity,
+    required this.unitPrice,
+    required this.purchaseDate,
+    required this.saleType,
+  });
+
+  final String productName;
+  final int quantity;
+  final int unitPrice;
+  final DateTime purchaseDate;
+  final String saleType;
 }

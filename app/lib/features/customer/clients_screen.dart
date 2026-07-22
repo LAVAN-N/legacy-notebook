@@ -239,10 +239,11 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                     IconButton(
                       icon: Icon(
                         Icons.filter_list_rounded,
-                        color:
-                            _selectedWeekday != null || _selectedPlace != null
-                                ? colors.primary
-                                : colors.mutedFg,
+                        color: _selectedWeekday != null ||
+                                _selectedPlace != null ||
+                                _selectedStatus != 'All'
+                            ? colors.primary
+                            : colors.mutedFg,
                       ),
                       onPressed: () => _showFiltersSheet(
                           context, weekdaysWithClients, placesWithClients),
@@ -304,31 +305,49 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
           // List or Empty State
           Expanded(
             child: filtered.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xxl),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.people_outline_rounded,
-                              size: 56, color: colors.mutedFg),
-                          const SizedBox(height: AppSpacing.md),
-                          Text(
-                            'No clients found',
-                            style: AppTypography.bodyLarge.copyWith(
-                              color: colors.foreground,
-                              fontWeight: FontWeight.w600,
+                ? SingleChildScrollView(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xxl,
+                          vertical: AppSpacing.md,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.people_outline_rounded,
+                                size: 56, color: colors.mutedFg),
+                            const SizedBox(height: AppSpacing.md),
+                            Text(
+                              'No clients found',
+                              style: AppTypography.bodyLarge.copyWith(
+                                color: colors.foreground,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            'Try adjusting your search or filters.',
-                            style: AppTypography.bodySmall
-                                .copyWith(color: colors.mutedFg),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              'Try adjusting your search or filters.',
+                              style: AppTypography.bodySmall
+                                  .copyWith(color: colors.mutedFg),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            OutlinedButton(
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                  _selectedStatus = 'All';
+                                  _selectedWeekday = null;
+                                  _selectedPlace = null;
+                                });
+                              },
+                              child: const Text('Clear filters'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   )
@@ -506,6 +525,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
     List<String> places,
   ) {
     final colors = context.colors;
+    final statusOptions = ['All', 'Outstanding', 'Settled'];
     showModalBottomSheet(
       context: context,
       backgroundColor: colors.surface,
@@ -534,11 +554,12 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                       TextButton(
                         onPressed: () {
                           setState(() {
+                            _selectedStatus = 'All';
                             _selectedWeekday = null;
                             _selectedPlace = null;
                           });
                           setModalState(() {});
-                          Navigator.pop(context);
+                          context.pop();
                         },
                         child: const Text('Reset'),
                       ),
@@ -546,6 +567,48 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                   ),
                   const Divider(),
                   const SizedBox(height: AppSpacing.sm),
+
+                  // Status Filter
+                  Text(
+                    'Status',
+                    style: AppTypography.labelLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colors.foreground,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: statusOptions.map((status) {
+                        final isSelected = _selectedStatus == status;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: ChoiceChip(
+                            label: Text(status),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              if (selected) {
+                                setState(() => _selectedStatus = status);
+                                setModalState(() {});
+                              }
+                            },
+                            backgroundColor: colors.surface,
+                            selectedColor:
+                                colors.primary.withValues(alpha: 0.15),
+                            checkmarkColor: colors.primary,
+                            side: BorderSide(
+                              color: isSelected ? colors.primary : colors.border,
+                            ),
+                            labelStyle: TextStyle(
+                              color: isSelected ? colors.primary : colors.mutedFg,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
 
                   // Weekday Filter
                   Text(
@@ -693,19 +756,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colors.primary,
-                        foregroundColor: colors.primaryFg,
-                      ),
-                      child: const Text('Apply Filters'),
-                    ),
-                  ),
+                  const SizedBox(height: AppSpacing.md),
                 ],
               ),
             );

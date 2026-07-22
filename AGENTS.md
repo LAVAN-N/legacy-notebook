@@ -179,4 +179,53 @@ If stuck in an error loop (3+ attempts on the same failure):
 
 ---
 
+## 8. Integrated Project Knowledge Base (Domain, Schema & Workflows)
+
+### 8.1 Core Business Model & Route System
+- **Operations:** Collectors travel weekly to village places, each containing areas and customers.
+- **Route Hierarchy:** Dashboard → Weekday (e.g., Monday) → Place (e.g., Village A) → Area (e.g., North Street) → Customer.
+- **Goal:** Enable substitute collectors to select a weekday/place/area, visit customers, view outstanding, collect payments, record sales, and view history offline-first without assist.
+
+### 8.2 Product Sales & Booking Workflows
+- **Ready Sale:** Customer pays full amount. Credit added is ₹0. Sale type derived: READY. Deduct inventory.
+- **Credit Sale:** Customer pays advance (enforce: advance ≤ sale total) and takes the product. Remaining amount becomes credit. Sale type derived: CREDIT. Update outstanding. Deduct inventory.
+- **Booking:** For unavailable products. Record advance and create booking sale. Deduct inventory later upon physical delivery.
+
+### 8.3 Running Balance & Collection Principles
+- **No Per-Product EMIs:** A customer has exactly *one* unified running balance. Multiple credit sales accumulate into the same running outstanding.
+- **Outstanding Formula:** `SUM(sales.financed_amount) - SUM(collections.amount WHERE type IN (PAYMENT, PARTIAL_PAYMENT))`.
+- **Collection Outcomes:**
+  - `PAYMENT`: Entire expected collection received. Reduces outstanding.
+  - `PARTIAL_PAYMENT`: Partial amount received. Collector adds note for evening revisit. Reduces outstanding.
+  - `CARRY_FORWARD`: No payment. Notes state revisit intent/reasons. **NEVER** reduces outstanding.
+
+### 8.4 Inventory Management
+- **Transaction-Driven:** Current stock is computed as `Purchases - Sales ± Adjustments`. Stock count is never manually updated/edited directly without transaction entry.
+
+### 8.5 Database Schema Reference
+- **Enums:**
+  - `collection_status`: `PAYMENT`, `PARTIAL_PAYMENT`, `CARRY_FORWARD`
+  - `sale_type`: `READY`, `CREDIT`
+  - `inventory_transaction_type`: `PURCHASE`, `SALE`, `ADJUSTMENT`
+- **Main Tables:**
+  - `weekdays`: `id`, `name`, `sort_order`
+  - `places`: `id`, `weekday_id`, `name`
+  - `areas`: `id`, `place_id`, `name`
+  - `products`: `id`, `sku`, `name`, `brand`, `category`, `minimum_stock`, `image_url`
+  - `customers`: `id`, `customer_code`, `name`, `phone`, `alternate_phone`, `address`, `photo_url`, `location_url`, `weekday_id`, `place_id`, `area_id`, `sequence_number`, `status`, `created_by`
+  - `customer_nominees`: `id`, `customer_id`, `name`, `phone`, `relation` (Many-to-one with customer)
+  - `customer_proofs`: `id`, `customer_id`, `proof_type`, `image_url` (Many-to-one with customer)
+  - `collections`: `id`, `customer_id`, `visit_datetime`, `status`, `amount`, `reason`, `collected_by`
+  - `sales`: `id`, `customer_id`, `sale_datetime`, `sale_type`, `total_amount`, `advance_amount`, `financed_amount`, `sold_by`, `remarks`
+  - `sale_items`: `id`, `sale_id`, `product_id`, `quantity`, `unit_price`, `total_price`
+  - `inventory_transactions`: `id`, `product_id`, `transaction_type`, `quantity`, `reference_id`, `remarks`, `created_by`
+- **Views:**
+  - `customer_outstanding_view`: calculates net outstanding.
+  - `customer_activity_view`: unified timeline (Collections + Sales).
+  - `product_stock_view`: current stock audits.
+  - `route_summary_view` & `customer_route_view`: route navigation summaries.
+
+---
+
 **End of AGENTS.md.** If you edit this file, also add a `MISTAKES.md` entry explaining what agent behavior change prompted it.
+
