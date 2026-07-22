@@ -234,7 +234,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ),
                         ),
                       // Bottom padding to avoid floating nav overlap
-                      const SizedBox(height: 96),
+                      const SizedBox(height: AppSpacing.lg),
                     ],
                   ),
                 ),
@@ -270,7 +270,7 @@ class _LoadingState extends StatelessWidget {
             ),
             SizedBox(height: 24),
             SkeletonList(itemCount: 3),
-            SizedBox(height: 96),
+            SizedBox(height: AppSpacing.lg),
           ],
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:ui';
 import 'package:go_router/go_router.dart';
 import '../theme/app_colors.dart';
@@ -83,7 +84,23 @@ class _AppScaffoldState extends State<AppScaffold> {
     final appBarElevation = widget.blendHeader && !_isScrolled ? 0.0 : 1.0;
     final showBorder = widget.blendHeader && _isScrolled;
 
+    final location = GoRouterState.of(context).uri.path;
+    final isDashboard = location == '/' || location == '/dashboard';
+
+    final systemOverlayStyle = SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Theme.of(context).brightness == Brightness.light
+          ? Brightness.dark
+          : Brightness.light,
+      statusBarBrightness: Theme.of(context).brightness,
+      systemNavigationBarColor: isDashboard ? Colors.transparent : colors.surface,
+      systemNavigationBarIconBrightness: isDashboard
+          ? Brightness.light
+          : (Theme.of(context).brightness == Brightness.light ? Brightness.dark : Brightness.light),
+    );
+
     Widget scaffoldContent = Scaffold(
+      extendBody: isDashboard,
       backgroundColor: colors.background,
       drawer: widget.drawer,
       appBar: widget.title != null
@@ -100,6 +117,7 @@ class _AppScaffoldState extends State<AppScaffold> {
               backgroundColor: appBarBackground,
               elevation: appBarElevation,
               scrolledUnderElevation: widget.blendHeader ? 0 : 2,
+              systemOverlayStyle: systemOverlayStyle,
               flexibleSpace: widget.blendHeader && _isScrolled
                   ? ClipRect(
                       child: BackdropFilter(

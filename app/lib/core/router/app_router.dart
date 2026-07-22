@@ -26,9 +26,16 @@ final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(de
 final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final refreshListenable = ValueNotifier<bool>(true);
+  
+  ref.listen<SplashState>(splashControllerProvider, (previous, next) {
+    refreshListenable.value = next.isSplashVisible;
+  });
+
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: Routes.splash,
+    refreshListenable: refreshListenable,
     redirect: (context, state) {
       final splashVisible = ref.read(splashControllerProvider).isSplashVisible;
       

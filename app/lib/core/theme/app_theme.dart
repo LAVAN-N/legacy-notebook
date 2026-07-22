@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'app_colors.dart';
 import 'app_typography.dart';
 import 'app_radius.dart';
@@ -37,6 +38,17 @@ class AppTheme {
         foregroundColor: colors.foreground,
         elevation: 0,
         scrolledUnderElevation: 2,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent, // transparent for edge-to-edge
+          statusBarIconBrightness: brightness == Brightness.light
+              ? Brightness.dark
+              : Brightness.light, // dark icons for light mode, light icons for dark mode
+          statusBarBrightness: brightness, // for iOS
+          systemNavigationBarColor: colors.surface, // matches navigation bar background
+          systemNavigationBarIconBrightness: brightness == Brightness.light
+              ? Brightness.dark
+              : Brightness.light,
+        ),
         titleTextStyle: AppTypography.titleLarge.copyWith(
           color: colors.foreground,
         ),
@@ -118,10 +130,10 @@ class AppTheme {
         hintStyle: AppTypography.bodyMedium.copyWith(color: colors.mutedFg),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: colors.surface,
+        backgroundColor: Colors.transparent,
         selectedItemColor: colors.primary,
         unselectedItemColor: colors.mutedFg,
-        elevation: 8,
+        elevation: 0,
         type: BottomNavigationBarType.fixed,
         selectedLabelStyle: AppTypography.labelSmall,
         unselectedLabelStyle: AppTypography.labelSmall,

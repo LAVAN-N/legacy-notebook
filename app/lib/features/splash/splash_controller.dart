@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// State for the splash screen visibility
@@ -13,48 +14,36 @@ class SplashState {
   }
 }
 
-/// Controller to manage splash screen visibility with timer and router idle tracking
+/// Controller to manage splash screen visibility with timer triggered on mount
 class SplashController extends StateNotifier<SplashState> {
-  SplashController() : super(const SplashState(isSplashVisible: true)) {
-    _initSplash();
-  }
+  SplashController() : super(const SplashState(isSplashVisible: true));
 
-  static const _minimumDuration = Duration(milliseconds: 900);
-  static const _maximumDuration = Duration(milliseconds: 1800);
+  static const _minimumDuration = Duration(milliseconds: 3000); // 3.0s minimum display
+  static const _maximumDuration = Duration(milliseconds: 4000); // 4.0s maximum safety limit
 
-  bool _timerElapsed = false;
-  bool _routerReady = false;
+  bool _timerStarted = false;
 
-  /// Initialize splash: start timer and mark router as ready after initial build
-  void _initSplash() {
+  /// Start the splash display timer (called once the screen mounts)
+  void startSplashTimer() {
+    if (_timerStarted) return;
+    _timerStarted = true;
+
     // Start the minimum timer
     Future.delayed(_minimumDuration, () {
-      _timerElapsed = true;
-      _checkDismiss();
+      _dismissSplash();
     });
 
-    // Mark router as ready after a brief delay to allow initial navigation setup
-    Future.delayed(const Duration(milliseconds: 100), () {
-      _routerReady = true;
-      _checkDismiss();
-    });
-
-    // Safety timeout to ensure splash dismisses within maximum duration
+    // Safety timeout to ensure splash dismisses
     Future.delayed(_maximumDuration, () {
       _dismissSplash();
     });
   }
 
-  /// Check if both conditions are met to dismiss splash
-  void _checkDismiss() {
-    if (_timerElapsed && _routerReady) {
-      _dismissSplash();
-    }
-  }
-
   /// Dismiss splash screen
   void _dismissSplash() {
-    state = state.copyWith(isSplashVisible: false);
+    if (state.isSplashVisible) {
+      state = state.copyWith(isSplashVisible: false);
+    }
   }
 
   /// Force dismiss (e.g., for testing or early exit)

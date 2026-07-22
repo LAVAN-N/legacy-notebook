@@ -136,3 +136,32 @@ Read before starting. Never edit past entries.
 - **Rule for next agent:** ALWAYS keep the integrated knowledge base in `AGENTS.md` updated when database schemas or business workflows evolve.
 - **Guardrail:** Validate that new project rules or schema changes are added to both `/knowledge` files and the integrated knowledge base in `AGENTS.md`.
 
+---
+
+### 2026-07-22 · Splash timer triggered on constructor & static GoRouter redirects
+
+- **Context:** Ensuring the splash screen is displayed on cold startups and theme change animations are smooth.
+- **Mistake:** (1) Starting the minimum splash display timer in the controller's constructor. On slow cold boots or development builds, the startup latency exceeds the 900ms minimum duration, dismissing the splash screen before the first frame even paints. (2) GoRouter did not reactively redirect on splash status updates because `refreshListenable` was not set. (3) Leaving the theme change animations at default (which is linear and fast).
+- **Root cause:** Starting timers prior to visual rendering and neglecting GoRouter's reactive refresh hook.
+- **Fix applied:** Moved the splash display timer logic to `startSplashTimer()` which is explicitly called inside `SplashScreen`'s post-frame callback. Added `refreshListenable` with `GoRouterRefreshStream` on the `GoRouter` provider to listen to `splashControllerProvider`. Configured `themeAnimationDuration` and `themeAnimationCurve` on `MaterialApp.router`.
+- **Rule for next agent:** ALWAYS start screen-minimum duration timers on widget mount or post-frame callbacks rather than controller construction, and wire Riverpod triggers to GoRouter via `refreshListenable`.
+- **Guardrail:** Ensure splash controllers do not auto-run timers in the constructor; verify `refreshListenable` mapping.
+
+---
+
+### 2026-07-22 · Premature GoRouter notifications & Missing Assets on startup
+
+- **Context:** Resolving cold boot blank screens on Android and optimizing theme transition frame rates.
+- **Mistake:** (1) Calling `notifyListeners()` during GoRouter's initial delegate building phase (inside `GoRouterRefreshStream` constructor), which interrupts setup and causes a blank screen. (2) Invoking `Image.asset` on a missing `assets/brand_mark.png` without verifying its presence in `pubspec.yaml`, triggering cold-start bundle exceptions. (3) Enabling color-interpolating theme transitions that cause frame drops during builds on mobile hardware.
+- **Root cause:** Dispatching UI refresh events before matching state is ready, calling non-registered asset keys, and animating resource-intensive full-tree style builds.
+- **Fix applied:** Replaced `GoRouterRefreshStream` with a direct `ValueNotifier` and a Riverpod `ref.listen` block inside the router provider. Replaced the `Image.asset` widget in `SplashScreen` with the standalone fallback brand mark `Container` directly. Set `themeAnimationDuration: Duration.zero` on `MaterialApp.router`. Fully implemented the premium classic editorial splash screen layout from `splash_design.md` utilizing a custom-rendered `LedgerIcon` vector, Bodoni Moda + Inter typography, safe-area geometry, and accessibility-compliant transition controls. Centered the main screen content horizontally by wrapping the parent Column in a `Center` widget, removed the top established dates block, and configured the minimum display timer to 3 seconds. Fixed horizontal offset text centering by applying left padding offsets equal to the positive letter spacings. Created a transparent status bar layout (Blinkit style) by setting `SystemUiMode.edgeToEdge`, configuring `statusBarColor: Colors.transparent` with light system icons, and setting `top: false` on `SafeArea` to stretch the deep teal canvas completely behind the top overlays. Enabled `SystemUiMode.edgeToEdge` globally at app boot in `main.dart` and defined dynamic transparent `systemOverlayStyle` in `AppBarTheme` inside `app_theme.dart` for light and dark modes, ensuring edge-to-edge styling operates dynamically across all app screens with correct icon contrasts. Configured the bottom navigation bar to support dynamic edge-to-edge scroll hiding exclusively on the Dashboard screen: set `extendBody: isDashboard` dynamically on both the outer Scaffold in [navigation_shell.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/core/router/navigation_shell.dart) and the inner Scaffold in [app_scaffold.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/core/widgets/app_scaffold.dart) to allow content to flow behind the floating bottom bar transparently on the Dashboard screen while keeping bounds solid on other screens. Dynamically adjusted `systemNavigationBarColor` via `SystemChrome.setSystemUIOverlayStyle` in `NavigationShell` to be `Colors.transparent` only on the Dashboard screen and `colors.surface` on all other pages. Fixed AppBar override conflicts by explicitly passing a dynamic `systemOverlayStyle` inside [app_scaffold.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/core/widgets/app_scaffold.dart) to force transparent system navigation bar colors on the Dashboard, eliminating the solid white/black background block artifact completely. Set `bottomNavigationBarTheme.backgroundColor` to `Colors.transparent` and `elevation` to `0` in [app_theme.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/core/theme/app_theme.dart) to prevent Scaffold from drawing solid background wrappers behind the floating bar. Reduced the bottom spacer in [dashboard_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/dashboard/dashboard_screen.dart) from `96` to `AppSpacing.lg` to remove excess empty scrollable space at the bottom.
+- **Rule for next agent:** NEVER trigger router refresh events inside router initialization constructors, use `ref.listen` and `ValueNotifier` for router state updates, and use `Duration.zero` on theme switches to avoid frame drops on mobile.
+
+
+
+
+
+
+
+
+

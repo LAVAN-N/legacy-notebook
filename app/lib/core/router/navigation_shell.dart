@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/floating_bottom_nav.dart';
 import 'routes.dart';
 import '../../data/models/customer.dart';
+import '../theme/app_colors.dart';
 
 /// Represents a breadcrumb in the navigation hierarchy
 class BreadcrumbItem {
@@ -253,10 +256,23 @@ String? _computeBackTarget(GoRouterState state) {
   return null;
 }
 
-class NavigationShell extends StatelessWidget {
+class NavigationShell extends StatefulWidget {
   const NavigationShell({super.key, required this.child});
 
   final Widget child;
+
+  @override
+  State<NavigationShell> createState() => _NavigationShellState();
+}
+
+class _NavigationShellState extends State<NavigationShell> {
+  bool _isBottomNavVisible = true;
+  int _lastSelectedIndex = 0;
+
+  bool _isDashboard(BuildContext context) {
+    final location = GoRouterState.of(context).uri.path;
+    return location == Routes.dashboard;
+  }
 
   int _getSelectedIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
@@ -269,8 +285,6 @@ class NavigationShell extends StatelessWidget {
     } else if (location.startsWith('/profile')) {
       return 3; // Profile
     }
-    // For routes like /weekday, /place, /area, /customer, we don't highlight any tab
-    // (they live in the shell but are accessed via breadcrumbs, not nav)
     return 0;
   }
 
@@ -309,29 +323,82 @@ class NavigationShell extends StatelessWidget {
     final selectedIndex = _getSelectedIndex(context);
     final showBottomNav = _shouldShowBottomNav(context);
     final backTarget = context.getBackTarget();
+    final isDashboard = _isDashboard(context);
+    final colors = context.colors;
+
+    // Dynamically adjust system navigation bar overlay transparency strictly for the Dashboard
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Theme.of(context).brightness == Brightness.light
+          ? Brightness.dark
+          : Brightness.light,
+      statusBarBrightness: Theme.of(context).brightness,
+      systemNavigationBarColor: isDashboard ? Colors.transparent : colors.surface,
+      systemNavigationBarIconBrightness: isDashboard
+          ? Brightness.light
+          : (Theme.of(context).brightness == Brightness.light ? Brightness.dark : Brightness.light),
+    ));
+
+    // Ensure bottom nav is always visible on non-dashboard screens
+    if (!isDashboard) {
+      _isBottomNavVisible = true;
+    }
+
+    // Reset visibility if the tab selection changes
+    if (selectedIndex != _lastSelectedIndex) {
+      _lastSelectedIndex = selectedIndex;
+      _isBottomNavVisible = true;
+    }
 
     final scaffold = Scaffold(
-      body: child,
+      extendBody: isDashboard, // Extend body behind bottom nav bar on Dashboard screen only
+      body: widget.child,
       bottomNavigationBar: showBottomNav
-          ? FloatingBottomNav(
-              selectedIndex: selectedIndex,
-              onTap: (index) => _onBottomNavTapped(context, index),
+          ? AnimatedSlide(
+              offset: _isBottomNavVisible ? Offset.zero : const Offset(0, 2.0),
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOutCubic,
+              child: FloatingBottomNav(
+                selectedIndex: selectedIndex,
+                onTap: (index) => _onBottomNavTapped(context, index),
+              ),
             )
           : null,
     );
 
-    if (backTarget != null) {
-      return PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) {
-          if (didPop) return;
-          context.go(backTarget);
-        },
-        child: scaffold,
-      );
-    }
+    final wrappedWithPop = backTarget != null
+        ? PopScope(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, result) {
+              if (didPop) return;
+              context.go(backTarget);
+            },
+            child: scaffold,
+          )
+        : scaffold;
 
-    return scaffold;
+    return NotificationListener<UserScrollNotification>(
+      onNotification: (notification) {
+        // Only trigger scroll-to-hide on the Dashboard screen
+        if (_isDashboard(context)) {
+          if (notification.direction == ScrollDirection.reverse) {
+            if (_isBottomNavVisible) {
+              setState(() {
+                _isBottomNavVisible = false;
+              });
+            }
+          } else if (notification.direction == ScrollDirection.forward) {
+            if (!_isBottomNavVisible) {
+              setState(() {
+                _isBottomNavVisible = true;
+              });
+            }
+          }
+        }
+        return false; // Bubbles scroll notification to let other listeners react
+      },
+      child: wrappedWithPop,
+    );
   }
 }
 
