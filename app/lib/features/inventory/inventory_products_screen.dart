@@ -150,20 +150,13 @@ class _InventoryProductsScreenState
               },
               decoration: InputDecoration(
                 hintText: 'Search products...',
-                prefixIcon: Icon(Icons.search, color: colors.mutedFg),
-                filled: true,
+                prefixIcon: Icon(Icons.search_rounded, color: colors.mutedFg),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.border),
+                  borderSide: BorderSide.none,
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.primary, width: 1.5),
-                ),
+                filled: true,
+                fillColor: colors.surface,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               ),
             ),

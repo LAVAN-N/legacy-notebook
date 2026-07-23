@@ -135,13 +135,20 @@ class _InventoryCategoriesScreenState
               },
               decoration: InputDecoration(
                 hintText: 'Search categories or products...',
-                prefixIcon: Icon(Icons.search_rounded, color: colors.mutedFg),
+                prefixIcon: Icon(Icons.search, color: colors.mutedFg),
+                filled: true,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: colors.border),
                 ),
-                filled: true,
-                fillColor: colors.surface,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.primary, width: 1.5),
+                ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               ),
             ),
@@ -164,6 +171,7 @@ class _InventoryCategoriesScreenState
                       });
                     },
                     selectedColor: colors.primary.withValues(alpha: 0.15),
+                    backgroundColor: colors.surface,
                     checkmarkColor: colors.primary,
                     labelStyle: TextStyle(
                       color: isSelected ? colors.primary : colors.mutedFg,

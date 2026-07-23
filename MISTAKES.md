@@ -187,6 +187,16 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Configured `shape: const CircleBorder()` on the standard FloatingActionButtons inside [clients_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/clients_screen.dart), [inventory_categories_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/inventory_categories_screen.dart), and [inventory_products_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/inventory_products_screen.dart).
 - **Rule for next agent:** ALWAYS use `shape: const CircleBorder()` on default-sized FloatingActionButtons if the user requests them to be regular-sized (56dp) but perfectly circular.
 
+---
+
+### 2026-07-23 · Supabase Schema RLS & Public Git Security Enforcements
+
+- **Context:** Conducting full security and IP audit for public git repository deployment.
+- **Mistake:** Database schema placeholder lacked `ENABLE ROW LEVEL SECURITY` and `GRANT` directives across all public tables, leaving potential REST endpoints open without policy enforcement.
+- **Root cause:** Defining SQL schema tables without explicit RLS activation statements.
+- **Fix applied:** Updated [001_schema_placeholder.sql](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/supabase/seed/001_schema_placeholder.sql) to add `GRANT` statements and `ALTER TABLE ... ENABLE ROW LEVEL SECURITY;` across all tables (`weekdays`, `places`, `areas`, `customers`, `products`, `sales`, `sale_items`, `collections`). Generated a full security audit report artifact at [security_audit_report.md](file:///C:/Users/LavanyanThandapani/.gemini/antigravity-cli/brain/265bdc04-8859-4c9e-af13-6ecf17e765cc/security_audit_report.md).
+- **Rule for next agent:** ALWAYS include `GRANT` statements and `ENABLE ROW LEVEL SECURITY` on every table created in Supabase SQL migration files.
+
 
 
 
