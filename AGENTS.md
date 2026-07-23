@@ -136,6 +136,7 @@ These are promoted from `MISTAKES.md` — if you re-introduce any, that's a repe
 - Every list has loading, empty, and error states.
 - **Bottom nav IS in v1** (4 tabs — see `specs/navigation-shell-spec.md`). This supersedes the older "no bottom nav" rule in `design-skill.md`; do not re-remove it.
 - No modal confirmation dialogs on save — snackbar + UNDO.
+- **Flutter `extendBody` & Floating Nav Bars**: When enabling `extendBody: true` on a `Scaffold` with custom floating bottom navigation bars, ALWAYS wrap the Scaffold `body` in `MediaQuery.removePadding(removeBottom: true)`. This prevents Flutter from inflating `MediaQuery.of(context).padding.bottom` with the nav bar height and causing extra empty scrollable space at the bottom.
 
 **Navigation (both web & Flutter):**
 - The back target of any screen is derived from the **current URL params**, never from `new Date()` / "today". Weekday back-nav must return to the weekday in the URL. (See `specs/navigation-shell-spec.md` §4.)

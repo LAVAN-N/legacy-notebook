@@ -352,7 +352,13 @@ class _NavigationShellState extends State<NavigationShell> {
 
     final scaffold = Scaffold(
       extendBody: isDashboard, // Extend body behind bottom nav bar on Dashboard screen only
-      body: widget.child,
+      body: isDashboard
+          ? MediaQuery.removePadding(
+              context: context,
+              removeBottom: true,
+              child: widget.child,
+            )
+          : widget.child,
       bottomNavigationBar: showBottomNav
           ? AnimatedSlide(
               offset: _isBottomNavVisible ? Offset.zero : const Offset(0, 2.0),
