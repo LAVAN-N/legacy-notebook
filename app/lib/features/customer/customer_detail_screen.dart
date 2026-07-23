@@ -370,21 +370,24 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            final source = GoRouterState.of(context)
-                                .uri
-                                .queryParameters['source'];
-                            final suffix = source != null ? '?source=$source' : '';
-                            context.push(
-                                '${Routes.sale(widget.weekday, widget.placeId, widget.areaId, widget.customerId)}$suffix');
-                          },
-                          icon: const Icon(Icons.shopping_bag),
-                          label: const Text('NEW SALE'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: colors.surface,
-                            foregroundColor: colors.primary,
-                            elevation: 1,
+                        child: Opacity(
+                          opacity: 0.85,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              final source = GoRouterState.of(context)
+                                  .uri
+                                  .queryParameters['source'];
+                              final suffix = source != null ? '?source=$source' : '';
+                              context.push(
+                                  '${Routes.sale(widget.weekday, widget.placeId, widget.areaId, widget.customerId)}$suffix');
+                            },
+                            icon: const Icon(Icons.shopping_bag),
+                            label: const Text('NEW SALE'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: colors.surface,
+                              foregroundColor: colors.primary,
+                              elevation: 1,
+                            ),
                           ),
                         ),
                       ),

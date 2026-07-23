@@ -142,12 +142,15 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
         padding: EdgeInsets.only(
           bottom: isKeyboardOpen ? 16.0 : 88.0 + rawSafeAreaBottom,
         ),
-        child: FloatingActionButton.extended(
-          onPressed: () => context.push(Routes.newClient),
-          backgroundColor: colors.primary,
-          foregroundColor: colors.primaryFg,
-          icon: const Icon(Icons.person_add_alt_1_rounded),
-          label: const Text('New Client'),
+        child: Opacity(
+          opacity: 0.85,
+          child: FloatingActionButton(
+            onPressed: () => context.push(Routes.newClient),
+            shape: const CircleBorder(),
+            backgroundColor: colors.primary,
+            foregroundColor: colors.primaryFg,
+            child: const Icon(Icons.person_add_alt_1_rounded),
+          ),
         ),
       ),
       body: Column(

@@ -124,14 +124,17 @@ class _InventoryProductsScreenState
         padding: EdgeInsets.only(
           bottom: isKeyboardOpen ? 16.0 : 88.0 + rawSafeAreaBottom,
         ),
-        child: FloatingActionButton.extended(
-          onPressed: () {
-            showAddProductSheet(context, initialCategoryId: widget.categoryId);
-          },
-          backgroundColor: colors.primary,
-          foregroundColor: colors.primaryFg,
-          icon: const Icon(Icons.add_box_rounded),
-          label: const Text('Add Product'),
+        child: Opacity(
+          opacity: 0.85,
+          child: FloatingActionButton(
+            onPressed: () {
+              showAddProductSheet(context, initialCategoryId: widget.categoryId);
+            },
+            shape: const CircleBorder(),
+            backgroundColor: colors.primary,
+            foregroundColor: colors.primaryFg,
+            child: const Icon(Icons.add_box_rounded),
+          ),
         ),
       ),
       body: Column(
