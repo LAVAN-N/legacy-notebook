@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../widgets/floating_bottom_nav.dart';
 import 'routes.dart';
 import '../../data/models/customer.dart';
-import '../theme/app_colors.dart';
 
 /// Represents a breadcrumb in the navigation hierarchy
 class BreadcrumbItem {
@@ -324,19 +323,19 @@ class _NavigationShellState extends State<NavigationShell> {
     final showBottomNav = _shouldShowBottomNav(context);
     final backTarget = context.getBackTarget();
     final isDashboard = _isDashboard(context);
-    final colors = context.colors;
 
-    // Dynamically adjust system navigation bar overlay transparency strictly for the Dashboard
+    // Dynamically adjust system navigation bar overlay transparency globally
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Theme.of(context).brightness == Brightness.light
           ? Brightness.dark
           : Brightness.light,
       statusBarBrightness: Theme.of(context).brightness,
-      systemNavigationBarColor: isDashboard ? Colors.transparent : colors.surface,
-      systemNavigationBarIconBrightness: isDashboard
-          ? Brightness.light
-          : (Theme.of(context).brightness == Brightness.light ? Brightness.dark : Brightness.light),
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Theme.of(context).brightness == Brightness.light
+          ? Brightness.dark
+          : Brightness.light,
+      systemNavigationBarContrastEnforced: false,
     ));
 
     // Ensure bottom nav is always visible on non-dashboard screens

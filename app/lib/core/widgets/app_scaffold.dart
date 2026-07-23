@@ -20,6 +20,7 @@ class AppScaffold extends StatefulWidget {
     this.appBarLeading,
     this.blendHeader = false,
     this.showSyncIndicator = true,
+    this.extendBody,
   });
 
   final Widget body;
@@ -32,35 +33,14 @@ class AppScaffold extends StatefulWidget {
   final Widget? appBarLeading;
   final bool blendHeader;
   final bool showSyncIndicator;
+  final bool? extendBody;
 
   @override
   State<AppScaffold> createState() => _AppScaffoldState();
 }
 
 class _AppScaffoldState extends State<AppScaffold> {
-  late ScrollController _scrollController;
   bool _isScrolled = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController();
-    _scrollController.addListener(_onScroll);
-  }
-
-  void _onScroll() {
-    final scrolled = _scrollController.offset > 8;
-    if (scrolled != _isScrolled) {
-      setState(() => _isScrolled = scrolled);
-    }
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +66,7 @@ class _AppScaffoldState extends State<AppScaffold> {
 
     final location = GoRouterState.of(context).uri.path;
     final isDashboard = location == '/' || location == '/dashboard';
+    final extendBody = widget.extendBody ?? isDashboard;
 
     final systemOverlayStyle = SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -93,14 +74,15 @@ class _AppScaffoldState extends State<AppScaffold> {
           ? Brightness.dark
           : Brightness.light,
       statusBarBrightness: Theme.of(context).brightness,
-      systemNavigationBarColor: isDashboard ? Colors.transparent : colors.surface,
-      systemNavigationBarIconBrightness: isDashboard
-          ? Brightness.light
-          : (Theme.of(context).brightness == Brightness.light ? Brightness.dark : Brightness.light),
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Theme.of(context).brightness == Brightness.light
+          ? Brightness.dark
+          : Brightness.light,
+      systemNavigationBarContrastEnforced: false,
     );
 
     Widget scaffoldContent = Scaffold(
-      extendBody: isDashboard,
+      extendBody: extendBody,
       backgroundColor: colors.background,
       drawer: widget.drawer,
       appBar: widget.title != null
@@ -143,7 +125,18 @@ class _AppScaffoldState extends State<AppScaffold> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const BreadcrumbsBar(),
-            Expanded(child: widget.body),
+            Expanded(
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (notification) {
+                  final scrolled = notification.metrics.pixels > 8;
+                  if (scrolled != _isScrolled) {
+                    setState(() => _isScrolled = scrolled);
+                  }
+                  return false;
+                },
+                child: widget.body,
+              ),
+            ),
           ],
         ),
       ),

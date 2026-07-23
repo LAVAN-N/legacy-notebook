@@ -142,6 +142,7 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
         _handleBack();
       },
       child: AppScaffold(
+        blendHeader: true,
         showSyncIndicator: false,
         appBarLeading: IconButton(
           icon: const Icon(Icons.arrow_back),

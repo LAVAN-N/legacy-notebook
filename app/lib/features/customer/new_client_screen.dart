@@ -185,6 +185,7 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
         _handleBack();
       },
       child: AppScaffold(
+        blendHeader: true,
         showSyncIndicator: false,
         appBarLeading: IconButton(
           icon: const Icon(Icons.arrow_back),

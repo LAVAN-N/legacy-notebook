@@ -134,6 +134,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
         _handleBack();
       },
       child: AppScaffold(
+        blendHeader: true,
         showSyncIndicator: false,
         appBarLeading: IconButton(
           icon: const Icon(Icons.arrow_back),

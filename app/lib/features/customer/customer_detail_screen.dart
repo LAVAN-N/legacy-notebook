@@ -182,15 +182,20 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
         final hasMore = timeline.length > _activityLimit;
 
         return AppScaffold(
+          extendBody: true,
           blendHeader: true,
           title: Text(
             customer.name,
             style:
                 AppTypography.headlineMedium.copyWith(color: colors.foreground),
           ),
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+          body: Builder(
+            builder: (context) => MediaQuery.removePadding(
+              context: context,
+              removeBottom: true,
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -357,8 +362,10 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
               ),
             ),
           ),
-          bottomSheetSlot: Container(
-            color: colors.surface,
+        ),
+      ),
+          bottomNavigationBar: Container(
+            color: Colors.transparent,
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.lg,
               vertical: AppSpacing.md,
@@ -366,7 +373,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
+                  child: ElevatedButton.icon(
                     onPressed: () {
                       final source = GoRouterState.of(context)
                           .uri
@@ -377,9 +384,10 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                     },
                     icon: const Icon(Icons.shopping_bag),
                     label: const Text('NEW SALE'),
-                    style: OutlinedButton.styleFrom(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colors.surface,
                       foregroundColor: colors.primary,
-                      side: BorderSide(color: colors.primary),
+                      elevation: 1,
                     ),
                   ),
                 ),
