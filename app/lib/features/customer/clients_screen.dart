@@ -128,6 +128,8 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
         allCustomers.map((c) => c.placeId).toSet().toList();
     placesWithClients.sort();
 
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+    final rawSafeAreaBottom = MediaQueryData.fromView(View.of(context)).padding.bottom;
     final statusOptions = ['All', 'Outstanding', 'Settled'];
 
     return AppScaffold(
@@ -136,12 +138,17 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
         'Clients',
         style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(Routes.newClient),
-        backgroundColor: colors.primary,
-        foregroundColor: colors.primaryFg,
-        icon: const Icon(Icons.person_add_alt_1_rounded),
-        label: const Text('New Client'),
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(
+          bottom: isKeyboardOpen ? 16.0 : 88.0 + rawSafeAreaBottom,
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () => context.push(Routes.newClient),
+          backgroundColor: colors.primary,
+          foregroundColor: colors.primaryFg,
+          icon: const Icon(Icons.person_add_alt_1_rounded),
+          label: const Text('New Client'),
+        ),
       ),
       body: Column(
         children: [
@@ -352,8 +359,12 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                     ),
                   )
                 : ListView.separated(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    padding: EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      0,
+                      AppSpacing.md,
+                      16.0 + 88.0 + rawSafeAreaBottom,
+                    ),
                     itemCount: filtered.length,
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: AppSpacing.sm),
@@ -528,6 +539,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
     final statusOptions = ['All', 'Outstanding', 'Settled'];
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: colors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),

@@ -111,6 +111,8 @@ class _InventoryProductsScreenState
         // Keep original order (newest first)
         break;
     }
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+    final rawSafeAreaBottom = MediaQueryData.fromView(View.of(context)).padding.bottom;
 
     return AppScaffold(
       blendHeader: true,
@@ -118,14 +120,19 @@ class _InventoryProductsScreenState
         _category.name,
         style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          showAddProductSheet(context, initialCategoryId: widget.categoryId);
-        },
-        backgroundColor: colors.primary,
-        foregroundColor: colors.primaryFg,
-        icon: const Icon(Icons.add_box_rounded),
-        label: const Text('Add Product'),
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(
+          bottom: isKeyboardOpen ? 16.0 : 88.0 + rawSafeAreaBottom,
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            showAddProductSheet(context, initialCategoryId: widget.categoryId);
+          },
+          backgroundColor: colors.primary,
+          foregroundColor: colors.primaryFg,
+          icon: const Icon(Icons.add_box_rounded),
+          label: const Text('Add Product'),
+        ),
       ),
       body: Column(
         children: [
@@ -247,20 +254,28 @@ class _InventoryProductsScreenState
           Expanded(
             child: products.isEmpty
                 ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.inbox, size: 48, color: colors.mutedFg),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No products found',
-                          style: AppTypography.bodyLarge.copyWith(color: colors.foreground),
-                        ),
-                      ],
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: 88.0 + rawSafeAreaBottom),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.inbox, size: 48, color: colors.mutedFg),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No products found',
+                            style: AppTypography.bodyLarge.copyWith(color: colors.foreground),
+                          ),
+                        ],
+                      ),
                     ),
                   )
                 : GridView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      16,
+                      16,
+                      16.0 + 88.0 + rawSafeAreaBottom,
+                    ),
                     gridDelegate:
                         const SliverGridDelegateWithMaxCrossAxisExtent(
                       maxCrossAxisExtent: 200,

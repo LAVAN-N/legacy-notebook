@@ -16,6 +16,7 @@ import '../../../data/models/category.dart';
 void showAddProductSheet(BuildContext context, {String? initialCategoryId}) {
   showModalBottomSheet(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (context) {
@@ -27,6 +28,7 @@ void showAddProductSheet(BuildContext context, {String? initialCategoryId}) {
 void showEditProductSheet(BuildContext context, Product product) {
   showModalBottomSheet(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (context) {
@@ -320,7 +322,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
           left: 20,
           right: 20,
           top: 16,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24 + MediaQueryData.fromView(View.of(context)).padding.bottom,
         ),
         child: Form(
           key: _formKey,
@@ -1013,7 +1015,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
           left: 20,
           right: 20,
           top: 16,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24 + MediaQueryData.fromView(View.of(context)).padding.bottom,
         ),
         child: Form(
           key: _formKey,

@@ -98,6 +98,7 @@ class _CustomCalendarViewState extends State<CustomCalendarView> {
         // Weekday labels
         GridView.count(
           shrinkWrap: true,
+          padding: EdgeInsets.zero,
           crossAxisCount: 7,
           physics: const NeverScrollableScrollPhysics(),
           children: const ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day) {
@@ -118,6 +119,7 @@ class _CustomCalendarViewState extends State<CustomCalendarView> {
         // Day cells
         GridView.builder(
           shrinkWrap: true,
+          padding: EdgeInsets.zero,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 7,

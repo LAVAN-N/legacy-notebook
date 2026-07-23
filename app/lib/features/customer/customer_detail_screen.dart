@@ -138,6 +138,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final rawSafeAreaBottom = MediaQueryData.fromView(View.of(context)).padding.bottom;
     final detailState = ref.watch(customerDetailControllerProvider(widget.customerId));
 
     return detailState.when(
@@ -189,231 +190,230 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
             style:
                 AppTypography.headlineMedium.copyWith(color: colors.foreground),
           ),
-          body: Builder(
-            builder: (context) => MediaQuery.removePadding(
-              context: context,
-              removeBottom: true,
-              child: SingleChildScrollView(
+          body: Stack(
+            children: [
+              SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Identity Block
-                  CustomerContextCard(
-                    customer: customer,
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // Financial Block
-                  FinancialSummaryBlock(outstanding: outstanding),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // Purchased Products Section
-                  const SectionHeader(title: 'Purchased Products'),
-                  const SizedBox(height: AppSpacing.sm),
-
-                  if (purchasedProducts.isEmpty)
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: BorderRadius.circular(AppRadius.lg),
-                        border: Border.all(color: colors.border.withValues(alpha: 0.5)),
-                      ),
-                      padding: const EdgeInsets.all(AppSpacing.xl),
-                      alignment: Alignment.center,
-                      child: Text(
-                        'No products purchased yet.',
-                        style: AppTypography.bodyMedium
-                            .copyWith(color: colors.mutedFg),
-                      ),
-                    )
-                  else
-                    SizedBox(
-                      height: 140,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: purchasedProducts.length,
-                        itemBuilder: (context, index) {
-                          final prod = purchasedProducts[index];
-                          return PurchasedProductCard(
-                            productName: prod.productName,
-                            quantity: prod.quantity,
-                            unitPrice: prod.unitPrice,
-                            purchaseDate: prod.purchaseDate,
-                            saleType: prod.saleType,
-                          );
-                        },
-                      ),
-                    ),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // Timeline Section Header with Toggle
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SectionHeader(title: 'Unified Activity History'),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: colors.muted.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            GestureDetector(
-                              onTap: () => setState(() => _isCalendarView = false),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: !_isCalendarView ? colors.primary : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(AppRadius.md),
-                                ),
-                                child: Icon(
-                                  Icons.list,
-                                  size: 16,
-                                  color: !_isCalendarView ? colors.primaryFg : colors.mutedFg,
-                                ),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => setState(() => _isCalendarView = true),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: _isCalendarView ? colors.primary : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(AppRadius.md),
-                                ),
-                                child: Icon(
-                                  Icons.calendar_today,
-                                  size: 16,
-                                  color: _isCalendarView ? colors.primaryFg : colors.mutedFg,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      // Identity Block
+                      CustomerContextCard(
+                        customer: customer,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: AppSpacing.lg),
 
-                  if (_isCalendarView)
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: CustomCalendarView(
-                          activitiesByDate: activitiesByDate,
-                          onDateTapped: (date, activities) {
-                            _showActivityDetailsPopUp(date, activities);
-                          },
-                        ),
-                      ),
-                    )
-                  else ...[
-                    if (timeline.isEmpty)
-                      Container(
-                        decoration: BoxDecoration(
-                          color: colors.surface,
-                          borderRadius: BorderRadius.circular(AppRadius.lg),
-                        ),
-                        padding: const EdgeInsets.all(AppSpacing.xxl),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'No activities recorded yet.',
-                          style: AppTypography.bodyMedium
-                              .copyWith(color: colors.mutedFg),
-                        ),
-                      )
-                    else
-                      Card(
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: visibleTimeline.length,
-                          separatorBuilder: (_, __) => const Divider(),
-                          itemBuilder: (context, index) {
-                            return TimelineEntryTile(activity: visibleTimeline[index]);
-                          },
-                        ),
-                      ),
-                    if (hasMore) ...[
+                      // Financial Block
+                      FinancialSummaryBlock(outstanding: outstanding),
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // Purchased Products Section
+                      const SectionHeader(title: 'Purchased Products'),
                       const SizedBox(height: AppSpacing.sm),
-                      Center(
-                        child: TextButton.icon(
-                          onPressed: () {
-                            setState(() {
-                              _activityLimit += 10;
-                            });
-                          },
-                          icon: const Icon(Icons.add),
-                          label: const Text('LOAD MORE'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: colors.primary,
+
+                      if (purchasedProducts.isEmpty)
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: colors.surface,
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
+                            border: Border.all(color: colors.border.withValues(alpha: 0.5)),
+                          ),
+                          padding: const EdgeInsets.all(AppSpacing.xl),
+                          alignment: Alignment.center,
+                          child: Text(
+                            'No products purchased yet.',
+                            style: AppTypography.bodyMedium
+                                .copyWith(color: colors.mutedFg),
+                          ),
+                        )
+                      else
+                        SizedBox(
+                          height: 140,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: purchasedProducts.length,
+                            itemBuilder: (context, index) {
+                              final prod = purchasedProducts[index];
+                              return PurchasedProductCard(
+                                productName: prod.productName,
+                                quantity: prod.quantity,
+                                unitPrice: prod.unitPrice,
+                                purchaseDate: prod.purchaseDate,
+                                saleType: prod.saleType,
+                              );
+                            },
                           ),
                         ),
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // Timeline Section Header with Toggle
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const SectionHeader(title: 'Unified Activity History'),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: colors.muted.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                GestureDetector(
+                                  onTap: () => setState(() => _isCalendarView = false),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: !_isCalendarView ? colors.primary : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(AppRadius.md),
+                                    ),
+                                    child: Icon(
+                                      Icons.list,
+                                      size: 16,
+                                      color: !_isCalendarView ? colors.primaryFg : colors.mutedFg,
+                                    ),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () => setState(() => _isCalendarView = true),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: _isCalendarView ? colors.primary : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(AppRadius.md),
+                                    ),
+                                    child: Icon(
+                                      Icons.calendar_today,
+                                      size: 16,
+                                      color: _isCalendarView ? colors.primaryFg : colors.mutedFg,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: AppSpacing.sm),
+
+                      if (_isCalendarView)
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: CustomCalendarView(
+                              activitiesByDate: activitiesByDate,
+                              onDateTapped: (date, activities) {
+                                _showActivityDetailsPopUp(date, activities);
+                              },
+                            ),
+                          ),
+                        )
+                      else ...[
+                        if (timeline.isEmpty)
+                          Container(
+                            decoration: BoxDecoration(
+                              color: colors.surface,
+                              borderRadius: BorderRadius.circular(AppRadius.lg),
+                            ),
+                            padding: const EdgeInsets.all(AppSpacing.xxl),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'No activities recorded yet.',
+                              style: AppTypography.bodyMedium
+                                  .copyWith(color: colors.mutedFg),
+                            ),
+                          )
+                        else
+                          Card(
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              itemCount: visibleTimeline.length,
+                              separatorBuilder: (_, __) => const Divider(height: 1),
+                              itemBuilder: (context, index) {
+                                return TimelineEntryTile(activity: visibleTimeline[index]);
+                              },
+                            ),
+                          ),
+                        if (hasMore) ...[
+                          const SizedBox(height: AppSpacing.sm),
+                          Center(
+                            child: TextButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  _activityLimit += 10;
+                                });
+                              },
+                              icon: const Icon(Icons.add),
+                              label: const Text('LOAD MORE'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: colors.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                      SizedBox(height: 172 + rawSafeAreaBottom), // spacer for sticky bottom actions
                     ],
-                  ],
-                  const SizedBox(
-                      height: 80), // spacer for sticky bottom actions
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-          bottomNavigationBar: Container(
-            color: Colors.transparent,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.md,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      final source = GoRouterState.of(context)
-                          .uri
-                          .queryParameters['source'];
-                      final suffix = source != null ? '?source=$source' : '';
-                      context.push(
-                          '${Routes.sale(widget.weekday, widget.placeId, widget.areaId, widget.customerId)}$suffix');
-                    },
-                    icon: const Icon(Icons.shopping_bag),
-                    label: const Text('NEW SALE'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colors.surface,
-                      foregroundColor: colors.primary,
-                      elevation: 1,
-                    ),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: outstanding.outstandingAmount <= 0
-                        ? null
-                        : () {
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 88 + rawSafeAreaBottom,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
                             final source = GoRouterState.of(context)
                                 .uri
                                 .queryParameters['source'];
                             final suffix = source != null ? '?source=$source' : '';
                             context.push(
-                                '${Routes.collect(widget.weekday, widget.placeId, widget.areaId, widget.customerId)}$suffix');
+                                '${Routes.sale(widget.weekday, widget.placeId, widget.areaId, widget.customerId)}$suffix');
                           },
-                    icon: const Icon(Icons.wallet_giftcard),
-                    label: const Text('COLLECT'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colors.primary,
-                      foregroundColor: colors.primaryFg,
-                    ),
+                          icon: const Icon(Icons.shopping_bag),
+                          label: const Text('NEW SALE'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colors.surface,
+                            foregroundColor: colors.primary,
+                            elevation: 1,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: outstanding.outstandingAmount <= 0
+                              ? null
+                              : () {
+                                  final source = GoRouterState.of(context)
+                                      .uri
+                                      .queryParameters['source'];
+                                  final suffix = source != null ? '?source=$source' : '';
+                                  context.push(
+                                      '${Routes.collect(widget.weekday, widget.placeId, widget.areaId, widget.customerId)}$suffix');
+                                },
+                          icon: const Icon(Icons.wallet_giftcard),
+                          label: const Text('COLLECT'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colors.primary,
+                            foregroundColor: colors.primaryFg,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },

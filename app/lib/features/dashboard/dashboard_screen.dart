@@ -206,8 +206,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           child: ListView.separated(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
                             itemCount: data.recentActivities.length,
-                            separatorBuilder: (_, __) => const Divider(),
+                            separatorBuilder: (_, __) => const Divider(height: 1),
                             itemBuilder: (context, index) {
                               final act = data.recentActivities[index];
                               // Map activity back to customer name mapping for UI context display

@@ -8,6 +8,11 @@ void main() {
   
   // Enable edge-to-edge system overlays globally across all screens
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarContrastEnforced: false,
+  ));
 
   runApp(
     const ProviderScope(

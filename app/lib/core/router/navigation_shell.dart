@@ -350,8 +350,8 @@ class _NavigationShellState extends State<NavigationShell> {
     }
 
     final scaffold = Scaffold(
-      extendBody: isDashboard, // Extend body behind bottom nav bar on Dashboard screen only
-      body: isDashboard
+      extendBody: showBottomNav, // Extend body behind bottom nav bar on all nav screens
+      body: showBottomNav
           ? MediaQuery.removePadding(
               context: context,
               removeBottom: true,
@@ -382,27 +382,43 @@ class _NavigationShellState extends State<NavigationShell> {
           )
         : scaffold;
 
-    return NotificationListener<UserScrollNotification>(
-      onNotification: (notification) {
-        // Only trigger scroll-to-hide on the Dashboard screen
-        if (_isDashboard(context)) {
-          if (notification.direction == ScrollDirection.reverse) {
-            if (_isBottomNavVisible) {
-              setState(() {
-                _isBottomNavVisible = false;
-              });
-            }
-          } else if (notification.direction == ScrollDirection.forward) {
-            if (!_isBottomNavVisible) {
-              setState(() {
-                _isBottomNavVisible = true;
-              });
+    final systemOverlayStyle = SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Theme.of(context).brightness == Brightness.light
+          ? Brightness.dark
+          : Brightness.light,
+      statusBarBrightness: Theme.of(context).brightness,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Theme.of(context).brightness == Brightness.light
+          ? Brightness.dark
+          : Brightness.light,
+      systemNavigationBarContrastEnforced: false,
+    );
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: systemOverlayStyle,
+      child: NotificationListener<UserScrollNotification>(
+        onNotification: (notification) {
+          // Only trigger scroll-to-hide on the Dashboard screen
+          if (_isDashboard(context)) {
+            if (notification.direction == ScrollDirection.reverse) {
+              if (_isBottomNavVisible) {
+                setState(() {
+                  _isBottomNavVisible = false;
+                });
+              }
+            } else if (notification.direction == ScrollDirection.forward) {
+              if (!_isBottomNavVisible) {
+                setState(() {
+                  _isBottomNavVisible = true;
+                });
+              }
             }
           }
-        }
-        return false; // Bubbles scroll notification to let other listeners react
-      },
-      child: wrappedWithPop,
+          return false; // Bubbles scroll notification to let other listeners react
+        },
+        child: wrappedWithPop,
+      ),
     );
   }
 }

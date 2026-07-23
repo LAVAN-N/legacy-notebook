@@ -44,7 +44,8 @@ class AppTheme {
               ? Brightness.dark
               : Brightness.light, // dark icons for light mode, light icons for dark mode
           statusBarBrightness: brightness, // for iOS
-          systemNavigationBarColor: colors.surface, // matches navigation bar background
+          systemNavigationBarColor: Colors.transparent, // transparent for edge-to-edge
+          systemNavigationBarContrastEnforced: false,
           systemNavigationBarIconBrightness: brightness == Brightness.light
               ? Brightness.dark
               : Brightness.light,

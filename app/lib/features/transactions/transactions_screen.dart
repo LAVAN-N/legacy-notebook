@@ -117,6 +117,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   void _showFiltersSheet(BuildContext context, String currentRange) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: context.colors.surface,
       shape: const RoundedRectangleBorder(

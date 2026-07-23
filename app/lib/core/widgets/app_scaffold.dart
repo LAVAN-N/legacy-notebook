@@ -65,8 +65,7 @@ class _AppScaffoldState extends State<AppScaffold> {
     final showBorder = widget.blendHeader && _isScrolled;
 
     final location = GoRouterState.of(context).uri.path;
-    final isDashboard = location == '/' || location == '/dashboard';
-    final extendBody = widget.extendBody ?? isDashboard;
+    final extendBody = widget.extendBody ?? true;
 
     final systemOverlayStyle = SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -81,10 +80,18 @@ class _AppScaffoldState extends State<AppScaffold> {
       systemNavigationBarContrastEnforced: false,
     );
 
+    final isLeafScreen = location == '/splash' ||
+        location == '/customer/new' ||
+        location.contains('/collect') ||
+        location.contains('/sale') ||
+        location.startsWith('/new-client');
+    final resizeToAvoidBottomInset = isLeafScreen;
+
     Widget scaffoldContent = Scaffold(
       extendBody: extendBody,
       backgroundColor: colors.background,
       drawer: widget.drawer,
+      resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       appBar: widget.title != null
           ? AppBar(
               leading: widget.appBarLeading ??
@@ -145,17 +152,20 @@ class _AppScaffoldState extends State<AppScaffold> {
       floatingActionButton: widget.floatingActionButton,
     );
 
-    if (backTarget != null && widget.appBarLeading == null) {
-      return PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) {
-          if (didPop) return;
-          context.go(backTarget);
-        },
-        child: scaffoldContent,
-      );
-    }
+    final resultWidget = (backTarget != null && widget.appBarLeading == null)
+        ? PopScope(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, result) {
+              if (didPop) return;
+              context.go(backTarget);
+            },
+            child: scaffoldContent,
+          )
+        : scaffoldContent;
 
-    return scaffoldContent;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: systemOverlayStyle,
+      child: resultWidget,
+    );
   }
 }

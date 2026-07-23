@@ -101,15 +101,23 @@ class _InventoryCategoriesScreenState
       }).toList();
     }
 
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+    final rawSafeAreaBottom = MediaQueryData.fromView(View.of(context)).padding.bottom;
+
     return AppScaffold(
       blendHeader: true,
       title: const Text('Inventory'),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => showAddProductSheet(context),
-        backgroundColor: colors.primary,
-        foregroundColor: colors.primaryFg,
-        icon: const Icon(Icons.add_box_rounded),
-        label: const Text('Add Product'),
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(
+          bottom: isKeyboardOpen ? 16.0 : 88.0 + rawSafeAreaBottom,
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () => showAddProductSheet(context),
+          backgroundColor: colors.primary,
+          foregroundColor: colors.primaryFg,
+          icon: const Icon(Icons.add_box_rounded),
+          label: const Text('Add Product'),
+        ),
       ),
       body: Column(
         children: [
@@ -123,54 +131,41 @@ class _InventoryCategoriesScreenState
                 });
               },
               decoration: InputDecoration(
-                hintText: 'Search categories, products...',
-                prefixIcon: Icon(Icons.search, color: colors.mutedFg),
-                filled: true,
+                hintText: 'Search categories or products...',
+                prefixIcon: Icon(Icons.search_rounded, color: colors.mutedFg),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.border),
+                  borderSide: BorderSide.none,
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.primary, width: 1.5),
-                ),
+                filled: true,
+                fillColor: colors.surface,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               ),
             ),
           ),
-
-          // Filter chips
+          // Filter pills
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
-              children: ['All', 'In stock', 'Low stock', 'Out of stock']
-                  .map((filter) {
-                final isSelected = _filterType == filter;
+              children: ['All', 'In stock', 'Low stock', 'Out of stock'].map((type) {
+                final isSelected = _filterType == type;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
-                    label: Text(
-                      filter,
-                      style: AppTypography.labelMedium.copyWith(
-                        color: isSelected ? colors.primary : colors.mutedFg,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.normal,
-                      ),
-                    ),
+                    label: Text(type),
                     selected: isSelected,
                     onSelected: (selected) {
                       setState(() {
-                        _filterType = filter;
+                        _filterType = type;
                       });
                     },
                     selectedColor: colors.primary.withValues(alpha: 0.15),
-                    backgroundColor: colors.surface,
                     checkmarkColor: colors.primary,
+                    labelStyle: TextStyle(
+                      color: isSelected ? colors.primary : colors.mutedFg,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
                     side: BorderSide(
                       color: isSelected ? colors.primary : colors.border,
                     ),
@@ -196,21 +191,29 @@ class _InventoryCategoriesScreenState
             child: _searchQuery.isNotEmpty
                 ? (displayProducts.isEmpty
                     ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.search_off,
-                                size: 48, color: colors.mutedFg),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No products found matching "$_searchQuery"',
-                              style: AppTypography.bodyLarge.copyWith(color: colors.foreground),
-                            ),
-                          ],
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: 88.0 + rawSafeAreaBottom),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.search_off,
+                                  size: 48, color: colors.mutedFg),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No products found matching "$_searchQuery"',
+                                style: AppTypography.bodyLarge.copyWith(color: colors.foreground),
+                              ),
+                            ],
+                          ),
                         ),
                       )
                     : GridView.builder(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.fromLTRB(
+                          16,
+                          16,
+                          16,
+                          16.0 + 88.0 + rawSafeAreaBottom,
+                        ),
                         gridDelegate:
                             const SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: 200,
@@ -226,20 +229,28 @@ class _InventoryCategoriesScreenState
                       ))
                 : (displayCategories.isEmpty
                     ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.inbox, size: 48, color: colors.mutedFg),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No categories found',
-                              style: AppTypography.bodyLarge.copyWith(color: colors.foreground),
-                            ),
-                          ],
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: 88.0 + rawSafeAreaBottom),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.inbox, size: 48, color: colors.mutedFg),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No categories found',
+                                style: AppTypography.bodyLarge.copyWith(color: colors.foreground),
+                              ),
+                            ],
+                          ),
                         ),
                       )
                     : GridView.builder(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.fromLTRB(
+                          16,
+                          16,
+                          16,
+                          16.0 + 88.0 + rawSafeAreaBottom,
+                        ),
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
