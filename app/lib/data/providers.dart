@@ -5,35 +5,57 @@ import 'repositories/route_repository.dart';
 import 'repositories/sale_repository.dart';
 import 'repositories/product_repository.dart';
 import 'mock/mock_repository.dart';
+import 'repositories/local_sqlite_repositories.dart';
 import 'models/product.dart';
 import 'models/customer.dart';
 import 'models/collection.dart';
 import 'models/sale.dart';
 import 'models/outstanding.dart';
 
+/// Local SQLite Repository Providers
+final localSqliteCustomerRepositoryProvider = Provider<CustomerRepository>((ref) {
+  return LocalSqliteCustomerRepository();
+});
+
+final localSqliteCollectionRepositoryProvider = Provider<CollectionRepository>((ref) {
+  return LocalSqliteCollectionRepository();
+});
+
+final localSqliteRouteRepositoryProvider = Provider<RouteRepository>((ref) {
+  return LocalSqliteRouteRepository();
+});
+
+final localSqliteSaleRepositoryProvider = Provider<SaleRepository>((ref) {
+  return LocalSqliteSaleRepository();
+});
+
+final localSqliteProductRepositoryProvider = Provider<ProductRepository>((ref) {
+  return LocalSqliteProductRepository();
+});
+
 /// Customer Repository Provider
 final customerRepositoryProvider = Provider<CustomerRepository>((ref) {
-  return ref.watch(mockRepositoryProvider);
+  return ref.watch(localSqliteCustomerRepositoryProvider);
 });
 
 /// Collection Repository Provider
 final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
-  return ref.watch(mockRepositoryProvider);
+  return ref.watch(localSqliteCollectionRepositoryProvider);
 });
 
 /// Route Repository Provider
 final routeRepositoryProvider = Provider<RouteRepository>((ref) {
-  return ref.watch(mockRepositoryProvider);
+  return ref.watch(localSqliteRouteRepositoryProvider);
 });
 
 /// Sale Repository Provider
 final saleRepositoryProvider = Provider<SaleRepository>((ref) {
-  return ref.watch(mockRepositoryProvider);
+  return ref.watch(localSqliteSaleRepositoryProvider);
 });
 
 /// Product Repository Provider
 final productRepositoryProvider = Provider<ProductRepository>((ref) {
-  return ref.watch(mockRepositoryProvider);
+  return ref.watch(localSqliteProductRepositoryProvider);
 });
 
 /// Products Stream Provider

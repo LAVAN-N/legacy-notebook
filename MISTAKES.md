@@ -250,6 +250,55 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Wrapped each custom tab item in an `Expanded` container widget so it consumes exactly 1/4 of the nav bar width, and set `behavior: HitTestBehavior.opaque` on the `GestureDetector` to capture clicks on all parts of the segment.
 - **Rule for next agent:** ALWAYS wrap custom row navigation items in `Expanded` and set `behavior: HitTestBehavior.opaque` on `GestureDetector` to keep tab switching responsive and avoid dead zones.
 
+---
+
+### 2026-07-24 · Local persistent SQLite storage migration
+
+- **Context:** Replacing the in-memory mock repository with a local SQL database using `sqflite`.
+- **Mistake:** Assuming model mappings for `Nominee` and `IdProof` contained simple fields like `customerId` and `imageUrl`, which led to compilation failures since `IdProof` stores document details inside an nested `IdProofDocument` object and `Nominee` does not carry a back-reference field.
+- **Root cause:** Insufficient inspection of target model classes in `lib/data/models/` before writing SQL mapper queries.
+- **Fix applied:**
+  1. Created [database_helper.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/data/local/database_helper.dart) containing table schemas, indexes, views, and seed data.
+  2. Implemented [local_sqlite_repositories.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/data/repositories/local_sqlite_repositories.dart) representing reactive query listeners using a custom `TableBroadcaster`.
+  3. Aligned `Nominee` instantiation and mapped proof media to `IdProofDocument(localUri: ...)` structures.
+  4. Updated [providers.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/data/providers.dart) to wire repositories to the new SQLite database providers.
+- **Rule for next agent:** ALWAYS check Freezed model constructors in `lib/data/models/` prior to mapping database query result sets to domain entities.
+
+---
+
+### 2026-07-24 · Alignment of local SQL schema & seeds with actual mock datasets
+
+- **Context:** Ensuring that local SQLite database schemas and seeded tables match mock data formats rather than the outdated database-schema.md document.
+- **Mistake:** Using generic placeholder categories (e.g. `Television`) and custom string keys (e.g. `mon`, `tue`) during database setup, which broke mappings to `mockCategoriesList` and search indices because the UI expected exact IDs like `w-1` and `cat-kat`.
+- **Root cause:** Relying on the outdated `database-schema.md` context file instead of analyzing `lib/data/mock/mock_data.dart` which is the source of truth for current app values.
+- **Fix applied:**
+  1. Updated the product table schema in [database_helper.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/data/local/database_helper.dart) to define a `category_id` column matching model field expectations.
+  2. Modified the seed methods to directly loop through and insert records from `mockWeekdaysList`, `mockPlacesList`, `mockAreasList`, `mockProductsList`, `mockCustomersList`, `mockSalesList`, and `mockCollectionsList`.
+  3. Ensured that inventory transactions and items correctly match product prices and SKUs in rupees/paise scales.
+- **Rule for next agent:** ALWAYS prioritize mock data definitions in `lib/data/mock/` over schema design files when configuring local-first databases or sync endpoints.
+
+---
+
+### 2026-07-24 · Upgrading local SQLite schema in development to clear cached versions
+
+- **Context:** Resolving the 'inventory totally not loading' bug where products list failed to display.
+- **Mistake:** Attempting to query newly added `category_id` columns and views while using the cached database file created under version 1, which triggered SQLite runtime errors because `onCreate` is bypassed if version is unchanged.
+- **Root cause:** Neglecting to increment the database version and configure a drop/recreate upgrade policy when updating table schemas during rapid development iterations.
+- **Fix applied:**
+  1. Incremented the database version to `2` in [database_helper.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/data/local/database_helper.dart).
+  2. Implemented the `onUpgrade` database callback and a `_dropAll` method to clean and rebuild all SQLite tables, views, and seed datasets.
+- **Rule for next agent:** ALWAYS increment the version number and write an upgrade/rebuild hook in [database_helper.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/data/local/database_helper.dart) when modifying SQL tables or column schemas.
+
+---
+
+### 2026-07-24 · Product category key mismatch in SQL repository mappings
+
+- **Context:** Fixing the `Null is not a subtype of type String` cast exception when opening the Inventory screen.
+- **Mistake:** Accessing `m['category']` in [local_sqlite_repositories.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/data/repositories/local_sqlite_repositories.dart) after refactoring the SQLite schema to use `category_id`.
+- **Root cause:** Querying a non-existent map key `category` in sqflite query maps returns `null`, which throws a cast error when cast to non-nullable `String`.
+- **Fix applied:** Updated `categoryId: m['category_id'] as String` in `getProducts()`, and corrected map insert/update statements to target `'category_id'`.
+- **Rule for next agent:** ALWAYS ensure database map result queries target the exact column name definition (e.g. `category_id`) rather than the model's camelCase name (e.g. `categoryId`) or older properties.
+
 
 
 
