@@ -10,15 +10,16 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/avatar.dart';
 import '../../../core/router/routes.dart';
 import '../../../data/models/customer.dart';
-import '../../../data/models/nominee.dart';
 
 class CustomerContextCard extends StatelessWidget {
   const CustomerContextCard({
     super.key,
     required this.customer,
+    this.createdDate,
   });
 
   final Customer customer;
+  final DateTime? createdDate;
 
   void _callPhone(String phone) async {
     final uri = Uri.parse('tel:$phone');
@@ -50,59 +51,7 @@ class CustomerContextCard extends StatelessWidget {
     return dob;
   }
 
-  Widget _buildGuardianWidget(Customer customer, Nominee? primaryNominee, AppColors colors) {
-    String name = '';
-    String relationship = '';
 
-    if (customer.guardianName != null && customer.guardianName!.isNotEmpty) {
-      final guardian = customer.guardianName!;
-      final openParen = guardian.indexOf('(');
-      final closeParen = guardian.indexOf(')');
-      if (openParen != -1 && closeParen != -1 && closeParen > openParen) {
-        name = guardian.substring(0, openParen).trim();
-        relationship = guardian.substring(openParen, closeParen + 1).trim();
-      } else {
-        name = guardian;
-      }
-    } else if (primaryNominee != null) {
-      name = primaryNominee.name;
-      if (primaryNominee.relation != null && primaryNominee.relation!.isNotEmpty) {
-        relationship = '(${primaryNominee.relation})';
-      }
-    }
-
-    if (name.isEmpty) {
-      return Text(
-        'Not Provided',
-        style: AppTypography.bodySmall.copyWith(
-          color: colors.foreground,
-          fontWeight: FontWeight.w600,
-        ),
-      );
-    }
-
-    return Text.rich(
-      TextSpan(
-        text: name,
-        style: AppTypography.bodySmall.copyWith(
-          color: colors.foreground,
-          fontWeight: FontWeight.w600,
-        ),
-        children: [
-          if (relationship.isNotEmpty)
-            TextSpan(
-              text: ' $relationship',
-              style: AppTypography.bodySmall.copyWith(
-                color: colors.mutedFg,
-                fontWeight: FontWeight.w300,
-              ),
-            ),
-        ],
-      ),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-    );
-  }
 
   void _openMap(double lat, double lng) async {
     final uri = Uri.parse('https://www.google.com/maps?q=$lat,$lng');
@@ -139,7 +88,6 @@ class CustomerContextCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final primaryNominee = customer.nominees.isNotEmpty ? customer.nominees.first : null;
     final statusColor = _getStatusColor(customer.status, colors);
 
     return Card(
@@ -261,10 +209,11 @@ class CustomerContextCard extends StatelessWidget {
                 
                 _buildInfoGrid([
                   _InfoItem(
-                    label: 'Guardian/Spouse',
-                    value: customer.guardianName ?? primaryNominee?.name ?? 'Not Provided',
-                    customValue: _buildGuardianWidget(customer, primaryNominee, colors),
-                    icon: Icons.family_restroom,
+                    label: 'Client Created Date',
+                    value: createdDate != null
+                        ? "${createdDate!.day.toString().padLeft(2, '0')}-${createdDate!.month.toString().padLeft(2, '0')}-${createdDate!.year}"
+                        : 'Not Available',
+                    icon: Icons.calendar_today_outlined,
                   ),
                   _InfoItem(
                     label: 'Age',
@@ -654,7 +603,7 @@ class CustomerContextCard extends StatelessWidget {
                         style: AppTypography.labelSmall.copyWith(color: colors.mutedFg, fontSize: 10),
                       ),
                       const SizedBox(height: 2),
-                      item.customValue ?? Text(
+                      Text(
                         item.value,
                         style: AppTypography.bodySmall.copyWith(
                           color: colors.foreground,
@@ -730,13 +679,11 @@ class CustomerContextCard extends StatelessWidget {
 class _InfoItem {
   final String label;
   final String value;
-  final Widget? customValue;
   final IconData icon;
 
   _InfoItem({
     required this.label,
     required this.value,
-    this.customValue,
     required this.icon,
   });
 }

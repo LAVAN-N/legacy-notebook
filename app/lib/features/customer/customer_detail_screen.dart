@@ -161,11 +161,11 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
         final timeline = data.timeline;
 
         // Extract purchased products from timeline sale activities
-        final purchasedProducts = <_PurchasedProduct>[];
+        final purchasedProducts = <PurchasedProduct>[];
         for (final activity in timeline) {
           if (activity is SaleActivity) {
             for (final item in activity.items) {
-              purchasedProducts.add(_PurchasedProduct(
+              purchasedProducts.add(PurchasedProduct(
                 productName: item.productName,
                 quantity: item.quantity,
                 unitPrice: item.unitPrice,
@@ -202,54 +202,18 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Identity Block
-                      CustomerContextCard(
-                        customer: customer,
+                      // Financial Block (Merged summary + purchased products)
+                      FinancialSummaryBlock(
+                        outstanding: outstanding,
+                        purchasedProducts: purchasedProducts,
                       ),
                       const SizedBox(height: AppSpacing.lg),
 
-                      // Financial Block
-                      FinancialSummaryBlock(outstanding: outstanding),
-                      const SizedBox(height: AppSpacing.lg),
-
-                      // Purchased Products Section
-                      const SectionHeader(title: 'Purchased Products'),
-                      const SizedBox(height: AppSpacing.sm),
-
-                      if (purchasedProducts.isEmpty)
-                        Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: colors.surface,
-                            borderRadius: BorderRadius.circular(AppRadius.lg),
-                            border: Border.all(color: colors.border.withValues(alpha: 0.5)),
-                          ),
-                          padding: const EdgeInsets.all(AppSpacing.xl),
-                          alignment: Alignment.center,
-                          child: Text(
-                            'No products purchased yet.',
-                            style: AppTypography.bodyMedium
-                                .copyWith(color: colors.mutedFg),
-                          ),
-                        )
-                      else
-                        SizedBox(
-                          height: 140,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: purchasedProducts.length,
-                            itemBuilder: (context, index) {
-                              final prod = purchasedProducts[index];
-                              return PurchasedProductCard(
-                                productName: prod.productName,
-                                quantity: prod.quantity,
-                                unitPrice: prod.unitPrice,
-                                purchaseDate: prod.purchaseDate,
-                                saleType: prod.saleType,
-                              );
-                            },
-                          ),
-                        ),
+                      // Identity Block
+                      CustomerContextCard(
+                        customer: customer,
+                        createdDate: timeline.isNotEmpty ? timeline.last.at : null,
+                      ),
                       const SizedBox(height: AppSpacing.lg),
 
                       // Timeline Section Header with Toggle
@@ -428,18 +392,4 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
   }
 }
 
-class _PurchasedProduct {
-  const _PurchasedProduct({
-    required this.productName,
-    required this.quantity,
-    required this.unitPrice,
-    required this.purchaseDate,
-    required this.saleType,
-  });
 
-  final String productName;
-  final int quantity;
-  final int unitPrice;
-  final DateTime purchaseDate;
-  final String saleType;
-}

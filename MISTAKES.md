@@ -299,6 +299,30 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Updated `categoryId: m['category_id'] as String` in `getProducts()`, and corrected map insert/update statements to target `'category_id'`.
 - **Rule for next agent:** ALWAYS ensure database map result queries target the exact column name definition (e.g. `category_id`) rather than the model's camelCase name (e.g. `categoryId`) or older properties.
 
+---
+
+### 2026-07-24 · Client Details Screen layout rearrangements & field mappings
+
+- **Context:** Refining layout order and info parameters on the client details screen.
+- **Mistake:** Rendering personal details card above financial summary card, showing unused guardian data instead of profile creation dates, and placing purchased products in a disconnected bottom list.
+- **Root cause:** Suboptimal layout arrangement that prioritizes auxiliary static text over key financial performance indicators and purchase history.
+- **Fix applied:**
+  1. Updated [customer_detail_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/customer_detail_screen.dart) to place the `FinancialSummaryBlock` at the top of the details panel.
+  2. Nested the horizontal purchased products list (using `PurchasedProductCard`) inside the `FinancialSummaryBlock` card directly.
+  3. Extracted the customer created date dynamically from the oldest timeline activity (usually their initial sale or opening balance setup) and passed it to `CustomerContextCard`.
+  4. Swapped out the `Guardian/Spouse` row in [customer_context_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/customer_context_card.dart) with `Client Created Date`.
+- **Rule for next agent:** ALWAYS place high-priority summary widgets (like running balances and purchase history) at the top fold of customer detail panels to maximize operational efficiency for collection agents.
+
+---
+
+### 2026-07-24 · Transactions Screen safe scroll height padding
+
+- **Context:** Implementing scroll spacing at the bottom of the transactions page list to avoid contents hiding behind the floating navigation bar.
+- **Mistake:** Setting standard symmetric padding on the ListView without accommodating the height of the custom floating bottom navigation bar.
+- **Root cause:** Neglecting the overlay height of custom floating navigation widgets when `extendBody: true` is configured.
+- **Fix applied:** Declared `rawSafeAreaBottom` in [transactions_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/transactions/transactions_screen.dart) and set the ListView bottom padding to `88.0 + rawSafeAreaBottom`.
+- **Rule for next agent:** ALWAYS apply a bottom padding of `88.0 + rawSafeAreaBottom` to primary scrollable list views on screens that sit above the floating bottom navigation bar.
+
 
 
 

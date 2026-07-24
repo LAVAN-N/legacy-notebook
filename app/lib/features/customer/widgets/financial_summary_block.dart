@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../data/models/outstanding.dart';
+import 'purchased_product_card.dart';
 
 class FinancialSummaryBlock extends StatelessWidget {
   const FinancialSummaryBlock({
     super.key,
     required this.outstanding,
+    required this.purchasedProducts,
   });
 
   final Outstanding outstanding;
+  final List<PurchasedProduct> purchasedProducts;
 
   @override
   Widget build(BuildContext context) {
@@ -100,6 +104,44 @@ class FinancialSummaryBlock extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: AppSpacing.md),
+            const Divider(),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Purchased Products',
+              style: AppTypography.titleSmall.copyWith(
+                color: colors.foreground,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            if (purchasedProducts.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: colors.surface.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(color: colors.border.withValues(alpha: 0.3)),
+                ),
+                child: Text(
+                  'No products purchased yet.',
+                  style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg),
+                ),
+              )
+            else
+              SizedBox(
+                height: 140,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: purchasedProducts.length,
+                  itemBuilder: (context, index) {
+                    final prod = purchasedProducts[index];
+                    return PurchasedProductCard(product: prod);
+                  },
+                ),
+              ),
           ],
         ),
       ),

@@ -276,6 +276,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final rawSafeAreaBottom = MediaQueryData.fromView(View.of(context)).padding.bottom;
     final uri = GoRouterState.of(context).uri;
     final kindParam = uri.queryParameters['kind'] ?? 'All';
     final rangeParam = uri.queryParameters['range'] ?? 'Today';
@@ -673,8 +674,12 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     ),
                   )
                 : ListView.separated(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    padding: EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      0,
+                      AppSpacing.md,
+                      88.0 + rawSafeAreaBottom,
+                    ),
                     itemCount: filtered.length,
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: AppSpacing.sm),

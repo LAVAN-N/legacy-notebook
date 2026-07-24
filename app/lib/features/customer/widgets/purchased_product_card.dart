@@ -5,9 +5,8 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
 
-class PurchasedProductCard extends StatelessWidget {
-  const PurchasedProductCard({
-    super.key,
+class PurchasedProduct {
+  const PurchasedProduct({
     required this.productName,
     required this.quantity,
     required this.unitPrice,
@@ -20,11 +19,20 @@ class PurchasedProductCard extends StatelessWidget {
   final int unitPrice;
   final DateTime purchaseDate;
   final String saleType;
+}
+
+class PurchasedProductCard extends StatelessWidget {
+  const PurchasedProductCard({
+    super.key,
+    required this.product,
+  });
+
+  final PurchasedProduct product;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final isCredit = saleType.toUpperCase() == 'CREDIT';
+    final isCredit = product.saleType.toUpperCase() == 'CREDIT';
     final badgeColor = isCredit ? colors.danger : colors.success;
 
     return Container(
@@ -37,7 +45,7 @@ class PurchasedProductCard extends StatelessWidget {
         border: Border.all(color: colors.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: colors.border.withValues(alpha: 0.1),
+            color: colors.border.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -51,7 +59,7 @@ class PurchasedProductCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                productName,
+                product.productName,
                 style: AppTypography.bodyMedium.copyWith(
                   color: colors.foreground,
                   fontWeight: FontWeight.bold,
@@ -64,11 +72,11 @@ class PurchasedProductCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Qty: $quantity',
+                    'Qty: ${product.quantity}',
                     style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
                   ),
                   Text(
-                    rupees(unitPrice * quantity),
+                    rupees(product.unitPrice * product.quantity),
                     style: AppTypography.bodySmall.copyWith(
                       color: colors.foreground,
                       fontWeight: FontWeight.w700,
@@ -90,7 +98,7 @@ class PurchasedProductCard extends StatelessWidget {
                       Icon(Icons.calendar_today, size: 10, color: colors.mutedFg),
                       const SizedBox(width: 4),
                       Text(
-                        dateShort(purchaseDate),
+                        dateShort(product.purchaseDate),
                         style: AppTypography.labelSmall.copyWith(
                           color: colors.mutedFg,
                           fontWeight: FontWeight.w500,
@@ -105,7 +113,7 @@ class PurchasedProductCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      saleType.toUpperCase(),
+                      product.saleType.toUpperCase(),
                       style: AppTypography.labelSmall.copyWith(
                         color: badgeColor,
                         fontWeight: FontWeight.w800,
