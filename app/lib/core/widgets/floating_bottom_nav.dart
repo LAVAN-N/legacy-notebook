@@ -50,33 +50,41 @@ class FloatingBottomNav extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _NavBarItem(
-                  icon: Icons.dashboard,
-                  label: 'Dashboard',
-                  isActive: selectedIndex == 0,
-                  onTap: () => onTap(0),
-                  colors: colors,
+                Expanded(
+                  child: _NavBarItem(
+                    icon: Icons.dashboard,
+                    label: 'Dashboard',
+                    isActive: selectedIndex == 0,
+                    onTap: () => onTap(0),
+                    colors: colors,
+                  ),
                 ),
-                _NavBarItem(
-                  icon: Icons.inventory_2,
-                  label: 'Inventory',
-                  isActive: selectedIndex == 1,
-                  onTap: () => onTap(1),
-                  colors: colors,
+                Expanded(
+                  child: _NavBarItem(
+                    icon: Icons.inventory_2,
+                    label: 'Inventory',
+                    isActive: selectedIndex == 1,
+                    onTap: () => onTap(1),
+                    colors: colors,
+                  ),
                 ),
-                _NavBarItem(
-                  icon: Icons.receipt,
-                  label: 'Transactions',
-                  isActive: selectedIndex == 2,
-                  onTap: () => onTap(2),
-                  colors: colors,
+                Expanded(
+                  child: _NavBarItem(
+                    icon: Icons.receipt,
+                    label: 'Transactions',
+                    isActive: selectedIndex == 2,
+                    onTap: () => onTap(2),
+                    colors: colors,
+                  ),
                 ),
-                _NavBarItem(
-                  icon: Icons.people,
-                  label: 'Clients',
-                  isActive: selectedIndex == 3,
-                  onTap: () => onTap(3),
-                  colors: colors,
+                Expanded(
+                  child: _NavBarItem(
+                    icon: Icons.people,
+                    label: 'Clients',
+                    isActive: selectedIndex == 3,
+                    onTap: () => onTap(3),
+                    colors: colors,
+                  ),
                 ),
               ],
             ),
@@ -107,6 +115,7 @@ class _NavBarItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

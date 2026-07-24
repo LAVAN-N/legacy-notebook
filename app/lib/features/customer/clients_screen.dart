@@ -5,6 +5,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_scaffold.dart';
+import '../../core/widgets/loading_skeleton.dart';
+import '../../core/widgets/error_state.dart';
 import '../../core/router/routes.dart';
 import '../../core/utils/formatters.dart';
 import '../../data/providers.dart';
@@ -45,7 +47,25 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
         title: Text('Clients',
             style: AppTypography.headlineMedium
                 .copyWith(color: colors.foreground)),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const SkeletonList(),
+      );
+    }
+
+    if (customersAsync.hasError || salesAsync.hasError || collectionsAsync.hasError) {
+      final error = customersAsync.error ?? salesAsync.error ?? collectionsAsync.error;
+      return AppScaffold(
+        blendHeader: true,
+        title: Text('Clients',
+            style: AppTypography.headlineMedium
+                .copyWith(color: colors.foreground)),
+        body: ErrorState(
+          message: error.toString(),
+          onRetry: () {
+            ref.invalidate(customersStreamProvider);
+            ref.invalidate(salesStreamProvider);
+            ref.invalidate(collectionsStreamProvider);
+          },
+        ),
       );
     }
 

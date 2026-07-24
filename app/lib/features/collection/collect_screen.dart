@@ -8,6 +8,7 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/amount_text.dart';
 import '../../core/widgets/confirm_snackbar.dart';
+import '../../core/widgets/custom_visual_loader.dart';
 import '../../core/router/navigation_shell.dart';
 import '../../core/router/routes.dart';
 import '../../core/utils/formatters.dart';
@@ -455,7 +456,7 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
             ElevatedButton(
               onPressed: state.isSaving ? null : _onSave,
               child: state.isSaving
-                  ? const CircularProgressIndicator(color: Colors.white)
+                  ? const WaveDotLoader(color: Colors.white, dotSize: 6, spacing: 4)
                   : const Text('SAVE VISIT RECORD'),
             ),
             const SizedBox(height: 20),

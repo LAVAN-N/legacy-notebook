@@ -15,6 +15,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_scaffold.dart';
+import '../../core/widgets/custom_visual_loader.dart';
 import '../../core/router/routes.dart';
 import '../../data/providers.dart';
 import '../../data/models/nominee.dart';
@@ -928,11 +929,7 @@ class _ActionButtons extends StatelessWidget {
         child: ElevatedButton(
           onPressed: isLoading ? null : onCreateOnly,
           child: isLoading
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
+              ? const WaveDotLoader(color: Colors.white, dotSize: 6, spacing: 4)
               : const Text('Save changes'),
         ),
       );
@@ -944,11 +941,7 @@ class _ActionButtons extends StatelessWidget {
           child: ElevatedButton(
             onPressed: isLoading ? null : onCreateAndSale,
             child: isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
+                ? const WaveDotLoader(color: Colors.white, dotSize: 6, spacing: 4)
                 : const Text('Create & start sale'),
           ),
         ),
@@ -1902,13 +1895,10 @@ class _LocationBlockState extends State<_LocationBlock> {
                         ),
                         child: Center(
                           child: _isLocating
-                              ? SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: colors.primary,
-                                  ),
+                              ? WaveDotLoader(
+                                  color: colors.primary,
+                                  dotSize: 4,
+                                  spacing: 2,
                                 )
                               : Icon(
                                   Icons.gps_fixed,
@@ -2893,13 +2883,10 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
                           ),
                         IconButton(
                           icon: _isSearching
-                              ? SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: colors.primary,
-                                  ),
+                              ? WaveDotLoader(
+                                  color: colors.primary,
+                                  dotSize: 4,
+                                  spacing: 2,
                                 )
                               : const Icon(Icons.search),
                           color: colors.primary,
@@ -2929,10 +2916,10 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
                   backgroundColor: colors.background,
                   foregroundColor: colors.primary,
                   child: _isLocating
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                      ? WaveDotLoader(
+                          color: colors.primary,
+                          dotSize: 4,
+                          spacing: 2,
                         )
                       : const Icon(Icons.gps_fixed),
                 ),

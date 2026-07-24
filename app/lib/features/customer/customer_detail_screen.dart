@@ -7,6 +7,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_scaffold.dart';
+import '../../core/widgets/loading_skeleton.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/router/routes.dart';
@@ -142,8 +143,11 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
     final detailState = ref.watch(customerDetailControllerProvider(widget.customerId));
 
     return detailState.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => const Scaffold(
+        body: SafeArea(
+          child: SkeletonList(),
+        ),
+      ),
       error: (err, stack) => Scaffold(
         body: ErrorState(
           message: err.toString(),

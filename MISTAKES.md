@@ -197,6 +197,59 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Updated [001_schema_placeholder.sql](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/supabase/seed/001_schema_placeholder.sql) to add `GRANT` statements and `ALTER TABLE ... ENABLE ROW LEVEL SECURITY;` across all tables (`weekdays`, `places`, `areas`, `customers`, `products`, `sales`, `sale_items`, `collections`). Generated a full security audit report artifact at [security_audit_report.md](file:///C:/Users/LavanyanThandapani/.gemini/antigravity-cli/brain/265bdc04-8859-4c9e-af13-6ecf17e765cc/security_audit_report.md).
 - **Rule for next agent:** ALWAYS include `GRANT` statements and `ENABLE ROW LEVEL SECURITY` on every table created in Supabase SQL migration files.
 
+---
+
+### 2026-07-23 · Product sheet bottom padding & solid block removal
+
+- **Context:** Resolving solid colored bottom block above device app toggle bar on Inventory Add and Edit product forms.
+- **Mistake:** Including `+ MediaQueryData.fromView(View.of(context)).padding.bottom` inside the modal sheet container's bottom padding added solid background color fill on top of system gesture area.
+- **Root cause:** Adding screen bottom safe area padding directly inside container decoration padding of full modal sheets.
+- **Fix applied:** Updated container bottom padding in [add_product_sheet.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/widgets/add_product_sheet.dart) to `MediaQuery.of(context).viewInsets.bottom + 24` across `_AddProductSheetState` and `_EditProductSheetState`, matching `edit_customer_sheet.dart` and eliminating the solid bottom block above the system toggle handle.
+- **Rule for next agent:** NEVER add `MediaQueryData.fromView(View.of(context)).padding.bottom` inside bottom sheet container padding when `backgroundColor` is filled.
+
+---
+
+### 2026-07-23 · Transparent Android system navigation bar on modal sheets
+
+- **Context:** Enforcing transparent system navigation gesture background on showModalBottomSheet views.
+- **Mistake:** Solid color container background in product forms extended to screen bottom, overlaying a background color behind the transparent Android navigation bar.
+- **Root cause:** Omitting `SafeArea(top: false, bottom: true)` outside sheet content and omitting `AnnotatedRegion<SystemUiOverlayStyle>` inside the modal route builder.
+- **Fix applied:** Wrapped the widget trees returned by `_AddProductSheetState.build` and `_EditProductSheetState.build` in [add_product_sheet.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/widgets/add_product_sheet.dart) inside `AnnotatedRegion<SystemUiOverlayStyle>` (with systemNavigationBarColor: Colors.transparent), allowing the sheet container background to extend edge-to-edge under the system gesture bar without leaving any solid block or background.
+- **Rule for next agent:** ALWAYS wrap modal bottom sheet widget content inside the Stateful/Stateless widget's `build` method with `AnnotatedRegion<SystemUiOverlayStyle>` (with systemNavigationBarColor: Colors.transparent) to ensure Android applies the styling during route overlay, and do NOT wrap the route builder in `SafeArea(bottom: true)` so the sheet draws edge-to-edge.
+
+---
+
+### 2026-07-24 · High-fidelity custom animated loading visuals
+
+- **Context:** Delivering customized loader styles that avoid basic system spinners.
+- **Mistake:** Depending on standard CircularProgressIndicator, which looks standard and fails to present a premium brand style.
+- **Root cause:** Defaulting to native Material loading widgets instead of building custom animations.
+- **Fix applied:** Created [custom_visual_loader.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/core/widgets/custom_visual_loader.dart) featuring `PulseRippleLoader` (expanding concentric radar wave rings around a central rotating core), `WaveDotLoader` (staggered scaling dot wave), and `CustomLoadingOverlay` to support premium loading behaviors without heavy external libraries.
+- **Rule for next agent:** ALWAYS use `PulseRippleLoader` or `WaveDotLoader` instead of standard spinners when loading is triggered on major operations or transactions.
+
+---
+
+### 2026-07-24 · Migration of generic loaders to premium shimmers & custom visual dots
+
+- **Context:** Replacing CircularProgressIndicator with SkeletonList and WaveDotLoader across customer list, details, transactions, new client registration, and collect/sale screens.
+- **Mistake:** Retaining default Material spinners in main directory lists and action buttons, breaking design parity.
+- **Root cause:** Standard spinners were left as placeholder loaders in initial layout iterations.
+- **Fix applied:** 
+  1. Updated [clients_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/clients_screen.dart) and [transactions_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/transactions/transactions_screen.dart) to show `SkeletonList` and handle stream failures via `ErrorState` with retry callbacks.
+  2. Updated [customer_detail_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/customer_detail_screen.dart) detail state loading to render `SkeletonList`.
+  3. Replaced button spinners and GPS locator indicators in [new_client_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/new_client_screen.dart), [collect_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/collection/collect_screen.dart), and [sale_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/sale/sale_screen.dart) with custom pulsing `WaveDotLoader` animations.
+- **Rule for next agent:** NEVER leave a default CircularProgressIndicator on main listing pages or major button loading states; utilize SkeletonList or WaveDotLoader.
+
+---
+
+### 2026-07-24 · Custom bottom navigation bar touch targets and hit-testing
+
+- **Context:** Resolving sluggish navigation behavior where custom bottom nav items required multiple taps or very precise taps to trigger tab switching.
+- **Mistake:** Bottom nav items in [floating_bottom_nav.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/core/widgets/floating_bottom_nav.dart) had no `Expanded` wrappers inside the parent row and `GestureDetector` lacked `HitTestBehavior.opaque`.
+- **Root cause:** Without `Expanded` and `behavior: HitTestBehavior.opaque`, the touch target size was limited strictly to the visual pixels of the tiny icons/text, ignoring taps on empty/transparent space around the tabs.
+- **Fix applied:** Wrapped each custom tab item in an `Expanded` container widget so it consumes exactly 1/4 of the nav bar width, and set `behavior: HitTestBehavior.opaque` on the `GestureDetector` to capture clicks on all parts of the segment.
+- **Rule for next agent:** ALWAYS wrap custom row navigation items in `Expanded` and set `behavior: HitTestBehavior.opaque` on `GestureDetector` to keep tab switching responsive and avoid dead zones.
+
 
 
 
