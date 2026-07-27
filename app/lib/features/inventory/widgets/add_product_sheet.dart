@@ -403,6 +403,37 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
     final rawMaxMarkup = _maxAllowedMarkup;
     final maxMarkup = ((rawMaxMarkup / 5).floor() * 5).toDouble().clamp(5.0, 100.0);
     final divisions = ((maxMarkup - 5) / 5).round().clamp(1, 20);
+
+    Widget buildSliderLabels(double maxMarkup, AppColors colors) {
+      final list = <double>[];
+      for (double val = 5.0; val <= maxMarkup; val += 5.0) {
+        list.add(val);
+      }
+      
+      return Container(
+        height: 14,
+        margin: const EdgeInsets.symmetric(horizontal: 10),
+        child: Stack(
+          children: list.map((val) {
+            final double fraction = maxMarkup > 5.0 
+                ? (val - 5.0) / (maxMarkup - 5.0) 
+                : 0.0;
+            final double alignX = 2 * fraction - 1;
+            return Align(
+              alignment: Alignment(alignX, 0),
+              child: Text(
+                val.toStringAsFixed(0),
+                style: TextStyle(
+                  fontSize: 7.0,
+                  color: colors.mutedFg.withValues(alpha: 0.8),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      );
+    }
     
     return PopScope(
       canPop: false,
@@ -678,6 +709,8 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                           onChanged: _onMarkupSliderChanged,
                         ),
                       ),
+                      const SizedBox(height: 2),
+                      buildSliderLabels(maxMarkup, colors),
                       if (maxMarkup < 100.0) ...[
                         const SizedBox(height: 4),
                         Padding(
@@ -1313,6 +1346,37 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     final rawMaxMarkup = _maxAllowedMarkup;
     final maxMarkup = ((rawMaxMarkup / 5).floor() * 5).toDouble().clamp(5.0, 100.0);
     final divisions = ((maxMarkup - 5) / 5).round().clamp(1, 20);
+
+    Widget buildSliderLabels(double maxMarkup, AppColors colors) {
+      final list = <double>[];
+      for (double val = 5.0; val <= maxMarkup; val += 5.0) {
+        list.add(val);
+      }
+      
+      return Container(
+        height: 14,
+        margin: const EdgeInsets.symmetric(horizontal: 10),
+        child: Stack(
+          children: list.map((val) {
+            final double fraction = maxMarkup > 5.0 
+                ? (val - 5.0) / (maxMarkup - 5.0) 
+                : 0.0;
+            final double alignX = 2 * fraction - 1;
+            return Align(
+              alignment: Alignment(alignX, 0),
+              child: Text(
+                val.toStringAsFixed(0),
+                style: TextStyle(
+                  fontSize: 7.0,
+                  color: colors.mutedFg.withValues(alpha: 0.8),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      );
+    }
     
     return PopScope(
       canPop: false,
@@ -1580,6 +1644,8 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                           onChanged: _onMarkupSliderChanged,
                         ),
                       ),
+                      const SizedBox(height: 2),
+                      buildSliderLabels(maxMarkup, colors),
                       if (maxMarkup < 100.0) ...[
                         const SizedBox(height: 4),
                         Padding(

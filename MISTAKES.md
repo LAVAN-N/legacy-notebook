@@ -417,6 +417,36 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Wrapped the pricing `Column` in an `Expanded` widget and changed the inner `Row` of MRP and Cost elements to a `Wrap` widget in [inventory_products_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/inventory_products_screen.dart).
 - **Rule for next agent:** ALWAYS wrap flexible price text columns inside standard `Row` structures in `Expanded` and use `Wrap` widgets for side-by-side text elements to avoid layout overflow issues on smaller displays.
 
+---
+
+### 2026-07-27 · Alignment displacement in discrete slider labels
+
+- **Context:** Placing text indicator labels underneath a discrete slider showing divisions.
+- **Mistake:** Spacing labels using a standard `Row` with `MainAxisAlignment.spaceBetween` when the slider track max value varies dynamically.
+- **Root cause:** Because the slider track is a linear scale starting at a fixed minimum (5%) and ending at a dynamic maximum (e.g. 60%), simple intermediate labels (e.g. 25%, 50%) spaced evenly in a Row will not physically align with the tick marks on the slider track.
+- **Fix applied:** Rendered the labels in a `Stack` of `Align` widgets, calculating the exact horizontal alignment fraction as `2 * (value - min) / (max - min) - 1` in [add_product_sheet.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/widgets/add_product_sheet.dart).
+- **Rule for next agent:** ALWAYS align tick mark label indicators underneath linear sliders dynamically based on their fractional positions along the track using a Stack of Aligns, ensuring labels physically match track tick stops.
+
+---
+
+### 2026-07-27 · Continuous slider with discrete indicator labels
+
+- **Context:** Building a continuous slider that has indicator labels below it representing increments of multiples of 5 (e.g., 5%, 20%, 40%, 60%, 80%, 100%).
+- **Mistake:** Using discrete track configurations (`divisions`) and rounding slider values inside callback hooks, which breaks continuous sliding movement.
+- **Root cause:** Defining the `divisions` parameter on a `Slider` makes the slider track discrete. Omitting `divisions` makes it continuous.
+- **Fix applied:** Removed the `divisions` parameter from `Slider` and removed value rounding/snapping logic inside `_onMarkupSliderChanged` in [add_product_sheet.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/widgets/add_product_sheet.dart). Kept the dynamic `buildSliderLabels` helper to render indicators below.
+- **Rule for next agent:** NEVER set the `divisions` property on `Slider` when a continuous sliding UX is desired, even if discrete visual indicators are requested below the track.
+
+---
+
+### 2026-07-27 · Discrete slider snapping at 5 multiples with full indicators
+
+- **Context:** Enforcing a discrete slider snapped to 5-multiple intervals (5%, 10%, 15%...) with tick marks and digit labels for each.
+- **Mistake:** Omitting the `divisions` property or removing snapped rounding inside callback listeners. Also, using string interpolation for `toStringAsFixed` values triggering unnecessary string interpolation lints.
+- **Root cause:** Snapping requires both the `divisions` property on the `Slider` widget and snapped value rounding in its callbacks. Direct method outputs (like `val.toStringAsFixed(0)`) should not be nested in string interpolation templates.
+- **Fix applied:** Configured `divisions: divisions` on the `Slider` widgets and snapped slider values to the nearest multiple of 5. Placed compact digit labels under each tick mark, and resolved the string interpolation warnings in [add_product_sheet.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/widgets/add_product_sheet.dart).
+- **Rule for next agent:** ALWAYS use snapping rounding in slider change listeners alongside the `divisions` track property for discrete layouts, and write clean method invocations without redundant string wrappers.
+
 
 
 
