@@ -373,12 +373,26 @@ class _InventoryProductsScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          CurrencyFormatter.format(product.sellingPrice),
-                          style: AppTypography.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: colors.primary,
-                          ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              CurrencyFormatter.format(product.sellingPrice),
+                              style: AppTypography.bodyMedium.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: colors.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'x${product.costPrice > 0 ? (((product.sellingPrice - product.costPrice) / product.costPrice) * 100).round() : 0}%',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: colors.success,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 2),
                         Wrap(

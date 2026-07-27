@@ -457,6 +457,16 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Reduced `trackHeight` to `1.5` and set `tickMarkShape` to a `RoundSliderTickMarkShape` of radius `3.0` in [add_product_sheet.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/widgets/add_product_sheet.dart).
 - **Rule for next agent:** ALWAYS set a thin track height (e.g. 1.5) and larger tick mark radius (e.g. 3.0) to achieve a dotted discrete slider design in Flutter.
 
+---
+
+### 2026-07-27 · Pricing multiplier labels display on product cards
+
+- **Context:** Presenting product markup multipliers visually on catalog items.
+- **Mistake:** Forgetting to dynamically compute product markup percentage (`(((sellingPrice - costPrice) / costPrice) * 100).round()`) and render it visually next to the primary selling price.
+- **Root cause:** Dynamic catalog details need to map exact item margins using standard formatting models.
+- **Fix applied:** Rendered the computed markup margin using a multiplier tag format (`x25` for 25% markup) inside a horizontal Row next to the selling price in [inventory_products_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/inventory_products_screen.dart).
+- **Rule for next agent:** ALWAYS render margin percentages using standard multiplier notations (e.g. `x25` for 25% profit margin) next to the primary selling price in catalog displays.
+
 
 
 
