@@ -4,39 +4,24 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../data/models/activity.dart';
 
-class PurchasedProduct {
-  const PurchasedProduct({
-    required this.productName,
-    required this.quantity,
-    required this.unitPrice,
-    required this.purchaseDate,
-    required this.saleType,
-  });
-
-  final String productName;
-  final int quantity;
-  final int unitPrice;
-  final DateTime purchaseDate;
-  final String saleType;
-}
-
-class PurchasedProductCard extends StatelessWidget {
-  const PurchasedProductCard({
+class PurchaseSummaryCard extends StatelessWidget {
+  const PurchaseSummaryCard({
     super.key,
-    required this.product,
+    required this.sale,
   });
 
-  final PurchasedProduct product;
+  final SaleActivity sale;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final isCredit = product.saleType.toUpperCase() == 'CREDIT';
+    final isCredit = sale.saleType.toUpperCase() == 'CREDIT';
     final badgeColor = isCredit ? colors.danger : colors.success;
 
     return Container(
-      width: 220,
+      width: 250,
       margin: const EdgeInsets.only(right: AppSpacing.md),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -55,74 +40,119 @@ class PurchasedProductCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // Header: Date and Sale Type Badge
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                product.productName,
-                style: AppTypography.bodyMedium.copyWith(
-                  color: colors.foreground,
-                  fontWeight: FontWeight.bold,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 8),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  Icon(Icons.calendar_today, size: 12, color: colors.mutedFg),
+                  const SizedBox(width: 6),
                   Text(
-                    'Qty: ${product.quantity}',
-                    style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
-                  ),
-                  Text(
-                    rupees(product.unitPrice * product.quantity),
-                    style: AppTypography.bodySmall.copyWith(
+                    dateShort(sale.at),
+                    style: AppTypography.labelMedium.copyWith(
                       color: colors.foreground,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: badgeColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  sale.saleType.toUpperCase(),
+                  style: AppTypography.labelSmall.copyWith(
+                    color: badgeColor,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 9,
+                  ),
+                ),
+              ),
             ],
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Divider(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+          const SizedBox(height: 8),
+          
+          // Products list
+          Expanded(
+            child: ListView(
+              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
+              children: sale.items.map((item) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 2.0),
+                  child: Row(
                     children: [
-                      Icon(Icons.calendar_today, size: 10, color: colors.mutedFg),
-                      const SizedBox(width: 4),
-                      Text(
-                        dateShort(product.purchaseDate),
-                        style: AppTypography.labelSmall.copyWith(
-                          color: colors.mutedFg,
-                          fontWeight: FontWeight.w500,
+                      Icon(Icons.arrow_right, size: 12, color: colors.mutedFg),
+                      Expanded(
+                        child: Text(
+                          '${item.productName} (x${item.quantity})',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: colors.foreground.withValues(alpha: 0.9),
+                            fontSize: 10,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: badgeColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      product.saleType.toUpperCase(),
-                      style: AppTypography.labelSmall.copyWith(
-                        color: badgeColor,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 9,
-                      ),
-                    ),
+                );
+              }).toList(),
+            ),
+          ),
+          
+          const Divider(height: 12),
+          
+          // Financial Summary
+          Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Total:',
+                    style: AppTypography.labelSmall.copyWith(color: colors.mutedFg, fontSize: 9),
+                  ),
+                  Text(
+                    rupees(sale.total),
+                    style: AppTypography.labelSmall.copyWith(color: colors.foreground, fontWeight: FontWeight.bold, fontSize: 10),
                   ),
                 ],
               ),
+              const SizedBox(height: 2),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Down Payment:',
+                    style: AppTypography.labelSmall.copyWith(color: colors.mutedFg, fontSize: 9),
+                  ),
+                  Text(
+                    rupees(sale.advance),
+                    style: AppTypography.labelSmall.copyWith(color: colors.success, fontWeight: FontWeight.bold, fontSize: 10),
+                  ),
+                ],
+              ),
+              if (isCredit) ...[
+                const SizedBox(height: 2),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Credit Added:',
+                      style: AppTypography.labelSmall.copyWith(color: colors.mutedFg, fontSize: 9),
+                    ),
+                    Text(
+                      rupees(sale.creditAdded),
+                      style: AppTypography.labelSmall.copyWith(color: colors.danger, fontWeight: FontWeight.bold, fontSize: 10),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ],

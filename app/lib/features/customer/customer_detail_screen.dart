@@ -16,7 +16,6 @@ import 'controllers/customer_controller.dart';
 import 'widgets/customer_context_card.dart';
 import 'widgets/financial_summary_block.dart';
 import 'widgets/timeline_entry_tile.dart';
-import 'widgets/purchased_product_card.dart';
 import 'widgets/custom_calendar_view.dart';
 
 class CustomerDetailScreen extends ConsumerStatefulWidget {
@@ -160,21 +159,8 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
         final outstanding = data.outstanding;
         final timeline = data.timeline;
 
-        // Extract purchased products from timeline sale activities
-        final purchasedProducts = <PurchasedProduct>[];
-        for (final activity in timeline) {
-          if (activity is SaleActivity) {
-            for (final item in activity.items) {
-              purchasedProducts.add(PurchasedProduct(
-                productName: item.productName,
-                quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                purchaseDate: activity.at,
-                saleType: activity.saleType,
-              ));
-            }
-          }
-        }
+        // Extract sale activities from timeline
+        final saleActivities = timeline.whereType<SaleActivity>().toList();
 
         // Group activities by date for calendar view
         final activitiesByDate = <DateTime, List<Activity>>{};
@@ -205,7 +191,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                       // Financial Block (Merged summary + purchased products)
                       FinancialSummaryBlock(
                         outstanding: outstanding,
-                        purchasedProducts: purchasedProducts,
+                        saleActivities: saleActivities,
                       ),
                       const SizedBox(height: AppSpacing.lg),
 

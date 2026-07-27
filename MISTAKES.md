@@ -477,6 +477,16 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Implemented credit charge state parameters (`creditChargeValue`, `creditChargeType`) in [sale_controller.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/sale/controllers/sale_controller.dart). Added a custom styled ₹/% toggle and numeric input in [sale_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/sale/sale_screen.dart), and passed the computed surcharge to the SQLite query save transaction.
 - **Rule for next agent:** ALWAYS allow credit surcharge inputs to toggle between absolute (₹) and percentage (%) units, and add it directly to total sale values to ensure financed running balances are updated correctly.
 
+---
+
+### 2026-07-27 · Purchased products unification into purchase summaries
+
+- **Context:** Transitioning from displaying individual products to displaying unified transaction summaries in customer details.
+- **Mistake:** Grouping purchased items individually causing cluttered/duplicated date rows, or omitting the corresponding invoice financial summary on those cards.
+- **Root cause:** Customer history screens should group transactions logically by sale event (`SaleActivity`) rather than flat product arrays.
+- **Fix applied:** Replaced `PurchasedProductCard` with `PurchaseSummaryCard` in [purchased_product_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/purchased_product_card.dart). Unified lines using `timeline.whereType<SaleActivity>()` in [customer_detail_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/customer_detail_screen.dart), displaying item details alongside the financial summary (total, advance, credit) of that transaction.
+- **Rule for next agent:** ALWAYS render customer purchases grouped by transaction event/date rather than individual products, displaying the items list and transaction totals unified in a single card.
+
 
 
 

@@ -5,17 +5,18 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../data/models/outstanding.dart';
+import '../../../data/models/activity.dart';
 import 'purchased_product_card.dart';
 
 class FinancialSummaryBlock extends StatelessWidget {
   const FinancialSummaryBlock({
     super.key,
     required this.outstanding,
-    required this.purchasedProducts,
+    required this.saleActivities,
   });
 
   final Outstanding outstanding;
-  final List<PurchasedProduct> purchasedProducts;
+  final List<SaleActivity> saleActivities;
 
   @override
   Widget build(BuildContext context) {
@@ -108,14 +109,14 @@ class FinancialSummaryBlock extends StatelessWidget {
             const Divider(),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Purchased Products',
+              'Purchase Summary',
               style: AppTypography.titleSmall.copyWith(
                 color: colors.foreground,
                 fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            if (purchasedProducts.isEmpty)
+            if (saleActivities.isEmpty)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
@@ -126,19 +127,19 @@ class FinancialSummaryBlock extends StatelessWidget {
                   border: Border.all(color: colors.border.withValues(alpha: 0.3)),
                 ),
                 child: Text(
-                  'No products purchased yet.',
+                  'No purchases recorded yet.',
                   style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg),
                 ),
               )
             else
               SizedBox(
-                height: 140,
+                height: 165,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: purchasedProducts.length,
+                  itemCount: saleActivities.length,
                   itemBuilder: (context, index) {
-                    final prod = purchasedProducts[index];
-                    return PurchasedProductCard(product: prod);
+                    final sale = saleActivities[index];
+                    return PurchaseSummaryCard(sale: sale);
                   },
                 ),
               ),
