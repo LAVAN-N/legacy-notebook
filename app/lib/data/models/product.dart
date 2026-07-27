@@ -13,7 +13,9 @@ class Product with _$Product {
     required String categoryId,
     required int minimumStock,
     required int stock, // Current stock quantity
-    required int price, // Price in paise (₹ × 100)
+    required int costPrice, // Cost price in paise (₹ × 100)
+    required int sellingPrice, // Selling price in paise (₹ × 100)
+    required int mrp, // Maximum Retail Price in paise (₹ × 100)
     String? imageUrl,
     String? description,
   }) = _Product;

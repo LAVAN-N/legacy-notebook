@@ -98,10 +98,10 @@ class _InventoryProductsScreenState
     // Apply sort
     switch (_sortType) {
       case 'Price ↑':
-        products.sort((a, b) => a.price.compareTo(b.price));
+        products.sort((a, b) => a.sellingPrice.compareTo(b.sellingPrice));
         break;
       case 'Price ↓':
-        products.sort((a, b) => b.price.compareTo(a.price));
+        products.sort((a, b) => b.sellingPrice.compareTo(a.sellingPrice));
         break;
       case 'Name A-Z':
         products.sort((a, b) => a.name.compareTo(b.name));
@@ -369,11 +369,40 @@ class _InventoryProductsScreenState
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    CurrencyFormatter.format(product.price),
-                    style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colors.primary,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          CurrencyFormatter.format(product.sellingPrice),
+                          style: AppTypography.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: colors.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 2,
+                          children: [
+                            Text(
+                              'MRP: ${CurrencyFormatter.format(product.mrp)}',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: colors.mutedFg,
+                                fontSize: 9,
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                            Text(
+                              'Cost: ${CurrencyFormatter.format(product.costPrice)}',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: colors.mutedFg,
+                                fontSize: 9,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                   Container(

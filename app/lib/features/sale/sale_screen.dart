@@ -705,7 +705,7 @@ class _ProductPickerSheetState extends State<_ProductPickerSheet> {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  rupees(product.price ~/ 100),
+                                  rupees(product.sellingPrice ~/ 100),
                                   style: AppTypography.currencySmall.copyWith(
                                     color: outOfStock ? colors.mutedFg : colors.primary,
                                   ),
@@ -763,15 +763,15 @@ class _LineItemEditorSheetState extends State<_LineItemEditorSheet> {
   void initState() {
     super.initState();
     _quantity = 1;
-    _priceController = TextEditingController(text: (widget.product.price / 100).toStringAsFixed(2));
+    _priceController = TextEditingController(text: (widget.product.sellingPrice / 100).toStringAsFixed(2));
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final currentPrice = double.tryParse(_priceController.text) ?? (widget.product.price / 100);
+    final currentPrice = double.tryParse(_priceController.text) ?? (widget.product.sellingPrice / 100);
     final total = currentPrice * _quantity;
-    final isEdited = currentPrice != (widget.product.price / 100);
+    final isEdited = currentPrice != (widget.product.sellingPrice / 100);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -864,7 +864,7 @@ class _LineItemEditorSheetState extends State<_LineItemEditorSheet> {
           if (isEdited) ...[
             const SizedBox(height: 4),
             Text(
-              'Price differs from catalog (₹${(widget.product.price / 100).toStringAsFixed(2)})',
+              'Price differs from catalog (₹${(widget.product.sellingPrice / 100).toStringAsFixed(2)})',
               style: AppTypography.labelSmall.copyWith(color: colors.warning),
             ),
           ],

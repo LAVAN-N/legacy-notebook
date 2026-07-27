@@ -383,6 +383,40 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Integrated the `open_filex` package, which configures Android's `FileProvider` automatically, and updated [customer_context_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/customer_context_card.dart) and [new_client_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/new_client_screen.dart) to call `OpenFilex.open(filePath)` on mobile platforms.
 - **Rule for next agent:** ALWAYS use the `open_filex` package (`OpenFilex.open`) when opening local files on mobile devices (Android/iOS) to ensure security provider wrapping and avoid exposure crashes.
 
+---
+
+### 2026-07-27 · Interface parameters refactoring and AppColors constraints
+
+- **Context:** Refactoring product price fields into cost price, selling price, and markup percentage slider.
+- **Mistake:** Forgetting to update repository stubs/mocks (`MockRepository` and `SupabaseProductRepository`) when changing `ProductRepository` interface method signatures. Also, using Material 3 style colors (`surfaceContainerLowest`) that are not defined in the custom `AppColors` extension class.
+- **Root cause:**
+  1. Interfaces specify contracts. Adding/renaming parameters in the base interface means all sub-classes and implementors must implement the exact signature.
+  2. The custom `AppColors` extension defines custom color tokens but doesn't mimic the default Material 3 color scheme class (e.g. `surfaceContainerLowest`).
+- **Fix applied:**
+  1. Updated `addProduct` signatures in both `MockRepository` and `SupabaseProductRepository` to match `ProductRepository`.
+  2. Swapped `colors.surfaceContainerLowest` for `colors.muted.withValues(alpha: 0.05)` and imported `app_spacing.dart` into [add_product_sheet.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/widgets/add_product_sheet.dart).
+- **Rule for next agent:** ALWAYS update all mock and production implementors of an interface when refactoring its method signatures, and NEVER assume M3 colors exist on `AppColors` unless explicitly defined in the theme file.
+
+---
+
+### 2026-07-27 · Pricing constraints and dynamic slider markup validation
+
+- **Context:** Enforcing that selling price does not exceed maximum retail price (MRP).
+- **Mistake:** Assuming the profit markup percentage slider can static-bound up to 100% when MRP limits are configured.
+- **Root cause:** If cost price is high and MRP is close to cost price, a 100% markup would generate a selling price far exceeding MRP, violating business rules and user constraints.
+- **Fix applied:** Added the `mrp` field and dynamically calculated the maximum allowed markup (`(((mrp - cost) / cost) * 100).clamp(5.0, 100.0)`) inside [add_product_sheet.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/widgets/add_product_sheet.dart). Used this dynamic maximum to configure the Slider's `max` and `divisions` properties, and clamped the active `_markupPercent` to it.
+- **Rule for next agent:** ALWAYS constrain sliders and calculated fields dynamically based on related bounds (e.g. MRP limits), and verify bounds clamp values to prevent Flutter slider assertion crashes.
+
+---
+
+### 2026-07-27 · RenderFlex overflow in product list pricing Row
+
+- **Context:** Presenting selling price, cost price, and MRP details on product catalog cards.
+- **Mistake:** Rendering multiple text details side-by-side in a horizontal `Row` alongside a fixed stock badge container.
+- **Root cause:** When screen widths are small or price numbers are long, the horizontal row length exceeds available width constraints and causes a `RenderFlex overflow` error.
+- **Fix applied:** Wrapped the pricing `Column` in an `Expanded` widget and changed the inner `Row` of MRP and Cost elements to a `Wrap` widget in [inventory_products_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/inventory_products_screen.dart).
+- **Rule for next agent:** ALWAYS wrap flexible price text columns inside standard `Row` structures in `Expanded` and use `Wrap` widgets for side-by-side text elements to avoid layout overflow issues on smaller displays.
+
 
 
 

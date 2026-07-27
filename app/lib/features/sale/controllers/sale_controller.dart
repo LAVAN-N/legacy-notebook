@@ -9,7 +9,7 @@ class SaleItemInput {
     required this.product,
     required this.quantity,
     int? customPrice,
-  }) : price = customPrice ?? product.price;
+  }) : price = customPrice ?? product.sellingPrice;
 
   final Product product;
   int quantity;

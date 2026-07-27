@@ -428,7 +428,7 @@ class _InventoryCategoriesScreenState
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    '₹ ${(product.price / 100).toStringAsFixed(2)}',
+                    '₹ ${(product.sellingPrice / 100).toStringAsFixed(2)}',
                     style: AppTypography.bodyMedium.copyWith(
                       fontWeight: FontWeight.w700,
                       color: colors.primary,

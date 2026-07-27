@@ -27,8 +27,12 @@ mixin _$Product {
   String get categoryId => throw _privateConstructorUsedError;
   int get minimumStock => throw _privateConstructorUsedError;
   int get stock => throw _privateConstructorUsedError; // Current stock quantity
-  int get price =>
-      throw _privateConstructorUsedError; // Price in paise (₹ × 100)
+  int get costPrice =>
+      throw _privateConstructorUsedError; // Cost price in paise (₹ × 100)
+  int get sellingPrice =>
+      throw _privateConstructorUsedError; // Selling price in paise (₹ × 100)
+  int get mrp =>
+      throw _privateConstructorUsedError; // Maximum Retail Price in paise (₹ × 100)
   String? get imageUrl => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
 
@@ -54,7 +58,9 @@ abstract class $ProductCopyWith<$Res> {
       String categoryId,
       int minimumStock,
       int stock,
-      int price,
+      int costPrice,
+      int sellingPrice,
+      int mrp,
       String? imageUrl,
       String? description});
 }
@@ -81,7 +87,9 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
     Object? categoryId = null,
     Object? minimumStock = null,
     Object? stock = null,
-    Object? price = null,
+    Object? costPrice = null,
+    Object? sellingPrice = null,
+    Object? mrp = null,
     Object? imageUrl = freezed,
     Object? description = freezed,
   }) {
@@ -114,9 +122,17 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
           ? _value.stock
           : stock // ignore: cast_nullable_to_non_nullable
               as int,
-      price: null == price
-          ? _value.price
-          : price // ignore: cast_nullable_to_non_nullable
+      costPrice: null == costPrice
+          ? _value.costPrice
+          : costPrice // ignore: cast_nullable_to_non_nullable
+              as int,
+      sellingPrice: null == sellingPrice
+          ? _value.sellingPrice
+          : sellingPrice // ignore: cast_nullable_to_non_nullable
+              as int,
+      mrp: null == mrp
+          ? _value.mrp
+          : mrp // ignore: cast_nullable_to_non_nullable
               as int,
       imageUrl: freezed == imageUrl
           ? _value.imageUrl
@@ -145,7 +161,9 @@ abstract class _$$ProductImplCopyWith<$Res> implements $ProductCopyWith<$Res> {
       String categoryId,
       int minimumStock,
       int stock,
-      int price,
+      int costPrice,
+      int sellingPrice,
+      int mrp,
       String? imageUrl,
       String? description});
 }
@@ -170,7 +188,9 @@ class __$$ProductImplCopyWithImpl<$Res>
     Object? categoryId = null,
     Object? minimumStock = null,
     Object? stock = null,
-    Object? price = null,
+    Object? costPrice = null,
+    Object? sellingPrice = null,
+    Object? mrp = null,
     Object? imageUrl = freezed,
     Object? description = freezed,
   }) {
@@ -203,9 +223,17 @@ class __$$ProductImplCopyWithImpl<$Res>
           ? _value.stock
           : stock // ignore: cast_nullable_to_non_nullable
               as int,
-      price: null == price
-          ? _value.price
-          : price // ignore: cast_nullable_to_non_nullable
+      costPrice: null == costPrice
+          ? _value.costPrice
+          : costPrice // ignore: cast_nullable_to_non_nullable
+              as int,
+      sellingPrice: null == sellingPrice
+          ? _value.sellingPrice
+          : sellingPrice // ignore: cast_nullable_to_non_nullable
+              as int,
+      mrp: null == mrp
+          ? _value.mrp
+          : mrp // ignore: cast_nullable_to_non_nullable
               as int,
       imageUrl: freezed == imageUrl
           ? _value.imageUrl
@@ -230,7 +258,9 @@ class _$ProductImpl implements _Product {
       required this.categoryId,
       required this.minimumStock,
       required this.stock,
-      required this.price,
+      required this.costPrice,
+      required this.sellingPrice,
+      required this.mrp,
       this.imageUrl,
       this.description});
 
@@ -253,8 +283,14 @@ class _$ProductImpl implements _Product {
   final int stock;
 // Current stock quantity
   @override
-  final int price;
-// Price in paise (₹ × 100)
+  final int costPrice;
+// Cost price in paise (₹ × 100)
+  @override
+  final int sellingPrice;
+// Selling price in paise (₹ × 100)
+  @override
+  final int mrp;
+// Maximum Retail Price in paise (₹ × 100)
   @override
   final String? imageUrl;
   @override
@@ -262,7 +298,7 @@ class _$ProductImpl implements _Product {
 
   @override
   String toString() {
-    return 'Product(id: $id, sku: $sku, name: $name, brand: $brand, categoryId: $categoryId, minimumStock: $minimumStock, stock: $stock, price: $price, imageUrl: $imageUrl, description: $description)';
+    return 'Product(id: $id, sku: $sku, name: $name, brand: $brand, categoryId: $categoryId, minimumStock: $minimumStock, stock: $stock, costPrice: $costPrice, sellingPrice: $sellingPrice, mrp: $mrp, imageUrl: $imageUrl, description: $description)';
   }
 
   @override
@@ -279,7 +315,11 @@ class _$ProductImpl implements _Product {
             (identical(other.minimumStock, minimumStock) ||
                 other.minimumStock == minimumStock) &&
             (identical(other.stock, stock) || other.stock == stock) &&
-            (identical(other.price, price) || other.price == price) &&
+            (identical(other.costPrice, costPrice) ||
+                other.costPrice == costPrice) &&
+            (identical(other.sellingPrice, sellingPrice) ||
+                other.sellingPrice == sellingPrice) &&
+            (identical(other.mrp, mrp) || other.mrp == mrp) &&
             (identical(other.imageUrl, imageUrl) ||
                 other.imageUrl == imageUrl) &&
             (identical(other.description, description) ||
@@ -289,7 +329,7 @@ class _$ProductImpl implements _Product {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, id, sku, name, brand, categoryId,
-      minimumStock, stock, price, imageUrl, description);
+      minimumStock, stock, costPrice, sellingPrice, mrp, imageUrl, description);
 
   /// Create a copy of Product
   /// with the given fields replaced by the non-null parameter values.
@@ -316,7 +356,9 @@ abstract class _Product implements Product {
       required final String categoryId,
       required final int minimumStock,
       required final int stock,
-      required final int price,
+      required final int costPrice,
+      required final int sellingPrice,
+      required final int mrp,
       final String? imageUrl,
       final String? description}) = _$ProductImpl;
 
@@ -337,7 +379,11 @@ abstract class _Product implements Product {
   @override
   int get stock; // Current stock quantity
   @override
-  int get price; // Price in paise (₹ × 100)
+  int get costPrice; // Cost price in paise (₹ × 100)
+  @override
+  int get sellingPrice; // Selling price in paise (₹ × 100)
+  @override
+  int get mrp; // Maximum Retail Price in paise (₹ × 100)
   @override
   String? get imageUrl;
   @override

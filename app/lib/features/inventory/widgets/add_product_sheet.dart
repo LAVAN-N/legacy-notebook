@@ -8,6 +8,7 @@ import 'package:camera/camera.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../data/mock/mock_data.dart';
 import '../../../data/providers.dart';
 import '../../../data/models/product.dart';
@@ -53,16 +54,21 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
   final _nameController = TextEditingController();
   final _brandController = TextEditingController();
   final _skuController = TextEditingController();
-  final _priceController = TextEditingController();
+  final _mrpController = TextEditingController();
+  final _costPriceController = TextEditingController();
+  final _sellingPriceController = TextEditingController();
   final _stockController = TextEditingController(text: '0');
   final _minStockController = TextEditingController(text: '5');
   final _descriptionController = TextEditingController();
+  double _markupPercent = 25.0;
 
   bool get _isDirty {
     if (_nameController.text.isNotEmpty ||
         _brandController.text.isNotEmpty ||
         _skuController.text.isNotEmpty ||
-        _priceController.text.isNotEmpty ||
+        _mrpController.text.isNotEmpty ||
+        _costPriceController.text.isNotEmpty ||
+        _sellingPriceController.text.isNotEmpty ||
         (_stockController.text != '0' && _stockController.text.isNotEmpty) ||
         _descriptionController.text.isNotEmpty ||
         _imagePath != null) {
@@ -103,6 +109,92 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
   void initState() {
     super.initState();
     _selectedCategoryId = widget.initialCategoryId;
+    _mrpController.addListener(_onMrpChanged);
+    _costPriceController.addListener(_onCostPriceChanged);
+    _sellingPriceController.addListener(_onSellingPriceChanged);
+  }
+
+  bool _isUpdatingPrice = false;
+
+  void _onMrpChanged() {
+    if (_isUpdatingPrice) return;
+    _isUpdatingPrice = true;
+    final mrp = double.tryParse(_mrpController.text) ?? 0.0;
+    final cost = double.tryParse(_costPriceController.text) ?? 0.0;
+    final selling = double.tryParse(_sellingPriceController.text) ?? 0.0;
+    
+    if (mrp > 0 && selling > mrp) {
+      _sellingPriceController.text = mrp.toStringAsFixed(2);
+      if (cost > 0) {
+        _markupPercent = (((mrp - cost) / cost) * 100).clamp(5.0, 100.0);
+      }
+    }
+    _isUpdatingPrice = false;
+    setState(() {});
+  }
+
+  void _onCostPriceChanged() {
+    if (_isUpdatingPrice) return;
+    _isUpdatingPrice = true;
+    final cost = double.tryParse(_costPriceController.text) ?? 0.0;
+    final mrp = double.tryParse(_mrpController.text) ?? 0.0;
+    double selling = cost * (1 + _markupPercent / 100);
+    if (mrp > 0 && selling > mrp) {
+      selling = mrp;
+      if (cost > 0) {
+        _markupPercent = (((selling - cost) / cost) * 100).clamp(5.0, 100.0);
+      }
+    }
+    _sellingPriceController.text = selling == 0.0 ? '' : selling.toStringAsFixed(2);
+    _isUpdatingPrice = false;
+    setState(() {});
+  }
+
+  void _onSellingPriceChanged() {
+    if (_isUpdatingPrice) return;
+    _isUpdatingPrice = true;
+    final cost = double.tryParse(_costPriceController.text) ?? 0.0;
+    final selling = double.tryParse(_sellingPriceController.text) ?? 0.0;
+    final mrp = double.tryParse(_mrpController.text) ?? 0.0;
+    
+    double finalSelling = selling;
+    if (mrp > 0 && selling > mrp) {
+      finalSelling = mrp;
+      _sellingPriceController.text = mrp.toStringAsFixed(2);
+    }
+    
+    if (cost > 0 && finalSelling >= cost) {
+      _markupPercent = (((finalSelling - cost) / cost) * 100).clamp(5.0, 100.0);
+    }
+    _isUpdatingPrice = false;
+    setState(() {});
+  }
+
+  void _onMarkupSliderChanged(double value) {
+    final snapped = ((value / 5).round() * 5).toDouble();
+    setState(() {
+      _markupPercent = snapped;
+      _isUpdatingPrice = true;
+      final cost = double.tryParse(_costPriceController.text) ?? 0.0;
+      final mrp = double.tryParse(_mrpController.text) ?? 0.0;
+      
+      double selling = cost * (1 + _markupPercent / 100);
+      if (mrp > 0 && selling > mrp) {
+        selling = mrp;
+        _markupPercent = (((selling - cost) / cost) * 100).clamp(5.0, 100.0);
+      }
+      _sellingPriceController.text = selling == 0.0 ? '' : selling.toStringAsFixed(2);
+      _isUpdatingPrice = false;
+    });
+  }
+
+  double get _maxAllowedMarkup {
+    final cost = double.tryParse(_costPriceController.text) ?? 0.0;
+    final mrp = double.tryParse(_mrpController.text) ?? 0.0;
+    if (cost > 0 && mrp > cost) {
+      return (((mrp - cost) / cost) * 100).clamp(5.0, 100.0);
+    }
+    return 100.0;
   }
 
   @override
@@ -110,7 +202,9 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
     _nameController.dispose();
     _brandController.dispose();
     _skuController.dispose();
-    _priceController.dispose();
+    _mrpController.dispose();
+    _costPriceController.dispose();
+    _sellingPriceController.dispose();
     _stockController.dispose();
     _minStockController.dispose();
     _descriptionController.dispose();
@@ -306,6 +400,9 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
+    final rawMaxMarkup = _maxAllowedMarkup;
+    final maxMarkup = ((rawMaxMarkup / 5).floor() * 5).toDouble().clamp(5.0, 100.0);
+    final divisions = ((maxMarkup - 5) / 5).round().clamp(1, 20);
     
     return PopScope(
       canPop: false,
@@ -473,48 +570,155 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
               ),
               const SizedBox(height: 12),
 
+              // MRP Field
               TextFormField(
-                controller: _priceController,
+                controller: _mrpController,
                 decoration: InputDecoration(
-                  labelText: 'Price (₹) *',
+                  labelText: 'MRP (₹) *',
                   prefixIcon: Icon(Icons.currency_rupee_outlined, color: colors.primary),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 onTap: () {
-                  if (_priceController.text == '0') {
-                    _priceController.selection = TextSelection.fromPosition(
-                      TextPosition(offset: _priceController.text.length),
-                    );
-                  }
-                },
-                onChanged: (val) {
-                  String cleaned = val.replaceAll(RegExp(r'[^0-9.]'), '');
-                  final dotIndex = cleaned.indexOf('.');
-                  if (dotIndex != -1) {
-                    cleaned = cleaned.substring(0, dotIndex + 1) + 
-                              cleaned.substring(dotIndex + 1).replaceAll('.', '');
-                  }
-                  if (cleaned.startsWith('0') && cleaned.length > 1 && cleaned[1] != '.') {
-                    cleaned = cleaned.replaceFirst(RegExp(r'^0+'), '');
-                    if (cleaned.isEmpty) {
-                      cleaned = '0';
-                    } else if (cleaned.startsWith('.')) {
-                      cleaned = '0$cleaned';
-                    }
-                  }
-                  if (cleaned != val) {
-                    _priceController.value = TextEditingValue(
-                      text: cleaned,
-                      selection: TextSelection.collapsed(offset: cleaned.length),
+                  if (_mrpController.text == '0') {
+                    _mrpController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _mrpController.text.length),
                     );
                   }
                 },
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty) return 'Price is required';
+                  if (val == null || val.trim().isEmpty) return 'MRP is required';
                   final parsed = double.tryParse(val);
                   if (parsed == null) return 'Enter a valid number';
-                  if (parsed < 0) return 'Price cannot be negative';
+                  if (parsed <= 0) return 'MRP must be greater than zero';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // Cost Price Field
+              TextFormField(
+                controller: _costPriceController,
+                decoration: InputDecoration(
+                  labelText: 'Cost Price (₹) *',
+                  prefixIcon: Icon(Icons.currency_rupee_outlined, color: colors.primary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                onTap: () {
+                  if (_costPriceController.text == '0') {
+                    _costPriceController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _costPriceController.text.length),
+                    );
+                  }
+                },
+                validator: (val) {
+                  if (val == null || val.trim().isEmpty) return 'Cost Price is required';
+                  final parsed = double.tryParse(val);
+                  if (parsed == null) return 'Enter a valid number';
+                  if (parsed < 0) return 'Cost Price cannot be negative';
+                  final mrp = double.tryParse(_mrpController.text) ?? 0.0;
+                  if (mrp > 0 && parsed > mrp) return 'Cost price cannot exceed MRP';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // Markup Slider (dotted at 5 multiples, progress bar removed)
+              Card(
+                elevation: 0,
+                color: colors.muted.withValues(alpha: 0.05),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: colors.border.withValues(alpha: 0.5)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Profit Markup', style: AppTypography.bodySmall.copyWith(color: colors.mutedFg)),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: colors.success.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '${_markupPercent.toStringAsFixed(0)}% Markup',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: colors.success,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          activeTrackColor: colors.success,
+                          inactiveTrackColor: colors.muted.withValues(alpha: 0.2),
+                          thumbColor: colors.success,
+                          overlayColor: colors.success.withValues(alpha: 0.1),
+                          trackHeight: 4,
+                          showValueIndicator: ShowValueIndicator.onDrag,
+                          activeTickMarkColor: colors.success,
+                          inactiveTickMarkColor: colors.muted.withValues(alpha: 0.4),
+                        ),
+                        child: Slider(
+                          min: 5.0,
+                          max: maxMarkup,
+                          divisions: divisions,
+                          value: _markupPercent.clamp(5.0, maxMarkup),
+                          label: '${_markupPercent.toStringAsFixed(0)}%',
+                          onChanged: _onMarkupSliderChanged,
+                        ),
+                      ),
+                      if (maxMarkup < 100.0) ...[
+                        const SizedBox(height: 4),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Text(
+                            'Note: Markup capped at ${maxMarkup.toStringAsFixed(0)}% to stay within MRP.',
+                            style: TextStyle(fontSize: 10, color: colors.warning, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Selling Price Field
+              TextFormField(
+                controller: _sellingPriceController,
+                decoration: InputDecoration(
+                  labelText: 'Selling Price (₹) *',
+                  prefixIcon: Icon(Icons.currency_rupee_outlined, color: colors.primary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                onTap: () {
+                  if (_sellingPriceController.text == '0') {
+                    _sellingPriceController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _sellingPriceController.text.length),
+                    );
+                  }
+                },
+                validator: (val) {
+                  if (val == null || val.trim().isEmpty) return 'Selling Price is required';
+                  final parsed = double.tryParse(val);
+                  if (parsed == null) return 'Enter a valid number';
+                  if (parsed < 0) return 'Selling Price cannot be negative';
+                  final cost = double.tryParse(_costPriceController.text) ?? 0.0;
+                  if (parsed < cost) return 'Selling price cannot be less than cost price';
+                  final mrp = double.tryParse(_mrpController.text) ?? 0.0;
+                  if (mrp > 0 && parsed > mrp) return 'Selling price cannot exceed MRP';
                   return null;
                 },
               ),
@@ -703,7 +907,9 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                         final name = _nameController.text.trim();
                         final brand = _brandController.text.trim();
                         final sku = _skuController.text.trim();
-                        final price = ((double.tryParse(_priceController.text) ?? 0.0) * 100).round();
+                        final mrp = ((double.tryParse(_mrpController.text) ?? 0.0) * 100).round();
+                        final costPrice = ((double.tryParse(_costPriceController.text) ?? 0.0) * 100).round();
+                        final sellingPrice = ((double.tryParse(_sellingPriceController.text) ?? 0.0) * 100).round();
                         final stock = int.tryParse(_stockController.text) ?? 0;
                         final minimumStock = int.tryParse(_minStockController.text) ?? 0;
                         final categoryId = _selectedCategoryId!;
@@ -719,7 +925,9 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                             name: name,
                             brand: brand,
                             sku: sku,
-                            price: price,
+                            costPrice: costPrice,
+                            sellingPrice: sellingPrice,
+                            mrp: mrp,
                             stock: stock,
                             categoryId: categoryId,
                             minimumStock: minimumStock,
@@ -769,16 +977,21 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
   late final TextEditingController _nameController;
   late final TextEditingController _brandController;
   late final TextEditingController _skuController;
-  late final TextEditingController _priceController;
+  late final TextEditingController _mrpController;
+  late final TextEditingController _costPriceController;
+  late final TextEditingController _sellingPriceController;
   late final TextEditingController _stockController;
   late final TextEditingController _minimumStockController;
   late final TextEditingController _descriptionController;
+  double _markupPercent = 25.0;
 
   bool get _isDirty {
     if (_nameController.text != widget.product.name ||
         _brandController.text != widget.product.brand ||
         _skuController.text != widget.product.sku ||
-        _priceController.text != (widget.product.price / 100).toString() ||
+        _mrpController.text != (widget.product.mrp / 100).toString() ||
+        _costPriceController.text != (widget.product.costPrice / 100).toString() ||
+        _sellingPriceController.text != (widget.product.sellingPrice / 100).toString() ||
         _stockController.text != widget.product.stock.toString() ||
         _minimumStockController.text != widget.product.minimumStock.toString() ||
         _descriptionController.text != (widget.product.description ?? '') ||
@@ -825,10 +1038,106 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     _nameController = TextEditingController(text: widget.product.name);
     _brandController = TextEditingController(text: widget.product.brand);
     _skuController = TextEditingController(text: widget.product.sku);
-    _priceController = TextEditingController(text: (widget.product.price / 100).toString());
+    _mrpController = TextEditingController(text: (widget.product.mrp / 100).toString());
+    _costPriceController = TextEditingController(text: (widget.product.costPrice / 100).toString());
+    _sellingPriceController = TextEditingController(text: (widget.product.sellingPrice / 100).toString());
     _stockController = TextEditingController(text: widget.product.stock.toString());
     _minimumStockController = TextEditingController(text: widget.product.minimumStock.toString());
     _descriptionController = TextEditingController(text: widget.product.description ?? '');
+
+    // Calculate initial markup percent
+    final cost = widget.product.costPrice.toDouble();
+    final selling = widget.product.sellingPrice.toDouble();
+    if (cost > 0) {
+      _markupPercent = (((selling - cost) / cost) * 100).clamp(5.0, 100.0);
+    }
+
+    _mrpController.addListener(_onMrpChanged);
+    _costPriceController.addListener(_onCostPriceChanged);
+    _sellingPriceController.addListener(_onSellingPriceChanged);
+  }
+
+  bool _isUpdatingPrice = false;
+
+  void _onMrpChanged() {
+    if (_isUpdatingPrice) return;
+    _isUpdatingPrice = true;
+    final mrp = double.tryParse(_mrpController.text) ?? 0.0;
+    final cost = double.tryParse(_costPriceController.text) ?? 0.0;
+    final selling = double.tryParse(_sellingPriceController.text) ?? 0.0;
+    
+    if (mrp > 0 && selling > mrp) {
+      _sellingPriceController.text = mrp.toStringAsFixed(2);
+      if (cost > 0) {
+        _markupPercent = (((mrp - cost) / cost) * 100).clamp(5.0, 100.0);
+      }
+    }
+    _isUpdatingPrice = false;
+    setState(() {});
+  }
+
+  void _onCostPriceChanged() {
+    if (_isUpdatingPrice) return;
+    _isUpdatingPrice = true;
+    final cost = double.tryParse(_costPriceController.text) ?? 0.0;
+    final mrp = double.tryParse(_mrpController.text) ?? 0.0;
+    double selling = cost * (1 + _markupPercent / 100);
+    if (mrp > 0 && selling > mrp) {
+      selling = mrp;
+      if (cost > 0) {
+        _markupPercent = (((selling - cost) / cost) * 100).clamp(5.0, 100.0);
+      }
+    }
+    _sellingPriceController.text = selling == 0.0 ? '' : selling.toStringAsFixed(2);
+    _isUpdatingPrice = false;
+    setState(() {});
+  }
+
+  void _onSellingPriceChanged() {
+    if (_isUpdatingPrice) return;
+    _isUpdatingPrice = true;
+    final cost = double.tryParse(_costPriceController.text) ?? 0.0;
+    final selling = double.tryParse(_sellingPriceController.text) ?? 0.0;
+    final mrp = double.tryParse(_mrpController.text) ?? 0.0;
+    
+    double finalSelling = selling;
+    if (mrp > 0 && selling > mrp) {
+      finalSelling = mrp;
+      _sellingPriceController.text = mrp.toStringAsFixed(2);
+    }
+    
+    if (cost > 0 && finalSelling >= cost) {
+      _markupPercent = (((finalSelling - cost) / cost) * 100).clamp(5.0, 100.0);
+    }
+    _isUpdatingPrice = false;
+    setState(() {});
+  }
+
+  void _onMarkupSliderChanged(double value) {
+    final snapped = ((value / 5).round() * 5).toDouble();
+    setState(() {
+      _markupPercent = snapped;
+      _isUpdatingPrice = true;
+      final cost = double.tryParse(_costPriceController.text) ?? 0.0;
+      final mrp = double.tryParse(_mrpController.text) ?? 0.0;
+      
+      double selling = cost * (1 + _markupPercent / 100);
+      if (mrp > 0 && selling > mrp) {
+        selling = mrp;
+        _markupPercent = (((selling - cost) / cost) * 100).clamp(5.0, 100.0);
+      }
+      _sellingPriceController.text = selling == 0.0 ? '' : selling.toStringAsFixed(2);
+      _isUpdatingPrice = false;
+    });
+  }
+
+  double get _maxAllowedMarkup {
+    final cost = double.tryParse(_costPriceController.text) ?? 0.0;
+    final mrp = double.tryParse(_mrpController.text) ?? 0.0;
+    if (cost > 0 && mrp > cost) {
+      return (((mrp - cost) / cost) * 100).clamp(5.0, 100.0);
+    }
+    return 100.0;
   }
 
   @override
@@ -836,7 +1145,9 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     _nameController.dispose();
     _brandController.dispose();
     _skuController.dispose();
-    _priceController.dispose();
+    _mrpController.dispose();
+    _costPriceController.dispose();
+    _sellingPriceController.dispose();
     _stockController.dispose();
     _minimumStockController.dispose();
     _descriptionController.dispose();
@@ -999,6 +1310,9 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
+    final rawMaxMarkup = _maxAllowedMarkup;
+    final maxMarkup = ((rawMaxMarkup / 5).floor() * 5).toDouble().clamp(5.0, 100.0);
+    final divisions = ((maxMarkup - 5) / 5).round().clamp(1, 20);
     
     return PopScope(
       canPop: false,
@@ -1158,48 +1472,155 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
               ),
               const SizedBox(height: 12),
 
+              // MRP Field
               TextFormField(
-                controller: _priceController,
+                controller: _mrpController,
                 decoration: InputDecoration(
-                  labelText: 'Price (₹) *',
+                  labelText: 'MRP (₹) *',
                   prefixIcon: Icon(Icons.currency_rupee_outlined, color: colors.primary),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 onTap: () {
-                  if (_priceController.text == '0') {
-                    _priceController.selection = TextSelection.fromPosition(
-                      TextPosition(offset: _priceController.text.length),
-                    );
-                  }
-                },
-                onChanged: (val) {
-                  String cleaned = val.replaceAll(RegExp(r'[^0-9.]'), '');
-                  final dotIndex = cleaned.indexOf('.');
-                  if (dotIndex != -1) {
-                    cleaned = cleaned.substring(0, dotIndex + 1) + 
-                              cleaned.substring(dotIndex + 1).replaceAll('.', '');
-                  }
-                  if (cleaned.startsWith('0') && cleaned.length > 1 && cleaned[1] != '.') {
-                    cleaned = cleaned.replaceFirst(RegExp(r'^0+'), '');
-                    if (cleaned.isEmpty) {
-                      cleaned = '0';
-                    } else if (cleaned.startsWith('.')) {
-                      cleaned = '0$cleaned';
-                    }
-                  }
-                  if (cleaned != val) {
-                    _priceController.value = TextEditingValue(
-                      text: cleaned,
-                      selection: TextSelection.collapsed(offset: cleaned.length),
+                  if (_mrpController.text == '0') {
+                    _mrpController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _mrpController.text.length),
                     );
                   }
                 },
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty) return 'Price is required';
+                  if (val == null || val.trim().isEmpty) return 'MRP is required';
                   final parsed = double.tryParse(val);
                   if (parsed == null) return 'Enter a valid number';
-                  if (parsed < 0) return 'Price cannot be negative';
+                  if (parsed <= 0) return 'MRP must be greater than zero';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // Cost Price Field
+              TextFormField(
+                controller: _costPriceController,
+                decoration: InputDecoration(
+                  labelText: 'Cost Price (₹) *',
+                  prefixIcon: Icon(Icons.currency_rupee_outlined, color: colors.primary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                onTap: () {
+                  if (_costPriceController.text == '0') {
+                    _costPriceController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _costPriceController.text.length),
+                    );
+                  }
+                },
+                validator: (val) {
+                  if (val == null || val.trim().isEmpty) return 'Cost Price is required';
+                  final parsed = double.tryParse(val);
+                  if (parsed == null) return 'Enter a valid number';
+                  if (parsed < 0) return 'Cost Price cannot be negative';
+                  final mrp = double.tryParse(_mrpController.text) ?? 0.0;
+                  if (mrp > 0 && parsed > mrp) return 'Cost price cannot exceed MRP';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // Markup Slider (dotted at 5 multiples, progress bar removed)
+              Card(
+                elevation: 0,
+                color: colors.muted.withValues(alpha: 0.05),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: colors.border.withValues(alpha: 0.5)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Profit Markup', style: AppTypography.bodySmall.copyWith(color: colors.mutedFg)),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: colors.success.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '${_markupPercent.toStringAsFixed(0)}% Markup',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: colors.success,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          activeTrackColor: colors.success,
+                          inactiveTrackColor: colors.muted.withValues(alpha: 0.2),
+                          thumbColor: colors.success,
+                          overlayColor: colors.success.withValues(alpha: 0.1),
+                          trackHeight: 4,
+                          showValueIndicator: ShowValueIndicator.onDrag,
+                          activeTickMarkColor: colors.success,
+                          inactiveTickMarkColor: colors.muted.withValues(alpha: 0.4),
+                        ),
+                        child: Slider(
+                          min: 5.0,
+                          max: maxMarkup,
+                          divisions: divisions,
+                          value: _markupPercent.clamp(5.0, maxMarkup),
+                          label: '${_markupPercent.toStringAsFixed(0)}%',
+                          onChanged: _onMarkupSliderChanged,
+                        ),
+                      ),
+                      if (maxMarkup < 100.0) ...[
+                        const SizedBox(height: 4),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Text(
+                            'Note: Markup capped at ${maxMarkup.toStringAsFixed(0)}% to stay within MRP.',
+                            style: TextStyle(fontSize: 10, color: colors.warning, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Selling Price Field
+              TextFormField(
+                controller: _sellingPriceController,
+                decoration: InputDecoration(
+                  labelText: 'Selling Price (₹) *',
+                  prefixIcon: Icon(Icons.currency_rupee_outlined, color: colors.primary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                onTap: () {
+                  if (_sellingPriceController.text == '0') {
+                    _sellingPriceController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _sellingPriceController.text.length),
+                    );
+                  }
+                },
+                validator: (val) {
+                  if (val == null || val.trim().isEmpty) return 'Selling Price is required';
+                  final parsed = double.tryParse(val);
+                  if (parsed == null) return 'Enter a valid number';
+                  if (parsed < 0) return 'Selling Price cannot be negative';
+                  final cost = double.tryParse(_costPriceController.text) ?? 0.0;
+                  if (parsed < cost) return 'Selling price cannot be less than cost price';
+                  final mrp = double.tryParse(_mrpController.text) ?? 0.0;
+                  if (mrp > 0 && parsed > mrp) return 'Selling price cannot exceed MRP';
                   return null;
                 },
               ),
@@ -1382,7 +1803,9 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                           name: _nameController.text.trim(),
                           brand: _brandController.text.trim(),
                           sku: _skuController.text.trim(),
-                          price: ((double.tryParse(_priceController.text) ?? 0.0) * 100).round(),
+                          mrp: ((double.tryParse(_mrpController.text) ?? 0.0) * 100).round(),
+                          costPrice: ((double.tryParse(_costPriceController.text) ?? 0.0) * 100).round(),
+                          sellingPrice: ((double.tryParse(_sellingPriceController.text) ?? 0.0) * 100).round(),
                           stock: int.tryParse(_stockController.text) ?? 0,
                           minimumStock: int.tryParse(_minimumStockController.text) ?? widget.product.minimumStock,
                           categoryId: _selectedCategoryId!,
