@@ -10,6 +10,8 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/avatar.dart';
 import '../../../core/router/routes.dart';
 import '../../../data/models/customer.dart';
+import '../../../data/models/id_proof.dart';
+import 'package:open_filex/open_filex.dart';
 
 class CustomerContextCard extends StatelessWidget {
   const CustomerContextCard({
@@ -456,6 +458,9 @@ class CustomerContextCard extends StatelessWidget {
                       final hasDoc = p.document != null;
                       final isImage = hasDoc && p.document!.mimeType.startsWith('image/');
                       final docUri = p.document?.localUri;
+                      final String filePath = (docUri != null && docUri.startsWith('file://'))
+                          ? Uri.parse(docUri).toFilePath()
+                          : (docUri ?? '');
 
                       return Card(
                         margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -487,14 +492,16 @@ class CustomerContextCard extends StatelessWidget {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
+
                                       if (isImage)
                                         Container(
                                           height: 180,
                                           width: double.infinity,
                                           margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                                           decoration: BoxDecoration(
+                                            color: colors.muted.withValues(alpha: 0.05),
                                             borderRadius: BorderRadius.circular(8),
-                                            border: Border.all(color: colors.border),
+                                            border: Border.all(color: colors.border.withValues(alpha: 0.5)),
                                           ),
                                           child: ClipRRect(
                                             borderRadius: BorderRadius.circular(8),
@@ -503,14 +510,16 @@ class CustomerContextCard extends StatelessWidget {
                                                     docUri,
                                                     fit: BoxFit.cover,
                                                     errorBuilder: (context, error, stackTrace) =>
-                                                        Center(child: Text('Failed to load image preview', style: TextStyle(color: colors.danger))),
+                                                        _buildFilePlaceholder(colors, p.type),
                                                   )
-                                                : Image.file(
-                                                    File(docUri),
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder: (context, error, stackTrace) =>
-                                                        Center(child: Text('Failed to load file preview', style: TextStyle(color: colors.danger))),
-                                                  ),
+                                                : (filePath.isNotEmpty && File(filePath).existsSync()
+                                                    ? Image.file(
+                                                        File(filePath),
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder: (context, error, stackTrace) =>
+                                                            _buildFilePlaceholder(colors, p.type),
+                                                      )
+                                                    : _buildFilePlaceholder(colors, p.type)),
                                           ),
                                         ),
                                       if (!isImage)
@@ -537,9 +546,41 @@ class CustomerContextCard extends StatelessWidget {
                                           foregroundColor: colors.primaryFg,
                                         ),
                                         onPressed: () async {
-                                          final uri = Uri.parse(docUri);
-                                          if (await canLaunchUrl(uri)) {
-                                            await launchUrl(uri);
+                                          try {
+                                            if (docUri.startsWith('http')) {
+                                              final uri = Uri.parse(docUri);
+                                              if (await canLaunchUrl(uri)) {
+                                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                              } else {
+                                                throw 'Cannot launch web URL';
+                                              }
+                                            } else if (filePath.isNotEmpty && File(filePath).existsSync()) {
+                                              if (Platform.isWindows) {
+                                                await Process.run('explorer.exe', [filePath]);
+                                              } else if (Platform.isMacOS) {
+                                                await Process.run('open', [filePath]);
+                                              } else if (Platform.isLinux) {
+                                                await Process.run('xdg-open', [filePath]);
+                                              } else {
+                                                final result = await OpenFilex.open(filePath);
+                                                if (result.type != ResultType.done) {
+                                                  throw result.message;
+                                                }
+                                              }
+                                            } else {
+                                              if (context.mounted) {
+                                                _showMockDocumentDialog(context, p);
+                                              }
+                                            }
+                                          } catch (e) {
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text('Could not open document: $e'),
+                                                  behavior: SnackBarBehavior.fixed,
+                                                ),
+                                              );
+                                            }
                                           }
                                         },
                                         icon: const Icon(Icons.open_in_new, size: 14),
@@ -670,6 +711,160 @@ class CustomerContextCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilePlaceholder(AppColors colors, String type) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.badge, size: 40, color: colors.mutedFg.withValues(alpha: 0.6)),
+          const SizedBox(height: 8),
+          Text(
+            'Offline Mock $type Card',
+            style: AppTypography.bodySmall.copyWith(
+              color: colors.mutedFg,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Tap Open Document to view card details',
+            style: AppTypography.labelSmall.copyWith(color: colors.mutedFg, fontSize: 10),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMockDocumentDialog(BuildContext context, IdProof proof) {
+    final colors = context.colors;
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: colors.surface,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.badge, color: colors.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${proof.type} Document',
+                        style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const Divider(),
+              const SizedBox(height: AppSpacing.md),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [colors.primary.withValues(alpha: 0.1), colors.primary.withValues(alpha: 0.02)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: colors.primary.withValues(alpha: 0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'GOVERNMENT OF INDIA',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: colors.primary,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                        Icon(Icons.shield, size: 16, color: colors.primary),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Document Type: ${proof.type}',
+                      style: AppTypography.bodySmall.copyWith(color: colors.mutedFg),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      proof.number,
+                      style: AppTypography.titleMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                        color: colors.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'HOLDER NAME',
+                              style: TextStyle(fontSize: 8, color: colors.mutedFg),
+                            ),
+                            Text(
+                              customer.name.toUpperCase(),
+                              style: AppTypography.bodySmall.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: colors.foreground,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: colors.success.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'VERIFIED',
+                            style: TextStyle(
+                              color: colors.success,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'Note: This is an offline mock view of the ID proof document.',
+                style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );

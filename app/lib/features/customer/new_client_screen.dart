@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -2345,7 +2346,10 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
     }
 
     try {
-      final fileUri = Uri.parse(doc.localUri);
+      final String uriString = doc.localUri;
+      final String filePath = uriString.startsWith('file://')
+          ? Uri.parse(uriString).toFilePath()
+          : uriString;
 
       if (doc.mimeType.startsWith('image/')) {
         showDialog(
@@ -2374,19 +2378,27 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: InteractiveViewer(
-                      child: Image.file(
-                        File(fileUri.toFilePath()),
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Text('Could not load image file: $error',
-                                  style: AppTypography.bodyMedium),
-                            ),
-                          );
-                        },
-                      ),
+                      child: uriString.startsWith('http')
+                          ? Image.network(
+                              uriString,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Center(child: Text('Could not load image: $error')),
+                            )
+                          : (File(filePath).existsSync()
+                              ? Image.file(
+                                  File(filePath),
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Center(child: Text('Could not load image file: $error')),
+                                )
+                              : Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Text('File not found: $filePath',
+                                        style: AppTypography.bodyMedium),
+                                  ),
+                                )),
                     ),
                   ),
                 ),
@@ -2395,16 +2407,34 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
           ),
         );
       } else {
-        final launched =
-            await launchUrl(fileUri, mode: LaunchMode.externalApplication);
-        if (!launched) {
-          throw 'Could not launch URL';
+        if (uriString.startsWith('http')) {
+          final fileUri = Uri.parse(uriString);
+          final launched = await launchUrl(fileUri, mode: LaunchMode.externalApplication);
+          if (!launched) {
+            throw 'Could not launch URL';
+          }
+        } else {
+          if (Platform.isWindows) {
+            await Process.run('explorer.exe', [filePath]);
+          } else if (Platform.isMacOS) {
+            await Process.run('open', [filePath]);
+          } else if (Platform.isLinux) {
+            await Process.run('xdg-open', [filePath]);
+          } else {
+            final result = await OpenFilex.open(filePath);
+            if (result.type != ResultType.done) {
+              throw result.message;
+            }
+          }
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error opening file: $e')),
+          SnackBar(
+            content: Text('Error opening file: $e'),
+            behavior: SnackBarBehavior.fixed,
+          ),
         );
       }
     }

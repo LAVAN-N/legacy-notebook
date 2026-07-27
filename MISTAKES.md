@@ -323,6 +323,66 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Declared `rawSafeAreaBottom` in [transactions_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/transactions/transactions_screen.dart) and set the ListView bottom padding to `88.0 + rawSafeAreaBottom`.
 - **Rule for next agent:** ALWAYS apply a bottom padding of `88.0 + rawSafeAreaBottom` to primary scrollable list views on screens that sit above the floating bottom navigation bar.
 
+---
+
+### 2026-07-27 · Local File Existence Checks & Mock Viewer Fallback in ID Proof details
+
+- **Context:** Fixing file preview failure and document viewing crashes for ID proofs.
+- **Mistake:** Attempting to render `Image.file(File(docUri))` directly and launching raw local paths without verification, which threw file system exceptions for seeded/mock files that did not exist on the device.
+- **Root cause:** Assuming local database path seeds mapped to files present on disk, and parsing plain local folder strings directly into `Uri.parse` without adding the `file://` scheme prefix.
+- **Fix applied:**
+  1. Wrapped local file image rendering in `File(docUri).existsSync()` checks inside [customer_context_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/customer_context_card.dart) and [new_client_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/new_client_screen.dart).
+  2. Implemented a fallback placeholder card (`_buildFilePlaceholder`) to show a clean design for missing local preview files.
+  3. Added logic to parse local file paths using `Uri.file()` and fallback to a simulated digital document card dialog (`_showMockDocumentDialog`) if the file is missing from disk.
+- **Rule for next agent:** ALWAYS wrap `Image.file` calls and file open actions in `File(path).existsSync()` verification checks, and provide simulated mock visual cards in offline mode when actual files are unavailable.
+
+---
+
+### 2026-07-27 · file:// URI parsing for file existence checks
+
+- **Context:** Resolving file preview failure when uploading a file (still showing mock placeholder).
+- **Mistake:** Passing raw `file://` scheme URIs directly into Dart's `File()` constructor.
+- **Root cause:** When a user uploads a new ID proof document, the file path is saved to the database as a `file://` URI string. Passing this string directly to `File(uriString)` fails because the constructor expects a raw path string (e.g., `C:\Users\...` or `/data/...`), causing `File(uriString).existsSync()` to evaluate to false and display the mock placeholder instead of the file image.
+- **Fix applied:** Added helper logic `Uri.parse(docUri).toFilePath()` in [customer_context_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/customer_context_card.dart) and [new_client_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/new_client_screen.dart) to convert `file://` URIs back into raw file paths before performing file checks or initializing `Image.file()`.
+- **Rule for next agent:** ALWAYS convert `file://` URI strings to raw platform paths using `Uri.parse(uriString).toFilePath()` before passing them to Dart's `File` constructor.
+
+---
+
+### 2026-07-27 · Local File launch mode configuration and async context safety
+
+- **Context:** Resolving file launcher crash / `<asynchronous suspension>` exception when clicking the 'Open Document' button.
+- **Mistake:** Launching `file://` scheme URIs without wrapping in a try-catch block and without specifying the correct external launcher mode.
+- **Root cause:** Standard `launchUrl(uri)` tries to open URIs within WebView intents by default, which throws platform exception crashes when loading local `file://` paths. Additionally, executing BuildContext references across await boundaries triggers linter sync warnings.
+- **Fix applied:**
+  1. Wrapped `launchUrl` in a try-catch block to handle launch failures gracefully via SnackBars.
+  2. Set `mode: LaunchMode.externalApplication` to delegate local file opening to the operating system's native viewers.
+  3. Guarded `BuildContext` operations with `context.mounted` checks.
+- **Rule for next agent:** ALWAYS set `mode: LaunchMode.externalApplication` when launching local file URIs using `url_launcher`, and verify `context.mounted` before rendering dialogues or SnackBars inside asynchronous callbacks.
+
+---
+
+### 2026-07-27 · Native shell launcher for desktop platforms and SnackBar layout bounds
+
+- **Context:** Resolving platform file launch exceptions and floating SnackBar off-screen layout assertions.
+- **Mistake:** Launching `file://` URIs on Windows via `url_launcher` (which often fails due to security associations/restrictions) and displaying error notifications as floating SnackBars.
+- **Root cause:**
+  1. On desktop platforms (like Windows/macOS/Linux), launching file paths directly is most reliably handled by native shell processes (`Process.run('explorer.exe', [path])`) rather than web intent handlers.
+  2. Floating SnackBars inside a layout with high bottom navigation overlays can exceed vertical limits and trigger performLayout boundary failures.
+- **Fix applied:**
+  1. Swapped direct file launches on desktop platforms to native shell calls (`Process.run('explorer.exe')` on Windows, `open` on macOS, `xdg-open` on Linux) inside [customer_context_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/customer_context_card.dart) and [new_client_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/new_client_screen.dart).
+  2. Set `behavior: SnackBarBehavior.fixed` for file opening error SnackBars to ensure they draw at the bottom bounds and prevent layout overflow assertions.
+- **Rule for next agent:** ALWAYS launch local desktop files natively via `Process.run('explorer.exe' / 'open')` instead of using `url_launcher`, and set SnackBar behavior to `fixed` when presenting warnings/errors on screens overlaid with floating bottom navigation widgets.
+
+---
+
+### 2026-07-27 · FileUriExposedException and integration of open_filex on Android
+
+- **Context:** Resolving `FileUriExposedException` on Android when clicking 'Open Document'.
+- **Mistake:** Attempting to share raw `file://` URIs with external apps via `url_launcher` on Android.
+- **Root cause:** Android 24+ blocks sharing raw `file://` URIs outside the app's package boundary to prevent directory transversal exploits. This triggers a `FileUriExposedException` unless files are shared through a secure `FileProvider` converting the scheme to `content://`.
+- **Fix applied:** Integrated the `open_filex` package, which configures Android's `FileProvider` automatically, and updated [customer_context_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/customer_context_card.dart) and [new_client_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/new_client_screen.dart) to call `OpenFilex.open(filePath)` on mobile platforms.
+- **Rule for next agent:** ALWAYS use the `open_filex` package (`OpenFilex.open`) when opening local files on mobile devices (Android/iOS) to ensure security provider wrapping and avoid exposure crashes.
+
 
 
 
