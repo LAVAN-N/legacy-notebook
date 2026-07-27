@@ -447,6 +447,16 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Configured `divisions: divisions` on the `Slider` widgets and snapped slider values to the nearest multiple of 5. Placed compact digit labels under each tick mark, and resolved the string interpolation warnings in [add_product_sheet.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/widgets/add_product_sheet.dart).
 - **Rule for next agent:** ALWAYS use snapping rounding in slider change listeners alongside the `divisions` track property for discrete layouts, and write clean method invocations without redundant string wrappers.
 
+---
+
+### 2026-07-27 · Solid track line layout instead of dotted track appearance
+
+- **Context:** Styling a discrete slider to appear visually as a dotted line of ticks instead of a solid line with dots on top.
+- **Mistake:** Using standard default `trackHeight` values (e.g. 4) which draws a solid prominent bar that visually overwhelms the discrete tick marks.
+- **Root cause:** The track is drawn as a solid rectangle of `trackHeight` thickness, while tick marks are drawn as circles of `tickMarkRadius` size. Setting track height very thin and tick mark radius larger changes the aesthetics to a dotted track.
+- **Fix applied:** Reduced `trackHeight` to `1.5` and set `tickMarkShape` to a `RoundSliderTickMarkShape` of radius `3.0` in [add_product_sheet.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/widgets/add_product_sheet.dart).
+- **Rule for next agent:** ALWAYS set a thin track height (e.g. 1.5) and larger tick mark radius (e.g. 3.0) to achieve a dotted discrete slider design in Flutter.
+
 
 
 

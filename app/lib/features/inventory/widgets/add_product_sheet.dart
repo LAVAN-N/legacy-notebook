@@ -691,14 +691,15 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                       const SizedBox(height: 4),
                       SliderTheme(
                         data: SliderTheme.of(context).copyWith(
-                          activeTrackColor: colors.success,
-                          inactiveTrackColor: colors.muted.withValues(alpha: 0.2),
+                          activeTrackColor: colors.success.withValues(alpha: 0.8),
+                          inactiveTrackColor: colors.muted.withValues(alpha: 0.15),
                           thumbColor: colors.success,
                           overlayColor: colors.success.withValues(alpha: 0.1),
-                          trackHeight: 4,
+                          trackHeight: 1.5,
                           showValueIndicator: ShowValueIndicator.onDrag,
                           activeTickMarkColor: colors.success,
-                          inactiveTickMarkColor: colors.muted.withValues(alpha: 0.4),
+                          inactiveTickMarkColor: colors.muted.withValues(alpha: 0.5),
+                          tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 3.0),
                         ),
                         child: Slider(
                           min: 5.0,
@@ -1626,14 +1627,15 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                       const SizedBox(height: 4),
                       SliderTheme(
                         data: SliderTheme.of(context).copyWith(
-                          activeTrackColor: colors.success,
-                          inactiveTrackColor: colors.muted.withValues(alpha: 0.2),
+                          activeTrackColor: colors.success.withValues(alpha: 0.8),
+                          inactiveTrackColor: colors.muted.withValues(alpha: 0.15),
                           thumbColor: colors.success,
                           overlayColor: colors.success.withValues(alpha: 0.1),
-                          trackHeight: 4,
+                          trackHeight: 1.5,
                           showValueIndicator: ShowValueIndicator.onDrag,
                           activeTickMarkColor: colors.success,
-                          inactiveTickMarkColor: colors.muted.withValues(alpha: 0.4),
+                          inactiveTickMarkColor: colors.muted.withValues(alpha: 0.5),
+                          tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 3.0),
                         ),
                         child: Slider(
                           min: 5.0,
