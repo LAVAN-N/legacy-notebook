@@ -279,47 +279,169 @@ class PurchaseSummaryCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             
-            // Products list
+            // X & Y Grid Timeline Graph UI
             Expanded(
-              child: ListView(
-                physics: const ClampingScrollPhysics(),
-                padding: EdgeInsets.zero,
-                children: groupedSale.sales.expand((sale) => sale.items).map((item) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 4.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '${item.productName} (x${item.quantity})',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: colors.foreground.withValues(alpha: 0.9),
-                              fontSize: 10,
+              child: SizedBox(
+                height: 96,
+                child: Row(
+                  children: [
+                    // Y Axis Labels
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0), // align with axis
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: colors.success.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(4),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            child: Text(
+                              'READY',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: colors.success,
+                                fontSize: 6.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          rupees(item.unitPrice * item.quantity),
-                          style: AppTypography.labelSmall.copyWith(
-                            color: colors.foreground,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 10,
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: colors.danger.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'CREDIT',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: colors.danger,
+                                fontSize: 6.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  );
-                }).toList(),
+                    const SizedBox(width: 6),
+                    // Graph Area
+                    Expanded(
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          // Grid lines: Horizontal
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(height: 0.5, color: colors.border.withValues(alpha: 0.2)),
+                              Container(height: 0.5, color: colors.border.withValues(alpha: 0.2)),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 16.0), // match bottom offset
+                                child: Container(height: 0.5, color: colors.border.withValues(alpha: 0.2)),
+                              ),
+                            ],
+                          ),
+                          // Grid lines: Vertical
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Container(width: 0.5, color: colors.border.withValues(alpha: 0.15)),
+                                Container(width: 0.5, color: colors.border.withValues(alpha: 0.15)),
+                                Container(width: 0.5, color: colors.border.withValues(alpha: 0.15)),
+                              ],
+                            ),
+                          ),
+                          // Y-Axis line
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            bottom: 16,
+                            child: Container(width: 1.2, color: colors.border.withValues(alpha: 0.5)),
+                          ),
+                          // X-Axis line
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 16,
+                            child: Container(height: 1.2, color: colors.border.withValues(alpha: 0.5)),
+                          ),
+                          // Nodes & timeline labels
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: groupedSale.sales.map((sale) {
+                                final isCredit = sale.saleType.toUpperCase() == 'CREDIT';
+                                final color = isCredit ? colors.danger : colors.success;
+                                final timeStr = DateFormat('hh:mm a').format(sale.at);
+                                return Expanded(
+                                  child: Stack(
+                                    clipBehavior: Clip.none,
+                                    alignment: Alignment.center,
+                                    children: [
+                                      // Trace Line to X-Axis
+                                      Positioned(
+                                        top: isCredit ? null : 6,
+                                        bottom: isCredit ? 6 : null,
+                                        child: Container(
+                                          width: 0.8,
+                                          height: 28,
+                                          color: color.withValues(alpha: 0.3),
+                                        ),
+                                      ),
+                                      // Node Circle
+                                      Positioned(
+                                        top: isCredit ? null : 6,
+                                        bottom: isCredit ? 6 : null,
+                                        child: Container(
+                                          width: 8,
+                                          height: 8,
+                                          decoration: BoxDecoration(
+                                            color: colors.surface,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(color: color, width: 2),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: color.withValues(alpha: 0.2),
+                                                blurRadius: 3,
+                                                spreadRadius: 0.5,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      // Time Label (X-axis ticks)
+                                      Positioned(
+                                        bottom: -14,
+                                        child: Text(
+                                          timeStr,
+                                          style: AppTypography.labelSmall.copyWith(
+                                            color: colors.mutedFg,
+                                            fontSize: 7,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             
-            const Divider(height: 8),
+            const Divider(height: 12),
             
             // Footer: Tap to view financials summary info
             Row(

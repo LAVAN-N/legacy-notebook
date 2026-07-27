@@ -557,6 +557,96 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Removed the `* 100` scaling multiplier on the `creditCharge` parameter in [sale_controller.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/sale/controllers/sale_controller.dart). Grouped sales by date only (using `dateOnly`) and derived the primary card badge by checking if any sale contains credit terms in [customer_detail_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/customer_detail_screen.dart).
 - **Rule for next agent:** ALWAYS pass credit surcharge fields to save sale repository stubs in whole rupees (no `* 100` multiplication), and group all sale events on the same calendar date into a single card.
 
+---
+
+### 2026-07-27 · Visual transaction occurrence chips in horizontal catalog summaries
+
+- **Context:** Transitioning initial card bodies from text product list files to graphical occurrence chips.
+- **Mistake:** Rendering full product name lists directly inside small horizontal overview cards, causing clutter or duplication of detail.
+- **Root cause:** Overview blocks should summarize structural states (e.g. sequence of Credit/Ready events) visually and let users drill down on tap to read detailed products list.
+- **Fix applied:** Replaced the products list ListView with a dynamic `Wrap` of small cards/chips representing each sale occurrence, color-coded in green for `Ready` (cash) and red for `Credit` with timestamps in [purchased_product_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/purchased_product_card.dart).
+- **Rule for next agent:** ALWAYS render horizontal timeline summary card bodies as visual occurrence chips (green for Ready, red for Credit) indicating chronological events rather than raw product text.
+
+---
+
+### 2026-07-27 · Graph timeline UI with axis lines and nodes in purchase summaries
+
+- **Context:** Transitioning card summary views into stylized progress timeline axis widgets.
+- **Mistake:** Using flat chip grids that do not communicate linear progress or step events chronologically.
+- **Root cause:** Day transactions represent chronological step progress. Displaying them as nodes on a horizontal axis line provides a graph-like visual feed.
+- **Fix applied:** Implemented a horizontal graph timeline UI inside [purchased_product_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/purchased_product_card.dart) utilizing a background axis line and centered nodes (circles with thick matching borders and glowing shadows) indicating daily Ready/Credit sale occurrences with times.
+- **Rule for next agent:** ALWAYS display horizontal daily overview cards utilizing a timeline graph widget with axis lines and glowing circular nodes.
+
+---
+
+### 2026-07-27 · Grid stroke graph timeline layout with X and Y axes
+
+- **Context:** Transitioning daily summary cards into mini graph-grid analytical visual widgets.
+- **Mistake:** Omitting grid strokes, Y-axis references (Ready vs Credit), or trace lines connecting coordinates to timeline bounds.
+- **Root cause:** Day-based timeline plots are best represented as coordinates mapping type (Y-axis) against transaction times (X-axis) overlaid on a structured grid layer.
+- **Fix applied:** Implemented an analytical graph timeline layout in [purchased_product_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/purchased_product_card.dart) featuring Y-axis labels ('Ready' at top in green, 'Credit' at bottom in red), horizontal/vertical dashed grid stroke lines, solid X & Y axis lines, and trace-connected node circles representing chronological sale coordinates with bottom timestamps.
+- **Rule for next agent:** ALWAYS render purchase overview bodies utilizing a grid chart layout displaying Ready (top Y-axis) and Credit (bottom Y-axis) points trace-linked to the X-axis timeline.
+
+---
+
+### 2026-07-27 · Responsive timeline nodes using Expanded to prevent RenderFlex overflow
+
+- **Context:** Preventing horizontal RenderFlex layout overflows when a customer records multiple transactions in a single day.
+- **Mistake:** Using fixed-width widgets (`SizedBox(width: 48)`) for plotted timeline nodes inside small horizontal parent cards (width `220`), which causes right-edge visual overflows.
+- **Root cause:** Dynamic counts of elements in horizontal layout rows must divide the parent space proportionally to guarantee they never exceed strict layout boundaries.
+- **Fix applied:** Replaced fixed-width graph coordinates inside [purchased_product_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/purchased_product_card.dart) with `Expanded` widgets, allowing nodes to share the available horizontal space dynamically and resolving the 27px overflow.
+- **Rule for next agent:** ALWAYS wrap plotted timeline grid nodes in `Expanded` inside Row layouts to ensure they scale dynamically without causing horizontal RenderFlex overflows.
+
+---
+
+### 2026-07-27 · Unified single grid graph timeline representing purchase summaries
+
+- **Context:** Replacing multiple sliding timeline cards with a single unified chronological chart widget.
+- **Mistake:** Rendering distinct card scroll lists for transactions when the user prefers a single, macro-view grid graph (Y: Date, X: Time).
+- **Root cause:** Macro analytical dashboards are cleaner and less prone to overflow bugs when they present all transaction dates and times on a single timeline axis board using coordinate alignments.
+- **Fix applied:** Overwrote [financial_summary_block.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/financial_summary_block.dart) to draw a single Grid Chart (Y-axis: Dates as rows, X-axis: Times as columns) with responsive alignment coordinates (`hourFraction`), where tapping plotted node circles (green/red) opens the detailed elevated financial summary bottom sheet. Deleted the unused `purchased_product_card.dart` imports.
+- **Rule for next agent:** ALWAYS render customer purchase summaries as a single unified grid timeline graph (Y: Date, X: Time) displaying interactive tapped nodes rather than separate scrollable cards.
+
+---
+
+### 2026-07-27 · GitHub contribution activity grid for purchase summaries
+
+- **Context:** Transitioning daily transaction indicators into a GitHub-style weekly contribution activity matrix.
+- **Mistake:** Building standard timeline axes when the user specifically requests a commit grid chart representation.
+- **Root cause:** Git contribution charts represent activity density per calendar day arranged as weekdays (Y-axis) by weeks (X-axis).
+- **Fix applied:** Re-implemented the purchase summary block in [financial_summary_block.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/financial_summary_block.dart) as a GitHub contribution grid displaying 8 weeks (columns) of 7 days (rows). Cells are color-coded (red for Credit sales, green for Ready cash sales, grey for no activity) and labeled with weekday ticks (`Mon`, `Wed`, `Fri`, `Sun`) and dynamic Month name headers. Tapping any active cell opens the detailed financial invoice list modal.
+- **Rule for next agent:** ALWAYS render purchase histories as a GitHub contribution activity grid chart showing Ready (green) and Credit (red) calendar cells mapped over weeks.
+
+---
+
+### 2026-07-27 · Stateful calendar contribution grid with 5-year and 12-month selectors
+
+- **Context:** Implementing navigation controls to allow viewing daily transaction activity across months and years.
+- **Mistake:** Rendering rigid weekly grids that cannot scroll or represent historical transactions spanning several years.
+- **Root cause:** To inspect transaction trends, collectors need to select specific years and months. Presenting this as a monthly calendar grid (7 columns for weekdays, 5-6 rows for weeks) allows all dates of any selected month to be visually represented responsively on mobile.
+- **Fix applied:** Converted [financial_summary_block.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/financial_summary_block.dart) to a stateful widget. Added a horizontal Year selector (5 years choice pills) and Month selector (12 month chips) that update the visual calendar grid. Cells represent calendar days (labeled `1` to `31`), color-coded based on sale activity status (green: Ready, red: Credit, grey: empty/inactive). Tapping active days triggers detailed timeline bottom sheet modals.
+- **Rule for next agent:** ALWAYS display calendar-style purchase activity matrices utilizing stateful Year (5 options) and Month (12 options) pills above a 7-column weekday calendar grid.
+
+---
+
+### 2026-07-27 · Combined concise month and year filters top-row layout
+
+- **Context:** Saving visual space inside the calendar chart filters layout.
+- **Mistake:** Dedicating separate full-width rows for Year and Month selectors, causing vertical scroll bloat.
+- **Root cause:** Year selection can be rendered as a compact dropdown menu on the right side of the screen, freeing up horizontal space on the left to render the Month capsule scroll list.
+- **Fix applied:** Redesigned the filter header in [financial_summary_block.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/financial_summary_block.dart) by wrapping Months scroll (left) and Year selection DropdownButton (right) into a single concise Row layout. Removed the unused `_buildWeekdayLabel` helper method.
+- **Rule for next agent:** ALWAYS align horizontal Month tabs and Year dropdown filters into a single concise row directly above the calendar grid to save vertical display space.
+
+---
+
+### 2026-07-27 · Split-pane GitHub calendar grid with vertical month selector and event chips
+
+- **Context:** Implementing a highly detailed GitHub-style activity grid with vertical scrolling month navigation and event logs.
+- **Mistake:** Rendering day numbers inside cells or losing sequential event context in overview layouts.
+- **Root cause:** Real GitHub contribution grids show blank status squares representing weekday rows by calendar weeks, requiring chronological lists of active event chips below the grid for text readability.
+- **Fix applied:** Overwrote [financial_summary_block.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/financial_summary_block.dart) with a split-pane layout containing a vertical Month list selector on the left and a blank GitHub grid matrix (Mon-Sun rows, weeks columns) on the right. Below the grid is a chronological list of compact event chips showing date tags, status indicators, and total rupees. Corrected SizedBox alignment/margin compilation issues.
+- **Rule for next agent:** ALWAYS render split-pane purchase summaries as a vertical Month scroll selector (left) beside a blank GitHub calendar grid (right) with chronological detailed event chips below.
+
 
 
 

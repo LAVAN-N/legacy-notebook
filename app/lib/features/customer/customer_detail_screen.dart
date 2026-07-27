@@ -16,7 +16,6 @@ import 'controllers/customer_controller.dart';
 import 'widgets/customer_context_card.dart';
 import 'widgets/financial_summary_block.dart';
 import 'widgets/timeline_entry_tile.dart';
-import 'widgets/purchased_product_card.dart';
 import 'widgets/custom_calendar_view.dart';
 
 class CustomerDetailScreen extends ConsumerStatefulWidget {
