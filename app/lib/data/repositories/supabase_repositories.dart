@@ -190,6 +190,7 @@ class SupabaseSaleRepository implements SaleRepository {
     required int advanceAmount,
     required String soldBy,
     int discount = 0,
+    int creditCharge = 0,
     String? remarks,
   }) => throw UnimplementedError('wire in follow-up skill');
 

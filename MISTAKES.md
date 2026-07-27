@@ -467,6 +467,16 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Rendered the computed markup margin using a multiplier tag format (`x25` for 25% markup) inside a horizontal Row next to the selling price in [inventory_products_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/inventory_products_screen.dart).
 - **Rule for next agent:** ALWAYS render margin percentages using standard multiplier notations (e.g. `x25` for 25% profit margin) next to the primary selling price in catalog displays.
 
+---
+
+### 2026-07-27 · Credit surcharge input integration on credit sales
+
+- **Context:** Adding a credit transaction surcharge to credit sales records.
+- **Mistake:** Calculating credit surcharge as a static rupee field without support for percentages, or forgetting to pass the calculated surcharge to saveSale database queries.
+- **Root cause:** Credit charges must support unit toggles (₹ and %) and be added directly to the total sale amount before determining financed amounts and running balances.
+- **Fix applied:** Implemented credit charge state parameters (`creditChargeValue`, `creditChargeType`) in [sale_controller.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/sale/controllers/sale_controller.dart). Added a custom styled ₹/% toggle and numeric input in [sale_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/sale/sale_screen.dart), and passed the computed surcharge to the SQLite query save transaction.
+- **Rule for next agent:** ALWAYS allow credit surcharge inputs to toggle between absolute (₹) and percentage (%) units, and add it directly to total sale values to ensure financed running balances are updated correctly.
+
 
 
 

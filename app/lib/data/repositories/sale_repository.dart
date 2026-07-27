@@ -8,6 +8,7 @@ abstract class SaleRepository {
     required int advanceAmount,
     required String soldBy,
     int discount = 0,
+    int creditCharge = 0,
     String? remarks,
   });
 

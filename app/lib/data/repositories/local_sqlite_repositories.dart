@@ -832,6 +832,7 @@ class LocalSqliteSaleRepository implements SaleRepository {
     required int advanceAmount,
     required String soldBy,
     int discount = 0,
+    int creditCharge = 0,
     String? remarks,
   }) async {
     final db = await DatabaseHelper.instance.database;
@@ -845,6 +846,7 @@ class LocalSqliteSaleRepository implements SaleRepository {
       totalAmount += qty * unitPrice;
     }
     totalAmount -= discount;
+    totalAmount += creditCharge;
 
     // Business Rule 5: Enforce advance <= totalAmount
     if (advanceAmount > totalAmount) {

@@ -26,6 +26,8 @@ class SaleScreenState {
     required this.lineItems,
     required this.advanceAmount,
     required this.isDiscounted,
+    this.creditChargeValue = 0.0,
+    this.creditChargeType = 'RUPEE',
     required this.remarks,
     required this.errorMessage,
     required this.isSaving,
@@ -37,14 +39,27 @@ class SaleScreenState {
   final List<SaleItemInput> lineItems;
   final int advanceAmount;
   final bool isDiscounted;
+  final double creditChargeValue;
+  final String creditChargeType; // 'RUPEE' or 'PERCENT'
   final String remarks;
   final String? errorMessage;
   final bool isSaving;
 
   int get totalAmount => lineItems.fold<int>(0, (sum, item) => sum + item.subtotal) ~/ 100;
-  int get finalAmount => isDiscounted ? advanceAmount : totalAmount;
+
+  int get creditChargeAmount {
+    if (isDiscounted) return 0;
+    if (creditChargeType == 'PERCENT') {
+      return (totalAmount * creditChargeValue / 100.0).round();
+    } else {
+      return creditChargeValue.round();
+    }
+  }
+
+  int get grandTotal => totalAmount + creditChargeAmount;
+  int get finalAmount => isDiscounted ? advanceAmount : grandTotal;
   int get discountAmount => isDiscounted ? (totalAmount - advanceAmount).clamp(0, totalAmount) : 0;
-  int get creditAdded => isDiscounted ? 0 : (totalAmount - advanceAmount).clamp(0, 9999999);
+  int get creditAdded => isDiscounted ? 0 : (grandTotal - advanceAmount).clamp(0, 9999999);
   String get saleType => creditAdded == 0 ? 'READY' : 'CREDIT';
 
   SaleScreenState copyWith({
@@ -54,6 +69,8 @@ class SaleScreenState {
     List<SaleItemInput>? lineItems,
     int? advanceAmount,
     bool? isDiscounted,
+    double? creditChargeValue,
+    String? creditChargeType,
     String? remarks,
     String? errorMessage,
     bool? isSaving,
@@ -65,6 +82,8 @@ class SaleScreenState {
       lineItems: lineItems ?? this.lineItems,
       advanceAmount: advanceAmount ?? this.advanceAmount,
       isDiscounted: isDiscounted ?? this.isDiscounted,
+      creditChargeValue: creditChargeValue ?? this.creditChargeValue,
+      creditChargeType: creditChargeType ?? this.creditChargeType,
       remarks: remarks ?? this.remarks,
       errorMessage: errorMessage, // Nullable override
       isSaving: isSaving ?? this.isSaving,
@@ -96,6 +115,8 @@ class SaleController extends StateNotifier<SaleScreenState> {
           lineItems: [],
           advanceAmount: 0,
           isDiscounted: false,
+          creditChargeValue: 0.0,
+          creditChargeType: 'RUPEE',
           remarks: '',
           errorMessage: null,
           isSaving: false,
@@ -198,11 +219,21 @@ class SaleController extends StateNotifier<SaleScreenState> {
     state = state.copyWith(lineItems: list, advanceAmount: newAdvance, errorMessage: null);
   }
 
+  void updateCreditChargeValue(double val) {
+    if (val < 0) return;
+    state = state.copyWith(creditChargeValue: val, errorMessage: null);
+  }
+
+  void toggleCreditChargeType(String type) {
+    if (type != 'RUPEE' && type != 'PERCENT') return;
+    state = state.copyWith(creditChargeType: type, errorMessage: null);
+  }
+
   void updateAdvance(int advance) {
     String? error;
     if (advance < 0) {
       error = 'Advance cannot be negative';
-    } else if (advance > state.totalAmount) {
+    } else if (advance > state.grandTotal) {
       error = 'Advance paid cannot exceed total purchase value!';
     }
 
@@ -236,7 +267,7 @@ class SaleController extends StateNotifier<SaleScreenState> {
       return false;
     }
 
-    if (state.advanceAmount > state.totalAmount) {
+    if (state.advanceAmount > state.grandTotal) {
       state = state.copyWith(errorMessage: 'Advance paid cannot exceed total purchase value.');
       return false;
     }
@@ -257,6 +288,7 @@ class SaleController extends StateNotifier<SaleScreenState> {
         items: mappedItems,
         advanceAmount: state.advanceAmount,
         discount: state.discountAmount,
+        creditCharge: state.creditChargeAmount * 100,
         soldBy: 'Ramesh (Collector)',
         remarks: state.remarks.isNotEmpty ? state.remarks : null,
       );

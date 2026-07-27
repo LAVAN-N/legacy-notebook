@@ -581,6 +581,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     required int advanceAmount,
     required String soldBy,
     int discount = 0,
+    int creditCharge = 0,
     String? remarks,
   }) async {
     int total = 0;
@@ -597,14 +598,15 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
       }
     }
  
-    final creditAdded = total - discount - advanceAmount;
+    final totalSaleAmount = total - discount + creditCharge;
+    final creditAdded = totalSaleAmount - advanceAmount;
  
     final sale = Sale(
       id: 's-${DateTime.now().millisecondsSinceEpoch}',
       customerId: customerId,
       saleDatetime: DateTime.now(),
       saleType: creditAdded == 0 ? 'READY' : 'CREDIT',
-      totalAmount: total - discount,
+      totalAmount: totalSaleAmount,
       advanceAmount: advanceAmount,
       financedAmount: creditAdded,
       soldBy: soldBy,

@@ -29,6 +29,7 @@ class SaleScreen extends ConsumerStatefulWidget {
 
 class _SaleScreenState extends ConsumerState<SaleScreen> {
   final TextEditingController _advanceController = TextEditingController();
+  final TextEditingController _creditChargeController = TextEditingController();
   final TextEditingController _remarksController = TextEditingController();
 
   bool get _isDirty {
@@ -37,6 +38,9 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
       return true;
     }
     if (_advanceController.text != '0' && _advanceController.text.isNotEmpty) {
+      return true;
+    }
+    if (_creditChargeController.text.isNotEmpty && _creditChargeController.text != '0') {
       return true;
     }
     if (_remarksController.text.isNotEmpty) {
@@ -91,6 +95,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
   @override
   void dispose() {
     _advanceController.dispose();
+    _creditChargeController.dispose();
     _remarksController.dispose();
     super.dispose();
   }
@@ -302,6 +307,114 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                 hintText: 'Enter cash down payment collected',
               ),
             ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Credit Charge input field
+            Text(
+              'Credit Charge (Optional)',
+              style: AppTypography.labelMedium.copyWith(color: colors.mutedFg),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _creditChargeController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    style: AppTypography.currencyMedium.copyWith(color: colors.foreground),
+                    onChanged: (val) {
+                      String sanitized = val.replaceAll(RegExp(r'[^0-9.]'), '');
+                      final dots = RegExp(r'\.').allMatches(sanitized);
+                      if (dots.length > 1) {
+                        final firstDotIdx = sanitized.indexOf('.');
+                        sanitized = sanitized.substring(0, firstDotIdx + 1) + 
+                            sanitized.substring(firstDotIdx + 1).replaceAll('.', '');
+                      }
+                      if (sanitized != val) {
+                        _creditChargeController.value = TextEditingValue(
+                          text: sanitized,
+                          selection: TextSelection.collapsed(offset: sanitized.length),
+                        );
+                      }
+                      final parsed = double.tryParse(sanitized) ?? 0.0;
+                      ref.read(saleControllerProvider(widget.customerId).notifier).updateCreditChargeValue(parsed);
+                    },
+                    decoration: InputDecoration(
+                      prefixText: state.creditChargeType == 'RUPEE' ? '₹ ' : null,
+                      suffixText: state.creditChargeType == 'PERCENT' ? ' %' : null,
+                      hintText: 'Enter credit surcharge',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: colors.muted.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: colors.border.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          ref.read(saleControllerProvider(widget.customerId).notifier).toggleCreditChargeType('RUPEE');
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: state.creditChargeType == 'RUPEE'
+                                ? colors.primary
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.horizontal(
+                              left: const Radius.circular(AppRadius.md - 1),
+                              right: state.creditChargeType == 'RUPEE' ? const Radius.circular(AppRadius.md - 1) : Radius.zero,
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            '₹',
+                            style: AppTypography.bodyMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: state.creditChargeType == 'RUPEE'
+                                  ? Colors.white
+                                  : colors.foreground,
+                            ),
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          ref.read(saleControllerProvider(widget.customerId).notifier).toggleCreditChargeType('PERCENT');
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: state.creditChargeType == 'PERCENT'
+                                ? colors.primary
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.horizontal(
+                              left: state.creditChargeType == 'PERCENT' ? const Radius.circular(AppRadius.md - 1) : Radius.zero,
+                              right: const Radius.circular(AppRadius.md - 1),
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            '%',
+                            style: AppTypography.bodyMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: state.creditChargeType == 'PERCENT'
+                                  ? Colors.white
+                                  : colors.foreground,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: AppSpacing.md),
 
             Row(
@@ -377,6 +490,22 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                         AmountText(amount: totalSale, style: AppTypography.currencySmall),
                       ],
                     ),
+                    if (state.creditChargeAmount > 0) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Credit Charge (${state.creditChargeType == 'RUPEE' ? '₹' : '${state.creditChargeValue.toStringAsFixed(0)}%'})',
+                            style: AppTypography.bodyMedium.copyWith(color: colors.warning),
+                          ),
+                          Text(
+                            '+ ${rupees(state.creditChargeAmount)}',
+                            style: AppTypography.currencySmall.copyWith(color: colors.warning),
+                          ),
+                        ],
+                      ),
+                    ],
                     if (state.discountAmount > 0) ...[
                       const SizedBox(height: 8),
                       Row(
