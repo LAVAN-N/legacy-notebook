@@ -288,7 +288,7 @@ class SaleController extends StateNotifier<SaleScreenState> {
         items: mappedItems,
         advanceAmount: state.advanceAmount,
         discount: state.discountAmount,
-        creditCharge: state.creditChargeAmount * 100,
+        creditCharge: state.creditChargeAmount,
         soldBy: 'Ramesh (Collector)',
         remarks: state.remarks.isNotEmpty ? state.remarks : null,
       );

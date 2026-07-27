@@ -5,18 +5,17 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../data/models/outstanding.dart';
-import '../../../data/models/activity.dart';
 import 'purchased_product_card.dart';
 
 class FinancialSummaryBlock extends StatelessWidget {
   const FinancialSummaryBlock({
     super.key,
     required this.outstanding,
-    required this.saleActivities,
+    required this.groupedSales,
   });
 
   final Outstanding outstanding;
-  final List<SaleActivity> saleActivities;
+  final List<GroupedSales> groupedSales;
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +115,7 @@ class FinancialSummaryBlock extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            if (saleActivities.isEmpty)
+            if (groupedSales.isEmpty)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
@@ -136,10 +135,10 @@ class FinancialSummaryBlock extends StatelessWidget {
                 height: 165,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: saleActivities.length,
+                  itemCount: groupedSales.length,
                   itemBuilder: (context, index) {
-                    final sale = saleActivities[index];
-                    return PurchaseSummaryCard(sale: sale);
+                    final grouped = groupedSales[index];
+                    return PurchaseSummaryCard(groupedSale: grouped);
                   },
                 ),
               ),

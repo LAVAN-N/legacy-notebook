@@ -16,6 +16,7 @@ import 'controllers/customer_controller.dart';
 import 'widgets/customer_context_card.dart';
 import 'widgets/financial_summary_block.dart';
 import 'widgets/timeline_entry_tile.dart';
+import 'widgets/purchased_product_card.dart';
 import 'widgets/custom_calendar_view.dart';
 
 class CustomerDetailScreen extends ConsumerStatefulWidget {
@@ -159,8 +160,26 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
         final outstanding = data.outstanding;
         final timeline = data.timeline;
 
-        // Extract sale activities from timeline
-        final saleActivities = timeline.whereType<SaleActivity>().toList();
+        // Extract and group sale activities by date (day)
+        final groupedSalesMap = <DateTime, List<SaleActivity>>{};
+        for (final activity in timeline) {
+          if (activity is SaleActivity) {
+            final dateOnly = DateTime(activity.at.year, activity.at.month, activity.at.day);
+            groupedSalesMap.putIfAbsent(dateOnly, () => []).add(activity);
+          }
+        }
+        
+        final groupedSales = groupedSalesMap.entries.map((e) {
+          final sales = e.value;
+          final hasCredit = sales.any((s) => s.saleType.toUpperCase() == 'CREDIT');
+          return GroupedSales(
+            date: e.key,
+            saleType: hasCredit ? 'CREDIT' : 'READY',
+            sales: sales,
+          );
+        }).toList();
+        
+        groupedSales.sort((a, b) => b.date.compareTo(a.date));
 
         // Group activities by date for calendar view
         final activitiesByDate = <DateTime, List<Activity>>{};
@@ -191,7 +210,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                       // Financial Block (Merged summary + purchased products)
                       FinancialSummaryBlock(
                         outstanding: outstanding,
-                        saleActivities: saleActivities,
+                        groupedSales: groupedSales,
                       ),
                       const SizedBox(height: AppSpacing.lg),
 

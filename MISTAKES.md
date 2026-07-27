@@ -487,6 +487,76 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Replaced `PurchasedProductCard` with `PurchaseSummaryCard` in [purchased_product_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/purchased_product_card.dart). Unified lines using `timeline.whereType<SaleActivity>()` in [customer_detail_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/customer_detail_screen.dart), displaying item details alongside the financial summary (total, advance, credit) of that transaction.
 - **Rule for next agent:** ALWAYS render customer purchases grouped by transaction event/date rather than individual products, displaying the items list and transaction totals unified in a single card.
 
+---
+
+### 2026-07-27 · Multiple transaction day grouping and credit charge detail representation
+
+- **Context:** Grouping multiple sale transactions on the same calendar day into a single card representation.
+- **Mistake:** Rendering individual cards for each transaction occurring on the same day instead of unifying them, or omitting timestamps and calculated credit charges.
+- **Root cause:** Day-based records require grouping sale events under a single parent date object, separating nested lists by divider lines, and showing timestamps (`hh:mm a`) alongside the computed credit charge difference (`total - itemsTotal`).
+- **Fix applied:** Grouped `SaleActivity` records into `GroupedSales` in [customer_detail_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/customer_detail_screen.dart). Rendered nested lists separated by `<hr>` dividers and timestamps, and added a credit charge breakdown field in [purchased_product_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/purchased_product_card.dart).
+- **Rule for next agent:** ALWAYS append multiple sales from the same date into a unified card, separating them with dividers and timestamps, and displaying computed credit charge differences (`grandTotal - itemsTotal`) on their summaries.
+
+---
+
+### 2026-07-27 · Modal presentation for detailed financial transaction audits
+
+- **Context:** Presenting granular accounting metrics (credit charges, down payments, running balances) on timeline cards.
+- **Mistake:** Rendering full accounting summaries directly inside narrow horizontal card listings, causing layout crowding or text overflow.
+- **Root cause:** Card templates in narrow scroll rows should only present key indicators (items, sale types, primary totals) and delegate extensive audit tables to full-size bottom sheet dialogs.
+- **Fix applied:** Configured the card list in [financial_summary_block.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/financial_summary_block.dart) as a horizontal scrollable view of height 165. Added a `GestureDetector` tap handler in [purchased_product_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/purchased_product_card.dart) that triggers a bottom sheet modal displaying the products list, timestamps, and elevated financial calculation card for that sale.
+- **Rule for next agent:** ALWAYS keep horizontal timeline summaries simple and clean, and use interactive tap actions to display complete financial calculation grids on custom elevated bottom sheets.
+
+---
+
+### 2026-07-27 · Bottom sheet safety paddings and product list text overflows
+
+- **Context:** Hardening bottom sheet modals against keyboard overlays, safe area height bounds, and horizontal flex overflows.
+- **Mistake:** Omitting `SafeArea` on modal contents, manual pixel paddings that clash with device notches/virtual keyboard viewInsets, or letting raw `Text` widgets overflow inside horizontal flex Rows.
+- **Root cause:** Modal bottom sheets must be wrapped in `SafeArea(top: false)` and padded with `MediaQuery.of(context).viewInsets.bottom` to adapt to screen notches and soft keyboards. Horizontal lists of variable-length product names in Rows must be wrapped in `Expanded` with ellipsis overflow to prevent layout overflows.
+- **Fix applied:** Wrapped the bottom sheet return in `SafeArea(top: false)` and padded with `viewInsets.bottom` in [purchased_product_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/purchased_product_card.dart). Wrapped item names in `Expanded` with `maxLines: 2` and `overflow: TextOverflow.ellipsis` to resolve the 21px overflow.
+- **Rule for next agent:** ALWAYS wrap bottom sheet widgets in `SafeArea` with `viewInsets.bottom` padding, and wrap all variable-length name strings in `Expanded` inside Row layouts to prevent horizontal overflows.
+
+---
+
+### 2026-07-27 · Floating bottom navigation bar safety height in bottom sheets
+
+- **Context:** Ensuring modal sheet content does not get hidden behind custom floating navigation bars.
+- **Mistake:** Assuming system `SafeArea` or `viewInsets` is sufficient bottom padding on screens that feature custom floating tab navigation layers.
+- **Root cause:** App frameworks overlaying custom floating navigation bar layouts (e.g. height 88 + system notch padding) will cover the bottom portion of default modal sheets unless we explicitly add offsetting bottom pad spaces.
+- **Fix applied:** Added a dynamic calculation in [purchased_product_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/purchased_product_card.dart) that checks if the keyboard is open: if not, it applies a padding of `88.0 + rawSafeAreaBottom + AppSpacing.lg` to keep all controls clearly visible above the floating nav bar layer.
+- **Rule for next agent:** ALWAYS add height offsets (e.g. `88.0 + rawSafeAreaBottom`) to bottom sheets displayed on pages featuring custom floating tab navigation bars to prevent content from hiding underneath them.
+
+---
+
+### 2026-07-27 · Revert bottom sheet modal SafeArea wrapper
+
+- **Context:** Restoring default modal presentation without extra SafeArea wrappers.
+- **Mistake:** Over-wrapping modal container overlays with SafeArea widget classes when not explicitly requested by UX/design guidelines.
+- **Root cause:** Dialogs and bottom sheet modals are often managed outside the Scaffold viewport, and standard system navigation padding (`MediaQuery.of(context).padding.bottom`) is preferred over nesting.
+- **Fix applied:** Reverted the bottom sheet wrapper changes in [purchased_product_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/purchased_product_card.dart) to return Container directly with `padding.bottom` set to `MediaQuery.of(context).padding.bottom + AppSpacing.lg`.
+- **Rule for next agent:** NEVER wrap default bottom sheets in additional `SafeArea` layers unless specifically requested, using standard system pad heights to handle device home indicators.
+
+---
+
+### 2026-07-27 · Navigation bar height offset inside bottom sheet padding
+
+- **Context:** Preventing bottom sheet contents from rendering underneath the app's custom floating bottom navigation bar.
+- **Mistake:** Omitting the `88.0` custom navigation bar height offset from the sheet container bottom padding parameter when not using standard layout screens.
+- **Root cause:** Default modal bottom sheet windows start from the absolute bottom of the window, so any custom overlay tab navigation bars (height `88.0`) sitting on top of the screen will hide the bottom of the sheet unless padding explicitly accounts for it.
+- **Fix applied:** Configured the bottom padding of the sheet container in [purchased_product_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/purchased_product_card.dart) to be `MediaQuery.of(context).padding.bottom + 88.0 + AppSpacing.lg`.
+- **Rule for next agent:** ALWAYS add custom floating navigation bar height offsets (`88.0`) to the container's bottom padding when designing modal bottom sheets on screens that display the custom floating navigation shell.
+
+---
+
+### 2026-07-27 · Credit charge scaling bug and unified same-day sales cards
+
+- **Context:** Grouping same-day sales of all payment types (ready cash/credit) and fixing scaling multiplier bugs on saved credit charges.
+- **Mistake:** Multiplying `creditChargeAmount` by 100 before calling `saveSale` database stubs, or dividing same-day sales into separate cards when they have different sale types.
+- **Root cause:** The database and repository layer processes sales and surcharge metrics in whole rupees, so multiplying by 100 scaled a ₹1,000 charge up to ₹1,00,000. Additionally, timeline cards should group all sales on the same date regardless of their READY/CREDIT type.
+- **Fix applied:** Removed the `* 100` scaling multiplier on the `creditCharge` parameter in [sale_controller.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/sale/controllers/sale_controller.dart). Grouped sales by date only (using `dateOnly`) and derived the primary card badge by checking if any sale contains credit terms in [customer_detail_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/customer_detail_screen.dart).
+- **Rule for next agent:** ALWAYS pass credit surcharge fields to save sale repository stubs in whole rupees (no `* 100` multiplication), and group all sale events on the same calendar date into a single card.
+
 
 
 
