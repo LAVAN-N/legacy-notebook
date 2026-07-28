@@ -757,6 +757,16 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Captured the notifier reference synchronously (`final notifier = ref.read(...)`) *before* registering the callback in the `dispose` method of [new_client_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/new_client_screen.dart).
 - **Rule for next agent:** NEVER access `ref` inside post-frame callbacks registered during a widget's unmount or disposal phase; always read and capture the notifier locally in `dispose` before scheduling the callback.
 
+---
+
+### 2026-07-28 · Scroll-to-hide FAB behavior with NotificationListener and AnimatedScale
+
+- **Context:** Implementing dynamic scroll-to-hide behavior for Floating Action Buttons on lists/grids (Add Client, Add Product).
+- **Mistake:** Using scroll controllers that require manual stateful initialization and disposal lifecycles, or using raw visibility changes without smooth scaling.
+- **Root cause:** Floating action buttons are visually prominent and should shrink dynamically when scrolling down to maximize reading area, and scale back up when scrolling up.
+- **Fix applied:** Wrapped scroll views in [clients_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/clients_screen.dart), [inventory_categories_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/inventory_categories_screen.dart), and [inventory_products_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/inventory_products_screen.dart) with a `NotificationListener<UserScrollNotification>` that toggles `_isFabVisible` depending on `ScrollDirection`. Wrapped the FABs in `IgnorePointer` and `AnimatedScale`. Added `package:flutter/rendering.dart` for `ScrollDirection` types.
+- **Rule for next agent:** ALWAYS use NotificationListener<UserScrollNotification> wrapped in AnimatedScale and IgnorePointer to implement clean scroll-to-hide Floating Action Buttons without needing manual ScrollController management.
+
 
 
 

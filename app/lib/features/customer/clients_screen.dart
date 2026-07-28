@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
@@ -24,6 +25,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
   String _selectedStatus = 'All';
   String? _selectedWeekday;
   String? _selectedPlace;
+  bool _isFabVisible = true;
 
   @override
   void dispose() {
@@ -165,18 +167,26 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
         'Clients',
         style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
       ),
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(
-          bottom: isKeyboardOpen ? 16.0 : 88.0 + rawSafeAreaBottom,
-        ),
-        child: Opacity(
-          opacity: 0.85,
-          child: FloatingActionButton(
-            onPressed: () => context.push(Routes.newClient),
-            shape: const CircleBorder(),
-            backgroundColor: colors.primary,
-            foregroundColor: colors.primaryFg,
-            child: const Icon(Icons.person_add_alt_1_rounded),
+      floatingActionButton: IgnorePointer(
+        ignoring: !_isFabVisible,
+        child: AnimatedScale(
+          scale: _isFabVisible ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: isKeyboardOpen ? 16.0 : 88.0 + rawSafeAreaBottom,
+            ),
+            child: Opacity(
+              opacity: 0.85,
+              child: FloatingActionButton(
+                onPressed: () => context.push(Routes.newClient),
+                shape: const CircleBorder(),
+                backgroundColor: colors.primary,
+                foregroundColor: colors.primaryFg,
+                child: const Icon(Icons.person_add_alt_1_rounded),
+              ),
+            ),
           ),
         ),
       ),
@@ -341,7 +351,16 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
 
           // List or Empty State
           Expanded(
-            child: filtered.isEmpty
+            child: NotificationListener<UserScrollNotification>(
+              onNotification: (notification) {
+                if (notification.direction == ScrollDirection.reverse) {
+                  if (_isFabVisible) setState(() => _isFabVisible = false);
+                } else if (notification.direction == ScrollDirection.forward) {
+                  if (!_isFabVisible) setState(() => _isFabVisible = true);
+                }
+                return false;
+              },
+              child: filtered.isEmpty
                 ? SingleChildScrollView(
                     child: Center(
                       child: Padding(
@@ -552,6 +571,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                       );
                     },
                   ),
+            ),
           ),
 
           const SizedBox(height: AppSpacing.md),

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -25,6 +26,7 @@ class _InventoryCategoriesScreenState
     extends ConsumerState<InventoryCategoriesScreen> {
   String _searchQuery = '';
   String _filterType = 'All'; // All, In stock, Low stock, Out of stock
+  bool _isFabVisible = true;
 
   IconData _getIconForCategory(String iconName) {
     final iconMap = {
@@ -107,18 +109,26 @@ class _InventoryCategoriesScreenState
     return AppScaffold(
       blendHeader: true,
       title: const Text('Inventory'),
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(
-          bottom: isKeyboardOpen ? 16.0 : 88.0 + rawSafeAreaBottom,
-        ),
-        child: Opacity(
-          opacity: 0.85,
-          child: FloatingActionButton(
-            onPressed: () => showAddProductSheet(context),
-            shape: const CircleBorder(),
-            backgroundColor: colors.primary,
-            foregroundColor: colors.primaryFg,
-            child: const Icon(Icons.add_box_rounded),
+      floatingActionButton: IgnorePointer(
+        ignoring: !_isFabVisible,
+        child: AnimatedScale(
+          scale: _isFabVisible ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: isKeyboardOpen ? 16.0 : 88.0 + rawSafeAreaBottom,
+            ),
+            child: Opacity(
+              opacity: 0.85,
+              child: FloatingActionButton(
+                onPressed: () => showAddProductSheet(context),
+                shape: const CircleBorder(),
+                backgroundColor: colors.primary,
+                foregroundColor: colors.primaryFg,
+                child: const Icon(Icons.add_box_rounded),
+              ),
+            ),
           ),
         ),
       ),
@@ -199,7 +209,16 @@ class _InventoryCategoriesScreenState
 
           // Grid of Categories or Products
           Expanded(
-            child: _searchQuery.isNotEmpty
+            child: NotificationListener<UserScrollNotification>(
+              onNotification: (notification) {
+                if (notification.direction == ScrollDirection.reverse) {
+                  if (_isFabVisible) setState(() => _isFabVisible = false);
+                } else if (notification.direction == ScrollDirection.forward) {
+                  if (!_isFabVisible) setState(() => _isFabVisible = true);
+                }
+                return false;
+              },
+              child: _searchQuery.isNotEmpty
                 ? (displayProducts.isEmpty
                     ? Center(
                         child: Padding(
@@ -275,6 +294,7 @@ class _InventoryCategoriesScreenState
                           return _buildCategoryCard(context, category, colors);
                         },
                       )),
+            ),
           ),
         ],
       ),
