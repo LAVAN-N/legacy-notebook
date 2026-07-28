@@ -85,15 +85,6 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
       return totalFinanced - totalCollected;
     }
 
-    // Dynamic stats
-    int totalOutstanding = 0;
-    for (final c in allCustomers) {
-      final out = getOutstanding(c.id);
-      if (out > 0) {
-        totalOutstanding += out;
-      }
-    }
-
     // Filter logic
     final filtered = allCustomers.where((c) {
       final q = _searchQuery.toLowerCase();
@@ -126,6 +117,15 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
 
       return true;
     }).toList();
+
+    // Dynamic stats based on filtered results
+    int totalOutstanding = 0;
+    for (final c in filtered) {
+      final out = getOutstanding(c.id);
+      if (out > 0) {
+        totalOutstanding += out;
+      }
+    }
 
     // Get unique weekdays represented by clients to show relevant filters
     final weekdaysWithClients =
@@ -199,7 +199,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
-                          '${allCustomers.length}',
+                          '${filtered.length}',
                           style: AppTypography.currencyMedium
                               .copyWith(color: colors.foreground),
                         ),

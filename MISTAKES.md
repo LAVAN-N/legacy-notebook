@@ -727,6 +727,16 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Changed `autofocus: true` to `autofocus: false` in the product picker search field of [sale_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/sale/sale_screen.dart).
 - **Rule for next agent:** NEVER set autofocus to true on search or filter fields inside overlay sheets to prevent keyboard occlusion on initial display.
 
+---
+
+### 2026-07-28 · Dynamic clients dashboard stats and green lowercase settled filter chip
+
+- **Context:** Ensuring search/filter screens present statistics based on current active query results, and styling settled indicators.
+- **Mistake:** Rendering overall database counts and total outstandings instead of updating statistics reactively based on filtered results. Hardcoding standard chips without styling special status options.
+- **Root cause:** Collectors filter the clients screen to see specific places or weekdays; dashboard indicators must represent the exact subset of clients currently visible to be useful. Settled accounts indicate complete collection (success) and should use green indicators.
+- **Fix applied:** Reordered filter logic to run before stats calculations in [clients_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/clients_screen.dart). Replaced overall dataset length and outstandings with filtered list parameters. Re-routed the "Settled" status filter chip styling to draw the text "settled" (lowercase) with `colors.success` formatting when active.
+- **Rule for next agent:** ALWAYS calculate screen summary headers, counts, and outstanding metrics using the active filtered list rather than the full database list, and color settled filter chips green using lowercase text.
+
 
 
 
