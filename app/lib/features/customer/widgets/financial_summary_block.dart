@@ -38,6 +38,7 @@ class FinancialSummaryBlock extends StatefulWidget {
 class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
   late int _selectedYear;
   late int _selectedMonth;
+  late final ScrollController _monthScrollController;
 
   @override
   void initState() {
@@ -45,6 +46,17 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
     final now = DateTime.now();
     _selectedYear = now.year;
     _selectedMonth = now.month;
+
+    // Standard Jan-Dec list index for current month is now.month - 1.
+    // Item height is ~36.0. Set initial offset to scroll current month to top.
+    final initialOffset = (now.month - 1) * 36.0;
+    _monthScrollController = ScrollController(initialScrollOffset: initialOffset);
+  }
+
+  @override
+  void dispose() {
+    _monthScrollController.dispose();
+    super.dispose();
   }
 
   Widget _buildLegendItem(Color color, String label, AppColors colors) {
@@ -423,10 +435,12 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Left column: Months Vertical Scroll Filter
+                          // Left column: Months Vertical Scroll Filter
                           SizedBox(
                             width: 52,
                             height: 172,
                             child: ListView.builder(
+                              controller: _monthScrollController,
                               physics: const BouncingScrollPhysics(),
                               itemCount: 12,
                               itemBuilder: (context, index) {
@@ -474,7 +488,7 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      'GitHub Activity Calendar',
+                                      'Activity Calendar',
                                       style: AppTypography.labelSmall.copyWith(color: colors.mutedFg, fontSize: 8),
                                     ),
                                     // Year Filter Dropdown

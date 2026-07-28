@@ -647,6 +647,36 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Overwrote [financial_summary_block.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/financial_summary_block.dart) with a split-pane layout containing a vertical Month list selector on the left and a blank GitHub grid matrix (Mon-Sun rows, weeks columns) on the right. Below the grid is a chronological list of compact event chips showing date tags, status indicators, and total rupees. Corrected SizedBox alignment/margin compilation issues.
 - **Rule for next agent:** ALWAYS render split-pane purchase summaries as a vertical Month scroll selector (left) beside a blank GitHub calendar grid (right) with chronological detailed event chips below.
 
+---
+
+### 2026-07-28 · Sorted Month list filter starting from current month going backward
+
+- **Context:** Keeping the current month at the top of the scroll filter list in chronological order.
+- **Mistake:** Listing calendar months in fixed January-to-December order, requiring the collector to scroll down to view current month transactions.
+- **Root cause:** Navigation structures are most helpful when recent activity is immediately displayed first, and historical periods follow as you scroll deeper.
+- **Fix applied:** Configured the Month vertical filter list inside [financial_summary_block.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/financial_summary_block.dart) to generate ordered months dynamically (current month at index 0, followed by previous months in reverse chronological order going back 12 steps).
+- **Rule for next agent:** ALWAYS sort scrollable month filter lists starting from the current month going backward in time to keep recent context visible first.
+
+---
+
+### 2026-07-28 · Chronologically sorted Month filter list starting from current month (rotated)
+
+- **Context:** Ordering months in standard chronological sequence (January to December) but starting the vertical selector list with the current month at index 0.
+- **Mistake:** Sorting months in reverse chronological order when the user explicitly requests correct chronological sequence starting from the current month.
+- **Root cause:** Standard chronological order is preferred for planning, but rotating the starting month keeps the current calendar month instantly visible at the top.
+- **Fix applied:** Corrected the month generator logic in [financial_summary_block.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/financial_summary_block.dart) to start from the current month and iterate forward chronologically wrapping around December: `(currentMonth + index - 1) % 12 + 1`.
+- **Rule for next agent:** ALWAYS sort scrollable month filters chronologically forward starting from the current month rotated.
+
+---
+
+### 2026-07-28 · Standard chronological Month list with ScrollController viewport offset
+
+- **Context:** Displaying the Month vertical filter list in standard January-to-December calendar order while focusing the viewport on the current month initially.
+- **Mistake:** Custom index-remapping or rotating the months list layout when the user prefers the normal January-to-December sequence with custom scroll focus.
+- **Root cause:** The list items should maintain standard calendar sequence, but we scroll the viewport automatically to position the current month first upon loading.
+- **Fix applied:** Restored standard `index + 1` (January to December) calendar order in [financial_summary_block.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/financial_summary_block.dart) and utilized a `ScrollController` initialized with an `initialScrollOffset` of `(currentMonth - 1) * 36.0` to position the current month at the top of the viewport when initialized.
+- **Rule for next agent:** ALWAYS keep scrollable month filters in standard chronological January-to-December order, using a ScrollController with offset calculations to scroll the current month to the top of the viewport.
+
 
 
 
