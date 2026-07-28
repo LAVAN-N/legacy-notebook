@@ -11,6 +11,7 @@ abstract class CollectionRepository {
     required int amount,
     String? reason,
     required String collectedBy,
+    DateTime? customDate,
   });
 
   Future<void> undoCollection(String collectionId);

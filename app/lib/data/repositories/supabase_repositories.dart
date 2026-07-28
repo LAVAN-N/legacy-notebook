@@ -173,6 +173,7 @@ class SupabaseCollectionRepository implements CollectionRepository {
     required int amount,
     String? reason,
     required String collectedBy,
+    DateTime? customDate,
   }) => throw UnimplementedError('wire in follow-up skill');
 
   @override
@@ -192,6 +193,7 @@ class SupabaseSaleRepository implements SaleRepository {
     int discount = 0,
     int creditCharge = 0,
     String? remarks,
+    DateTime? customDate,
   }) => throw UnimplementedError('wire in follow-up skill');
 
   @override

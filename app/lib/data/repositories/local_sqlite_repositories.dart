@@ -773,6 +773,7 @@ class LocalSqliteCollectionRepository implements CollectionRepository {
     required int amount,
     String? reason,
     required String collectedBy,
+    DateTime? customDate,
   }) async {
     final db = await DatabaseHelper.instance.database;
     final collectionId = 'col_${DateTime.now().millisecondsSinceEpoch}';
@@ -783,7 +784,7 @@ class LocalSqliteCollectionRepository implements CollectionRepository {
     await db.insert('collections', {
       'id': collectionId,
       'customer_id': customerId,
-      'visit_datetime': DateTime.now().toIso8601String(),
+      'visit_datetime': (customDate ?? DateTime.now()).toIso8601String(),
       'status': status,
       'amount': adjustedAmount,
       'reason': reason,
@@ -834,6 +835,7 @@ class LocalSqliteSaleRepository implements SaleRepository {
     int discount = 0,
     int creditCharge = 0,
     String? remarks,
+    DateTime? customDate,
   }) async {
     final db = await DatabaseHelper.instance.database;
     final saleId = 'sale_${DateTime.now().millisecondsSinceEpoch}';
@@ -863,7 +865,7 @@ class LocalSqliteSaleRepository implements SaleRepository {
       await txn.insert('sales', {
         'id': saleId,
         'customer_id': customerId,
-        'sale_datetime': DateTime.now().toIso8601String(),
+        'sale_datetime': (customDate ?? DateTime.now()).toIso8601String(),
         'sale_type': saleType,
         'total_amount': totalAmount,
         'advance_amount': advanceAmount,

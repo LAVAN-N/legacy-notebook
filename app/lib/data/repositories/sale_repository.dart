@@ -10,6 +10,7 @@ abstract class SaleRepository {
     int discount = 0,
     int creditCharge = 0,
     String? remarks,
+    DateTime? customDate,
   });
 
   Future<void> undoSale(String saleId);

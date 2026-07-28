@@ -221,7 +221,13 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                       // Identity Block
                       CustomerContextCard(
                         customer: customer,
-                        createdDate: timeline.isNotEmpty ? timeline.last.at : null,
+                        createdDate: () {
+                          final sales = timeline.whereType<SaleActivity>();
+                          if (sales.isNotEmpty) {
+                            return sales.last.at;
+                          }
+                          return timeline.isNotEmpty ? timeline.last.at : null;
+                        }(),
                       ),
                       const SizedBox(height: AppSpacing.lg),
 

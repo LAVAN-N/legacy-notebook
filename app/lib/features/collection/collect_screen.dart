@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
@@ -171,6 +172,8 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: AppSpacing.lg),
+            _buildDatePickerRow(context, ref, state.selectedDate),
             const SizedBox(height: AppSpacing.lg),
 
             // Segmented Status selector
@@ -463,6 +466,72 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
           ],
         ),
       ),
+      ),
+    );
+  }
+
+  Widget _buildDatePickerRow(BuildContext context, WidgetRef ref, DateTime selectedDate) {
+    final colors = context.colors;
+    final dateStr = DateFormat('dd MMM yyyy').format(selectedDate);
+
+    return InkWell(
+      onTap: () async {
+        final DateTime? picked = await showDatePicker(
+          context: context,
+          initialDate: selectedDate,
+          firstDate: DateTime(2020),
+          lastDate: DateTime.now().add(const Duration(days: 365)),
+          builder: (context, child) {
+            return Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: ColorScheme.light(
+                  primary: colors.primary,
+                  onPrimary: colors.primaryFg,
+                  onSurface: colors.foreground,
+                ),
+              ),
+              child: child!,
+            );
+          },
+        );
+        if (picked != null) {
+          ref.read(collectControllerProvider(widget.customerId).notifier).updateDate(picked);
+        }
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: colors.primary.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.primary.withValues(alpha: 0.15)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.calendar_month, color: colors.primary, size: 20),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Transaction Date (Migration)',
+                    style: AppTypography.labelSmall.copyWith(color: colors.mutedFg, fontSize: 10),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    dateStr,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: colors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.edit_calendar_outlined, color: colors.primary, size: 18),
+          ],
+        ),
       ),
     );
   }

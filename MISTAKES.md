@@ -767,6 +767,16 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Wrapped scroll views in [clients_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/clients_screen.dart), [inventory_categories_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/inventory_categories_screen.dart), and [inventory_products_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/inventory_products_screen.dart) with a `NotificationListener<UserScrollNotification>` that toggles `_isFabVisible` depending on `ScrollDirection`. Wrapped the FABs in `IgnorePointer` and `AnimatedScale`. Added `package:flutter/rendering.dart` for `ScrollDirection` types.
 - **Rule for next agent:** ALWAYS use NotificationListener<UserScrollNotification> wrapped in AnimatedScale and IgnorePointer to implement clean scroll-to-hide Floating Action Buttons without needing manual ScrollController management.
 
+---
+
+### 2026-07-28 · Custom Transaction Dates for Migration & Customer Created Date Derivation
+
+- **Context:** Implementing historical record migrations via custom transaction dates in sales and collections, and deriving client created date from their oldest sale.
+- **Mistake:** Assuming database creation dates (`created_at`) are the canonical reference point for older migrated customer records, or ignoring mock repositories when updating signatures.
+- **Root cause:** Business records migrated from prior systems need exact transaction datetimes. Additionally, interface overrides (`CollectionRepository`, `SaleRepository`) must match exactly across all repositories including the mock repository.
+- **Fix applied:** Added custom transaction date picker to `sale_screen.dart` and `collect_screen.dart`, forwarding custom dates to controllers and database insertions. Modified `MockRepository`, `LocalSaleRepository`, and `LocalCollectionRepository` signatures to accept optional `customDate`. Updated client created date calculations on the detail view to target the oldest `SaleActivity` in the history stream.
+- **Rule for next agent:** ALWAYS ensure transaction date overrides are supported across all collection/sale database paths and mock classes, and derive client created date from the oldest sale activity in their timeline when available.
+
 
 
 

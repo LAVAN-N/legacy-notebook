@@ -31,6 +31,7 @@ class SaleScreenState {
     required this.remarks,
     required this.errorMessage,
     required this.isSaving,
+    required this.selectedDate,
   });
 
   final Customer customer;
@@ -44,6 +45,7 @@ class SaleScreenState {
   final String remarks;
   final String? errorMessage;
   final bool isSaving;
+  final DateTime selectedDate;
 
   int get totalAmount => lineItems.fold<int>(0, (sum, item) => sum + item.subtotal) ~/ 100;
 
@@ -74,6 +76,7 @@ class SaleScreenState {
     String? remarks,
     String? errorMessage,
     bool? isSaving,
+    DateTime? selectedDate,
   }) {
     return SaleScreenState(
       customer: customer ?? this.customer,
@@ -87,6 +90,7 @@ class SaleScreenState {
       remarks: remarks ?? this.remarks,
       errorMessage: errorMessage, // Nullable override
       isSaving: isSaving ?? this.isSaving,
+      selectedDate: selectedDate ?? this.selectedDate,
     );
   }
 }
@@ -97,8 +101,8 @@ final saleControllerProvider = AutoDisposeStateNotifierProviderFamily<SaleContro
 
 class SaleController extends StateNotifier<SaleScreenState> {
   SaleController(this._ref, this._customerId)
-      : super(const SaleScreenState(
-          customer: Customer(
+      : super(SaleScreenState(
+          customer: const Customer(
             id: '',
             customerCode: '',
             name: '',
@@ -110,9 +114,9 @@ class SaleController extends StateNotifier<SaleScreenState> {
             sequenceNumber: 0,
             status: 'ACTIVE',
           ),
-          outstanding: Outstanding(customerId: '', totalFinanced: 0, totalCollected: 0, outstandingAmount: 0),
-          catalog: [],
-          lineItems: [],
+          outstanding: const Outstanding(customerId: '', totalFinanced: 0, totalCollected: 0, outstandingAmount: 0),
+          catalog: const [],
+          lineItems: const [],
           advanceAmount: 0,
           isDiscounted: false,
           creditChargeValue: 0.0,
@@ -120,6 +124,7 @@ class SaleController extends StateNotifier<SaleScreenState> {
           remarks: '',
           errorMessage: null,
           isSaving: false,
+          selectedDate: DateTime.now(),
         )) {
     _init();
 
@@ -254,6 +259,10 @@ class SaleController extends StateNotifier<SaleScreenState> {
     state = state.copyWith(remarks: remarks);
   }
 
+  void updateDate(DateTime date) {
+    state = state.copyWith(selectedDate: date);
+  }
+
   Future<bool> saveSale() async {
     if (state.isSaving) return false;
 
@@ -291,6 +300,7 @@ class SaleController extends StateNotifier<SaleScreenState> {
         creditCharge: state.creditChargeAmount,
         soldBy: 'Ramesh (Collector)',
         remarks: state.remarks.isNotEmpty ? state.remarks : null,
+        customDate: state.selectedDate,
       );
 
       state = state.copyWith(isSaving: false);

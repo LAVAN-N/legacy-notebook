@@ -12,6 +12,7 @@ class CollectScreenState {
     required this.notes,
     required this.errorMessage,
     required this.isSaving,
+    required this.selectedDate,
   });
 
   final Customer customer;
@@ -21,6 +22,7 @@ class CollectScreenState {
   final String notes;
   final String? errorMessage;
   final bool isSaving;
+  final DateTime selectedDate;
 
   CollectScreenState copyWith({
     Customer? customer,
@@ -30,6 +32,7 @@ class CollectScreenState {
     String? notes,
     String? errorMessage,
     bool? isSaving,
+    DateTime? selectedDate,
   }) {
     return CollectScreenState(
       customer: customer ?? this.customer,
@@ -39,6 +42,7 @@ class CollectScreenState {
       notes: notes ?? this.notes,
       errorMessage: errorMessage, // Nullable override
       isSaving: isSaving ?? this.isSaving,
+      selectedDate: selectedDate ?? this.selectedDate,
     );
   }
 }
@@ -49,8 +53,8 @@ final collectControllerProvider = AutoDisposeStateNotifierProviderFamily<Collect
 
 class CollectController extends StateNotifier<CollectScreenState> {
   CollectController(this._ref, this._customerId)
-      : super(const CollectScreenState(
-          customer: Customer(
+      : super(CollectScreenState(
+          customer: const Customer(
             id: '',
             customerCode: '',
             name: '',
@@ -62,12 +66,13 @@ class CollectController extends StateNotifier<CollectScreenState> {
             sequenceNumber: 0,
             status: 'ACTIVE',
           ),
-          outstanding: Outstanding(customerId: '', totalFinanced: 0, totalCollected: 0, outstandingAmount: 0),
+          outstanding: const Outstanding(customerId: '', totalFinanced: 0, totalCollected: 0, outstandingAmount: 0),
           status: 'PAYMENT',
           amount: 0,
           notes: '',
           errorMessage: null,
           isSaving: false,
+          selectedDate: DateTime.now(),
         )) {
     _init();
   }
@@ -123,6 +128,10 @@ class CollectController extends StateNotifier<CollectScreenState> {
     state = state.copyWith(notes: notes);
   }
 
+  void updateDate(DateTime date) {
+    state = state.copyWith(selectedDate: date);
+  }
+
   Future<bool> saveCollection() async {
     if (state.isSaving) return false;
 
@@ -154,6 +163,7 @@ class CollectController extends StateNotifier<CollectScreenState> {
         amount: state.status == 'CARRY_FORWARD' ? 0 : state.amount,
         reason: state.notes.isNotEmpty ? state.notes : null,
         collectedBy: 'Ramesh (Collector)',
+        customDate: state.selectedDate,
       );
       state = state.copyWith(isSaving: false);
       return true;

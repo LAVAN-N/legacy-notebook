@@ -543,11 +543,12 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     required int amount,
     String? reason,
     required String collectedBy,
+    DateTime? customDate,
   }) async {
     final collection = Collection(
       id: 'col-${DateTime.now().millisecondsSinceEpoch}',
       customerId: customerId,
-      visitDatetime: DateTime.now(),
+      visitDatetime: customDate ?? DateTime.now(),
       status: status,
       amount: amount,
       reason: reason,
@@ -583,6 +584,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     int discount = 0,
     int creditCharge = 0,
     String? remarks,
+    DateTime? customDate,
   }) async {
     int total = 0;
     for (final item in items) {
@@ -604,7 +606,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     final sale = Sale(
       id: 's-${DateTime.now().millisecondsSinceEpoch}',
       customerId: customerId,
-      saleDatetime: DateTime.now(),
+      saleDatetime: customDate ?? DateTime.now(),
       saleType: creditAdded == 0 ? 'READY' : 'CREDIT',
       totalAmount: totalSaleAmount,
       advanceAmount: advanceAmount,
