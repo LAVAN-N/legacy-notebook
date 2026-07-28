@@ -787,6 +787,16 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Removed the `dob` emptiness validator block in [new_client_controller.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/new_client_controller.dart) and updated the text field label in [new_client_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/new_client_screen.dart) to remove the asterisk.
 - **Rule for next agent:** ALWAYS align controller validations with UI optionality states when fields are changed between mandatory and optional.
 
+---
+
+### 2026-07-28 · Redesign Quick Action Row to Circle Icon Items
+
+- **Context:** Redesigning the Quick Actions section on the dashboard to use lightweight circular icon buttons instead of large Card panels, and introducing an "Add Product" action.
+- **Mistake:** Retaining large box elements or forgetting to clean up unused imports (such as `app_spacing.dart` when no longer using custom margins).
+- **Root cause:** Card wrappers add visual weight; replacing them with transparent round items provides a native dashboard aesthetics.
+- **Fix applied:** Overwrote [quick_actions_row.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/dashboard/widgets/quick_actions_row.dart) to define a grid of three custom circular icon items ("Collect Money", "New Client Sale", "Add Product"). Wired "Add Product" to trigger `showAddProductSheet(context)`. Cleaned up unused imports.
+- **Rule for next agent:** ALWAYS implement quick actions as circular, containerless icon items with centeralized text labels, and remember to clean up unused imports to satisfy compiler checks.
+
 
 
 
