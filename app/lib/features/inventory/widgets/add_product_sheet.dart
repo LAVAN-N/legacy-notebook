@@ -50,6 +50,9 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
   final _formKey = GlobalKey<FormState>();
   String? _selectedCategoryId;
   String? _imagePath;
+  String? _selectedBrand;
+  List<String> _brands = [];
+  final _brandKey = GlobalKey<FormFieldState<String>>();
   
   final _nameController = TextEditingController();
   final _brandController = TextEditingController();
@@ -109,9 +112,63 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
   void initState() {
     super.initState();
     _selectedCategoryId = widget.initialCategoryId;
+    final uniqueBrands = mockProductsList.map((p) => p.brand).toSet().toList();
+    uniqueBrands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    _brands = uniqueBrands;
     _mrpController.addListener(_onMrpChanged);
     _costPriceController.addListener(_onCostPriceChanged);
     _sellingPriceController.addListener(_onSellingPriceChanged);
+  }
+
+  void _showAddBrandSheet(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final nameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: colors.background,
+          title: Text(
+            'Add New Brand',
+            style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
+          ),
+          content: TextField(
+            controller: nameController,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: 'Brand Name',
+              hintText: 'e.g., Samsung',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+            ),
+            TextButton(
+              onPressed: () {
+                final newBrand = nameController.text.trim();
+                if (newBrand.isNotEmpty) {
+                  Navigator.pop(context);
+                  setState(() {
+                    if (!_brands.contains(newBrand)) {
+                      _brands.add(newBrand);
+                      _brands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+                    }
+                    _selectedBrand = newBrand;
+                    _brandController.text = newBrand;
+                    _brandKey.currentState?.didChange(newBrand);
+                  });
+                }
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   bool _isUpdatingPrice = false;
@@ -579,14 +636,47 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
               ),
               const SizedBox(height: 12),
 
-              TextFormField(
-                controller: _brandController,
+              DropdownButtonFormField<String>(
+                key: _brandKey,
+                initialValue: _selectedBrand,
                 decoration: InputDecoration(
                   labelText: 'Brand *',
                   prefixIcon: Icon(Icons.branding_watermark_outlined, color: colors.primary),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                validator: (val) => (val == null || val.trim().isEmpty) ? 'Brand is required' : null,
+                items: [
+                  ..._brands.map((b) => DropdownMenuItem(
+                        value: b,
+                        child: Text(b),
+                      )),
+                  DropdownMenuItem(
+                    value: 'add_new_brand',
+                    child: Row(
+                      children: [
+                        Icon(Icons.add_circle_outline, color: colors.primary, size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Add new brand...',
+                          style: TextStyle(
+                            color: colors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                onChanged: (val) async {
+                  if (val == 'add_new_brand') {
+                    _showAddBrandSheet(context);
+                  } else if (val != null) {
+                    setState(() {
+                      _selectedBrand = val;
+                      _brandController.text = val;
+                    });
+                  }
+                },
+                validator: (val) => (val == null || val == 'add_new_brand' || val.trim().isEmpty) ? 'Brand is required' : null,
               ),
               const SizedBox(height: 12),
 
@@ -1007,6 +1097,9 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
   final _formKey = GlobalKey<FormState>();
   String? _selectedCategoryId;
   String? _imagePath;
+  String? _selectedBrand;
+  List<String> _brands = [];
+  final _brandKey = GlobalKey<FormFieldState<String>>();
   
   late final TextEditingController _nameController;
   late final TextEditingController _brandController;
@@ -1079,6 +1172,15 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     _minimumStockController = TextEditingController(text: widget.product.minimumStock.toString());
     _descriptionController = TextEditingController(text: widget.product.description ?? '');
 
+    final uniqueBrands = mockProductsList.map((p) => p.brand).toSet().toList();
+    uniqueBrands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    _brands = uniqueBrands;
+    _selectedBrand = widget.product.brand;
+    if (_selectedBrand != null && !_brands.contains(_selectedBrand!)) {
+      _brands.add(_selectedBrand!);
+      _brands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    }
+
     // Calculate initial markup percent
     final cost = widget.product.costPrice.toDouble();
     final selling = widget.product.sellingPrice.toDouble();
@@ -1089,6 +1191,57 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     _mrpController.addListener(_onMrpChanged);
     _costPriceController.addListener(_onCostPriceChanged);
     _sellingPriceController.addListener(_onSellingPriceChanged);
+  }
+
+  void _showAddBrandSheet(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final nameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: colors.background,
+          title: Text(
+            'Add New Brand',
+            style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
+          ),
+          content: TextField(
+            controller: nameController,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: 'Brand Name',
+              hintText: 'e.g., Samsung',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+            ),
+            TextButton(
+              onPressed: () {
+                final newBrand = nameController.text.trim();
+                if (newBrand.isNotEmpty) {
+                  Navigator.pop(context);
+                  setState(() {
+                    if (!_brands.contains(newBrand)) {
+                      _brands.add(newBrand);
+                      _brands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+                    }
+                    _selectedBrand = newBrand;
+                    _brandController.text = newBrand;
+                    _brandKey.currentState?.didChange(newBrand);
+                  });
+                }
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   bool _isUpdatingPrice = false;
@@ -1515,14 +1668,47 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
               ),
               const SizedBox(height: 12),
 
-              TextFormField(
-                controller: _brandController,
+              DropdownButtonFormField<String>(
+                key: _brandKey,
+                initialValue: _selectedBrand,
                 decoration: InputDecoration(
                   labelText: 'Brand *',
                   prefixIcon: Icon(Icons.branding_watermark_outlined, color: colors.primary),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                validator: (val) => (val == null || val.trim().isEmpty) ? 'Brand is required' : null,
+                items: [
+                  ..._brands.map((b) => DropdownMenuItem(
+                        value: b,
+                        child: Text(b),
+                      )),
+                  DropdownMenuItem(
+                    value: 'add_new_brand',
+                    child: Row(
+                      children: [
+                        Icon(Icons.add_circle_outline, color: colors.primary, size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Add new brand...',
+                          style: TextStyle(
+                            color: colors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                onChanged: (val) async {
+                  if (val == 'add_new_brand') {
+                    _showAddBrandSheet(context);
+                  } else if (val != null) {
+                    setState(() {
+                      _selectedBrand = val;
+                      _brandController.text = val;
+                    });
+                  }
+                },
+                validator: (val) => (val == null || val == 'add_new_brand' || val.trim().isEmpty) ? 'Brand is required' : null,
               ),
               const SizedBox(height: 12),
 

@@ -797,6 +797,16 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Overwrote [quick_actions_row.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/dashboard/widgets/quick_actions_row.dart) to define a grid of three custom circular icon items ("Collect Money", "New Client Sale", "Add Product"). Wired "Add Product" to trigger `showAddProductSheet(context)`. Cleaned up unused imports.
 - **Rule for next agent:** ALWAYS implement quick actions as circular, containerless icon items with centeralized text labels, and remember to clean up unused imports to satisfy compiler checks.
 
+---
+
+### 2026-07-28 · Brand Field Dropdown with Add Brand Dialog
+
+- **Context:** Redesigning the brand text entry field in Add and Edit product sheets to be a sorted dropdown list with an "Add brand..." dynamic dialog action.
+- **Mistake:** Using the deprecated `value` parameter in `DropdownButtonFormField` instead of `initialValue` which causes analyzer deprecation warnings.
+- **Root cause:** Modern versions of Flutter deprecate FormField-based `value` parameters in favor of `initialValue` for initial load and key-based `currentState.didChange` for controlled updates.
+- **Fix applied:** Refactored brand fields in both `_AddProductSheetState` and `_EditProductSheetState` to use `DropdownButtonFormField` with `key` mapped to `_brandKey` and `initialValue` mapped to `_selectedBrand`. Programmatic updates after brand additions call `_brandKey.currentState?.didChange(newBrand)`.
+- **Rule for next agent:** NEVER use the deprecated `value` parameter on modern FormFields like `DropdownButtonFormField`; ALWAYS use `initialValue` and control dynamic value changes programmatically using a `GlobalKey<FormFieldState>`.
+
 
 
 
