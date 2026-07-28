@@ -697,6 +697,16 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Replaced `IconButton` widgets in the quantity adjuster row of [sale_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/sale/sale_screen.dart) with custom `GestureDetector` widgets wrapping `Container` structures of exact `28x28` dimensions.
 - **Rule for next agent:** NEVER use raw `IconButton` widgets in space-constrained horizontal rows where precise widths are needed; use custom `GestureDetector` widgets with fixed-size containers instead.
 
+---
+
+### 2026-07-28 · Global unfocus GestureDetector inside MaterialApp builder
+
+- **Context:** Implementing global tap-to-dismiss keyboard behavior when clicking outside text inputs.
+- **Mistake:** Wrapping individual screens or views with GestureDetector which fails to unfocus text inputs inside overlay routes, alerts, and bottom sheet modals.
+- **Root cause:** Dialogs, bottom sheets, and route changes render inside the top-level Navigator overlay, bypassing individual screen GestureDetectors.
+- **Fix applied:** Wrapped the `builder` parameter of `MaterialApp.router` in [app.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/app.dart) with a translucent `GestureDetector` executing `FocusManager.instance.primaryFocus?.unfocus()`.
+- **Rule for next agent:** ALWAYS wrap the MaterialApp builder widget with a translucent GestureDetector executing FocusManager unfocus to handle tap-to-dismiss keyboards globally across all screens and bottom sheets.
+
 
 
 
