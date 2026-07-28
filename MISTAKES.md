@@ -707,6 +707,26 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Wrapped the `builder` parameter of `MaterialApp.router` in [app.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/app.dart) with a translucent `GestureDetector` executing `FocusManager.instance.primaryFocus?.unfocus()`.
 - **Rule for next agent:** ALWAYS wrap the MaterialApp builder widget with a translucent GestureDetector executing FocusManager unfocus to handle tap-to-dismiss keyboards globally across all screens and bottom sheets.
 
+---
+
+### 2026-07-28 · Cached non-zero bottom safe-area offset to prevent bottom navigation overlaps during transitions
+
+- **Context:** Resolving action button layout overlaps on screen back-transitions inside bottom-navigation shells.
+- **Mistake:** Accessing raw view safe-area bottom padding inside transition frames where the overlay values temporarily drop to `0.0`, causing positioned elements to sink and overlap.
+- **Root cause:** Flutter route transition animations can cause the underlying window view safe-area metrics to fluctuate or reset to zero temporarily.
+- **Fix applied:** Implemented a persistent tracker variable `_maxSafeAreaBottom` in [customer_detail_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/customer_detail_screen.dart) that captures and locks the maximum non-zero safe area bottom padding ever reported by the view. Adjusted button position offset baseline from `88` to `96` to guarantee clearance over the floating bottom nav bar.
+- **Rule for next agent:** ALWAYS cache the maximum non-zero safe area bottom padding reported by the view to prevent elements in extend-body layouts from dropping down and overlapping bottom bars during route transitions.
+
+---
+
+### 2026-07-28 · Disabled search bar autofocus to prevent keyboard occlusion in bottom sheets
+
+- **Context:** Preventing the software keyboard from invoking automatically on launching the product picker.
+- **Mistake:** Setting `autofocus: true` on search text fields inside modal bottom sheets, causing the keyboard to invoke automatically and cover essential scroll content on presentation.
+- **Root cause:** Automatically focusing inputs inside modal overlays forces keyboard popups that disrupt visual discovery of content unless the user intentionally chooses to type.
+- **Fix applied:** Changed `autofocus: true` to `autofocus: false` in the product picker search field of [sale_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/sale/sale_screen.dart).
+- **Rule for next agent:** NEVER set autofocus to true on search or filter fields inside overlay sheets to prevent keyboard occlusion on initial display.
+
 
 
 

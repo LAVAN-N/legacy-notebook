@@ -719,7 +719,7 @@ class _ProductPickerSheetState extends ConsumerState<_ProductPickerSheet> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: TextField(
-                    autofocus: true,
+                    autofocus: false,
                     decoration: InputDecoration(
                       hintText: 'Search name, brand, sku...',
                       prefixIcon: const Icon(Icons.search),

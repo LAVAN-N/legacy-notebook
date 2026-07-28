@@ -39,6 +39,7 @@ class CustomerDetailScreen extends ConsumerStatefulWidget {
 class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
   bool _isCalendarView = false;
   int _activityLimit = 5;
+  double _maxSafeAreaBottom = 0.0;
 
   void _showActivityDetailsPopUp(DateTime date, List<Activity> activities) {
     final colors = context.colors;
@@ -138,7 +139,11 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final rawSafeAreaBottom = MediaQueryData.fromView(View.of(context)).padding.bottom;
+    final currentBottom = MediaQueryData.fromView(View.of(context)).padding.bottom;
+    if (currentBottom > _maxSafeAreaBottom) {
+      _maxSafeAreaBottom = currentBottom;
+    }
+    final rawSafeAreaBottom = _maxSafeAreaBottom > 0 ? _maxSafeAreaBottom : currentBottom;
     final detailState = ref.watch(customerDetailControllerProvider(widget.customerId));
 
     return detailState.when(
