@@ -677,6 +677,26 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Restored standard `index + 1` (January to December) calendar order in [financial_summary_block.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/financial_summary_block.dart) and utilized a `ScrollController` initialized with an `initialScrollOffset` of `(currentMonth - 1) * 36.0` to position the current month at the top of the viewport when initialized.
 - **Rule for next agent:** ALWAYS keep scrollable month filters in standard chronological January-to-December order, using a ScrollController with offset calculations to scroll the current month to the top of the viewport.
 
+---
+
+### 2026-07-28 · Add to Cart UI/UX with Builder-encapsulated non-nullable Cart item extraction
+
+- **Context:** Implementing direct Add and quantity counter adjustment actions in the product catalog sheet for new sales.
+- **Mistake:** Accessing nullable variables in closures or relying on implicit type-promotion in collection literals (`if` / `else if` blocks), which causes compiler warnings about nullable receivers.
+- **Root cause:** Dart's flow analysis does not propagate local variable type promotion inside callback closures or collection lists.
+- **Fix applied:** Converted `_ProductPickerSheet` in [sale_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/sale/sale_screen.dart) to a Riverpod `ConsumerStatefulWidget` so catalog additions and adjustment actions update the provider directly. Wrapped the quantity controller in a local `Builder` widget block inside the row list, declaring a local non-nullable variable `final cartItem = state.lineItems[existingIndex];` to completely avoid compiler warnings. Added a floating Zomato-style bottom Cart Summary bar.
+- **Rule for next agent:** ALWAYS encapsulate lists or widgets utilizing conditionally present items inside a local `Builder` to extract non-nullable states cleanly and avoid compiler type promotion warnings.
+
+---
+
+### 2026-07-28 · Custom GestureDetector replacement for IconButton to prevent layout overflows
+
+- **Context:** Resolving RenderFlex layout overflows inside the cart quantity adjuster row.
+- **Mistake:** Using material `IconButton` widgets in narrow flex layouts (like a product list row item) without completely overriding default layout padding, causing minor horizontal overlaps and `RenderFlex` overflows.
+- **Root cause:** Flutter's `IconButton` has implicit margins and touch-target padding constraints that can exceed parent flex widths.
+- **Fix applied:** Replaced `IconButton` widgets in the quantity adjuster row of [sale_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/sale/sale_screen.dart) with custom `GestureDetector` widgets wrapping `Container` structures of exact `28x28` dimensions.
+- **Rule for next agent:** NEVER use raw `IconButton` widgets in space-constrained horizontal rows where precise widths are needed; use custom `GestureDetector` widgets with fixed-size containers instead.
+
 
 
 
