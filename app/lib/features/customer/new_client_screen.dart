@@ -717,9 +717,9 @@ class _CustomerDetailsSection extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
 
-            // Date of birth (mandatory)
+            // Date of birth (optional)
             _buildDateField(
-              label: 'Date of birth *',
+              label: 'Date of birth',
               controller: dobController,
               onChanged: controller.setDob,
               errorText: state.errors['dob'],

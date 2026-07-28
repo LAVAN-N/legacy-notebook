@@ -777,6 +777,16 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Added custom transaction date picker to `sale_screen.dart` and `collect_screen.dart`, forwarding custom dates to controllers and database insertions. Modified `MockRepository`, `LocalSaleRepository`, and `LocalCollectionRepository` signatures to accept optional `customDate`. Updated client created date calculations on the detail view to target the oldest `SaleActivity` in the history stream.
 - **Rule for next agent:** ALWAYS ensure transaction date overrides are supported across all collection/sale database paths and mock classes, and derive client created date from the oldest sale activity in their timeline when available.
 
+---
+
+### 2026-07-28 · Make Date of Birth Optional in New Client Form
+
+- **Context:** Making the Date of Birth optional on the New Client registration/edit form.
+- **Mistake:** Forgetting to update validation logic in the controller alongside UI changes.
+- **Root cause:** Validation constraints on fields must match both the UI formatting and the controller validators.
+- **Fix applied:** Removed the `dob` emptiness validator block in [new_client_controller.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/new_client_controller.dart) and updated the text field label in [new_client_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/new_client_screen.dart) to remove the asterisk.
+- **Rule for next agent:** ALWAYS align controller validations with UI optionality states when fields are changed between mandatory and optional.
+
 
 
 

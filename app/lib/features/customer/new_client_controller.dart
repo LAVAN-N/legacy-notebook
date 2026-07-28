@@ -326,10 +326,6 @@ class NewClientController extends StateNotifier<NewClientFormState> {
       errors['address'] = 'Address must be ≤ 240 characters';
     }
 
-    if (state.dob.isEmpty) {
-      errors['dob'] = 'Date of birth is required';
-    }
-
     return errors;
   }
 
