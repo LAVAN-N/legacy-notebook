@@ -737,6 +737,16 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Reordered filter logic to run before stats calculations in [clients_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/clients_screen.dart). Replaced overall dataset length and outstandings with filtered list parameters. Re-routed the "Settled" status filter chip styling to draw the text "settled" (lowercase) with `colors.success` formatting when active.
 - **Rule for next agent:** ALWAYS calculate screen summary headers, counts, and outstanding metrics using the active filtered list rather than the full database list, and color settled filter chips green using lowercase text.
 
+---
+
+### 2026-07-28 · Clients list sorting and search-replace block boundaries safety
+
+- **Context:** Sorting the clients list by outstanding balance descending to show active accounts on top and settled accounts at the bottom, and resolving compile failures.
+- **Mistake:** Removing required return statements from closure bodies during replace tool invocations due to overlapping match scopes.
+- **Root cause:** The replacement range included the `return true;` statement at the tail end of the closure block which was missing from the replacement content, causing a compile-time type mismatch error.
+- **Fix applied:** Sorted the `filtered` list in [clients_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/clients_screen.dart) using a compare callback on outstanding balances descending (`outB.compareTo(outA)`). Restored the missing `return true;` statement inside the `where` closure.
+- **Rule for next agent:** ALWAYS double check replacement targets to ensure closure return statements or punctuation symbols are not accidentally swallowed, and sort the clients list descending by outstanding amount to keep active balances on top.
+
 
 
 

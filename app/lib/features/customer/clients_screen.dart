@@ -118,6 +118,13 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
       return true;
     }).toList();
 
+    // Sort: Keep outstandings on top (descending by amount), settled at the bottom
+    filtered.sort((a, b) {
+      final outA = getOutstanding(a.id);
+      final outB = getOutstanding(b.id);
+      return outB.compareTo(outA);
+    });
+
     // Dynamic stats based on filtered results
     int totalOutstanding = 0;
     for (final c in filtered) {
