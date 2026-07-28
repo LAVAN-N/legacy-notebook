@@ -747,6 +747,16 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Sorted the `filtered` list in [clients_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/clients_screen.dart) using a compare callback on outstanding balances descending (`outB.compareTo(outA)`). Restored the missing `return true;` statement inside the `where` closure.
 - **Rule for next agent:** ALWAYS double check replacement targets to ensure closure return statements or punctuation symbols are not accidentally swallowed, and sort the clients list descending by outstanding amount to keep active balances on top.
 
+---
+
+### 2026-07-28 · Riverpod 'ref' access in post-frame callbacks inside dispose
+
+- **Context:** Resolving `StateError: Cannot use "ref" after the widget was disposed` on popping the New Client screen.
+- **Mistake:** Accessing `ref.read` inside a `WidgetsBinding.instance.addPostFrameCallback` scheduled in the `dispose` method of a `ConsumerStatefulWidget`.
+- **Root cause:** Post-frame callbacks execute after the current rendering frame completes. By that time, the widget has completed its unmount/disposal phase, making the element's `ref` invalid and raising a Riverpod disposal assertion.
+- **Fix applied:** Captured the notifier reference synchronously (`final notifier = ref.read(...)`) *before* registering the callback in the `dispose` method of [new_client_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/new_client_screen.dart).
+- **Rule for next agent:** NEVER access `ref` inside post-frame callbacks registered during a widget's unmount or disposal phase; always read and capture the notifier locally in `dispose` before scheduling the callback.
+
 
 
 

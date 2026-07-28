@@ -95,8 +95,9 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
     _notesController.dispose();
     _placeNameController.dispose();
     _areaNameController.dispose();
+    final notifier = ref.read(newClientControllerProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(newClientControllerProvider.notifier).resetForm();
+      notifier.resetForm();
     });
     super.dispose();
   }
