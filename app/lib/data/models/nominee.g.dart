@@ -10,8 +10,8 @@ _$NomineeImpl _$$NomineeImplFromJson(Map<String, dynamic> json) =>
     _$NomineeImpl(
       id: json['id'] as String,
       name: json['name'] as String,
+      phone: json['phone'] as String,
       relation: json['relation'] as String?,
-      phone: json['phone'] as String?,
       dob: json['dob'] as String?,
     );
 
@@ -19,7 +19,7 @@ Map<String, dynamic> _$$NomineeImplToJson(_$NomineeImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
-      'relation': instance.relation,
       'phone': instance.phone,
+      'relation': instance.relation,
       'dob': instance.dob,
     };

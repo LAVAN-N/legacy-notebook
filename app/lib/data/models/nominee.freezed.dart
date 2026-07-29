@@ -22,8 +22,8 @@ Nominee _$NomineeFromJson(Map<String, dynamic> json) {
 mixin _$Nominee {
   String get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
+  String get phone => throw _privateConstructorUsedError;
   String? get relation => throw _privateConstructorUsedError;
-  String? get phone => throw _privateConstructorUsedError;
   String? get dob => throw _privateConstructorUsedError;
 
   /// Serializes this Nominee to a JSON map.
@@ -41,7 +41,7 @@ abstract class $NomineeCopyWith<$Res> {
       _$NomineeCopyWithImpl<$Res, Nominee>;
   @useResult
   $Res call(
-      {String id, String name, String? relation, String? phone, String? dob});
+      {String id, String name, String phone, String? relation, String? dob});
 }
 
 /// @nodoc
@@ -61,8 +61,8 @@ class _$NomineeCopyWithImpl<$Res, $Val extends Nominee>
   $Res call({
     Object? id = null,
     Object? name = null,
+    Object? phone = null,
     Object? relation = freezed,
-    Object? phone = freezed,
     Object? dob = freezed,
   }) {
     return _then(_value.copyWith(
@@ -74,13 +74,13 @@ class _$NomineeCopyWithImpl<$Res, $Val extends Nominee>
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
               as String,
+      phone: null == phone
+          ? _value.phone
+          : phone // ignore: cast_nullable_to_non_nullable
+              as String,
       relation: freezed == relation
           ? _value.relation
           : relation // ignore: cast_nullable_to_non_nullable
-              as String?,
-      phone: freezed == phone
-          ? _value.phone
-          : phone // ignore: cast_nullable_to_non_nullable
               as String?,
       dob: freezed == dob
           ? _value.dob
@@ -98,7 +98,7 @@ abstract class _$$NomineeImplCopyWith<$Res> implements $NomineeCopyWith<$Res> {
   @override
   @useResult
   $Res call(
-      {String id, String name, String? relation, String? phone, String? dob});
+      {String id, String name, String phone, String? relation, String? dob});
 }
 
 /// @nodoc
@@ -116,8 +116,8 @@ class __$$NomineeImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? name = null,
+    Object? phone = null,
     Object? relation = freezed,
-    Object? phone = freezed,
     Object? dob = freezed,
   }) {
     return _then(_$NomineeImpl(
@@ -129,13 +129,13 @@ class __$$NomineeImplCopyWithImpl<$Res>
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
               as String,
+      phone: null == phone
+          ? _value.phone
+          : phone // ignore: cast_nullable_to_non_nullable
+              as String,
       relation: freezed == relation
           ? _value.relation
           : relation // ignore: cast_nullable_to_non_nullable
-              as String?,
-      phone: freezed == phone
-          ? _value.phone
-          : phone // ignore: cast_nullable_to_non_nullable
               as String?,
       dob: freezed == dob
           ? _value.dob
@@ -151,8 +151,8 @@ class _$NomineeImpl implements _Nominee {
   const _$NomineeImpl(
       {required this.id,
       required this.name,
+      required this.phone,
       this.relation,
-      this.phone,
       this.dob});
 
   factory _$NomineeImpl.fromJson(Map<String, dynamic> json) =>
@@ -163,15 +163,15 @@ class _$NomineeImpl implements _Nominee {
   @override
   final String name;
   @override
-  final String? relation;
+  final String phone;
   @override
-  final String? phone;
+  final String? relation;
   @override
   final String? dob;
 
   @override
   String toString() {
-    return 'Nominee(id: $id, name: $name, relation: $relation, phone: $phone, dob: $dob)';
+    return 'Nominee(id: $id, name: $name, phone: $phone, relation: $relation, dob: $dob)';
   }
 
   @override
@@ -181,15 +181,15 @@ class _$NomineeImpl implements _Nominee {
             other is _$NomineeImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.name, name) || other.name == name) &&
+            (identical(other.phone, phone) || other.phone == phone) &&
             (identical(other.relation, relation) ||
                 other.relation == relation) &&
-            (identical(other.phone, phone) || other.phone == phone) &&
             (identical(other.dob, dob) || other.dob == dob));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, name, relation, phone, dob);
+  int get hashCode => Object.hash(runtimeType, id, name, phone, relation, dob);
 
   /// Create a copy of Nominee
   /// with the given fields replaced by the non-null parameter values.
@@ -211,8 +211,8 @@ abstract class _Nominee implements Nominee {
   const factory _Nominee(
       {required final String id,
       required final String name,
+      required final String phone,
       final String? relation,
-      final String? phone,
       final String? dob}) = _$NomineeImpl;
 
   factory _Nominee.fromJson(Map<String, dynamic> json) = _$NomineeImpl.fromJson;
@@ -222,9 +222,9 @@ abstract class _Nominee implements Nominee {
   @override
   String get name;
   @override
-  String? get relation;
+  String get phone;
   @override
-  String? get phone;
+  String? get relation;
   @override
   String? get dob;
 

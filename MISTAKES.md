@@ -946,3 +946,30 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Implemented a `_getCategoryName` lookup map in the repository and formatted the S3 path string using `<category_name>/<product_name>.<extension>` with spaces replaced by underscores for clean URL representation.
 - **Rule for next agent:** ALWAYS structure S3 storage object keys hierarchically using logical domain names (e.g. category and product name folders) rather than raw internal database IDs where readable URLs are expected.
 - **Guardrail:** Confirm that product S3 object URLs created in the database follow the `<category_name>/<product_name>.<extension>` format.
+
+### 2026-07-29 · Database null constraints and clashing loop IDs during nominee insertions
+
+- **Context:** Saving and updating customer nominee relationships in Supabase and local SQLite tables inside `supabase_repositories.dart` and `local_sqlite_repositories.dart`.
+- **Mistake:** Assuming that nominee phone number and relation columns are nullable when they were defined as `NOT NULL` in the database, resulting in crashes for optional UI inputs. Additionally, using simple timestamp strings inside loops to generate unique IDs, which crashed with duplicate key violations because inserts run faster than a millisecond/microsecond tick.
+- **Root cause:** Database table definition discrepancy with optional model parameters and generating identical timestamp-based IDs in execution loops.
+- **Fix applied:** Dropped `NOT NULL` constraints in Supabase, introduced empty-string writes workarounds for SQLite, and updated the repository ID generation code to use the UI's existing unique nominee ID if present, fallback appending index/hashes.
+- **Rule for next agent:** ALWAYS ensure that database columns align with optional model fields (nullable vs not null), and never generate loop IDs solely using microseconds epoch without unique offsets.
+- **Guardrail:** Verify that customers with multiple nominees (having empty phone numbers or relation fields) save and retrieve cleanly without constraint crashes.
+
+### 2026-07-29 · Type cast crashes during Customer.fromJson deserialization of nested Freezed collections
+
+- **Context:** Deserializing nested lists of models (such as `idProofs` and `nominees`) when reading custom maps from the Supabase database inside [supabase_repositories.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/data/repositories/supabase_repositories.dart).
+- **Mistake:** Passing lists of mapped objects like `proofs.map((p) => p.toJson()).toList()` inside the JSON map passed to `Customer.fromJson`. Because `json_serializable` does not automatically invoke `explicit_to_json` on child objects, the `document` property remained an instance of `_$IdProofDocumentImpl` inside the map, which crashed during casting to `Map<String, dynamic>`.
+- **Root cause:** Implicit nested serialization layout limits of Dart's `json_serializable` generator when converting model instances back to map representations.
+- **Fix applied:** Avoided converting objects to maps and back by refactoring the database fetch methods to instantiate the `Customer` class directly using its standard constructor.
+- **Rule for next agent:** NEVER convert class model instances to JSON maps and decode them back to construct parent models; ALWAYS instantiate model classes directly using their standard constructors for better performance and type-safety.
+- **Guardrail:** Confirm that the application dashboard and customer lists refresh and stream data without type cast exceptions.
+
+### 2026-07-29 · Database migration and validation dependencies when making optional model parameters mandatory
+
+- **Context:** Enforcing a required phone number for customer nominees across the database schema, Freezed models, mock data seeds, and UI sheets.
+- **Mistake:** Assuming that we can directly alter a database column to `NOT NULL` without migrating existing rows containing null values, which failed with database transaction errors. Also, neglecting to update existing mock model constructor instances and UI text field validation.
+- **Root cause:** Missing prerequisite migrations for existing database null values and missing validation state listeners for UI bottom sheets.
+- **Fix applied:** Ran SQL query to populate a dummy phone number placeholder for existing null nominees, set the column constraint to `SET NOT NULL`, updated all mock constructor instances, and added text changed state listeners to require non-empty input before saving nominees.
+- **Rule for next agent:** ALWAYS migrate existing database rows containing null/empty values before enforcing `NOT NULL` constraints, update mock seed models, and configure UI validators with proper change listeners.
+- **Guardrail:** Confirm that adding a nominee without a phone number is disabled in the UI, and editing nominees behaves correctly.

@@ -93,12 +93,16 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
 
       // Fetch nominees
       final nomineeMaps = await db.query('customer_nominees', where: 'customer_id = ?', whereArgs: [id]);
-      final nominees = nomineeMaps.map((nm) => Nominee(
-        id: nm['id'] as String,
-        name: nm['name'] as String,
-        phone: nm['phone'] as String,
-        relation: nm['relation'] as String,
-      )).toList();
+      final nominees = nomineeMaps.map((nm) {
+        final phoneStr = nm['phone'] as String?;
+        final relStr = nm['relation'] as String?;
+        return Nominee(
+          id: nm['id'] as String,
+          name: nm['name'] as String,
+          phone: phoneStr ?? '',
+          relation: (relStr == null || relStr.isEmpty) ? null : relStr,
+        );
+      }).toList();
 
       // Fetch proofs
       final proofMaps = await db.query('customer_proofs', where: 'customer_id = ?', whereArgs: [id]);
@@ -165,12 +169,16 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
 
     // Fetch nominees
     final nomineeMaps = await db.query('customer_nominees', where: 'customer_id = ?', whereArgs: [id]);
-    final nominees = nomineeMaps.map((nm) => Nominee(
-      id: nm['id'] as String,
-      name: nm['name'] as String,
-      phone: nm['phone'] as String,
-      relation: nm['relation'] as String,
-    )).toList();
+    final nominees = nomineeMaps.map((nm) {
+      final phoneStr = nm['phone'] as String?;
+      final relStr = nm['relation'] as String?;
+      return Nominee(
+        id: nm['id'] as String,
+        name: nm['name'] as String,
+        phone: phoneStr ?? '',
+        relation: (relStr == null || relStr.isEmpty) ? null : relStr,
+      );
+    }).toList();
 
     // Fetch proofs
     final proofMaps = await db.query('customer_proofs', where: 'customer_id = ?', whereArgs: [id]);
@@ -454,11 +462,11 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
       if (nominees != null) {
         for (var nominee in nominees) {
           await txn.insert('customer_nominees', {
-            'id': 'nom_${DateTime.now().millisecondsSinceEpoch}_${nominee.name.hashCode}',
+            'id': nominee.id.isNotEmpty ? nominee.id : 'nom_${DateTime.now().millisecondsSinceEpoch}_${nominee.name.hashCode}',
             'customer_id': customerId,
             'name': nominee.name,
             'phone': nominee.phone,
-            'relation': nominee.relation,
+            'relation': nominee.relation ?? '',
           });
         }
       }
@@ -466,7 +474,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
       if (idProofs != null) {
         for (var proof in idProofs) {
           await txn.insert('customer_proofs', {
-            'id': 'proof_${DateTime.now().millisecondsSinceEpoch}_${proof.type.hashCode}',
+            'id': proof.id.isNotEmpty ? proof.id : 'proof_${DateTime.now().millisecondsSinceEpoch}_${proof.type.hashCode}',
             'customer_id': customerId,
             'proof_type': proof.type,
             'image_url': proof.document?.localUri ?? '',
@@ -501,27 +509,54 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
   @override
   Future<void> updateCustomer(Customer customer) async {
     final db = await DatabaseHelper.instance.database;
-    await db.update('customers', {
-      'name': customer.name,
-      'phone': customer.phone,
-      'alternate_phone': customer.alternatePhone,
-      'address': customer.address,
-      'landmark': customer.landmark,
-      'proof_url': customer.proofUrl,
-      'location_url': customer.locationUrl,
-      'latitude': customer.location?.lat,
-      'longitude': customer.location?.lng,
-      'weekday_id': customer.weekdayId,
-      'place_id': customer.placeId,
-      'area_id': customer.areaId,
-      'status': customer.status,
-      'guardian_name': customer.guardianName,
-      'dob': customer.dob,
-      'occupation': customer.occupation,
-      'notes': customer.notes,
-    }, where: 'id = ?', whereArgs: [customer.id]);
+    await db.transaction((txn) async {
+      await txn.update('customers', {
+        'name': customer.name,
+        'phone': customer.phone,
+        'alternate_phone': customer.alternatePhone,
+        'address': customer.address,
+        'landmark': customer.landmark,
+        'proof_url': customer.proofUrl,
+        'location_url': customer.locationUrl,
+        'latitude': customer.location?.lat,
+        'longitude': customer.location?.lng,
+        'weekday_id': customer.weekdayId,
+        'place_id': customer.placeId,
+        'area_id': customer.areaId,
+        'status': customer.status,
+        'guardian_name': customer.guardianName,
+        'dob': customer.dob,
+        'occupation': customer.occupation,
+        'notes': customer.notes,
+      }, where: 'id = ?', whereArgs: [customer.id]);
+
+      // Refresh nominees
+      await txn.delete('customer_nominees', where: 'customer_id = ?', whereArgs: [customer.id]);
+      for (var nominee in customer.nominees) {
+        await txn.insert('customer_nominees', {
+          'id': nominee.id.isNotEmpty ? nominee.id : 'nom_${DateTime.now().millisecondsSinceEpoch}_${nominee.name.hashCode}',
+          'customer_id': customer.id,
+          'name': nominee.name,
+          'phone': nominee.phone,
+          'relation': nominee.relation ?? '',
+        });
+      }
+
+      // Refresh proofs
+      await txn.delete('customer_proofs', where: 'customer_id = ?', whereArgs: [customer.id]);
+      for (var proof in customer.idProofs) {
+        await txn.insert('customer_proofs', {
+          'id': proof.id.isNotEmpty ? proof.id : 'proof_${DateTime.now().millisecondsSinceEpoch}_${proof.type.hashCode}',
+          'customer_id': customer.id,
+          'proof_type': proof.type,
+          'image_url': proof.document?.localUri ?? '',
+        });
+      }
+    });
 
     TableBroadcaster.instance.notify('customers');
+    TableBroadcaster.instance.notify('customer_nominees');
+    TableBroadcaster.instance.notify('customer_proofs');
   }
 
   @override

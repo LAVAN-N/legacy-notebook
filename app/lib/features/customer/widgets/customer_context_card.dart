@@ -436,11 +436,11 @@ class CustomerContextCard extends StatelessWidget {
                         child: Icon(Icons.person, size: 16, color: colors.primary),
                       ),
                       title: Text(n.name, style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
-                      subtitle: Text('${n.relation ?? 'Nominee'}${n.phone != null ? ' · ${n.phone}' : ''}', style: AppTypography.labelSmall),
-                      trailing: n.phone != null
+                      subtitle: Text('${n.relation ?? 'Nominee'}${n.phone.isNotEmpty ? ' · ${n.phone}' : ''}', style: AppTypography.labelSmall),
+                      trailing: n.phone.isNotEmpty
                           ? IconButton(
                               icon: const Icon(Icons.phone_in_talk, size: 16),
-                              onPressed: () => _callPhone(n.phone!),
+                              onPressed: () => _callPhone(n.phone),
                               color: colors.primary,
                             )
                           : null,

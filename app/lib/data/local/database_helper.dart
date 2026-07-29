@@ -370,7 +370,7 @@ class DatabaseHelper {
           'id': n.id,
           'customer_id': c.id,
           'name': n.name,
-          'phone': n.phone ?? '',
+          'phone': n.phone,
           'relation': n.relation ?? '',
         });
       }

@@ -513,7 +513,7 @@ final mockCustomersList = [
     landmark: 'Opposite Government School',
     location: Location(lat: 10.0415, lng: 78.3350, label: 'Shop'),
     nominees: [
-      Nominee(id: 'n-3', name: 'Chinnasamy', relation: 'Father'),
+      Nominee(id: 'n-3', name: 'Chinnasamy', relation: 'Father', phone: '9443210988'),
     ],
     weekdayId: 'w-4', // Thursday
     placeId: 'p-1', // Melur
@@ -533,8 +533,8 @@ final mockCustomersList = [
     landmark: 'Beside Post Office',
     location: Location(lat: 9.9575, lng: 78.1820),
     nominees: [
-      Nominee(id: 'n-4', name: 'Rajendran', relation: 'Spouse'),
-      Nominee(id: 'n-5', name: 'Kavitha', relation: 'Daughter'),
+      Nominee(id: 'n-4', name: 'Rajendran', relation: 'Spouse', phone: '9988776654'),
+      Nominee(id: 'n-5', name: 'Kavitha', relation: 'Daughter', phone: '9988776653'),
     ],
     weekdayId: 'w-4', // Thursday
     placeId: 'p-2', // Othakadai

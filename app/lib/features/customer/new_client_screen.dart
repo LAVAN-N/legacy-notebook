@@ -1228,7 +1228,8 @@ class _NomineesBlockState extends State<_NomineesBlock> {
                       ),
                     ],
                     const SizedBox(height: AppSpacing.md),
-                    Text('Phone',
+                    const SizedBox(height: AppSpacing.md),
+                    Text('Phone *',
                         style: AppTypography.labelSmall
                             .copyWith(color: widget.colors.mutedFg)),
                     const SizedBox(height: AppSpacing.xs),
@@ -1241,8 +1242,9 @@ class _NomineesBlockState extends State<_NomineesBlock> {
                             borderRadius: BorderRadius.circular(8)),
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 8),
-                        hintText: 'Enter phone number (optional)',
+                        hintText: 'Enter phone number',
                       ),
+                      onChanged: (_) => setModalState(() {}),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     Row(
@@ -1258,6 +1260,7 @@ class _NomineesBlockState extends State<_NomineesBlock> {
                         const SizedBox(width: AppSpacing.sm),
                         ElevatedButton(
                           onPressed: nameCtrl.text.trim().isNotEmpty &&
+                                  phoneCtrl.text.trim().isNotEmpty &&
                                   (rel != 'Other' ||
                                       customRelCtrl.text.trim().isNotEmpty)
                               ? () {
@@ -1272,9 +1275,7 @@ class _NomineesBlockState extends State<_NomineesBlock> {
                                             .millisecondsSinceEpoch
                                             .toString(),
                                     name: nameCtrl.text.trim(),
-                                    phone: phoneCtrl.text.trim().isEmpty
-                                        ? null
-                                        : phoneCtrl.text.trim(),
+                                    phone: phoneCtrl.text.trim(),
                                     relation: chosenRelation,
                                     dob: null,
                                   );
@@ -1344,7 +1345,7 @@ class _NomineesBlockState extends State<_NomineesBlock> {
                       style: AppTypography.bodyMedium
                           .copyWith(fontWeight: FontWeight.bold)),
                   subtitle: Text(
-                    '${n.relation ?? ''}${n.phone != null && n.phone!.isNotEmpty ? ' · ${n.phone}' : ''}',
+                    '${n.relation ?? ''}${n.phone.isNotEmpty ? ' · ${n.phone}' : ''}',
                     style:
                         AppTypography.bodySmall.copyWith(color: colors.mutedFg),
                   ),

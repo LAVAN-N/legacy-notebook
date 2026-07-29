@@ -8,8 +8,8 @@ class Nominee with _$Nominee {
   const factory Nominee({
     required String id,
     required String name,
+    required String phone,
     String? relation,
-    String? phone,
     String? dob,
   }) = _Nominee;
 

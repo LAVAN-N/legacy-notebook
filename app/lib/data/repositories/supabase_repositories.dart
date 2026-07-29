@@ -68,31 +68,31 @@ class SupabaseCustomerRepository implements CustomerRepository {
             final id = map['id'] as String;
             final nominees = await getNominees(id);
             final proofs = await getProofs(id);
-            results.add(Customer.fromJson({
-              'id': map['id'],
-              'customerCode': map['customer_code'],
-              'name': map['name'],
-              'phone': map['phone'],
-              'alternatePhone': map['alternate_phone'],
-              'address': map['address'],
-              'landmark': map['landmark'],
-              'proofUrl': map['photo_url'],
-              'locationUrl': map['location_url'],
-              'location': (map['latitude'] != null && map['longitude'] != null)
-                  ? {'lat': map['latitude'], 'lng': map['longitude']}
+            results.add(Customer(
+              id: map['id'] as String,
+              customerCode: (map['customer_code'] as String?) ?? '',
+              name: (map['name'] as String?) ?? '',
+              phone: (map['phone'] as String?) ?? '',
+              alternatePhone: map['alternate_phone'] as String?,
+              address: (map['address'] as String?) ?? '',
+              landmark: map['landmark'] as String?,
+              proofUrl: map['proof_url'] as String?,
+              locationUrl: map['location_url'] as String?,
+              location: (map['latitude'] != null && map['longitude'] != null)
+                  ? Location(lat: (map['latitude'] as num).toDouble(), lng: (map['longitude'] as num).toDouble())
                   : null,
-              'nominees': nominees.map((n) => n.toJson()).toList(),
-              'idProofs': proofs.map((p) => p.toJson()).toList(),
-              'weekdayId': map['weekday_id'],
-              'placeId': map['place_id'],
-              'areaId': map['area_id'],
-              'sequenceNumber': map['sequence_number'] ?? 0,
-              'status': map['status'],
-              'guardianName': map['guardian_name'],
-              'dob': map['dob'],
-              'occupation': map['occupation'],
-              'notes': map['notes'],
-            }));
+              nominees: nominees,
+              idProofs: proofs,
+              weekdayId: (map['weekday_id'] as String?) ?? '',
+              placeId: (map['place_id'] as String?) ?? '',
+              areaId: (map['area_id'] as String?) ?? '',
+              sequenceNumber: (map['sequence_number'] as num?)?.toInt() ?? 0,
+              status: (map['status'] as String?) ?? 'ACTIVE',
+              guardianName: map['guardian_name'] as String?,
+              dob: map['dob'] as String?,
+              occupation: map['occupation'] as String?,
+              notes: map['notes'] as String?,
+            ));
           }
           return results;
         });
@@ -100,12 +100,12 @@ class SupabaseCustomerRepository implements CustomerRepository {
 
   Future<List<Nominee>> getNominees(String customerId) async {
     final res = await _client.from('customer_nominees').select().eq('customer_id', customerId);
-    return res.map((n) => Nominee.fromJson({
-      'id': n['id'],
-      'name': n['name'],
-      'phone': n['phone'],
-      'relation': n['relation'],
-    })).toList();
+    return res.map((n) => Nominee(
+      id: n['id'] as String,
+      name: n['name'] as String,
+      phone: (n['phone'] as String?) ?? '',
+      relation: n['relation'] as String?,
+    )).toList();
   }
 
   Future<List<IdProof>> getProofs(String customerId) async {
@@ -131,31 +131,31 @@ class SupabaseCustomerRepository implements CustomerRepository {
       final id = map['id'] as String;
       final nominees = await getNominees(id);
       final proofs = await getProofs(id);
-      results.add(Customer.fromJson({
-        'id': map['id'],
-        'customerCode': map['customer_code'],
-        'name': map['name'],
-        'phone': map['phone'],
-        'alternatePhone': map['alternate_phone'],
-        'address': map['address'],
-        'landmark': map['landmark'],
-        'proofUrl': map['photo_url'],
-        'locationUrl': map['location_url'],
-        'location': (map['latitude'] != null && map['longitude'] != null)
-            ? {'lat': map['latitude'], 'lng': map['longitude']}
+      results.add(Customer(
+        id: map['id'] as String,
+        customerCode: (map['customer_code'] as String?) ?? '',
+        name: (map['name'] as String?) ?? '',
+        phone: (map['phone'] as String?) ?? '',
+        alternatePhone: map['alternate_phone'] as String?,
+        address: (map['address'] as String?) ?? '',
+        landmark: map['landmark'] as String?,
+        proofUrl: map['proof_url'] as String?,
+        locationUrl: map['location_url'] as String?,
+        location: (map['latitude'] != null && map['longitude'] != null)
+            ? Location(lat: (map['latitude'] as num).toDouble(), lng: (map['longitude'] as num).toDouble())
             : null,
-        'nominees': nominees.map((n) => n.toJson()).toList(),
-        'idProofs': proofs.map((p) => p.toJson()).toList(),
-        'weekdayId': map['weekday_id'],
-        'placeId': map['place_id'],
-        'areaId': map['area_id'],
-        'sequenceNumber': map['sequence_number'] ?? 0,
-        'status': map['status'],
-        'guardianName': map['guardian_name'],
-        'dob': map['dob'],
-        'occupation': map['occupation'],
-        'notes': map['notes'],
-      }));
+        nominees: nominees,
+        idProofs: proofs,
+        weekdayId: (map['weekday_id'] as String?) ?? '',
+        placeId: (map['place_id'] as String?) ?? '',
+        areaId: (map['area_id'] as String?) ?? '',
+        sequenceNumber: (map['sequence_number'] as num?)?.toInt() ?? 0,
+        status: (map['status'] as String?) ?? 'ACTIVE',
+        guardianName: map['guardian_name'] as String?,
+        dob: map['dob'] as String?,
+        occupation: map['occupation'] as String?,
+        notes: map['notes'] as String?,
+      ));
     }
     return results;
   }
@@ -177,31 +177,31 @@ class SupabaseCustomerRepository implements CustomerRepository {
     if (res == null) return null;
     final nominees = await getNominees(id);
     final proofs = await getProofs(id);
-    return Customer.fromJson({
-      'id': res['id'],
-      'customerCode': res['customer_code'],
-      'name': res['name'],
-      'phone': res['phone'],
-      'alternatePhone': res['alternate_phone'],
-      'address': res['address'],
-      'landmark': res['landmark'],
-      'proofUrl': res['photo_url'],
-      'locationUrl': res['location_url'],
-      'location': (res['latitude'] != null && res['longitude'] != null)
-          ? {'lat': res['latitude'], 'lng': res['longitude']}
+    return Customer(
+      id: res['id'] as String,
+      customerCode: (res['customer_code'] as String?) ?? '',
+      name: (res['name'] as String?) ?? '',
+      phone: (res['phone'] as String?) ?? '',
+      alternatePhone: res['alternate_phone'] as String?,
+      address: (res['address'] as String?) ?? '',
+      landmark: res['landmark'] as String?,
+      proofUrl: res['proof_url'] as String?,
+      locationUrl: res['location_url'] as String?,
+      location: (res['latitude'] != null && res['longitude'] != null)
+          ? Location(lat: (res['latitude'] as num).toDouble(), lng: (res['longitude'] as num).toDouble())
           : null,
-      'nominees': nominees.map((n) => n.toJson()).toList(),
-      'idProofs': proofs.map((p) => p.toJson()).toList(),
-      'weekdayId': res['weekday_id'],
-      'placeId': res['place_id'],
-      'areaId': res['area_id'],
-      'sequenceNumber': res['sequence_number'] ?? 0,
-      'status': res['status'],
-      'guardianName': res['guardian_name'],
-      'dob': res['dob'],
-      'occupation': res['occupation'],
-      'notes': res['notes'],
-    });
+      nominees: nominees,
+      idProofs: proofs,
+      weekdayId: (res['weekday_id'] as String?) ?? '',
+      placeId: (res['place_id'] as String?) ?? '',
+      areaId: (res['area_id'] as String?) ?? '',
+      sequenceNumber: (res['sequence_number'] as num?)?.toInt() ?? 0,
+      status: (res['status'] as String?) ?? 'ACTIVE',
+      guardianName: res['guardian_name'] as String?,
+      dob: res['dob'] as String?,
+      occupation: res['occupation'] as String?,
+      notes: res['notes'] as String?,
+    );
   }
 
   @override
@@ -525,7 +525,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
     if (nominees != null) {
       for (var n in nominees) {
         await _client.from('customer_nominees').insert({
-          'id': 'nom_${DateTime.now().microsecondsSinceEpoch}',
+          'id': n.id.isNotEmpty ? n.id : 'nom_${DateTime.now().microsecondsSinceEpoch}_${n.name.hashCode}',
           'customer_id': customerId,
           'name': n.name,
           'phone': n.phone,
@@ -598,7 +598,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
     await _client.from('customer_nominees').delete().eq('customer_id', customer.id);
     for (var n in customer.nominees) {
       await _client.from('customer_nominees').insert({
-        'id': n.id.isNotEmpty ? n.id : 'nom_${DateTime.now().microsecondsSinceEpoch}',
+        'id': n.id.isNotEmpty ? n.id : 'nom_${DateTime.now().microsecondsSinceEpoch}_${n.name.hashCode}',
         'customer_id': customer.id,
         'name': n.name,
         'phone': n.phone,
