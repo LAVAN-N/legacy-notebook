@@ -52,7 +52,6 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
   String? _imagePath;
   String? _selectedBrand;
   List<String> _brands = [];
-  final _brandKey = GlobalKey<FormFieldState<String>>();
   
   final _nameController = TextEditingController();
   final _brandController = TextEditingController();
@@ -120,52 +119,25 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
     _sellingPriceController.addListener(_onSellingPriceChanged);
   }
 
-  void _showAddBrandSheet(BuildContext context) {
+  void _showSearchableBrandDialog(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
-    final nameController = TextEditingController();
-
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: colors.background,
-          title: Text(
-            'Add New Brand',
-            style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
-          ),
-          content: TextField(
-            controller: nameController,
-            autofocus: true,
-            decoration: InputDecoration(
-              labelText: 'Brand Name',
-              hintText: 'e.g., Samsung',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
-            ),
-            TextButton(
-              onPressed: () {
-                final newBrand = nameController.text.trim();
-                if (newBrand.isNotEmpty) {
-                  Navigator.pop(context);
-                  setState(() {
-                    if (!_brands.contains(newBrand)) {
-                      _brands.add(newBrand);
-                      _brands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-                    }
-                    _selectedBrand = newBrand;
-                    _brandController.text = newBrand;
-                    _brandKey.currentState?.didChange(newBrand);
-                  });
-                }
-              },
-              child: const Text('Add'),
-            ),
-          ],
+        return _SearchableBrandDialog(
+          colors: colors,
+          brands: _brands,
+          initialBrand: _selectedBrand,
+          onSelect: (brand) {
+            setState(() {
+              if (!_brands.contains(brand)) {
+                _brands.add(brand);
+                _brands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+              }
+              _selectedBrand = brand;
+              _brandController.text = brand;
+            });
+          },
         );
       },
     );
@@ -636,47 +608,21 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
               ),
               const SizedBox(height: 12),
 
-              DropdownButtonFormField<String>(
-                key: _brandKey,
-                initialValue: _selectedBrand,
-                decoration: InputDecoration(
-                  labelText: 'Brand *',
-                  prefixIcon: Icon(Icons.branding_watermark_outlined, color: colors.primary),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                items: [
-                  ..._brands.map((b) => DropdownMenuItem(
-                        value: b,
-                        child: Text(b),
-                      )),
-                  DropdownMenuItem(
-                    value: 'add_new_brand',
-                    child: Row(
-                      children: [
-                        Icon(Icons.add_circle_outline, color: colors.primary, size: 18),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Add new brand...',
-                          style: TextStyle(
-                            color: colors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+              InkWell(
+                onTap: () => _showSearchableBrandDialog(context),
+                borderRadius: BorderRadius.circular(12),
+                child: IgnorePointer(
+                  child: TextFormField(
+                    controller: _brandController,
+                    decoration: InputDecoration(
+                      labelText: 'Brand *',
+                      prefixIcon: Icon(Icons.branding_watermark_outlined, color: colors.primary),
+                      suffixIcon: const Icon(Icons.arrow_drop_down),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
+                    validator: (val) => (val == null || val.trim().isEmpty) ? 'Brand is required' : null,
                   ),
-                ],
-                onChanged: (val) async {
-                  if (val == 'add_new_brand') {
-                    _showAddBrandSheet(context);
-                  } else if (val != null) {
-                    setState(() {
-                      _selectedBrand = val;
-                      _brandController.text = val;
-                    });
-                  }
-                },
-                validator: (val) => (val == null || val == 'add_new_brand' || val.trim().isEmpty) ? 'Brand is required' : null,
+                ),
               ),
               const SizedBox(height: 12),
 
@@ -1099,7 +1045,6 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
   String? _imagePath;
   String? _selectedBrand;
   List<String> _brands = [];
-  final _brandKey = GlobalKey<FormFieldState<String>>();
   
   late final TextEditingController _nameController;
   late final TextEditingController _brandController;
@@ -1193,52 +1138,25 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     _sellingPriceController.addListener(_onSellingPriceChanged);
   }
 
-  void _showAddBrandSheet(BuildContext context) {
+  void _showSearchableBrandDialog(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
-    final nameController = TextEditingController();
-
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: colors.background,
-          title: Text(
-            'Add New Brand',
-            style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
-          ),
-          content: TextField(
-            controller: nameController,
-            autofocus: true,
-            decoration: InputDecoration(
-              labelText: 'Brand Name',
-              hintText: 'e.g., Samsung',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
-            ),
-            TextButton(
-              onPressed: () {
-                final newBrand = nameController.text.trim();
-                if (newBrand.isNotEmpty) {
-                  Navigator.pop(context);
-                  setState(() {
-                    if (!_brands.contains(newBrand)) {
-                      _brands.add(newBrand);
-                      _brands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-                    }
-                    _selectedBrand = newBrand;
-                    _brandController.text = newBrand;
-                    _brandKey.currentState?.didChange(newBrand);
-                  });
-                }
-              },
-              child: const Text('Add'),
-            ),
-          ],
+        return _SearchableBrandDialog(
+          colors: colors,
+          brands: _brands,
+          initialBrand: _selectedBrand,
+          onSelect: (brand) {
+            setState(() {
+              if (!_brands.contains(brand)) {
+                _brands.add(brand);
+                _brands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+              }
+              _selectedBrand = brand;
+              _brandController.text = brand;
+            });
+          },
         );
       },
     );
@@ -1668,47 +1586,21 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
               ),
               const SizedBox(height: 12),
 
-              DropdownButtonFormField<String>(
-                key: _brandKey,
-                initialValue: _selectedBrand,
-                decoration: InputDecoration(
-                  labelText: 'Brand *',
-                  prefixIcon: Icon(Icons.branding_watermark_outlined, color: colors.primary),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                items: [
-                  ..._brands.map((b) => DropdownMenuItem(
-                        value: b,
-                        child: Text(b),
-                      )),
-                  DropdownMenuItem(
-                    value: 'add_new_brand',
-                    child: Row(
-                      children: [
-                        Icon(Icons.add_circle_outline, color: colors.primary, size: 18),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Add new brand...',
-                          style: TextStyle(
-                            color: colors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+              InkWell(
+                onTap: () => _showSearchableBrandDialog(context),
+                borderRadius: BorderRadius.circular(12),
+                child: IgnorePointer(
+                  child: TextFormField(
+                    controller: _brandController,
+                    decoration: InputDecoration(
+                      labelText: 'Brand *',
+                      prefixIcon: Icon(Icons.branding_watermark_outlined, color: colors.primary),
+                      suffixIcon: const Icon(Icons.arrow_drop_down),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
+                    validator: (val) => (val == null || val.trim().isEmpty) ? 'Brand is required' : null,
                   ),
-                ],
-                onChanged: (val) async {
-                  if (val == 'add_new_brand') {
-                    _showAddBrandSheet(context);
-                  } else if (val != null) {
-                    setState(() {
-                      _selectedBrand = val;
-                      _brandController.text = val;
-                    });
-                  }
-                },
-                validator: (val) => (val == null || val == 'add_new_brand' || val.trim().isEmpty) ? 'Brand is required' : null,
+                ),
               ),
               const SizedBox(height: 12),
 
@@ -2808,4 +2700,154 @@ Future<String> cropImage({
   await File(croppedPath).writeAsBytes(croppedBytes);
 
   return croppedPath;
+}
+
+class _SearchableBrandDialog extends StatefulWidget {
+  final AppColors colors;
+  final List<String> brands;
+  final String? initialBrand;
+  final ValueChanged<String> onSelect;
+
+  const _SearchableBrandDialog({
+    required this.colors,
+    required this.brands,
+    required this.initialBrand,
+    required this.onSelect,
+  });
+
+  @override
+  State<_SearchableBrandDialog> createState() => _SearchableBrandDialogState();
+}
+
+class _SearchableBrandDialogState extends State<_SearchableBrandDialog> {
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+  late List<String> _filteredBrands;
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredBrands = List.from(widget.brands);
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text.trim();
+      if (_searchQuery.isEmpty) {
+        _filteredBrands = List.from(widget.brands);
+      } else {
+        _filteredBrands = widget.brands
+            .where((b) => b.toLowerCase().contains(_searchQuery.toLowerCase()))
+            .toList();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = widget.colors;
+    final showAddOption = _searchQuery.isNotEmpty && 
+        !widget.brands.any((b) => b.toLowerCase() == _searchQuery.toLowerCase());
+
+    return Dialog(
+      backgroundColor: colors.background,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        constraints: const BoxConstraints(maxHeight: 350, maxWidth: 320),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Select Brand',
+              style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _searchController,
+              autofocus: false,
+              decoration: InputDecoration(
+                hintText: 'Search brand...',
+                prefixIcon: Icon(Icons.search, size: 20, color: colors.mutedFg),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: _filteredBrands.isEmpty && !showAddOption
+                  ? Center(
+                      child: Text(
+                        'No brands found',
+                        style: TextStyle(color: colors.mutedFg, fontSize: 13),
+                      ),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: _filteredBrands.length + (showAddOption ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index < _filteredBrands.length) {
+                          final brand = _filteredBrands[index];
+                          final isSelected = widget.initialBrand == brand;
+                          return ListTile(
+                            dense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            title: Text(
+                              brand,
+                              style: TextStyle(
+                                color: isSelected ? colors.primary : colors.foreground,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                            trailing: isSelected 
+                                ? Icon(Icons.check, color: colors.primary, size: 16) 
+                                : null,
+                            onTap: () {
+                              widget.onSelect(brand);
+                              Navigator.pop(context);
+                            },
+                          );
+                        } else {
+                          return ListTile(
+                            dense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            leading: Icon(Icons.add_circle_outline, color: colors.primary, size: 18),
+                            title: Text(
+                              'Add "$_searchQuery"',
+                              style: TextStyle(
+                                color: colors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            onTap: () {
+                              widget.onSelect(_searchQuery);
+                              Navigator.pop(context);
+                            },
+                          );
+                        }
+                      },
+                    ),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

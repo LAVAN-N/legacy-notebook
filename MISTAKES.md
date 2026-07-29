@@ -807,6 +807,26 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Refactored brand fields in both `_AddProductSheetState` and `_EditProductSheetState` to use `DropdownButtonFormField` with `key` mapped to `_brandKey` and `initialValue` mapped to `_selectedBrand`. Programmatic updates after brand additions call `_brandKey.currentState?.didChange(newBrand)`.
 - **Rule for next agent:** NEVER use the deprecated `value` parameter on modern FormFields like `DropdownButtonFormField`; ALWAYS use `initialValue` and control dynamic value changes programmatically using a `GlobalKey<FormFieldState>`.
 
+---
+
+### 2026-07-28 · Searchable Concise Brand Dialog Selection
+
+- **Context:** Implementing a search bar for the brand list that is concise in size when adding or editing products.
+- **Mistake:** Implementing search fields directly inside dropdowns which is non-standard in Flutter and can cause overflow bugs.
+- **Root cause:** Standard Flutter DropdownButtons do not support embedded search text inputs cleanly. Replacing the dropdown with an InkWell wrapper that opens a constrained, searchable dialog list is highly clean and avoids rendering issues.
+- **Fix applied:** Refactored brand inputs in `_AddProductSheetState` and `_EditProductSheetState` in [add_product_sheet.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/widgets/add_product_sheet.dart) to be standard TextFormFields wrapped inside tap InkWells. These tap fields open `_SearchableBrandDialog` (bounded at 350x320 px) showing a compact search input, matching brands list sorted A-Z, and dynamic brand adding logic.
+- **Rule for next agent:** ALWAYS use a custom, constrained Dialog container with a search filter and ListView when implementing searchable selection list features to keep layouts clean and consistent.
+
+---
+
+### 2026-07-29 · Prevent Automatic Keyboard Invocation in Brand Dialog
+
+- **Context:** Preventing keyboard invoke upon opening the brand search dialog.
+- **Mistake:** Setting `autofocus: true` on the search TextField inside `_SearchableBrandDialogState` which automatically pops open the software keyboard immediately when the dialog opens.
+- **Root cause:** Dialogs are expected to show the list of options first; automatically triggering focus on the search input disrupts the user flow by taking up half the screen with the keyboard.
+- **Fix applied:** Changed `autofocus: true` to `autofocus: false` in [add_product_sheet.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/widgets/add_product_sheet.dart).
+- **Rule for next agent:** NEVER set `autofocus: true` on search TextFields inside option selector dialogs/bottom sheets unless explicitly requested by the user, ensuring the keyboard doesn't cover option lists on load.
+
 
 
 
