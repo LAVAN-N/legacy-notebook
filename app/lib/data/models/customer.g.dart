@@ -15,7 +15,7 @@ _$CustomerImpl _$$CustomerImplFromJson(Map<String, dynamic> json) =>
       alternatePhone: json['alternatePhone'] as String?,
       address: json['address'] as String,
       landmark: json['landmark'] as String?,
-      photoUrl: json['photoUrl'] as String?,
+      proofUrl: json['proofUrl'] as String?,
       locationUrl: json['locationUrl'] as String?,
       location: json['location'] == null
           ? null
@@ -48,7 +48,7 @@ Map<String, dynamic> _$$CustomerImplToJson(_$CustomerImpl instance) =>
       'alternatePhone': instance.alternatePhone,
       'address': instance.address,
       'landmark': instance.landmark,
-      'photoUrl': instance.photoUrl,
+      'proofUrl': instance.proofUrl,
       'locationUrl': instance.locationUrl,
       'location': instance.location,
       'nominees': instance.nominees,

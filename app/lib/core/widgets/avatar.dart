@@ -5,12 +5,12 @@ class Avatar extends StatelessWidget {
   const Avatar({
     super.key,
     required this.name,
-    this.photoUrl,
+    this.proofUrl,
     this.size = 44,
   });
 
   final String name;
-  final String? photoUrl;
+  final String? proofUrl;
   final double size;
 
   Color _getDeterministicColor(String value) {
@@ -38,7 +38,7 @@ class Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasPhoto = photoUrl != null && photoUrl!.isNotEmpty;
+    final hasPhoto = proofUrl != null && proofUrl!.isNotEmpty;
     final initials = _getInitials(name);
     final bgColor = _getDeterministicColor(name);
 
@@ -52,7 +52,7 @@ class Avatar extends StatelessWidget {
           color: bgColor,
           image: hasPhoto
               ? DecorationImage(
-                  image: NetworkImage(photoUrl!),
+                  image: NetworkImage(proofUrl!),
                   fit: BoxFit.cover,
                   onError: (_, __) {},
                 )

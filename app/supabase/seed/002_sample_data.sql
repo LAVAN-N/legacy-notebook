@@ -40,7 +40,7 @@ INSERT INTO products (id, sku, name, brand, category, minimum_stock, stock, pric
 ON CONFLICT (id) DO NOTHING;
 
 -- 5. Seed customers
-INSERT INTO customers (id, customer_code, name, phone, alternate_phone, address, landmark, photo_url, location_url, weekday_id, place_id, area_id, sequence_number, status, guardian_name, dob, occupation, notes) VALUES
+INSERT INTO customers (id, customer_code, name, phone, alternate_phone, address, landmark, proof_url, location_url, weekday_id, place_id, area_id, sequence_number, status, guardian_name, dob, occupation, notes) VALUES
 ('c-1', 'C-001', 'Lakshmi Priya', '9876543210', '9876543211', '12, North Street, Melur, Madurai - 625106', 'Near Ganesha Temple', NULL, NULL, 'w-4', 'p-1', 'a-1', 1, 'ACTIVE', 'Ramanathan (Spouse)', '15-08-1985', 'Homemaker', 'Always pays in the morning. Likes Prestige brand.'),
 ('c-2', 'C-002', 'Muthu Pandian', '9443210987', NULL, '45B, Bazaar Lane, Melur, Madurai - 625106', 'Opposite Government School', NULL, NULL, 'w-4', 'p-1', 'a-2', 2, 'ACTIVE', 'Chinnasamy (Father)', NULL, 'Shop Owner', 'Busy during noon. Call before visiting.'),
 ('c-3', 'C-003', 'Anitha Rajendran', '9988776655', NULL, '8, NH Colony, Othakadai, Madurai - 625107', 'Beside Post Office', NULL, NULL, 'w-4', 'p-2', 'a-3', 1, 'ACTIVE', 'Rajendran (Spouse)', NULL, 'Teacher', 'Check back after 5 PM.'),

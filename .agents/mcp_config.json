@@ -9,6 +9,9 @@
       "command": "npx",
       "args": ["-y", "@egyleader/dart-mcp-server"],
       "description": "NPM-based Dart/Flutter MCP server tool"
+    },
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=sssrdqyhhqorltejqqeo&features=database%2Cdocs%2Cdebugging%2Cstorage%2Cdevelopment%2Cfunctions"
     }
   }
 }

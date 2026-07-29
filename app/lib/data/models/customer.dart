@@ -17,7 +17,7 @@ class Customer with _$Customer {
     String? alternatePhone,
     required String address,
     String? landmark,
-    String? photoUrl,
+    String? proofUrl,
     String? locationUrl,
     Location? location,
     @Default([]) List<Nominee> nominees,

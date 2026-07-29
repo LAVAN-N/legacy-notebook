@@ -27,7 +27,7 @@ mixin _$Customer {
   String? get alternatePhone => throw _privateConstructorUsedError;
   String get address => throw _privateConstructorUsedError;
   String? get landmark => throw _privateConstructorUsedError;
-  String? get photoUrl => throw _privateConstructorUsedError;
+  String? get proofUrl => throw _privateConstructorUsedError;
   String? get locationUrl => throw _privateConstructorUsedError;
   Location? get location => throw _privateConstructorUsedError;
   List<Nominee> get nominees => throw _privateConstructorUsedError;
@@ -66,7 +66,7 @@ abstract class $CustomerCopyWith<$Res> {
       String? alternatePhone,
       String address,
       String? landmark,
-      String? photoUrl,
+      String? proofUrl,
       String? locationUrl,
       Location? location,
       List<Nominee> nominees,
@@ -106,7 +106,7 @@ class _$CustomerCopyWithImpl<$Res, $Val extends Customer>
     Object? alternatePhone = freezed,
     Object? address = null,
     Object? landmark = freezed,
-    Object? photoUrl = freezed,
+    Object? proofUrl = freezed,
     Object? locationUrl = freezed,
     Object? location = freezed,
     Object? nominees = null,
@@ -150,9 +150,9 @@ class _$CustomerCopyWithImpl<$Res, $Val extends Customer>
           ? _value.landmark
           : landmark // ignore: cast_nullable_to_non_nullable
               as String?,
-      photoUrl: freezed == photoUrl
-          ? _value.photoUrl
-          : photoUrl // ignore: cast_nullable_to_non_nullable
+      proofUrl: freezed == proofUrl
+          ? _value.proofUrl
+          : proofUrl // ignore: cast_nullable_to_non_nullable
               as String?,
       locationUrl: freezed == locationUrl
           ? _value.locationUrl
@@ -240,7 +240,7 @@ abstract class _$$CustomerImplCopyWith<$Res>
       String? alternatePhone,
       String address,
       String? landmark,
-      String? photoUrl,
+      String? proofUrl,
       String? locationUrl,
       Location? location,
       List<Nominee> nominees,
@@ -279,7 +279,7 @@ class __$$CustomerImplCopyWithImpl<$Res>
     Object? alternatePhone = freezed,
     Object? address = null,
     Object? landmark = freezed,
-    Object? photoUrl = freezed,
+    Object? proofUrl = freezed,
     Object? locationUrl = freezed,
     Object? location = freezed,
     Object? nominees = null,
@@ -323,9 +323,9 @@ class __$$CustomerImplCopyWithImpl<$Res>
           ? _value.landmark
           : landmark // ignore: cast_nullable_to_non_nullable
               as String?,
-      photoUrl: freezed == photoUrl
-          ? _value.photoUrl
-          : photoUrl // ignore: cast_nullable_to_non_nullable
+      proofUrl: freezed == proofUrl
+          ? _value.proofUrl
+          : proofUrl // ignore: cast_nullable_to_non_nullable
               as String?,
       locationUrl: freezed == locationUrl
           ? _value.locationUrl
@@ -394,7 +394,7 @@ class _$CustomerImpl implements _Customer {
       this.alternatePhone,
       required this.address,
       this.landmark,
-      this.photoUrl,
+      this.proofUrl,
       this.locationUrl,
       this.location,
       final List<Nominee> nominees = const [],
@@ -429,7 +429,7 @@ class _$CustomerImpl implements _Customer {
   @override
   final String? landmark;
   @override
-  final String? photoUrl;
+  final String? proofUrl;
   @override
   final String? locationUrl;
   @override
@@ -474,7 +474,7 @@ class _$CustomerImpl implements _Customer {
 
   @override
   String toString() {
-    return 'Customer(id: $id, customerCode: $customerCode, name: $name, phone: $phone, alternatePhone: $alternatePhone, address: $address, landmark: $landmark, photoUrl: $photoUrl, locationUrl: $locationUrl, location: $location, nominees: $nominees, idProofs: $idProofs, weekdayId: $weekdayId, placeId: $placeId, areaId: $areaId, sequenceNumber: $sequenceNumber, status: $status, guardianName: $guardianName, dob: $dob, occupation: $occupation, notes: $notes)';
+    return 'Customer(id: $id, customerCode: $customerCode, name: $name, phone: $phone, alternatePhone: $alternatePhone, address: $address, landmark: $landmark, proofUrl: $proofUrl, locationUrl: $locationUrl, location: $location, nominees: $nominees, idProofs: $idProofs, weekdayId: $weekdayId, placeId: $placeId, areaId: $areaId, sequenceNumber: $sequenceNumber, status: $status, guardianName: $guardianName, dob: $dob, occupation: $occupation, notes: $notes)';
   }
 
   @override
@@ -492,8 +492,8 @@ class _$CustomerImpl implements _Customer {
             (identical(other.address, address) || other.address == address) &&
             (identical(other.landmark, landmark) ||
                 other.landmark == landmark) &&
-            (identical(other.photoUrl, photoUrl) ||
-                other.photoUrl == photoUrl) &&
+            (identical(other.proofUrl, proofUrl) ||
+                other.proofUrl == proofUrl) &&
             (identical(other.locationUrl, locationUrl) ||
                 other.locationUrl == locationUrl) &&
             (identical(other.location, location) ||
@@ -526,7 +526,7 @@ class _$CustomerImpl implements _Customer {
         alternatePhone,
         address,
         landmark,
-        photoUrl,
+        proofUrl,
         locationUrl,
         location,
         const DeepCollectionEquality().hash(_nominees),
@@ -567,7 +567,7 @@ abstract class _Customer implements Customer {
       final String? alternatePhone,
       required final String address,
       final String? landmark,
-      final String? photoUrl,
+      final String? proofUrl,
       final String? locationUrl,
       final Location? location,
       final List<Nominee> nominees,
@@ -600,7 +600,7 @@ abstract class _Customer implements Customer {
   @override
   String? get landmark;
   @override
-  String? get photoUrl;
+  String? get proofUrl;
   @override
   String? get locationUrl;
   @override

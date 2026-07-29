@@ -6,6 +6,7 @@ import 'repositories/sale_repository.dart';
 import 'repositories/product_repository.dart';
 import 'mock/mock_repository.dart';
 import 'repositories/local_sqlite_repositories.dart';
+import 'repositories/supabase_repositories.dart';
 import 'models/product.dart';
 import 'models/customer.dart';
 import 'models/collection.dart';
@@ -33,29 +34,43 @@ final localSqliteProductRepositoryProvider = Provider<ProductRepository>((ref) {
   return LocalSqliteProductRepository();
 });
 
+/// Set to true to read/write to your live Supabase DB,
+/// or false to use local SQLite.
+const bool useSupabaseBackend = true;
+
 /// Customer Repository Provider
 final customerRepositoryProvider = Provider<CustomerRepository>((ref) {
-  return ref.watch(localSqliteCustomerRepositoryProvider);
+  return useSupabaseBackend 
+      ? SupabaseCustomerRepository() 
+      : ref.watch(localSqliteCustomerRepositoryProvider);
 });
 
 /// Collection Repository Provider
 final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
-  return ref.watch(localSqliteCollectionRepositoryProvider);
+  return useSupabaseBackend 
+      ? SupabaseCollectionRepository() 
+      : ref.watch(localSqliteCollectionRepositoryProvider);
 });
 
 /// Route Repository Provider
 final routeRepositoryProvider = Provider<RouteRepository>((ref) {
-  return ref.watch(localSqliteRouteRepositoryProvider);
+  return useSupabaseBackend 
+      ? SupabaseRouteRepository() 
+      : ref.watch(localSqliteRouteRepositoryProvider);
 });
 
 /// Sale Repository Provider
 final saleRepositoryProvider = Provider<SaleRepository>((ref) {
-  return ref.watch(localSqliteSaleRepositoryProvider);
+  return useSupabaseBackend 
+      ? SupabaseSaleRepository() 
+      : ref.watch(localSqliteSaleRepositoryProvider);
 });
 
 /// Product Repository Provider
 final productRepositoryProvider = Provider<ProductRepository>((ref) {
-  return ref.watch(localSqliteProductRepositoryProvider);
+  return useSupabaseBackend 
+      ? SupabaseProductRepository() 
+      : ref.watch(localSqliteProductRepositoryProvider);
 });
 
 /// Products Stream Provider

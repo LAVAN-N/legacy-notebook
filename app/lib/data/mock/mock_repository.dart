@@ -208,13 +208,13 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   }
 
   @override
-  Future<void> updateCustomerProfile(String id, {String? phone, String? photoUrl, String? locationUrl}) async {
+  Future<void> updateCustomerProfile(String id, {String? phone, String? proofUrl, String? locationUrl}) async {
     final index = _customers.indexWhere((c) => c.id == id);
     if (index != -1) {
       final old = _customers[index];
       _customers[index] = old.copyWith(
         phone: phone ?? old.phone,
-        photoUrl: photoUrl ?? old.photoUrl,
+        proofUrl: proofUrl ?? old.proofUrl,
         locationUrl: locationUrl ?? old.locationUrl,
       );
       _syncController();

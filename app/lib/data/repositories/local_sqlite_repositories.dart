@@ -122,7 +122,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
         alternatePhone: map['alternate_phone'] as String?,
         address: map['address'] as String,
         landmark: map['landmark'] as String?,
-        photoUrl: map['photo_url'] as String?,
+        proofUrl: map['proof_url'] as String?,
         locationUrl: map['location_url'] as String?,
         location: map['latitude'] != null && map['longitude'] != null
             ? Location(lat: map['latitude'] as double, lng: map['longitude'] as double)
@@ -195,7 +195,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
       alternatePhone: map['alternate_phone'] as String?,
       address: map['address'] as String,
       landmark: map['landmark'] as String?,
-      photoUrl: map['photo_url'] as String?,
+      proofUrl: map['proof_url'] as String?,
       locationUrl: map['location_url'] as String?,
       location: map['latitude'] != null && map['longitude'] != null
           ? Location(lat: map['latitude'] as double, lng: map['longitude'] as double)
@@ -358,11 +358,11 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
   }
 
   @override
-  Future<void> updateCustomerProfile(String id, {String? phone, String? photoUrl, String? locationUrl}) async {
+  Future<void> updateCustomerProfile(String id, {String? phone, String? proofUrl, String? locationUrl}) async {
     final db = await DatabaseHelper.instance.database;
     final Map<String, dynamic> updates = {};
     if (phone != null) updates['phone'] = phone;
-    if (photoUrl != null) updates['photo_url'] = photoUrl;
+    if (proofUrl != null) updates['proof_url'] = proofUrl;
     if (locationUrl != null) updates['location_url'] = locationUrl;
 
     if (updates.isNotEmpty) {
@@ -433,7 +433,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
       'alternate_phone': alternatePhone,
       'address': address,
       'landmark': landmark,
-      'photo_url': null,
+      'proof_url': null,
       'location_url': location != null ? 'https://maps.google.com/?q=${location.lat},${location.lng}' : null,
       'latitude': location?.lat,
       'longitude': location?.lng,
@@ -507,7 +507,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
       'alternate_phone': customer.alternatePhone,
       'address': customer.address,
       'landmark': customer.landmark,
-      'photo_url': customer.photoUrl,
+      'proof_url': customer.proofUrl,
       'location_url': customer.locationUrl,
       'latitude': customer.location?.lat,
       'longitude': customer.location?.lng,
