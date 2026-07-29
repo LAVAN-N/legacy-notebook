@@ -857,11 +857,83 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Refactored [inventory_categories_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/inventory_categories_screen.dart) and [inventory_products_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/inventory_products_screen.dart) to put a fixed-width `SizedBox(width: 140)` search TextField on the left and wrap filter chips on the right inside an `Expanded(child: SingleChildScrollView(scrollDirection: Axis.horizontal))` layout.
 - **Rule for next agent:** ALWAYS keep search inputs stationary on the left side and place scrollable filter chips inside an Expanded scroll container next to it.
 
+### 2026-07-29 · Database Column serialization to CamelCase Models
 
+- **Context:** Implementing remote repositories using `SupabaseClient` mapping table records to Freezed/JsonSerializable model structures.
+- **Mistake:** Assuming database query maps (snake_case columns like `customer_code`, `category_id`) can be directly deserialized by `Model.fromJson(...)` when generated serialization code expects camelCase keys (`customerCode`, `categoryId`).
+- **Root cause:** Dart's `@JsonSerializable()` default constructor setup without custom `@JsonKey` snake_case mapping configurations parses keys exactly matching camelCase properties.
+- **Fix applied:** Manually mapped raw postgres snake_case columns to camelCase fields (e.g. `customerCode: map['customer_code']`) when passing query maps to `.fromJson()` constructors in [supabase_repositories.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/data/repositories/supabase_repositories.dart).
+- **Rule for next agent:** ALWAYS transform database snake_case keys into camelCase keys before calling `.fromJson()` constructors on generated Freezed models unless explicit JSON key snake_case annotation mapping is verified in the model code.
+- **Guardrail:** `flutter analyze` compiler error/warning output will detect type conflicts or missing fields, or runtime parsing exceptions.
 
+### 2026-07-29 · Nested query builders inside PostgREST filter method
 
+- **Context:** Querying collections with subquery logic on client locations in [supabase_repositories.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/data/repositories/supabase_repositories.dart).
+- **Mistake:** Nesting a `PostgrestFilterBuilder` query client request inside `.filter('column', 'in', client.from(...).select())`, causing string parsing runtime exceptions (`PGRST100: failed to parse filter`).
+- **Root cause:** The Dart PostgREST SDK converts nested objects to their string representation (`Instance of 'PostgrestFilterBuilder'`) instead of producing subquery string requests.
+- **Fix applied:** Queried target entity IDs first, then filtered collections using `.inFilter('customer_id', idList)`.
+- **Rule for next agent:** NEVER nest PostgREST builder requests inside filter parameters; retrieve list IDs beforehand and apply `.inFilter(...)` on the results.
+- **Guardrail:** Validate query syntax runtime using test runs or checking for SQL parsing errors in the output logs.
 
+### 2026-07-29 · Numeric and Null type casting from database responses
 
+- **Context:** Deserializing database aggregates and nullable columns in [supabase_repositories.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/data/repositories/supabase_repositories.dart).
+- **Mistake:** Direct casting of database results (e.g. `map['amount'] as int` or `res['total_financed'] as int`) where aggregation fields can evaluate to `null` or double/num type formats in Dart, triggering `Null is not a subtype of int` cast exceptions.
+- **Root cause:** Sum and count aggregation results on database views are sometimes typed as numeric or double in Dart depending on postgrest versioning, and left join rows return null fields when missing child relations.
+- **Fix applied:** Upgraded all numeric mapping casts to use `(value as num?)?.toInt() ?? 0` to safely handle `null`, `double`, `int`, or `num` formats.
+- **Rule for next agent:** ALWAYS parse raw database query integers or sums using `(value as num?)?.toInt() ?? defaultValue` instead of direct `as int` casts.
+- **Guardrail:** Validate model loading in screens using mock tables or empty databases to ensure fallback defaults function correctly on null rows.
 
+### 2026-07-29 · Realtime logical replication on PostgreSQL database views
 
+- **Context:** Listening to client outstanding changes via `watchCustomerOutstanding` in [supabase_repositories.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/data/repositories/supabase_repositories.dart).
+- **Mistake:** Subscribing to logical replication updates on a view (`_client.from('customer_outstanding_view').stream(...)`), triggering a `RealtimeSubscribeException: Unable to subscribe to changes`.
+- **Root cause:** PostgreSQL logical replication publications (which power Supabase Realtime) ONLY support physical tables, not database views.
+- **Fix applied:** Refactored the stream to listen to changes on the underlying physical tables (`sales` and `collections`) using a custom `StreamController`, and trigger a reload of the calculated view values whenever an event occurs.
+- **Rule for next agent:** NEVER subscribe to realtime streams on database views; instead, subscribe to the underlying physical tables and trigger a manual view reload in the stream callback.
+- **Guardrail:** Verify all stream builders connect successfully without throwing RealtimeSubscribeException on startup.
 
+### 2026-07-29 · Unsafe Riverpod ref.read calls inside widget dispose
+
+- **Context:** Resetting customer creation form state when navigating back in [new_client_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/new_client_screen.dart).
+- **Mistake:** Calling `ref.read` directly inside `dispose()` method, which throws `StateError: Cannot use "ref" after the widget was disposed` because the widget element tree is already deactivated/unmounted during finalization.
+- **Root cause:** Flutter's unmounting cycle disposes elements, making Riverpod `ref` references inaccessible by the time `dispose()` is executed.
+- **Fix applied:** Moved `ref.read(...).resetForm()` into the widget's `deactivate()` method, which runs while the element is still attached to the tree and readable.
+- **Rule for next agent:** NEVER call `ref.read` or access Riverpod values inside `dispose()`; perform these actions in `deactivate()` or before popping the screen route.
+- **Guardrail:** Confirm screen navigates and pops back cleanly without throwing StateError exceptions in the debug logs.
+
+### 2026-07-29 · Modifying Riverpod providers during widget build / deactivate phase
+
+- **Context:** Resetting customer creation form state during navigation unmounting in [new_client_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/new_client_screen.dart).
+- **Mistake:** Triggering provider state updates directly inside the `deactivate()` lifecycle method, which throws `Unhandled Exception: Tried to modify a provider while the widget tree was building`.
+- **Root cause:** The `deactivate()` method is triggered during Flutter's element tree build/unmounting pass; modifying provider states during this phase breaks rendering consistency.
+- **Fix applied:** Wrapped the `ref.read(...).resetForm()` update inside `WidgetsBinding.instance.addPostFrameCallback((_) {...})` to schedule the provider update after the layout frame finishes building.
+- **Rule for next agent:** ALWAYS wrap provider modifications inside `WidgetsBinding.instance.addPostFrameCallback` when updating states from lifecycle hooks (like `initState`, `didUpdateWidget`, or `deactivate`).
+- **Guardrail:** Check logs for "Tried to modify a provider while the widget tree was building" exceptions during screen transitions.
+
+### 2026-07-29 · Location and ID Proof model deserialization key mismatches
+
+- **Context:** Parsing customer location and identity documents inside `SupabaseCustomerRepository` in [supabase_repositories.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/data/repositories/supabase_repositories.dart).
+- **Mistake:** Mapping location properties to JSON using `'latitude'` and `'longitude'` keys (which causes `Location.fromJson` to fail or load null because it expects `'lat'` and `'lng'`), and deserializing proof maps directly using `IdProof.fromJson` with `'imageUrl'` (which gets ignored as `IdProof` expects a nested `'document'` property).
+- **Root cause:** Misalignment between database snake_case columns and the specific nested properties expected by custom model parsing configurations.
+- **Fix applied:** Corrected location JSON keys to use `'lat'` and `'lng'`, and updated `getProofs` to instantiate the nested `IdProof` and `IdProofDocument` structures directly.
+- **Rule for next agent:** ALWAYS check target model property constructors (like `Location` expecting `lat`/`lng` and `IdProof` expecting `document.localUri`) before mapping raw database rows.
+- **Guardrail:** Confirm saved coordinates and identity document images render correctly on preview cards and detail screens.
+
+### 2026-07-29 · Storage bucket RLS policies for anonymous uploads and database key mappings
+
+- **Context:** Saving client avatars, identity proofs, and product photos to Supabase Storage in [supabase_repositories.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/data/repositories/supabase_repositories.dart).
+- **Mistake:** Assuming public buckets automatically permit write operations, resulting in 403 Forbidden errors that silently fallback to saving local file paths. Also, incorrectly mapping customer profile images from the database using `map['proof_url']` (which doesn't exist) instead of `map['photo_url']` into the `proofUrl` model property.
+- **Root cause:** Missing Row-Level Security (RLS) policies on the `storage.objects` table inside Supabase, and mapping keys which differed from database column definitions.
+- **Fix applied:** Configured anonymous SELECT, INSERT, UPDATE, and DELETE RLS policies on the `storage.objects` table. Updated customer profile avatar mapping to use the correct `photo_url` database column name.
+- **Rule for next agent:** ALWAYS ensure storage table permissions are enabled for the target roles, and double-check database columns (e.g. `photo_url` vs `proof_url`) before mapping.
+- **Guardrail:** Confirm files are successfully uploaded and return public S3 URLs in the database after saving.
+
+### 2026-07-29 · Hardcoding credentials in configuration files (leakage risk)
+
+- **Context:** Managing credentials configuration in [supabase_config.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/core/config/supabase_config.dart).
+- **Mistake:** Hardcoding the Supabase database connection URL and Anon API key inside a committed config file, risking credential leakage and unauthorized access when pushing to a public GitHub repository.
+- **Root cause:** Storing development configuration strings directly in source files instead of utilizing dynamic environment parameters.
+- **Fix applied:** Refactored `SupabaseConfig` to load values via `String.fromEnvironment` and created [README_ENV.md](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/README_ENV.md) instructing how to supply credentials during execution with `--dart-define`.
+- **Rule for next agent:** NEVER commit live public database URL or API keys to the repository; always load them dynamically from the environment.
+- **Guardrail:** Verify that `supabase_config.dart` contains no hardcoded credential strings before committing.

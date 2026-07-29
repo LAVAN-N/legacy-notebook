@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS customers (
     alternate_phone TEXT,
     address TEXT NOT NULL,
     landmark TEXT,
-    photo_url TEXT,
+    proof_url TEXT,
     location_url TEXT,
     weekday_id TEXT NOT NULL REFERENCES weekdays(id),
     place_id TEXT NOT NULL REFERENCES places(id),

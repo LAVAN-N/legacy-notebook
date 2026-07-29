@@ -213,7 +213,7 @@ If stuck in an error loop (3+ attempts on the same failure):
   - `places`: `id`, `weekday_id`, `name`
   - `areas`: `id`, `place_id`, `name`
   - `products`: `id`, `sku`, `name`, `brand`, `category`, `minimum_stock`, `image_url`
-  - `customers`: `id`, `customer_code`, `name`, `phone`, `alternate_phone`, `address`, `photo_url`, `location_url`, `weekday_id`, `place_id`, `area_id`, `sequence_number`, `status`, `created_by`
+  - `customers`: `id`, `customer_code`, `name`, `phone`, `alternate_phone`, `address`, `proof_url`, `location_url`, `weekday_id`, `place_id`, `area_id`, `sequence_number`, `status`, `created_by`
   - `customer_nominees`: `id`, `customer_id`, `name`, `phone`, `relation` (Many-to-one with customer)
   - `customer_proofs`: `id`, `customer_id`, `proof_type`, `image_url` (Many-to-one with customer)
   - `collections`: `id`, `customer_id`, `visit_datetime`, `status`, `amount`, `reason`, `collected_by`

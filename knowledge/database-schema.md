@@ -86,7 +86,7 @@ name
 phone
 alternate_phone
 address
-photo_url
+proof_url
 location_url
 weekday_id
 place_id
