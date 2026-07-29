@@ -937,3 +937,12 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Refactored `SupabaseConfig` to load values via `String.fromEnvironment` and created [README_ENV.md](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/README_ENV.md) instructing how to supply credentials during execution with `--dart-define`.
 - **Rule for next agent:** NEVER commit live public database URL or API keys to the repository; always load them dynamically from the environment.
 - **Guardrail:** Verify that `supabase_config.dart` contains no hardcoded credential strings before committing.
+
+### 2026-07-29 · Hardcoded object path formatting constraints in S3 storage uploads
+
+- **Context:** Storing product catalog images dynamically under structured folders in Supabase Storage inside [supabase_repositories.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/data/repositories/supabase_repositories.dart).
+- **Mistake:** Uploading product images using the product ID as a flat folder path (e.g. `productId/photo.png`) instead of formatting the path structure hierarchically as `<category_name>/<product_name>.<extension>` inside the `product-photos` bucket.
+- **Root cause:** Neglecting to map the `categoryId` to its corresponding name string when uploading, and failing to sanitize product and category name strings for spaces/URL encoding.
+- **Fix applied:** Implemented a `_getCategoryName` lookup map in the repository and formatted the S3 path string using `<category_name>/<product_name>.<extension>` with spaces replaced by underscores for clean URL representation.
+- **Rule for next agent:** ALWAYS structure S3 storage object keys hierarchically using logical domain names (e.g. category and product name folders) rather than raw internal database IDs where readable URLs are expected.
+- **Guardrail:** Confirm that product S3 object URLs created in the database follow the `<category_name>/<product_name>.<extension>` format.
