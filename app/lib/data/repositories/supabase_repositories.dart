@@ -1028,6 +1028,17 @@ class SupabaseProductRepository implements ProductRepository {
     return matches.isEmpty ? null : matches.first;
   }
 
+  String _getCategoryName(String categoryId) {
+    final map = {
+      'cat-kat': 'Kitchen Appliances',
+      'cat-laundry': 'Laundry',
+      'cat-audio': 'Home Audio',
+      'cat-lighting': 'Lighting',
+      'cat-cooling': 'Cooling',
+    };
+    return map[categoryId] ?? 'General';
+  }
+
   @override
   Future<Product> addProduct({
     required String name,
@@ -1046,8 +1057,10 @@ class SupabaseProductRepository implements ProductRepository {
 
     String? remoteUrl = imageUrl;
     if (imageUrl != null && imageUrl.isNotEmpty) {
-      final extension = imageUrl.split('.').last;
-      final remotePath = '$productId/photo.$extension';
+      final extension = imageUrl.split('.').last.split('?').first;
+      final categoryName = _getCategoryName(categoryId).replaceAll(' ', '_');
+      final productName = name.replaceAll(' ', '_');
+      final remotePath = '$categoryName/$productName.$extension';
       remoteUrl = await _uploadFile('product-photos', imageUrl, remotePath);
     }
 
@@ -1085,8 +1098,10 @@ class SupabaseProductRepository implements ProductRepository {
   Future<void> updateProduct(Product product) async {
     String? remoteUrl = product.imageUrl;
     if (product.imageUrl != null && product.imageUrl!.isNotEmpty && !product.imageUrl!.startsWith('http')) {
-      final extension = product.imageUrl!.split('.').last;
-      final remotePath = '${product.id}/photo.$extension';
+      final extension = product.imageUrl!.split('.').last.split('?').first;
+      final categoryName = _getCategoryName(product.categoryId).replaceAll(' ', '_');
+      final productName = product.name.replaceAll(' ', '_');
+      final remotePath = '$categoryName/$productName.$extension';
       remoteUrl = await _uploadFile('product-photos', product.imageUrl!, remotePath);
     }
 
