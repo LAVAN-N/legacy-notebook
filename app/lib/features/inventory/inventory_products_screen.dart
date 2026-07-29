@@ -30,11 +30,17 @@ class InventoryProductsScreen extends ConsumerStatefulWidget {
 
 class _InventoryProductsScreenState
     extends ConsumerState<InventoryProductsScreen> {
+  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _filterType = 'All';
-  String _sortType = 'Newest';
   late Category _category;
   bool _isFabVisible = true;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -97,22 +103,7 @@ class _InventoryProductsScreenState
           .toList();
     }
 
-    // Apply sort
-    switch (_sortType) {
-      case 'Price ↑':
-        products.sort((a, b) => a.sellingPrice.compareTo(b.sellingPrice));
-        break;
-      case 'Price ↓':
-        products.sort((a, b) => b.sellingPrice.compareTo(a.sellingPrice));
-        break;
-      case 'Name A-Z':
-        products.sort((a, b) => a.name.compareTo(b.name));
-        break;
-      case 'Newest':
-      default:
-        // Keep original order (newest first)
-        break;
-    }
+    // Default sorting: Newest first (original database/stream order)
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     final rawSafeAreaBottom = MediaQueryData.fromView(View.of(context)).padding.bottom;
 
@@ -149,106 +140,95 @@ class _InventoryProductsScreenState
       ),
       body: Column(
         children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: TextField(
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-              decoration: InputDecoration(
-                hintText: 'Search products...',
-                prefixIcon: Icon(Icons.search_rounded, color: colors.mutedFg),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: colors.surface,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-              ),
-            ),
-          ),
 
-          // Filter and sort chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
+
+          // Filter chips & Fixed Search Bar Row
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
-                ...[
-                  'All',
-                  'In stock',
-                  'Low stock',
-                  'Out of stock',
-                ].map((filter) {
-                  final isSelected = _filterType == filter;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text(
-                        filter,
-                        style: AppTypography.labelMedium.copyWith(
-                          color: isSelected ? colors.primary : colors.mutedFg,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.normal,
-                        ),
-                      ),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        setState(() {
-                          _filterType = filter;
-                        });
-                      },
-                      selectedColor: colors.primary.withValues(alpha: 0.15),
-                      backgroundColor: colors.surface,
-                      checkmarkColor: colors.primary,
-                      side: BorderSide(
-                        color: isSelected ? colors.primary : colors.border,
-                      ),
-                    ),
-                  );
-                }),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: PopupMenuButton<String>(
-                    initialValue: _sortType,
-                    onSelected: (value) {
+                SizedBox(
+                  width: 140,
+                  height: 38,
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
                       setState(() {
-                        _sortType = value;
+                        _searchQuery = value;
                       });
                     },
-                    itemBuilder: (BuildContext context) {
-                      return [
-                        'Newest',
-                        'Price ↑',
-                        'Price ↓',
-                        'Name A-Z',
-                      ].map((String choice) {
-                        return PopupMenuItem<String>(
-                          value: choice,
-                          child: Text(
-                            choice,
-                            style: AppTypography.bodyMedium.copyWith(color: colors.foreground),
+                    decoration: InputDecoration(
+                      hintText: 'Search...',
+                      hintStyle: AppTypography.labelMedium.copyWith(color: colors.mutedFg),
+                      prefixIcon: Icon(Icons.search_rounded, color: colors.mutedFg, size: 16),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? GestureDetector(
+                              onTap: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                });
+                              },
+                              child: Icon(Icons.clear_rounded, color: colors.mutedFg, size: 16),
+                            )
+                          : null,
+                      isDense: true,
+                      filled: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: colors.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: colors.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: colors.primary, width: 1.5),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    style: AppTypography.labelMedium.copyWith(color: colors.foreground),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        'All',
+                        'In stock',
+                        'Low stock',
+                        'Out of stock',
+                      ].map((filter) {
+                        final isSelected = _filterType == filter;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: FilterChip(
+                            label: Text(
+                              filter,
+                              style: AppTypography.labelMedium.copyWith(
+                                color: isSelected ? colors.primary : colors.mutedFg,
+                                fontWeight:
+                                    isSelected ? FontWeight.w600 : FontWeight.normal,
+                              ),
+                            ),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setState(() {
+                                _filterType = filter;
+                              });
+                            },
+                            selectedColor: colors.primary.withValues(alpha: 0.15),
+                            backgroundColor: colors.surface,
+                            checkmarkColor: colors.primary,
+                            side: BorderSide(
+                              color: isSelected ? colors.primary : colors.border,
+                            ),
                           ),
                         );
-                      }).toList();
-                    },
-                    child: Chip(
-                      label: Text(
-                        'Sort: $_sortType',
-                        style: AppTypography.labelMedium.copyWith(
-                          color: colors.foreground,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      backgroundColor: colors.surface,
-                      side: BorderSide(color: colors.border),
-                      deleteIcon: Icon(Icons.arrow_drop_down,
-                          color: colors.mutedFg, size: 18),
-                      onDeleted: () {},
+                      }).toList(),
                     ),
                   ),
                 ),

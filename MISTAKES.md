@@ -827,6 +827,36 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Changed `autofocus: true` to `autofocus: false` in [add_product_sheet.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/widgets/add_product_sheet.dart).
 - **Rule for next agent:** NEVER set `autofocus: true` on search TextFields inside option selector dialogs/bottom sheets unless explicitly requested by the user, ensuring the keyboard doesn't cover option lists on load.
 
+---
+
+### 2026-07-29 · Inline Search Bar Filter replacing Sort Chip
+
+- **Context:** Changing the products list sort chip filter into a search bar filter inside the horizontal filter chip list.
+- **Mistake:** Retaining two search fields on the products screen or placing an unconstrained text input that causes line overflows inside the horizontal list view.
+- **Root cause:** Double search bars are redundant and confuse the user layout; replacing the top category search bar and rendering a fixed-width (`width: 160`) inline search input instead of the `Sort: Newest` chip maintains structural consistency.
+- **Fix applied:** Overwrote `_InventoryProductsScreenState` build and state parameters in [inventory_products_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/inventory_products_screen.dart) to dispose of `_sortType`, remove the top large search text box, and define a compact `TextField` inline next to the category filter chips. Added a clear suffix action icon to empty text quickly.
+- **Rule for next agent:** ALWAYS remove redundant search inputs and use a defined-size constraints container (`SizedBox(width: ...)`) when placing text search fields inside horizontal scrolling layout rows.
+
+---
+
+### 2026-07-29 · reposition Search Inputs First in Horizontal Lists (Category + Product)
+
+- **Context:** Placing search text inputs as the first item in categories and products horizontal scrolling filter bars.
+- **Mistake:** Hardcoding class closures incorrectly during refactors, deleting state declaration signatures, or leaving search bars as the last item inside scrolling rows.
+- **Root cause:** Search inputs should be immediately visible and scrollable along with filter chips; placing them first ensures optimal discoverability.
+- **Fix applied:** Refactored [inventory_categories_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/inventory_categories_screen.dart) and [inventory_products_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/inventory_products_screen.dart) to remove top search text areas and define inline text fields as the first child of the horizontal scrollable lists.
+- **Rule for next agent:** ALWAYS position inline search inputs as the first element in scrollable rows to follow mobile usability guidelines, and double check class wrapper structures after editing class fields.
+
+---
+
+### 2026-07-29 · Fixed Docked Search Bar with Scrollable Filter Chips
+
+- **Context:** Placing search text inputs stationary (fixed) on the left while allowing filter chips to scroll on the right in Category and Product screens.
+- **Mistake:** Rendering search inputs inside the scrolling ListView viewport directly, causing search inputs to scroll out of view when sliding the chips.
+- **Root cause:** Search boxes should remain stationary at the start of filter groups for quick entry, while secondary filter tags slide horizontally.
+- **Fix applied:** Refactored [inventory_categories_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/inventory_categories_screen.dart) and [inventory_products_screen.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/inventory/inventory_products_screen.dart) to put a fixed-width `SizedBox(width: 140)` search TextField on the left and wrap filter chips on the right inside an `Expanded(child: SingleChildScrollView(scrollDirection: Axis.horizontal))` layout.
+- **Rule for next agent:** ALWAYS keep search inputs stationary on the left side and place scrollable filter chips inside an Expanded scroll container next to it.
+
 
 
 

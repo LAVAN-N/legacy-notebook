@@ -24,9 +24,16 @@ class InventoryCategoriesScreen extends ConsumerStatefulWidget {
 
 class _InventoryCategoriesScreenState
     extends ConsumerState<InventoryCategoriesScreen> {
+  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _filterType = 'All'; // All, In stock, Low stock, Out of stock
   bool _isFabVisible = true;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   IconData _getIconForCategory(String iconName) {
     final iconMap = {
@@ -134,65 +141,91 @@ class _InventoryCategoriesScreenState
       ),
       body: Column(
         children: [
-          // Search bar
+          // Filter pills & Search bar Row
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: TextField(
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-              decoration: InputDecoration(
-                hintText: 'Search categories or products...',
-                prefixIcon: Icon(Icons.search, color: colors.mutedFg),
-                filled: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.primary, width: 1.5),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-              ),
-            ),
-          ),
-          // Filter pills
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
-              children: ['All', 'In stock', 'Low stock', 'Out of stock'].map((type) {
-                final isSelected = _filterType == type;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: Text(type),
-                    selected: isSelected,
-                    onSelected: (selected) {
+              children: [
+                SizedBox(
+                  width: 140,
+                  height: 38,
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
                       setState(() {
-                        _filterType = type;
+                        _searchQuery = value;
                       });
                     },
-                    selectedColor: colors.primary.withValues(alpha: 0.15),
-                    backgroundColor: colors.surface,
-                    checkmarkColor: colors.primary,
-                    labelStyle: TextStyle(
-                      color: isSelected ? colors.primary : colors.mutedFg,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    decoration: InputDecoration(
+                      hintText: 'Search...',
+                      hintStyle: AppTypography.labelMedium.copyWith(color: colors.mutedFg),
+                      prefixIcon: Icon(Icons.search_rounded, color: colors.mutedFg, size: 16),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? GestureDetector(
+                              onTap: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                });
+                              },
+                              child: Icon(Icons.clear_rounded, color: colors.mutedFg, size: 16),
+                            )
+                          : null,
+                      isDense: true,
+                      filled: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: colors.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: colors.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: colors.primary, width: 1.5),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                     ),
-                    side: BorderSide(
-                      color: isSelected ? colors.primary : colors.border,
+                    style: AppTypography.labelMedium.copyWith(color: colors.foreground),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        ...['All', 'In stock', 'Low stock', 'Out of stock'].map((type) {
+                          final isSelected = _filterType == type;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              label: Text(type),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setState(() {
+                                  _filterType = type;
+                                });
+                              },
+                              selectedColor: colors.primary.withValues(alpha: 0.15),
+                              backgroundColor: colors.surface,
+                              checkmarkColor: colors.primary,
+                              labelStyle: TextStyle(
+                                color: isSelected ? colors.primary : colors.mutedFg,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              ),
+                              side: BorderSide(
+                                color: isSelected ? colors.primary : colors.border,
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
                     ),
                   ),
-                );
-              }).toList(),
+                ),
+              ],
             ),
           ),
 
