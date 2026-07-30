@@ -973,3 +973,21 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Ran SQL query to populate a dummy phone number placeholder for existing null nominees, set the column constraint to `SET NOT NULL`, updated all mock constructor instances, and added text changed state listeners to require non-empty input before saving nominees.
 - **Rule for next agent:** ALWAYS migrate existing database rows containing null/empty values before enforcing `NOT NULL` constraints, update mock seed models, and configure UI validators with proper change listeners.
 - **Guardrail:** Confirm that adding a nominee without a phone number is disabled in the UI, and editing nominees behaves correctly.
+
+### 2026-07-30 · Package visibility restrictions causing canLaunchUrl to fail on modern mobile OS versions
+
+- **Context:** Launching document viewer URLs, maps, or calling phone numbers in [customer_context_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/customer_context_card.dart).
+- **Mistake:** Using `canLaunchUrl(uri)` as a gatekeeper check before calling `launchUrl`. On Android 11+ and modern iOS versions, package visibility restrictions return `false` from `canLaunchUrl` unless schemes are explicitly queried in the native manifests, blocking the actual launching action.
+- **Root cause:** Native security model updates for package visibility restrictions preventing query discovery from client applications.
+- **Fix applied:** Bypassed `canLaunchUrl` checks completely by directly invoking `launchUrl` inside try-catch blocks.
+- **Rule for next agent:** NEVER use `canLaunchUrl` to gate URL/URI launches unless manifest queries are actively configured; always invoke `launchUrl` directly wrapped in try-catch to let the OS handle application resolution.
+- **Guardrail:** Verify that clicking ID proof document links, phone numbers, or map locations triggers external application launches without getting blocked.
+
+### 2026-07-30 · Leaking public bucket object URLs during document opens
+
+- **Context:** Opening remote ID proof documents from public Supabase buckets in [customer_context_card.dart](file:///C:/Users/LavanyanThandapani/Desktop/project-legacy/legacy-notebook/app/lib/features/customer/widgets/customer_context_card.dart).
+- **Mistake:** Launching the remote URL directly in a web browser using `launchUrl`, which exposes the public S3 URL in history and third-party browsers.
+- **Root cause:** Neglecting to download objects locally before opening, resulting in a potential security/confidentiality leak.
+- **Fix applied:** Refactored the open handler to download remote files using `HttpClient` into a local temp directory, and then opened the local path using `OpenFilex` or local OS process commands.
+- **Rule for next agent:** NEVER open remote public storage URLs of sensitive ID proofs in a browser; ALWAYS download them locally to a temporary secure path first, then open with native system application viewers.
+- **Guardrail:** Verify that opening remote documents downloads the file silently and starts the local viewer application directly.

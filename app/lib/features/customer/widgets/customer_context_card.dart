@@ -12,6 +12,7 @@ import '../../../core/router/routes.dart';
 import '../../../data/models/customer.dart';
 import '../../../data/models/id_proof.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 
 class CustomerContextCard extends StatelessWidget {
   const CustomerContextCard({
@@ -25,9 +26,9 @@ class CustomerContextCard extends StatelessWidget {
 
   void _callPhone(String phone) async {
     final uri = Uri.parse('tel:$phone');
-    if (await canLaunchUrl(uri)) {
+    try {
       await launchUrl(uri);
-    }
+    } catch (_) {}
   }
 
   String _calculateAge(String? dob) {
@@ -57,9 +58,9 @@ class CustomerContextCard extends StatelessWidget {
 
   void _openMap(double lat, double lng) async {
     final uri = Uri.parse('https://www.google.com/maps?q=$lat,$lng');
-    if (await canLaunchUrl(uri)) {
+    try {
       await launchUrl(uri);
-    }
+    } catch (_) {}
   }
 
   Color _getStatusColor(String status, AppColors colors) {
@@ -547,22 +548,39 @@ class CustomerContextCard extends StatelessWidget {
                                         ),
                                         onPressed: () async {
                                           try {
+                                            String targetPath = filePath;
                                             if (docUri.startsWith('http')) {
-                                              final uri = Uri.parse(docUri);
-                                              if (await canLaunchUrl(uri)) {
-                                                await launchUrl(uri, mode: LaunchMode.externalApplication);
-                                              } else {
-                                                throw 'Cannot launch web URL';
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text('Downloading document...'),
+                                                    duration: Duration(milliseconds: 800),
+                                                    behavior: SnackBarBehavior.floating,
+                                                  ),
+                                                );
                                               }
-                                            } else if (filePath.isNotEmpty && File(filePath).existsSync()) {
+                                              final extension = docUri.split('.').last.split('?').first;
+                                              final client = HttpClient();
+                                              final request = await client.getUrl(Uri.parse(docUri));
+                                              final response = await request.close();
+                                              if (response.statusCode != 200) {
+                                                throw 'Download failed (status ${response.statusCode})';
+                                              }
+                                              final tempDir = await getTemporaryDirectory();
+                                              final downloadedFile = File('${tempDir.path}/proof_${p.id}_temp.$extension');
+                                              await response.pipe(downloadedFile.openWrite());
+                                              targetPath = downloadedFile.path;
+                                            }
+
+                                            if (targetPath.isNotEmpty && File(targetPath).existsSync()) {
                                               if (Platform.isWindows) {
-                                                await Process.run('explorer.exe', [filePath]);
+                                                await Process.run('explorer.exe', [targetPath]);
                                               } else if (Platform.isMacOS) {
-                                                await Process.run('open', [filePath]);
+                                                await Process.run('open', [targetPath]);
                                               } else if (Platform.isLinux) {
-                                                await Process.run('xdg-open', [filePath]);
+                                                await Process.run('xdg-open', [targetPath]);
                                               } else {
-                                                final result = await OpenFilex.open(filePath);
+                                                final result = await OpenFilex.open(targetPath);
                                                 if (result.type != ResultType.done) {
                                                   throw result.message;
                                                 }
