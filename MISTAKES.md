@@ -1074,3 +1074,21 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Refactored all model, repository, database schema, and view references from `proof_url`/`proofUrl` to `profile_url`/`profileUrl`. Implemented an interactive `CircleAvatar` image upload field inside `_CustomerDetailsSection` that captures local gallery/camera paths using `ImagePicker` and synchronizes uploads to S3 bucket `customer-photos`.
 - **Rule for next agent:** ALWAYS refer to the primary customer avatar image URL as `profile_url` / `profileUrl`, and use the interactive uploader on `new_client_screen.dart` to pick or remove profile pictures.
 - **Guardrail:** Run `flutter analyze` and check that `profileUrl` maps cleanly to `profile_url` in both SQLite and Supabase serializers/repositories.
+
+### 2026-07-30 · Non-lowercase S3 file paths / names
+
+- **Context:** Storing uploaded profile images and ID proof documents on Supabase S3 bucket.
+- **Mistake:** Constructed remote upload path strings using raw casing (which preserves uppercase customer IDs like `CU-001` or client names), violating the requirement for all-lowercase S3 file paths.
+- **Root cause:** Forgot to convert filenames and parent folders to lowercase when assembling path strings.
+- **Fix applied:** Appended `.toLowerCase()` to all generated S3 upload paths inside `supabase_repositories.dart` before calling `_uploadFile`.
+- **Rule for next agent:** ALWAYS ensure all S3 upload path strings are converted to lowercase before performing uploads.
+- **Guardrail:** Verify that `.toLowerCase()` is called on final constructed remote paths in `supabase_repositories.dart`.
+
+### 2026-07-30 · Leaking unused S3 files when documents or photos are removed from UI
+
+- **Context:** Updating customer records when an ID proof document or profile photo is deleted from the screen.
+- **Mistake:** Left orphaned files in Supabase storage buckets (`customer-proofs`, `customer-photos`) when a user removed/deleted proofs or profile images in the UI form.
+- **Root cause:** Only updated the table records to remove references, without calling storage delete operations.
+- **Fix applied:** Implemented a comparison logic in `updateCustomer` inside `supabase_repositories.dart` which fetches the existing record and triggers `_deleteFile` to remove files from Supabase storage if they are no longer in the updated `idProofs` list or `profileUrl` field.
+- **Rule for next agent:** ALWAYS delete removed local files from remote S3 storage buckets when a user clears or modifies proof documents/profile photos.
+- **Guardrail:** Verify that the existing customer record is checked and any removed document URLs are cleaned up from Supabase storage during customer updates.

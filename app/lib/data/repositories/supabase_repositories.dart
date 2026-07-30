@@ -54,6 +54,25 @@ Future<String> _uploadFile(String bucket, String localPath, String remotePath) a
   }
 }
 
+Future<void> _deleteFile(String bucket, String publicUrl) async {
+  final client = Supabase.instance.client;
+  try {
+    final uri = Uri.tryParse(publicUrl);
+    if (uri == null) return;
+    final pathSegments = uri.pathSegments;
+    final bucketIdx = pathSegments.indexOf(bucket);
+    if (bucketIdx != -1 && bucketIdx + 1 < pathSegments.length) {
+      final relativePath = pathSegments.sublist(bucketIdx + 1).join('/');
+      await client.storage.from(bucket).remove([relativePath]);
+      // ignore: avoid_print
+      print('Successfully deleted file from Supabase storage: $relativePath');
+    }
+  } catch (e) {
+    // ignore: avoid_print
+    print('Error deleting file from Supabase storage: $e');
+  }
+}
+
 class SupabaseCustomerRepository implements CustomerRepository {
   final _client = Supabase.instance.client;
 
@@ -357,8 +376,8 @@ class SupabaseCustomerRepository implements CustomerRepository {
     if (locationUrl != null) updates['location_url'] = locationUrl;
 
     if (profileUrl != null && profileUrl.isNotEmpty) {
-      final extension = profileUrl.split('.').last;
-      final remotePath = '$id/profile.$extension';
+      final extension = profileUrl.split('.').last.toLowerCase();
+      final remotePath = '$id/profile.$extension'.toLowerCase();
       final remoteProfileUrl = await _uploadFile('customer-photos', profileUrl, remotePath);
       updates['profile_url'] = remoteProfileUrl;
     }
@@ -447,8 +466,8 @@ class SupabaseCustomerRepository implements CustomerRepository {
 
     String? remoteProfileUrl;
     if (profileUrl != null && profileUrl.isNotEmpty) {
-      final extension = profileUrl.split('.').last.split('?').first;
-      final remotePath = '$customerId/profile.$extension';
+      final extension = profileUrl.split('.').last.split('?').first.toLowerCase();
+      final remotePath = '$customerId/profile.$extension'.toLowerCase();
       remoteProfileUrl = await _uploadFile('customer-photos', profileUrl, remotePath);
     }
 
@@ -464,10 +483,10 @@ class SupabaseCustomerRepository implements CustomerRepository {
         final localPath = p.document?.localUri ?? '';
         String remoteUrl = localPath;
         if (localPath.isNotEmpty) {
-          final extension = localPath.split('.').last;
+          final extension = localPath.split('.').last.toLowerCase();
           final sanitizedName = name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
           final sanitizedType = p.type.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
-          final remotePath = '$customerId/${sanitizedName}_$sanitizedType.$extension';
+          final remotePath = '$customerId/${sanitizedName}_$sanitizedType.$extension'.toLowerCase();
           remoteUrl = await _uploadFile('customer-proofs', localPath, remotePath);
         }
         uploadedProofs.add(p.copyWith(
@@ -529,10 +548,39 @@ class SupabaseCustomerRepository implements CustomerRepository {
 
   @override
   Future<void> updateCustomer(Customer customer) async {
+    final existing = await getCustomerById(customer.id);
+    if (existing != null) {
+      // 1. Delete removed ID proofs from S3
+      final existingProofUrls = existing.idProofs
+          .map((p) => p.document?.localUri)
+          .whereType<String>()
+          .where((uri) => uri.startsWith('http'))
+          .toList();
+      final newProofUrls = customer.idProofs
+          .map((p) => p.document?.localUri)
+          .whereType<String>()
+          .toList();
+
+      for (final oldUrl in existingProofUrls) {
+        if (!newProofUrls.contains(oldUrl)) {
+          await _deleteFile('customer-proofs', oldUrl);
+        }
+      }
+
+      // 2. Delete removed profile photo from S3
+      final oldProfileUrl = existing.profileUrl;
+      final newProfileUrl = customer.profileUrl;
+      if (oldProfileUrl != null &&
+          oldProfileUrl.startsWith('http') &&
+          (newProfileUrl == null || newProfileUrl.isEmpty)) {
+        await _deleteFile('customer-photos', oldProfileUrl);
+      }
+    }
+
     String? remoteProfileUrl = customer.profileUrl;
     if (remoteProfileUrl != null && remoteProfileUrl.isNotEmpty && !remoteProfileUrl.startsWith('http')) {
-      final extension = remoteProfileUrl.split('.').last.split('?').first;
-      final remotePath = '${customer.id}/profile.$extension';
+      final extension = remoteProfileUrl.split('.').last.split('?').first.toLowerCase();
+      final remotePath = '${customer.id}/profile.$extension'.toLowerCase();
       remoteProfileUrl = await _uploadFile('customer-photos', remoteProfileUrl, remotePath);
     }
 
@@ -541,10 +589,10 @@ class SupabaseCustomerRepository implements CustomerRepository {
       final localPath = p.document?.localUri ?? '';
       String remoteUrl = localPath;
       if (localPath.isNotEmpty && !localPath.startsWith('http')) {
-        final extension = localPath.split('.').last.split('?').first;
+        final extension = localPath.split('.').last.split('?').first.toLowerCase();
         final sanitizedName = customer.name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
         final sanitizedType = p.type.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
-        final remotePath = '${customer.id}/${sanitizedName}_$sanitizedType.$extension';
+        final remotePath = '${customer.id}/${sanitizedName}_$sanitizedType.$extension'.toLowerCase();
         remoteUrl = await _uploadFile('customer-proofs', localPath, remotePath);
       }
       uploadedProofs.add(p.copyWith(
