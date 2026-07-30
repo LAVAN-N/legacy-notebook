@@ -540,7 +540,9 @@ class SupabaseCustomerRepository implements CustomerRepository {
         String remoteUrl = localPath;
         if (localPath.isNotEmpty) {
           final extension = localPath.split('.').last;
-          final remotePath = '$customerId/proof_${p.id}.$extension';
+          final sanitizedName = name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+          final sanitizedType = p.type.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+          final remotePath = '$customerId/${sanitizedName}_$sanitizedType.$extension';
           remoteUrl = await _uploadFile('customer-proofs', localPath, remotePath);
         }
         await _client.from('customer_proofs').insert({
@@ -613,7 +615,9 @@ class SupabaseCustomerRepository implements CustomerRepository {
       String remoteUrl = localPath;
       if (localPath.isNotEmpty && !localPath.startsWith('http')) {
         final extension = localPath.split('.').last.split('?').first;
-        final remotePath = '${customer.id}/proof_${p.id}.$extension';
+        final sanitizedName = customer.name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+        final sanitizedType = p.type.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+        final remotePath = '${customer.id}/${sanitizedName}_$sanitizedType.$extension';
         remoteUrl = await _uploadFile('customer-proofs', localPath, remotePath);
       }
       await _client.from('customer_proofs').insert({

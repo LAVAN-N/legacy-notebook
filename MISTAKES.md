@@ -991,3 +991,12 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Refactored the open handler to download remote files using `HttpClient` into a local temp directory, and then opened the local path using `OpenFilex` or local OS process commands.
 - **Rule for next agent:** NEVER open remote public storage URLs of sensitive ID proofs in a browser; ALWAYS download them locally to a temporary secure path first, then open with native system application viewers.
 - **Guardrail:** Verify that opening remote documents downloads the file silently and starts the local viewer application directly.
+
+### 2026-07-30 · Unstructured and clashing filenames in client proof storage uploads
+
+- **Context:** Storing and organizing customer identity documents inside Supabase Storage bucket paths in `supabase_repositories.dart`.
+- **Mistake:** Naming customer proof files solely by their proof ID (e.g. `customerId/proof_id.png`) instead of using structural naming parameters that identify the customer and document type context. Also, failing to sanitize special characters or spaces in customer name/proof type fields.
+- **Root cause:** Neglecting S3 folder organization constraints and ignoring name collision risks when uploading multiple documents of the same proof type for a single customer.
+- **Fix applied:** Refactored remote S3 paths to place proofs under a client-specific folder named after the `client_id`, with filenames structured as `<client_name>_<proof_type>.<extension>` (replacing non-alphanumeric characters with underscores) to support type-based overwriting directly.
+- **Rule for next agent:** ALWAYS name uploaded customer documents using a structured format containing the client's sanitized name and proof type under a customer-id directory context to enforce overwriting of existing document types.
+- **Guardrail:** Confirm that files uploaded to the `customer-proofs` bucket follow the `client_id/client_name_proof_type.ext` path pattern.
