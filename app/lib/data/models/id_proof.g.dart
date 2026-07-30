@@ -28,7 +28,7 @@ _$IdProofImpl _$$IdProofImplFromJson(Map<String, dynamic> json) =>
     _$IdProofImpl(
       id: json['id'] as String,
       type: json['type'] as String,
-      number: json['number'] as String,
+      proofUrl: json['proof_url'] as String,
       document: json['document'] == null
           ? null
           : IdProofDocument.fromJson(json['document'] as Map<String, dynamic>),
@@ -38,6 +38,6 @@ Map<String, dynamic> _$$IdProofImplToJson(_$IdProofImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
       'type': instance.type,
-      'number': instance.number,
+      'proof_url': instance.proofUrl,
       'document': instance.document,
     };

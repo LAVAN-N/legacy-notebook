@@ -478,7 +478,7 @@ final mockCategoriesList = [
 
 final mockCustomersList = [
   const Customer(
-    id: '1',
+    id: 'CU-001',
     customerCode: 'W4-P1-A1-001',
     name: 'Lakshmi Priya',
     phone: '9876543210',
@@ -487,12 +487,12 @@ final mockCustomersList = [
     landmark: 'Near Ganesha Temple',
     location: Location(lat: 10.0401, lng: 78.3312, label: 'Home'),
     nominees: [
-      Nominee(id: 'n-1', name: 'Ramanathan', relation: 'Spouse', phone: '9123456789'),
-      Nominee(id: 'n-2', name: 'Karthik', relation: 'Son', phone: '9876543210'),
+      Nominee(id: '3b2d6a5c-7f8e-4a3b-9c2d-1e0f8a7b6c5d', name: 'Ramanathan', relation: 'Spouse', phone: '9123456789'),
+      Nominee(id: '5e4d3c2b-1a0f-9e8d-7c6b-5a4f3e2d1c0b', name: 'Karthik', relation: 'Son', phone: '9876543210'),
     ],
     idProofs: [
-      IdProof(id: 'id-1', type: 'Aadhaar', number: '1234 5678 9012'),
-      IdProof(id: 'id-2', type: 'Voter', number: 'ABC1234567'),
+      IdProof(id: '8a7b6c5d-4e3f-2a1b-0c9d-8e7f6a5b4c3d', type: 'Aadhaar', proofUrl: 'https://supabase.co/customer-proofs/CU-001/Lakshmi_Priya_Aadhaar.jpg'),
+      IdProof(id: '9c8b7a6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d', type: 'Voter', proofUrl: 'https://supabase.co/customer-proofs/CU-001/Lakshmi_Priya_Voter.jpg'),
     ],
     weekdayId: 'w-4', // Thursday
     placeId: 'p-1', // Melur
@@ -504,7 +504,7 @@ final mockCustomersList = [
     notes: 'Always pays in the morning. Likes Prestige brand.',
   ),
   const Customer(
-    id: '2',
+    id: 'CU-002',
     customerCode: 'W4-P1-A2-002',
     name: 'Muthu Pandian',
     phone: '9443210987',
@@ -512,7 +512,7 @@ final mockCustomersList = [
     landmark: 'Opposite Government School',
     location: Location(lat: 10.0415, lng: 78.3350, label: 'Shop'),
     nominees: [
-      Nominee(id: 'n-3', name: 'Chinnasamy', relation: 'Father', phone: '9443210988'),
+      Nominee(id: '0f1e2d3c-4b5a-6789-0123-456789abcdef', name: 'Chinnasamy', relation: 'Father', phone: '9443210988'),
     ],
     weekdayId: 'w-4', // Thursday
     placeId: 'p-1', // Melur
@@ -523,7 +523,7 @@ final mockCustomersList = [
     notes: 'Busy during noon. Call before visiting.',
   ),
   const Customer(
-    id: '3',
+    id: 'CU-003',
     customerCode: 'W4-P2-A3-003',
     name: 'Anitha Rajendran',
     phone: '9988776655',
@@ -531,8 +531,8 @@ final mockCustomersList = [
     landmark: 'Beside Post Office',
     location: Location(lat: 9.9575, lng: 78.1820),
     nominees: [
-      Nominee(id: 'n-4', name: 'Rajendran', relation: 'Spouse', phone: '9988776654'),
-      Nominee(id: 'n-5', name: 'Kavitha', relation: 'Daughter', phone: '9988776653'),
+      Nominee(id: '1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d', name: 'Rajendran', relation: 'Spouse', phone: '9988776654'),
+      Nominee(id: '2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e', name: 'Kavitha', relation: 'Daughter', phone: '9988776653'),
     ],
     weekdayId: 'w-4', // Thursday
     placeId: 'p-2', // Othakadai
@@ -543,7 +543,7 @@ final mockCustomersList = [
     notes: 'Check back after 5 PM.',
   ),
   const Customer(
-    id: '4',
+    id: 'CU-004',
     customerCode: 'W1-P3-A4-004',
     name: 'Karthik Raja',
     phone: '9123456789',
@@ -556,7 +556,7 @@ final mockCustomersList = [
     notes: 'No outstanding balance.',
   ),
   const Customer(
-    id: '5',
+    id: 'CU-005',
     customerCode: 'W2-P4-A5-005',
     name: 'Selvi Murugesan',
     phone: '9554433221',
@@ -569,7 +569,7 @@ final mockCustomersList = [
     notes: 'Payment dispute. Flagged do not visit.',
   ),
   const Customer(
-    id: '6',
+    id: 'CU-006',
     customerCode: 'W1-P3-A4-006',
     name: 'Rahim Khan',
     phone: '9888877777',
@@ -581,7 +581,7 @@ final mockCustomersList = [
     notes: 'Small outstanding, pays regularly.',
   ),
   const Customer(
-    id: '7',
+    id: 'CU-007',
     customerCode: 'W4-P1-A1-007',
     name: 'Meena Subramanian',
     phone: '9777766666',
@@ -593,7 +593,7 @@ final mockCustomersList = [
     notes: 'Newly added customer.',
   ),
   const Customer(
-    id: '8',
+    id: 'CU-008',
     customerCode: 'W4-P2-A3-008',
     name: 'Venkatesan Alagar',
     phone: '9666655555',
@@ -610,7 +610,7 @@ final mockSalesList = [
   // Lakshmi Priya (c-1): bought Refrigerator, price 16500, advance 5000, financed 11500
   Sale(
     id: 's-1',
-    customerId: '1',
+    customerId: 'CU-001',
     saleDatetime: DateTime.now().subtract(const Duration(days: 15)),
     saleType: 'CREDIT',
     totalAmount: 16500,
@@ -621,7 +621,7 @@ final mockSalesList = [
   // Lakshmi Priya (c-1): bought Mixer Grinder, price 3200, advance 3200, financed 0 (Ready Sale)
   Sale(
     id: 's-2',
-    customerId: '1',
+    customerId: 'CU-001',
     saleDatetime: DateTime.now().subtract(const Duration(days: 8)),
     saleType: 'READY',
     totalAmount: 3200,
@@ -632,7 +632,7 @@ final mockSalesList = [
   // Muthu Pandian (c-2): bought Induction Cooktop, price 2800, advance 500, financed 2300
   Sale(
     id: 's-3',
-    customerId: '2',
+    customerId: 'CU-002',
     saleDatetime: DateTime.now().subtract(const Duration(days: 20)),
     saleType: 'CREDIT',
     totalAmount: 2800,
@@ -643,7 +643,7 @@ final mockSalesList = [
   // Anitha Rajendran (c-3): bought Washing Machine, price 28500, advance 8500, financed 20000
   Sale(
     id: 's-4',
-    customerId: '3',
+    customerId: 'CU-003',
     saleDatetime: DateTime.now().subtract(const Duration(days: 30)),
     saleType: 'CREDIT',
     totalAmount: 28500,
@@ -654,7 +654,7 @@ final mockSalesList = [
   // Rahim Khan (c-6): bought Dry Iron, price 850, advance 0, financed 850
   Sale(
     id: 's-5',
-    customerId: '6',
+    customerId: 'CU-006',
     saleDatetime: DateTime.now().subtract(const Duration(days: 5)),
     saleType: 'CREDIT',
     totalAmount: 850,
@@ -668,7 +668,7 @@ final mockCollectionsList = [
   // Lakshmi Priya (c-1): Paid 1500 (reducing 11500 -> 10000)
   Collection(
     id: 'col-1',
-    customerId: '1',
+    customerId: 'CU-001',
     visitDatetime: DateTime.now().subtract(const Duration(days: 7)),
     status: 'PAYMENT',
     amount: 1500.0,
@@ -677,7 +677,7 @@ final mockCollectionsList = [
   // Lakshmi Priya (c-1): Carry forward (outstanding remains 10000)
   Collection(
     id: 'col-2',
-    customerId: '1',
+    customerId: 'CU-001',
     visitDatetime: DateTime.now().subtract(const Duration(hours: 4)),
     status: 'CARRY_FORWARD',
     amount: 0.0,
@@ -687,7 +687,7 @@ final mockCollectionsList = [
   // Lakshmi Priya (c-1): Partial payment of 200 today (outstanding 10000 -> 9800)
   Collection(
     id: 'col-3',
-    customerId: '1',
+    customerId: 'CU-001',
     visitDatetime: DateTime.now().subtract(const Duration(hours: 2)),
     status: 'PARTIAL_PAYMENT',
     amount: 200.0,
@@ -697,7 +697,7 @@ final mockCollectionsList = [
   // Muthu Pandian (c-2): Paid 500 (reducing 2300 -> 1800)
   Collection(
     id: 'col-4',
-    customerId: '2',
+    customerId: 'CU-002',
     visitDatetime: DateTime.now().subtract(const Duration(days: 10)),
     status: 'PAYMENT',
     amount: 500.0,
@@ -706,7 +706,7 @@ final mockCollectionsList = [
   // Anitha Rajendran (c-3): Carry forward
   Collection(
     id: 'col-5',
-    customerId: '3',
+    customerId: 'CU-003',
     visitDatetime: DateTime.now().subtract(const Duration(days: 6)),
     status: 'CARRY_FORWARD',
     amount: 0.0,

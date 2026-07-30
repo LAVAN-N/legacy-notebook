@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/customer.dart';
@@ -56,106 +57,64 @@ Future<String> _uploadFile(String bucket, String localPath, String remotePath) a
 class SupabaseCustomerRepository implements CustomerRepository {
   final _client = Supabase.instance.client;
 
+  Customer _mapToCustomer(Map<String, dynamic> map) {
+    final List<dynamic> nomineeList = map['nominees'] != null
+        ? (map['nominees'] is String 
+            ? jsonDecode(map['nominees'] as String) 
+            : map['nominees']) as List<dynamic>
+        : [];
+    final nominees = nomineeList
+        .map((item) => Nominee.fromJson(item as Map<String, dynamic>))
+        .toList();
+
+    final List<dynamic> proofList = map['id_proofs'] != null
+        ? (map['id_proofs'] is String 
+            ? jsonDecode(map['id_proofs'] as String) 
+            : map['id_proofs']) as List<dynamic>
+        : [];
+    final idProofs = proofList
+        .map((item) => IdProof.fromJsonCustom(item as Map<String, dynamic>))
+        .toList();
+
+    return Customer(
+      id: map['id'] as String,
+      customerCode: (map['customer_code'] as String?) ?? '',
+      name: (map['name'] as String?) ?? '',
+      phone: (map['phone'] as String?) ?? '',
+      alternatePhone: map['alternate_phone'] as String?,
+      address: (map['address'] as String?) ?? '',
+      landmark: map['landmark'] as String?,
+      proofUrl: map['proof_url'] as String?,
+      locationUrl: map['location_url'] as String?,
+      location: (map['latitude'] != null && map['longitude'] != null)
+          ? Location(lat: (map['latitude'] as num).toDouble(), lng: (map['longitude'] as num).toDouble())
+          : null,
+      nominees: nominees,
+      idProofs: idProofs,
+      weekdayId: (map['weekday_id'] as String?) ?? '',
+      placeId: (map['place_id'] as String?) ?? '',
+      areaId: (map['area_id'] as String?) ?? '',
+      status: (map['status'] as String?) ?? 'ACTIVE',
+      guardianName: map['guardian_name'] as String?,
+      dob: map['dob'] as String?,
+      occupation: map['occupation'] as String?,
+      notes: map['notes'] as String?,
+    );
+  }
+
   @override
   Stream<List<Customer>> watchAllCustomers() {
     return _client
         .from('customers')
         .stream(primaryKey: ['id'])
         .order('id')
-        .asyncMap((maps) async {
-          final List<Customer> results = [];
-          for (final map in maps) {
-            final id = map['id'] as String;
-            final nominees = await getNominees(id);
-            final proofs = await getProofs(id);
-            results.add(Customer(
-              id: map['id'] as String,
-              customerCode: (map['customer_code'] as String?) ?? '',
-              name: (map['name'] as String?) ?? '',
-              phone: (map['phone'] as String?) ?? '',
-              alternatePhone: map['alternate_phone'] as String?,
-              address: (map['address'] as String?) ?? '',
-              landmark: map['landmark'] as String?,
-              proofUrl: map['proof_url'] as String?,
-              locationUrl: map['location_url'] as String?,
-              location: (map['latitude'] != null && map['longitude'] != null)
-                  ? Location(lat: (map['latitude'] as num).toDouble(), lng: (map['longitude'] as num).toDouble())
-                  : null,
-              nominees: nominees,
-              idProofs: proofs,
-              weekdayId: (map['weekday_id'] as String?) ?? '',
-              placeId: (map['place_id'] as String?) ?? '',
-              areaId: (map['area_id'] as String?) ?? '',
-              status: (map['status'] as String?) ?? 'ACTIVE',
-              guardianName: map['guardian_name'] as String?,
-              dob: map['dob'] as String?,
-              occupation: map['occupation'] as String?,
-              notes: map['notes'] as String?,
-            ));
-          }
-          return results;
-        });
-  }
-
-  Future<List<Nominee>> getNominees(String customerId) async {
-    final res = await _client.from('customer_nominees').select().eq('customer_id', customerId);
-    return res.map((n) => Nominee(
-      id: n['id'] as String,
-      name: n['name'] as String,
-      phone: (n['phone'] as String?) ?? '',
-      relation: n['relation'] as String?,
-    )).toList();
-  }
-
-  Future<List<IdProof>> getProofs(String customerId) async {
-    final res = await _client.from('customer_proofs').select().eq('customer_id', customerId);
-    return res.map((p) => IdProof(
-      id: p['id'] as String,
-      type: p['proof_type'] as String,
-      number: 'DOC-PROOF',
-      document: IdProofDocument(
-        filename: 'proof',
-        mimeType: 'image/jpeg',
-        sizeBytes: 0,
-        localUri: p['image_url'] as String,
-      ),
-    )).toList();
+        .map((maps) => maps.map((map) => _mapToCustomer(map)).toList());
   }
 
   @override
   Future<List<Customer>> getAllCustomers() async {
     final maps = await _client.from('customers').select().order('id');
-    final List<Customer> results = [];
-    for (final map in maps) {
-      final id = map['id'] as String;
-      final nominees = await getNominees(id);
-      final proofs = await getProofs(id);
-      results.add(Customer(
-        id: map['id'] as String,
-        customerCode: (map['customer_code'] as String?) ?? '',
-        name: (map['name'] as String?) ?? '',
-        phone: (map['phone'] as String?) ?? '',
-        alternatePhone: map['alternate_phone'] as String?,
-        address: (map['address'] as String?) ?? '',
-        landmark: map['landmark'] as String?,
-        proofUrl: map['proof_url'] as String?,
-        locationUrl: map['location_url'] as String?,
-        location: (map['latitude'] != null && map['longitude'] != null)
-            ? Location(lat: (map['latitude'] as num).toDouble(), lng: (map['longitude'] as num).toDouble())
-            : null,
-        nominees: nominees,
-        idProofs: proofs,
-        weekdayId: (map['weekday_id'] as String?) ?? '',
-        placeId: (map['place_id'] as String?) ?? '',
-        areaId: (map['area_id'] as String?) ?? '',
-        status: (map['status'] as String?) ?? 'ACTIVE',
-        guardianName: map['guardian_name'] as String?,
-        dob: map['dob'] as String?,
-        occupation: map['occupation'] as String?,
-        notes: map['notes'] as String?,
-      ));
-    }
-    return results;
+    return maps.map((map) => _mapToCustomer(map)).toList();
   }
 
   @override
@@ -173,32 +132,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
   Future<Customer?> getCustomerById(String id) async {
     final res = await _client.from('customers').select().eq('id', id).maybeSingle();
     if (res == null) return null;
-    final nominees = await getNominees(id);
-    final proofs = await getProofs(id);
-    return Customer(
-      id: res['id'] as String,
-      customerCode: (res['customer_code'] as String?) ?? '',
-      name: (res['name'] as String?) ?? '',
-      phone: (res['phone'] as String?) ?? '',
-      alternatePhone: res['alternate_phone'] as String?,
-      address: (res['address'] as String?) ?? '',
-      landmark: res['landmark'] as String?,
-      proofUrl: res['proof_url'] as String?,
-      locationUrl: res['location_url'] as String?,
-      location: (res['latitude'] != null && res['longitude'] != null)
-          ? Location(lat: (res['latitude'] as num).toDouble(), lng: (res['longitude'] as num).toDouble())
-          : null,
-      nominees: nominees,
-      idProofs: proofs,
-      weekdayId: (res['weekday_id'] as String?) ?? '',
-      placeId: (res['place_id'] as String?) ?? '',
-      areaId: (res['area_id'] as String?) ?? '',
-      status: (res['status'] as String?) ?? 'ACTIVE',
-      guardianName: res['guardian_name'] as String?,
-      dob: res['dob'] as String?,
-      occupation: res['occupation'] as String?,
-      notes: res['notes'] as String?,
-    );
+    return _mapToCustomer(res);
   }
 
   @override
@@ -437,30 +371,41 @@ class SupabaseCustomerRepository implements CustomerRepository {
 
   @override
   Future<void> addNominee(String customerId, String name, String phone, String relation) async {
-    await _client.from('customer_nominees').insert({
-      'id': 'nom_${DateTime.now().microsecondsSinceEpoch}',
-      'customer_id': customerId,
-      'name': name,
-      'phone': phone,
-      'relation': relation,
-    });
+    final customer = await getCustomerById(customerId);
+    if (customer != null) {
+      final newNominee = Nominee(
+        id: 'nom_${DateTime.now().microsecondsSinceEpoch}',
+        name: name,
+        phone: phone,
+        relation: relation,
+      );
+      final updated = customer.copyWith(
+        nominees: [...customer.nominees, newNominee],
+      );
+      await updateCustomer(updated);
+    }
   }
 
   @override
   Future<void> addProofImage(String customerId, String proofType, String imageUrl) async {
-    final id = 'proof_${DateTime.now().millisecondsSinceEpoch}';
-    String remoteUrl = imageUrl;
-    if (imageUrl.isNotEmpty) {
-      final extension = imageUrl.split('.').last;
-      final remotePath = '$customerId/proof_$id.$extension';
-      remoteUrl = await _uploadFile('customer-proofs', imageUrl, remotePath);
+    final customer = await getCustomerById(customerId);
+    if (customer != null) {
+      final newProof = IdProof(
+        id: 'prf_${DateTime.now().millisecondsSinceEpoch}',
+        type: proofType,
+        proofUrl: imageUrl,
+        document: IdProofDocument(
+          filename: 'proof',
+          mimeType: 'image/jpeg',
+          sizeBytes: 0,
+          localUri: imageUrl,
+        ),
+      );
+      final updated = customer.copyWith(
+        idProofs: [...customer.idProofs, newProof],
+      );
+      await updateCustomer(updated);
     }
-    await _client.from('customer_proofs').insert({
-      'id': id,
-      'customer_id': customerId,
-      'proof_type': proofType,
-      'image_url': remoteUrl,
-    });
   }
 
   @override
@@ -485,19 +430,50 @@ class SupabaseCustomerRepository implements CustomerRepository {
     int maxId = 0;
     for (final row in allRes) {
       final rawId = row['id']?.toString() ?? '';
-      final parsed = int.tryParse(rawId);
+      final numPart = rawId.replaceAll('CU-', '');
+      final parsed = int.tryParse(numPart);
       if (parsed != null && parsed > maxId) {
         maxId = parsed;
       }
     }
     final nextIdNum = maxId + 1;
-    final customerId = '$nextIdNum';
+    final customerId = 'CU-${nextIdNum.toString().padLeft(3, '0')}';
 
     final wCode = weekdayId.replaceAll('w-', 'W').toUpperCase();
     final pCode = placeId.replaceAll('p-', 'P').toUpperCase();
     final aCode = areaId.replaceAll('a-', 'A').toUpperCase();
     final paddedId = nextIdNum.toString().padLeft(3, '0');
     final code = '$wCode-$pCode-$aCode-$paddedId';
+
+    final updatedNominees = (nominees ?? []).map((n) {
+      return n.copyWith(
+        id: n.id.isNotEmpty ? n.id : 'nom_${DateTime.now().microsecondsSinceEpoch}',
+      );
+    }).toList();
+
+    final List<IdProof> uploadedProofs = [];
+    if (idProofs != null) {
+      for (var p in idProofs) {
+        final localPath = p.document?.localUri ?? '';
+        String remoteUrl = localPath;
+        if (localPath.isNotEmpty) {
+          final extension = localPath.split('.').last;
+          final sanitizedName = name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+          final sanitizedType = p.type.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+          final remotePath = '$customerId/${sanitizedName}_$sanitizedType.$extension';
+          remoteUrl = await _uploadFile('customer-proofs', localPath, remotePath);
+        }
+        uploadedProofs.add(p.copyWith(
+          id: p.id.isNotEmpty ? p.id : 'proof_${DateTime.now().microsecondsSinceEpoch}',
+          document: p.document?.copyWith(localUri: remoteUrl) ?? IdProofDocument(
+            filename: 'proof',
+            mimeType: 'image/jpeg',
+            sizeBytes: 0,
+            localUri: remoteUrl,
+          ),
+        ));
+      }
+    }
 
     final customerData = {
       'id': customerId,
@@ -519,41 +495,11 @@ class SupabaseCustomerRepository implements CustomerRepository {
       'occupation': occupation,
       'notes': notes,
       'created_by': 'collector_local',
+      'nominees': updatedNominees.map((n) => n.toJson()).toList(),
+      'id_proofs': uploadedProofs.map((p) => p.toJson()).toList(),
     };
 
     await _client.from('customers').insert(customerData);
-
-    if (nominees != null) {
-      for (var n in nominees) {
-        await _client.from('customer_nominees').insert({
-          'id': n.id.isNotEmpty ? n.id : 'nom_${DateTime.now().microsecondsSinceEpoch}_${n.name.hashCode}',
-          'customer_id': customerId,
-          'name': n.name,
-          'phone': n.phone,
-          'relation': n.relation,
-        });
-      }
-    }
-
-    if (idProofs != null) {
-      for (var p in idProofs) {
-        final localPath = p.document?.localUri ?? '';
-        String remoteUrl = localPath;
-        if (localPath.isNotEmpty) {
-          final extension = localPath.split('.').last;
-          final sanitizedName = name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
-          final sanitizedType = p.type.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
-          final remotePath = '$customerId/${sanitizedName}_$sanitizedType.$extension';
-          remoteUrl = await _uploadFile('customer-proofs', localPath, remotePath);
-        }
-        await _client.from('customer_proofs').insert({
-          'id': p.id,
-          'customer_id': customerId,
-          'proof_type': p.type,
-          'image_url': remoteUrl,
-        });
-      }
-    }
 
     if (openingBalance > 0) {
       final saleId = 'sale_ob_$customerId';
@@ -576,7 +522,28 @@ class SupabaseCustomerRepository implements CustomerRepository {
 
   @override
   Future<void> updateCustomer(Customer customer) async {
-    // 1. Update customers table fields (using proof_url for avatar)
+    final List<IdProof> uploadedProofs = [];
+    for (var p in customer.idProofs) {
+      final localPath = p.document?.localUri ?? '';
+      String remoteUrl = localPath;
+      if (localPath.isNotEmpty && !localPath.startsWith('http')) {
+        final extension = localPath.split('.').last.split('?').first;
+        final sanitizedName = customer.name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+        final sanitizedType = p.type.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+        final remotePath = '${customer.id}/${sanitizedName}_$sanitizedType.$extension';
+        remoteUrl = await _uploadFile('customer-proofs', localPath, remotePath);
+      }
+      uploadedProofs.add(p.copyWith(
+        id: p.id.isNotEmpty ? p.id : 'proof_${DateTime.now().microsecondsSinceEpoch}',
+        document: p.document?.copyWith(localUri: remoteUrl) ?? IdProofDocument(
+          filename: 'proof',
+          mimeType: 'image/jpeg',
+          sizeBytes: 0,
+          localUri: remoteUrl,
+        ),
+      ));
+    }
+
     await _client.from('customers').update({
       'name': customer.name,
       'phone': customer.phone,
@@ -595,39 +562,9 @@ class SupabaseCustomerRepository implements CustomerRepository {
       'dob': customer.dob,
       'occupation': customer.occupation,
       'notes': customer.notes,
+      'nominees': customer.nominees.map((n) => n.toJson()).toList(),
+      'id_proofs': uploadedProofs.map((p) => p.toJson()).toList(),
     }).eq('id', customer.id);
-
-    // 2. Refresh nominees
-    await _client.from('customer_nominees').delete().eq('customer_id', customer.id);
-    for (var n in customer.nominees) {
-      await _client.from('customer_nominees').insert({
-        'id': n.id.isNotEmpty ? n.id : 'nom_${DateTime.now().microsecondsSinceEpoch}_${n.name.hashCode}',
-        'customer_id': customer.id,
-        'name': n.name,
-        'phone': n.phone,
-        'relation': n.relation,
-      });
-    }
-
-    // 3. Refresh proofs (uploading local files to S3 bucket if any)
-    await _client.from('customer_proofs').delete().eq('customer_id', customer.id);
-    for (var p in customer.idProofs) {
-      final localPath = p.document?.localUri ?? '';
-      String remoteUrl = localPath;
-      if (localPath.isNotEmpty && !localPath.startsWith('http')) {
-        final extension = localPath.split('.').last.split('?').first;
-        final sanitizedName = customer.name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
-        final sanitizedType = p.type.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
-        final remotePath = '${customer.id}/${sanitizedName}_$sanitizedType.$extension';
-        remoteUrl = await _uploadFile('customer-proofs', localPath, remotePath);
-      }
-      await _client.from('customer_proofs').insert({
-        'id': p.id,
-        'customer_id': customer.id,
-        'proof_type': p.type,
-        'image_url': remoteUrl,
-      });
-    }
   }
 
   @override

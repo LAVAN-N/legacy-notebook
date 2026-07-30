@@ -479,7 +479,7 @@ class CustomerContextCard extends StatelessWidget {
                               color: colors.primary,
                             ),
                             title: Text(
-                              '${p.type} (${p.number})',
+                              p.type,
                               style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold),
                             ),
                             subtitle: Text(
@@ -828,7 +828,7 @@ class CustomerContextCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      proof.number,
+                      proof.proofUrl.split('/').last,
                       style: AppTypography.titleMedium.copyWith(
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.2,

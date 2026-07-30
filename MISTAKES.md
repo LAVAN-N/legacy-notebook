@@ -1029,3 +1029,21 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Re-created `route_summary_view` in Supabase and updated `001_schema_placeholder.sql` to explicitly alias `COUNT(DISTINCT c.id) AS customer_count`.
 - **Rule for next agent:** ALWAYS verify SQL view column aliases match repository `.select('column_name')` fields exactly.
 - **Guardrail:** Verify `DashboardController.refresh()` completes without PostgrestException 42703.
+
+### 2026-07-30 · Customer ID format refactoring and JSON Document Model mapping
+
+- **Context:** Storing and querying customer entities with nominees and ID proofs.
+- **Mistake:** Relational sub-queries for `customer_nominees` and `customer_proofs` tables added extra SQL joins and write operations, complicating sync and local database migrations.
+- **Root cause:** Relational modeling of dependent objects (nominees, proofs) created sync ordering complexities and overhead.
+- **Fix applied:** Refactored database schemas to store nominees and ID proofs as nested JSONB arrays (`nominees` and `id_proofs`) directly in the `customers` table, dropping `customer_nominees` and `customer_proofs` tables. Refactored customer IDs from integers to zero-padded strings (`CU-001`, `CU-002`) and nominee/proof IDs to random UUIDs.
+- **Rule for next agent:** ALWAYS store dependent customer nominees and ID proofs inside JSON columns on the `customers` record, and ALWAYS generate customer IDs in the `CU-001` format.
+- **Guardrail:** Verify that nominees and ID proofs are retrieved and saved successfully from/to the embedded JSON fields of the customer record.
+
+### 2026-07-30 · Replacing number key with proofUrl in customer ID proofs list
+
+- **Context:** Storing and displaying ID proof document records inside customer details.
+- **Mistake:** Used a redundant `number` text key to identify mock ID proofs, instead of referencing the document's remote S3 bucket file URL directly using `proof_url`.
+- **Root cause:** Requirement update to store document URLs directly under a `proof_url` key in PostgreSQL JSON fields.
+- **Fix applied:** Replaced `number` property in `IdProof` model with `proofUrl` mapping to `proof_url` in the database. Restored standard `fromJson` redirect factory to prevent build runner compilation crashes, and defined a custom static `fromJsonCustom` helper to dynamically hydrate UI `document` metadata objects in memory.
+- **Rule for next agent:** ALWAYS store ID proof S3 paths/URLs under the key `proof_url` (mapped to property `proofUrl`) inside the customer `id_proofs` list.
+- **Guardrail:** Verify that `IdProof` objects serialize `proof_url` as their primary S3 document path and compile/hydrate metadata cleanly.

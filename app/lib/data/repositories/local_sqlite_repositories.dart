@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import '../models/customer.dart';
 import '../models/outstanding.dart';
@@ -77,7 +78,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
   @override
   Stream<List<Customer>> watchAllCustomers() {
     return watchQuery(
-      tables: ['customers', 'customer_nominees', 'customer_proofs'],
+      tables: ['customers'],
       query: getAllCustomers,
     );
   }
@@ -85,41 +86,26 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
   @override
   Future<List<Customer>> getAllCustomers() async {
     final db = await DatabaseHelper.instance.database;
-    final maps = await db.query('customers', orderBy: 'CAST(id AS INTEGER) ASC');
+    final maps = await db.query('customers', orderBy: 'id ASC');
     final List<Customer> results = [];
 
     for (final map in maps) {
-      final id = map['id'] as String;
+      final List<dynamic> nomineeList = map['nominees'] != null
+          ? jsonDecode(map['nominees'] as String) as List<dynamic>
+          : [];
+      final nominees = nomineeList
+          .map((item) => Nominee.fromJson(item as Map<String, dynamic>))
+          .toList();
 
-      // Fetch nominees
-      final nomineeMaps = await db.query('customer_nominees', where: 'customer_id = ?', whereArgs: [id]);
-      final nominees = nomineeMaps.map((nm) {
-        final phoneStr = nm['phone'] as String?;
-        final relStr = nm['relation'] as String?;
-        return Nominee(
-          id: nm['id'] as String,
-          name: nm['name'] as String,
-          phone: phoneStr ?? '',
-          relation: (relStr == null || relStr.isEmpty) ? null : relStr,
-        );
-      }).toList();
-
-      // Fetch proofs
-      final proofMaps = await db.query('customer_proofs', where: 'customer_id = ?', whereArgs: [id]);
-      final idProofs = proofMaps.map((pm) => IdProof(
-        id: pm['id'] as String,
-        type: pm['proof_type'] as String,
-        number: 'DOC-PROOF',
-        document: IdProofDocument(
-          filename: 'proof',
-          mimeType: 'image/jpeg',
-          sizeBytes: 0,
-          localUri: pm['image_url'] as String,
-        ),
-      )).toList();
+      final List<dynamic> proofList = map['id_proofs'] != null
+          ? jsonDecode(map['id_proofs'] as String) as List<dynamic>
+          : [];
+      final idProofs = proofList
+          .map((item) => IdProof.fromJsonCustom(item as Map<String, dynamic>))
+          .toList();
 
       results.add(Customer(
-        id: id,
+        id: map['id'] as String,
         customerCode: map['customer_code'] as String,
         name: map['name'] as String,
         phone: map['phone'] as String,
@@ -149,7 +135,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
   @override
   Stream<List<Customer>> watchCustomersByArea(String areaId) {
     return watchQuery(
-      tables: ['customers', 'customer_nominees', 'customer_proofs'],
+      tables: ['customers'],
       query: () => getCustomersByArea(areaId),
     );
   }
@@ -166,34 +152,21 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
     final maps = await db.query('customers', where: 'id = ?', whereArgs: [id]);
     if (maps.isEmpty) return null;
 
-    // Fetch nominees
-    final nomineeMaps = await db.query('customer_nominees', where: 'customer_id = ?', whereArgs: [id]);
-    final nominees = nomineeMaps.map((nm) {
-      final phoneStr = nm['phone'] as String?;
-      final relStr = nm['relation'] as String?;
-      return Nominee(
-        id: nm['id'] as String,
-        name: nm['name'] as String,
-        phone: phoneStr ?? '',
-        relation: (relStr == null || relStr.isEmpty) ? null : relStr,
-      );
-    }).toList();
-
-    // Fetch proofs
-    final proofMaps = await db.query('customer_proofs', where: 'customer_id = ?', whereArgs: [id]);
-    final idProofs = proofMaps.map((pm) => IdProof(
-      id: pm['id'] as String,
-      type: pm['proof_type'] as String,
-      number: 'DOC-PROOF',
-      document: IdProofDocument(
-        filename: 'proof',
-        mimeType: 'image/jpeg',
-        sizeBytes: 0,
-        localUri: pm['image_url'] as String,
-      ),
-    )).toList();
-
     final map = maps.first;
+    final List<dynamic> nomineeList = map['nominees'] != null
+        ? jsonDecode(map['nominees'] as String) as List<dynamic>
+        : [];
+    final nominees = nomineeList
+        .map((item) => Nominee.fromJson(item as Map<String, dynamic>))
+        .toList();
+
+    final List<dynamic> proofList = map['id_proofs'] != null
+        ? jsonDecode(map['id_proofs'] as String) as List<dynamic>
+        : [];
+    final idProofs = proofList
+        .map((item) => IdProof.fromJsonCustom(item as Map<String, dynamic>))
+        .toList();
+
     return Customer(
       id: id,
       customerCode: map['customer_code'] as String,
@@ -223,7 +196,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
   @override
   Stream<Customer?> watchCustomerById(String id) {
     return watchQuery(
-      tables: ['customers', 'customer_nominees', 'customer_proofs'],
+      tables: ['customers'],
       query: () => getCustomerById(id),
     );
   }
@@ -379,27 +352,41 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
 
   @override
   Future<void> addNominee(String customerId, String name, String phone, String relation) async {
-    final db = await DatabaseHelper.instance.database;
-    await db.insert('customer_nominees', {
-      'id': 'nom_${DateTime.now().millisecondsSinceEpoch}',
-      'customer_id': customerId,
-      'name': name,
-      'phone': phone,
-      'relation': relation,
-    });
-    TableBroadcaster.instance.notify('customer_nominees');
+    final customer = await getCustomerById(customerId);
+    if (customer != null) {
+      final newNominee = Nominee(
+        id: 'nom_${DateTime.now().millisecondsSinceEpoch}',
+        name: name,
+        phone: phone,
+        relation: relation,
+      );
+      final updated = customer.copyWith(
+        nominees: [...customer.nominees, newNominee],
+      );
+      await updateCustomer(updated);
+    }
   }
 
   @override
   Future<void> addProofImage(String customerId, String proofType, String imageUrl) async {
-    final db = await DatabaseHelper.instance.database;
-    await db.insert('customer_proofs', {
-      'id': 'prf_${DateTime.now().millisecondsSinceEpoch}',
-      'customer_id': customerId,
-      'proof_type': proofType,
-      'image_url': imageUrl,
-    });
-    TableBroadcaster.instance.notify('customer_proofs');
+    final customer = await getCustomerById(customerId);
+    if (customer != null) {
+      final newProof = IdProof(
+        id: 'prf_${DateTime.now().millisecondsSinceEpoch}',
+        type: proofType,
+        proofUrl: imageUrl,
+        document: IdProofDocument(
+          filename: 'proof',
+          mimeType: 'image/jpeg',
+          sizeBytes: 0,
+          localUri: imageUrl,
+        ),
+      );
+      final updated = customer.copyWith(
+        idProofs: [...customer.idProofs, newProof],
+      );
+      await updateCustomer(updated);
+    }
   }
 
   @override
@@ -421,9 +408,18 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
     Location? location,
   }) async {
     final db = await DatabaseHelper.instance.database;
-    final idResult = await db.rawQuery('SELECT MAX(CAST(id AS INTEGER)) AS max_id FROM customers');
-    final nextIdNum = (Sqflite.firstIntValue(idResult) ?? 0) + 1;
-    final customerId = '$nextIdNum';
+    final idResult = await db.rawQuery("SELECT id FROM customers WHERE id LIKE 'CU-%'");
+    int maxId = 0;
+    for (final row in idResult) {
+      final rawId = row['id']?.toString() ?? '';
+      final numPart = rawId.replaceAll('CU-', '');
+      final parsed = int.tryParse(numPart);
+      if (parsed != null && parsed > maxId) {
+        maxId = parsed;
+      }
+    }
+    final nextIdNum = maxId + 1;
+    final customerId = 'CU-${nextIdNum.toString().padLeft(3, '0')}';
 
     final wCode = weekdayId.replaceAll('w-', 'W').toUpperCase();
     final pCode = placeId.replaceAll('p-', 'P').toUpperCase();
@@ -451,33 +447,12 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
       'occupation': occupation,
       'notes': notes,
       'created_by': 'collector_local',
+      'nominees': jsonEncode((nominees ?? []).map((n) => n.toJson()).toList()),
+      'id_proofs': jsonEncode((idProofs ?? []).map((p) => p.toJson()).toList()),
     };
 
     await db.transaction((txn) async {
       await txn.insert('customers', customerMap);
-
-      if (nominees != null) {
-        for (var nominee in nominees) {
-          await txn.insert('customer_nominees', {
-            'id': nominee.id.isNotEmpty ? nominee.id : 'nom_${DateTime.now().millisecondsSinceEpoch}_${nominee.name.hashCode}',
-            'customer_id': customerId,
-            'name': nominee.name,
-            'phone': nominee.phone,
-            'relation': nominee.relation ?? '',
-          });
-        }
-      }
-
-      if (idProofs != null) {
-        for (var proof in idProofs) {
-          await txn.insert('customer_proofs', {
-            'id': proof.id.isNotEmpty ? proof.id : 'proof_${DateTime.now().millisecondsSinceEpoch}_${proof.type.hashCode}',
-            'customer_id': customerId,
-            'proof_type': proof.type,
-            'image_url': proof.document?.localUri ?? '',
-          });
-        }
-      }
 
       // Handle opening balance as initial credit sale
       if (openingBalance > 0) {
@@ -506,54 +481,29 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
   @override
   Future<void> updateCustomer(Customer customer) async {
     final db = await DatabaseHelper.instance.database;
-    await db.transaction((txn) async {
-      await txn.update('customers', {
-        'name': customer.name,
-        'phone': customer.phone,
-        'alternate_phone': customer.alternatePhone,
-        'address': customer.address,
-        'landmark': customer.landmark,
-        'proof_url': customer.proofUrl,
-        'location_url': customer.locationUrl,
-        'latitude': customer.location?.lat,
-        'longitude': customer.location?.lng,
-        'weekday_id': customer.weekdayId,
-        'place_id': customer.placeId,
-        'area_id': customer.areaId,
-        'status': customer.status,
-        'guardian_name': customer.guardianName,
-        'dob': customer.dob,
-        'occupation': customer.occupation,
-        'notes': customer.notes,
-      }, where: 'id = ?', whereArgs: [customer.id]);
-
-      // Refresh nominees
-      await txn.delete('customer_nominees', where: 'customer_id = ?', whereArgs: [customer.id]);
-      for (var nominee in customer.nominees) {
-        await txn.insert('customer_nominees', {
-          'id': nominee.id.isNotEmpty ? nominee.id : 'nom_${DateTime.now().millisecondsSinceEpoch}_${nominee.name.hashCode}',
-          'customer_id': customer.id,
-          'name': nominee.name,
-          'phone': nominee.phone,
-          'relation': nominee.relation ?? '',
-        });
-      }
-
-      // Refresh proofs
-      await txn.delete('customer_proofs', where: 'customer_id = ?', whereArgs: [customer.id]);
-      for (var proof in customer.idProofs) {
-        await txn.insert('customer_proofs', {
-          'id': proof.id.isNotEmpty ? proof.id : 'proof_${DateTime.now().millisecondsSinceEpoch}_${proof.type.hashCode}',
-          'customer_id': customer.id,
-          'proof_type': proof.type,
-          'image_url': proof.document?.localUri ?? '',
-        });
-      }
-    });
+    await db.update('customers', {
+      'name': customer.name,
+      'phone': customer.phone,
+      'alternate_phone': customer.alternatePhone,
+      'address': customer.address,
+      'landmark': customer.landmark,
+      'proof_url': customer.proofUrl,
+      'location_url': customer.locationUrl,
+      'latitude': customer.location?.lat,
+      'longitude': customer.location?.lng,
+      'weekday_id': customer.weekdayId,
+      'place_id': customer.placeId,
+      'area_id': customer.areaId,
+      'status': customer.status,
+      'guardian_name': customer.guardianName,
+      'dob': customer.dob,
+      'occupation': customer.occupation,
+      'notes': customer.notes,
+      'nominees': jsonEncode(customer.nominees.map((n) => n.toJson()).toList()),
+      'id_proofs': jsonEncode(customer.idProofs.map((p) => p.toJson()).toList()),
+    }, where: 'id = ?', whereArgs: [customer.id]);
 
     TableBroadcaster.instance.notify('customers');
-    TableBroadcaster.instance.notify('customer_nominees');
-    TableBroadcaster.instance.notify('customer_proofs');
   }
 
   @override

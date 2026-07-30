@@ -20,9 +20,26 @@ class IdProof with _$IdProof {
   const factory IdProof({
     required String id,
     required String type, // 'Aadhaar' | 'Voter' | 'DL' | 'PAN' | 'Other'
-    required String number,
+    // ignore: invalid_annotation_target
+    @JsonKey(name: 'proof_url') required String proofUrl,
     IdProofDocument? document,
   }) = _IdProof;
 
   factory IdProof.fromJson(Map<String, dynamic> json) => _$IdProofFromJson(json);
+
+  static IdProof fromJsonCustom(Map<String, dynamic> json) {
+    final proof = IdProof.fromJson(json);
+    if (proof.document == null && proof.proofUrl.isNotEmpty) {
+      final decodedUrl = Uri.decodeFull(proof.proofUrl);
+      return proof.copyWith(
+        document: IdProofDocument(
+          filename: decodedUrl.split('/').last.split('?').first,
+          mimeType: proof.proofUrl.toLowerCase().contains('.pdf') ? 'application/pdf' : 'image/jpeg',
+          sizeBytes: 0,
+          localUri: proof.proofUrl,
+        ),
+      );
+    }
+    return proof;
+  }
 }

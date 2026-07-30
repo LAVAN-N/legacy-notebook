@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -26,7 +27,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
@@ -107,32 +108,11 @@ class DatabaseHelper {
         occupation TEXT,
         notes TEXT,
         created_by TEXT NOT NULL,
+        nominees TEXT NOT NULL DEFAULT '[]',
+        id_proofs TEXT NOT NULL DEFAULT '[]',
         FOREIGN KEY (weekday_id) REFERENCES weekdays (id),
         FOREIGN KEY (place_id) REFERENCES places (id),
         FOREIGN KEY (area_id) REFERENCES areas (id)
-      )
-    ''');
-
-    // 6. Customer Nominees
-    await db.execute('''
-      CREATE TABLE customer_nominees (
-        id TEXT PRIMARY KEY,
-        customer_id TEXT NOT NULL,
-        name TEXT NOT NULL,
-        phone TEXT NOT NULL,
-        relation TEXT NOT NULL,
-        FOREIGN KEY (customer_id) REFERENCES customers (id) ON DELETE CASCADE
-      )
-    ''');
-
-    // 7. Customer Proofs
-    await db.execute('''
-      CREATE TABLE customer_proofs (
-        id TEXT PRIMARY KEY,
-        customer_id TEXT NOT NULL,
-        proof_type TEXT NOT NULL,
-        image_url TEXT NOT NULL,
-        FOREIGN KEY (customer_id) REFERENCES customers (id) ON DELETE CASCADE
       )
     ''');
 
@@ -337,7 +317,7 @@ class DatabaseHelper {
       }
     }
 
-    // Seed Customers, Nominees, and ID Proofs
+    // Seed Customers
     for (var c in mockCustomersList) {
       await db.insert('customers', {
         'id': c.id,
@@ -360,26 +340,9 @@ class DatabaseHelper {
         'occupation': c.occupation,
         'notes': c.notes,
         'created_by': 'system',
+        'nominees': jsonEncode(c.nominees.map((n) => n.toJson()).toList()),
+        'id_proofs': jsonEncode(c.idProofs.map((p) => p.toJson()).toList()),
       });
-
-      for (var n in c.nominees) {
-        await db.insert('customer_nominees', {
-          'id': n.id,
-          'customer_id': c.id,
-          'name': n.name,
-          'phone': n.phone,
-          'relation': n.relation ?? '',
-        });
-      }
-
-      for (var proof in c.idProofs) {
-        await db.insert('customer_proofs', {
-          'id': proof.id,
-          'customer_id': c.id,
-          'proof_type': proof.type,
-          'image_url': proof.document?.localUri ?? '',
-        });
-      }
     }
 
     // Seed Sales & Deduct Inventory Stock
@@ -456,8 +419,6 @@ class DatabaseHelper {
       'sale_items',
       'sales',
       'collections',
-      'customer_proofs',
-      'customer_nominees',
       'customers',
       'products',
       'areas',

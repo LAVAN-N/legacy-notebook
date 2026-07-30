@@ -234,7 +234,8 @@ mixin _$IdProof {
   String get id => throw _privateConstructorUsedError;
   String get type =>
       throw _privateConstructorUsedError; // 'Aadhaar' | 'Voter' | 'DL' | 'PAN' | 'Other'
-  String get number => throw _privateConstructorUsedError;
+  @JsonKey(name: 'proof_url')
+  String get proofUrl => throw _privateConstructorUsedError;
   IdProofDocument? get document => throw _privateConstructorUsedError;
 
   /// Serializes this IdProof to a JSON map.
@@ -251,7 +252,11 @@ abstract class $IdProofCopyWith<$Res> {
   factory $IdProofCopyWith(IdProof value, $Res Function(IdProof) then) =
       _$IdProofCopyWithImpl<$Res, IdProof>;
   @useResult
-  $Res call({String id, String type, String number, IdProofDocument? document});
+  $Res call(
+      {String id,
+      String type,
+      @JsonKey(name: 'proof_url') String proofUrl,
+      IdProofDocument? document});
 
   $IdProofDocumentCopyWith<$Res>? get document;
 }
@@ -273,7 +278,7 @@ class _$IdProofCopyWithImpl<$Res, $Val extends IdProof>
   $Res call({
     Object? id = null,
     Object? type = null,
-    Object? number = null,
+    Object? proofUrl = null,
     Object? document = freezed,
   }) {
     return _then(_value.copyWith(
@@ -285,9 +290,9 @@ class _$IdProofCopyWithImpl<$Res, $Val extends IdProof>
           ? _value.type
           : type // ignore: cast_nullable_to_non_nullable
               as String,
-      number: null == number
-          ? _value.number
-          : number // ignore: cast_nullable_to_non_nullable
+      proofUrl: null == proofUrl
+          ? _value.proofUrl
+          : proofUrl // ignore: cast_nullable_to_non_nullable
               as String,
       document: freezed == document
           ? _value.document
@@ -318,7 +323,11 @@ abstract class _$$IdProofImplCopyWith<$Res> implements $IdProofCopyWith<$Res> {
       __$$IdProofImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String id, String type, String number, IdProofDocument? document});
+  $Res call(
+      {String id,
+      String type,
+      @JsonKey(name: 'proof_url') String proofUrl,
+      IdProofDocument? document});
 
   @override
   $IdProofDocumentCopyWith<$Res>? get document;
@@ -339,7 +348,7 @@ class __$$IdProofImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? type = null,
-    Object? number = null,
+    Object? proofUrl = null,
     Object? document = freezed,
   }) {
     return _then(_$IdProofImpl(
@@ -351,9 +360,9 @@ class __$$IdProofImplCopyWithImpl<$Res>
           ? _value.type
           : type // ignore: cast_nullable_to_non_nullable
               as String,
-      number: null == number
-          ? _value.number
-          : number // ignore: cast_nullable_to_non_nullable
+      proofUrl: null == proofUrl
+          ? _value.proofUrl
+          : proofUrl // ignore: cast_nullable_to_non_nullable
               as String,
       document: freezed == document
           ? _value.document
@@ -369,7 +378,7 @@ class _$IdProofImpl implements _IdProof {
   const _$IdProofImpl(
       {required this.id,
       required this.type,
-      required this.number,
+      @JsonKey(name: 'proof_url') required this.proofUrl,
       this.document});
 
   factory _$IdProofImpl.fromJson(Map<String, dynamic> json) =>
@@ -381,13 +390,14 @@ class _$IdProofImpl implements _IdProof {
   final String type;
 // 'Aadhaar' | 'Voter' | 'DL' | 'PAN' | 'Other'
   @override
-  final String number;
+  @JsonKey(name: 'proof_url')
+  final String proofUrl;
   @override
   final IdProofDocument? document;
 
   @override
   String toString() {
-    return 'IdProof(id: $id, type: $type, number: $number, document: $document)';
+    return 'IdProof(id: $id, type: $type, proofUrl: $proofUrl, document: $document)';
   }
 
   @override
@@ -397,14 +407,15 @@ class _$IdProofImpl implements _IdProof {
             other is _$IdProofImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.type, type) || other.type == type) &&
-            (identical(other.number, number) || other.number == number) &&
+            (identical(other.proofUrl, proofUrl) ||
+                other.proofUrl == proofUrl) &&
             (identical(other.document, document) ||
                 other.document == document));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, type, number, document);
+  int get hashCode => Object.hash(runtimeType, id, type, proofUrl, document);
 
   /// Create a copy of IdProof
   /// with the given fields replaced by the non-null parameter values.
@@ -426,7 +437,7 @@ abstract class _IdProof implements IdProof {
   const factory _IdProof(
       {required final String id,
       required final String type,
-      required final String number,
+      @JsonKey(name: 'proof_url') required final String proofUrl,
       final IdProofDocument? document}) = _$IdProofImpl;
 
   factory _IdProof.fromJson(Map<String, dynamic> json) = _$IdProofImpl.fromJson;
@@ -436,7 +447,8 @@ abstract class _IdProof implements IdProof {
   @override
   String get type; // 'Aadhaar' | 'Voter' | 'DL' | 'PAN' | 'Other'
   @override
-  String get number;
+  @JsonKey(name: 'proof_url')
+  String get proofUrl;
   @override
   IdProofDocument? get document;
 

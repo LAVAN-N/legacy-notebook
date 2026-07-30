@@ -63,17 +63,17 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   @override
   Stream<List<Customer>> watchCustomersByArea(String areaId) async* {
     yield _customers.where((c) => c.areaId == areaId).toList()
-      ..sort((a, b) => (int.tryParse(a.id) ?? 0).compareTo(int.tryParse(b.id) ?? 0));
+      ..sort((a, b) => a.id.compareTo(b.id));
     yield* _updateController.stream.map((_) {
       return _customers.where((c) => c.areaId == areaId).toList()
-        ..sort((a, b) => (int.tryParse(a.id) ?? 0).compareTo(int.tryParse(b.id) ?? 0));
+        ..sort((a, b) => a.id.compareTo(b.id));
     });
   }
 
   @override
   Future<List<Customer>> getCustomersByArea(String areaId) async {
     return _customers.where((c) => c.areaId == areaId).toList()
-      ..sort((a, b) => (int.tryParse(a.id) ?? 0).compareTo(int.tryParse(b.id) ?? 0));
+      ..sort((a, b) => a.id.compareTo(b.id));
   }
 
   @override
@@ -247,7 +247,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
       final newProof = IdProof(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         type: proofType,
-        number: 'DOC-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+        proofUrl: imageUrl,
         document: IdProofDocument(
           filename: imageUrl.split('/').last,
           mimeType: imageUrl.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
@@ -283,14 +283,35 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     List<IdProof>? idProofs,
     Location? location,
   }) async {
-    final nextIdNum = _customers.length + 1;
-    final customerId = '$nextIdNum';
+    int maxId = 0;
+    for (final c in _customers) {
+      final rawId = c.id;
+      final numPart = rawId.replaceAll('CU-', '');
+      final parsed = int.tryParse(numPart);
+      if (parsed != null && parsed > maxId) {
+        maxId = parsed;
+      }
+    }
+    final nextIdNum = maxId + 1;
+    final customerId = 'CU-${nextIdNum.toString().padLeft(3, '0')}';
     
     final wCode = weekdayId.replaceAll('w-', 'W').toUpperCase();
     final pCode = placeId.replaceAll('p-', 'P').toUpperCase();
     final aCode = areaId.replaceAll('a-', 'A').toUpperCase();
     final paddedId = nextIdNum.toString().padLeft(3, '0');
     final customerCode = '$wCode-$pCode-$aCode-$paddedId';
+
+    final updatedNominees = (nominees ?? []).map((n) {
+      return n.copyWith(
+        id: n.id.isNotEmpty ? n.id : 'nom-uuid-${DateTime.now().microsecondsSinceEpoch}',
+      );
+    }).toList();
+
+    final updatedProofs = (idProofs ?? []).map((p) {
+      return p.copyWith(
+        id: p.id.isNotEmpty ? p.id : 'proof-uuid-${DateTime.now().microsecondsSinceEpoch}',
+      );
+    }).toList();
 
     final newCustomer = Customer(
       id: customerId,
@@ -307,8 +328,8 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
       notes: notes,
       dob: dob,
       occupation: occupation,
-      nominees: nominees ?? const [],
-      idProofs: idProofs ?? const [],
+      nominees: updatedNominees,
+      idProofs: updatedProofs,
       location: location,
     );
 

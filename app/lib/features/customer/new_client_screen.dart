@@ -2232,8 +2232,7 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
     final proof = IdProof(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       type: _selectedType!,
-      number:
-          'DOC-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+      proofUrl: Uri.file(path).toString(),
       document: IdProofDocument(
         filename: filename,
         mimeType: mimeType,
