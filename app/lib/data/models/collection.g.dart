@@ -12,7 +12,7 @@ _$CollectionImpl _$$CollectionImplFromJson(Map<String, dynamic> json) =>
       customerId: json['customerId'] as String,
       visitDatetime: DateTime.parse(json['visitDatetime'] as String),
       status: json['status'] as String,
-      amount: (json['amount'] as num).toInt(),
+      amount: (json['amount'] as num).toDouble(),
       reason: json['reason'] as String?,
       collectedBy: json['collectedBy'] as String,
     );

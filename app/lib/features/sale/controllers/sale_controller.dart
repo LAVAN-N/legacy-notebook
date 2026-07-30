@@ -111,7 +111,6 @@ class SaleController extends StateNotifier<SaleScreenState> {
             weekdayId: '',
             placeId: '',
             areaId: '',
-            sequenceNumber: 0,
             status: 'ACTIVE',
           ),
           outstanding: const Outstanding(customerId: '', totalFinanced: 0, totalCollected: 0, outstandingAmount: 0),

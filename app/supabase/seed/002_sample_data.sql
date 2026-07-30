@@ -40,24 +40,24 @@ INSERT INTO products (id, sku, name, brand, category, minimum_stock, stock, pric
 ON CONFLICT (id) DO NOTHING;
 
 -- 5. Seed customers
-INSERT INTO customers (id, customer_code, name, phone, alternate_phone, address, landmark, proof_url, location_url, weekday_id, place_id, area_id, sequence_number, status, guardian_name, dob, occupation, notes) VALUES
-('c-1', 'C-001', 'Lakshmi Priya', '9876543210', '9876543211', '12, North Street, Melur, Madurai - 625106', 'Near Ganesha Temple', NULL, NULL, 'w-4', 'p-1', 'a-1', 1, 'ACTIVE', 'Ramanathan (Spouse)', '15-08-1985', 'Homemaker', 'Always pays in the morning. Likes Prestige brand.'),
-('c-2', 'C-002', 'Muthu Pandian', '9443210987', NULL, '45B, Bazaar Lane, Melur, Madurai - 625106', 'Opposite Government School', NULL, NULL, 'w-4', 'p-1', 'a-2', 2, 'ACTIVE', 'Chinnasamy (Father)', NULL, 'Shop Owner', 'Busy during noon. Call before visiting.'),
-('c-3', 'C-003', 'Anitha Rajendran', '9988776655', NULL, '8, NH Colony, Othakadai, Madurai - 625107', 'Beside Post Office', NULL, NULL, 'w-4', 'p-2', 'a-3', 1, 'ACTIVE', 'Rajendran (Spouse)', NULL, 'Teacher', 'Check back after 5 PM.'),
-('c-4', 'C-004', 'Karthik Raja', '9123456789', NULL, '15, Mosque Road, Goripalayam, Madurai - 625002', NULL, NULL, NULL, 'w-1', 'p-3', 'a-4', 1, 'ACTIVE', 'Murugan (Father)', NULL, NULL, 'No outstanding balance.'),
-('c-5', 'C-005', 'Selvi Murugesan', '9554433221', NULL, '22, Station Road, Thirunagar, Madurai - 625006', NULL, NULL, NULL, 'w-2', 'p-4', 'a-5', 1, 'DO_NOT_VISIT', 'Murugesan (Spouse)', NULL, NULL, 'Payment dispute. Flagged do not visit.'),
-('c-6', 'C-006', 'Rahim Khan', '9888877777', NULL, '3, Mosque Road, Goripalayam, Madurai - 625002', NULL, NULL, NULL, 'w-1', 'p-3', 'a-4', 2, 'ACTIVE', NULL, NULL, NULL, 'Small outstanding, pays regularly.'),
-('c-7', 'C-007', 'Meena Subramanian', '9777766666', NULL, '56, North Street, Melur, Madurai - 625106', NULL, NULL, NULL, 'w-4', 'p-1', 'a-1', 3, 'ACTIVE', NULL, NULL, NULL, 'Newly added customer.'),
-('c-8', 'C-008', 'Venkatesan Alagar', '9666655555', NULL, '102, NH Colony, Othakadai, Madurai - 625107', NULL, NULL, NULL, 'w-4', 'p-2', 'a-3', 2, 'ACTIVE', NULL, NULL, NULL, 'Prefers credit sales.')
+INSERT INTO customers (id, customer_code, name, phone, alternate_phone, address, landmark, proof_url, location_url, weekday_id, place_id, area_id, status, guardian_name, dob, occupation, notes) VALUES
+('1', 'W4-P1-A1-001', 'Lakshmi Priya', '9876543210', '9876543211', '12, North Street, Melur, Madurai - 625106', 'Near Ganesha Temple', NULL, NULL, 'w-4', 'p-1', 'a-1', 'ACTIVE', 'Ramanathan (Spouse)', '15-08-1985', 'Homemaker', 'Always pays in the morning. Likes Prestige brand.'),
+('2', 'W4-P1-A2-002', 'Muthu Pandian', '9443210987', NULL, '45B, Bazaar Lane, Melur, Madurai - 625106', 'Opposite Government School', NULL, NULL, 'w-4', 'p-1', 'a-2', 'ACTIVE', 'Chinnasamy (Father)', NULL, 'Shop Owner', 'Busy during noon. Call before visiting.'),
+('3', 'W4-P2-A3-003', 'Anitha Rajendran', '9988776655', NULL, '8, NH Colony, Othakadai, Madurai - 625107', 'Beside Post Office', NULL, NULL, 'w-4', 'p-2', 'a-3', 'ACTIVE', 'Rajendran (Spouse)', NULL, 'Teacher', 'Check back after 5 PM.'),
+('4', 'W1-P3-A4-004', 'Karthik Raja', '9123456789', NULL, '15, Mosque Road, Goripalayam, Madurai - 625002', NULL, NULL, NULL, 'w-1', 'p-3', 'a-4', 'ACTIVE', 'Murugan (Father)', NULL, NULL, 'No outstanding balance.'),
+('5', 'W2-P4-A5-005', 'Selvi Murugesan', '9554433221', NULL, '22, Station Road, Thirunagar, Madurai - 625006', NULL, NULL, NULL, 'w-2', 'p-4', 'a-5', 'DO_NOT_VISIT', 'Murugesan (Spouse)', NULL, NULL, 'Payment dispute. Flagged do not visit.'),
+('6', 'W1-P3-A4-006', 'Rahim Khan', '9888877777', NULL, '3, Mosque Road, Goripalayam, Madurai - 625002', NULL, NULL, NULL, 'w-1', 'p-3', 'a-4', 'ACTIVE', NULL, NULL, NULL, 'Small outstanding, pays regularly.'),
+('7', 'W4-P1-A1-007', 'Meena Subramanian', '9777766666', NULL, '56, North Street, Melur, Madurai - 625106', NULL, NULL, NULL, 'w-4', 'p-1', 'a-1', 'ACTIVE', NULL, NULL, NULL, 'Newly added customer.'),
+('8', 'W4-P2-A3-008', 'Venkatesan Alagar', '9666655555', NULL, '102, NH Colony, Othakadai, Madurai - 625107', NULL, NULL, NULL, 'w-4', 'p-2', 'a-3', 'ACTIVE', NULL, NULL, NULL, 'Prefers credit sales.')
 ON CONFLICT (id) DO NOTHING;
 
 -- 6. Seed sales
 INSERT INTO sales (id, customer_id, sale_datetime, sale_type, total_amount, advance_amount, financed_amount, sold_by, remarks) VALUES
-('s-1', 'c-1', NOW() - INTERVAL '15 days', 'CREDIT', 16500, 5000, 11500, 'Ramesh (Collector)', NULL),
-('s-2', 'c-1', NOW() - INTERVAL '8 days', 'READY', 3200, 3200, 0, 'Ramesh (Collector)', NULL),
-('s-3', 'c-2', NOW() - INTERVAL '20 days', 'CREDIT', 2800, 500, 2300, 'Ramesh (Collector)', NULL),
-('s-4', 'c-3', NOW() - INTERVAL '30 days', 'CREDIT', 28500, 8500, 20000, 'Ramesh (Collector)', NULL),
-('s-5', 'c-6', NOW() - INTERVAL '5 days', 'CREDIT', 850, 0, 850, 'Kumar (Owner)', NULL)
+('s-1', '1', NOW() - INTERVAL '15 days', 'CREDIT', 16500, 5000, 11500, 'Ramesh (Collector)', NULL),
+('s-2', '1', NOW() - INTERVAL '8 days', 'READY', 3200, 3200, 0, 'Ramesh (Collector)', NULL),
+('s-3', '2', NOW() - INTERVAL '20 days', 'CREDIT', 2800, 500, 2300, 'Ramesh (Collector)', NULL),
+('s-4', '3', NOW() - INTERVAL '30 days', 'CREDIT', 28500, 8500, 20000, 'Ramesh (Collector)', NULL),
+('s-5', '6', NOW() - INTERVAL '5 days', 'CREDIT', 850, 0, 850, 'Kumar (Owner)', NULL)
 ON CONFLICT (id) DO NOTHING;
 
 -- Seed sale items
@@ -71,9 +71,9 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 7. Seed collections
 INSERT INTO collections (id, customer_id, visit_datetime, status, amount, reason, collected_by) VALUES
-('col-1', 'c-1', NOW() - INTERVAL '7 days', 'PAYMENT', 1500, NULL, 'Ramesh (Collector)'),
-('col-2', 'c-1', NOW() - INTERVAL '4 hours', 'CARRY_FORWARD', 0, 'Husband not in town, will pay in evening', 'Ramesh (Collector)'),
-('col-3', 'c-1', NOW() - INTERVAL '2 hours', 'PARTIAL_PAYMENT', 200, 'Will pay remaining in evening visit', 'Ramesh (Collector)'),
-('col-4', 'c-2', NOW() - INTERVAL '10 days', 'PAYMENT', 500, NULL, 'Ramesh (Collector)'),
-('col-5', 'c-3', NOW() - INTERVAL '6 days', 'CARRY_FORWARD', 0, 'Salary delayed, check next week', 'Ramesh (Collector)')
+('col-1', '1', NOW() - INTERVAL '7 days', 'PAYMENT', 1500.00, NULL, 'Ramesh (Collector)'),
+('col-2', '1', NOW() - INTERVAL '4 hours', 'CARRY_FORWARD', 0.00, 'Husband not in town, will pay in evening', 'Ramesh (Collector)'),
+('col-3', '1', NOW() - INTERVAL '2 hours', 'PARTIAL_PAYMENT', 200.00, 'Will pay remaining in evening visit', 'Ramesh (Collector)'),
+('col-4', '2', NOW() - INTERVAL '10 days', 'PAYMENT', 500.00, NULL, 'Ramesh (Collector)'),
+('col-5', '3', NOW() - INTERVAL '6 days', 'CARRY_FORWARD', 0.00, 'Salary delayed, check next week', 'Ramesh (Collector)')
 ON CONFLICT (id) DO NOTHING;

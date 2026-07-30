@@ -25,7 +25,6 @@ class Customer with _$Customer {
     required String weekdayId,
     required String placeId,
     required String areaId,
-    required int sequenceNumber,
     required String status, // 'ACTIVE' or 'INACTIVE' or 'DO_NOT_VISIT'
     String? guardianName,
     String? dob,

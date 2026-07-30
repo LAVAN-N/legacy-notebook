@@ -63,17 +63,17 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   @override
   Stream<List<Customer>> watchCustomersByArea(String areaId) async* {
     yield _customers.where((c) => c.areaId == areaId).toList()
-      ..sort((a, b) => a.sequenceNumber.compareTo(b.sequenceNumber));
+      ..sort((a, b) => (int.tryParse(a.id) ?? 0).compareTo(int.tryParse(b.id) ?? 0));
     yield* _updateController.stream.map((_) {
       return _customers.where((c) => c.areaId == areaId).toList()
-        ..sort((a, b) => a.sequenceNumber.compareTo(b.sequenceNumber));
+        ..sort((a, b) => (int.tryParse(a.id) ?? 0).compareTo(int.tryParse(b.id) ?? 0));
     });
   }
 
   @override
   Future<List<Customer>> getCustomersByArea(String areaId) async {
     return _customers.where((c) => c.areaId == areaId).toList()
-      ..sort((a, b) => a.sequenceNumber.compareTo(b.sequenceNumber));
+      ..sort((a, b) => (int.tryParse(a.id) ?? 0).compareTo(int.tryParse(b.id) ?? 0));
   }
 
   @override
@@ -121,7 +121,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
         (c.status == 'PAYMENT' || c.status == 'PARTIAL_PAYMENT'));
 
     final totalFinanced = customerSales.fold<int>(0, (sum, s) => sum + s.financedAmount);
-    final totalCollected = customerCollections.fold<int>(0, (sum, c) => sum + c.amount);
+    final totalCollected = customerCollections.fold<int>(0, (sum, c) => sum + c.amount.round());
 
     return Outstanding(
       customerId: customerId,
@@ -151,7 +151,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
         activities.add(Activity.payment(
           id: col.id,
           at: col.visitDatetime,
-          amount: col.amount,
+          amount: col.amount.round(),
           note: col.reason,
           collectorName: col.collectedBy,
         ));
@@ -159,7 +159,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
         activities.add(Activity.partialPayment(
           id: col.id,
           at: col.visitDatetime,
-          amount: col.amount,
+          amount: col.amount.round(),
           note: col.reason ?? '',
           collectorName: col.collectedBy,
         ));
@@ -283,16 +283,14 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     List<IdProof>? idProofs,
     Location? location,
   }) async {
-    // Generate UUID-like ID
-    final customerId = 'c-${DateTime.now().millisecondsSinceEpoch}-${_customers.length + 1}';
+    final nextIdNum = _customers.length + 1;
+    final customerId = '$nextIdNum';
     
-    // Generate unique customer code
-    final nextCode = _customers.length + 1;
-    final customerCode = 'C-${nextCode.toString().padLeft(3, '0')}';
-    
-    // Get the highest sequence number for this area
-    final areaCustomers = _customers.where((c) => c.areaId == areaId).toList();
-    final maxSeq = areaCustomers.isEmpty ? 0 : areaCustomers.map((c) => c.sequenceNumber).reduce((a, b) => a > b ? a : b);
+    final wCode = weekdayId.replaceAll('w-', 'W').toUpperCase();
+    final pCode = placeId.replaceAll('p-', 'P').toUpperCase();
+    final aCode = areaId.replaceAll('a-', 'A').toUpperCase();
+    final paddedId = nextIdNum.toString().padLeft(3, '0');
+    final customerCode = '$wCode-$pCode-$aCode-$paddedId';
 
     final newCustomer = Customer(
       id: customerId,
@@ -305,7 +303,6 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
       weekdayId: weekdayId,
       placeId: placeId,
       areaId: areaId,
-      sequenceNumber: maxSeq + 1,
       status: 'ACTIVE',
       notes: notes,
       dob: dob,
@@ -482,7 +479,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     final todayCollections = _collections.where((col) =>
         customers.contains(col.customerId) &&
         (col.status == 'PAYMENT' || col.status == 'PARTIAL_PAYMENT'));
-    return todayCollections.fold<int>(0, (sum, c) => sum + c.amount);
+    return todayCollections.fold<int>(0, (sum, c) => sum + c.amount.round());
   }
 
   @override
@@ -491,7 +488,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     final todayCollections = _collections.where((col) =>
         customers.contains(col.customerId) &&
         (col.status == 'PAYMENT' || col.status == 'PARTIAL_PAYMENT'));
-    return todayCollections.fold<int>(0, (sum, c) => sum + c.amount);
+    return todayCollections.fold<int>(0, (sum, c) => sum + c.amount.round());
   }
 
   @override
@@ -500,7 +497,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     final todayCollections = _collections.where((col) =>
         customers.contains(col.customerId) &&
         (col.status == 'PAYMENT' || col.status == 'PARTIAL_PAYMENT'));
-    return todayCollections.fold<int>(0, (sum, c) => sum + c.amount);
+    return todayCollections.fold<int>(0, (sum, c) => sum + c.amount.round());
   }
 
   // ─── CollectionRepository ───────────────────────────────
@@ -540,7 +537,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   Future<void> saveCollection({
     required String customerId,
     required String status,
-    required int amount,
+    required double amount,
     String? reason,
     required String collectedBy,
     DateTime? customDate,

@@ -334,7 +334,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 weekdayId: '',
                 placeId: '',
                 areaId: '',
-                sequenceNumber: 0,
                 status: 'ACTIVE',
               ));
       return c.name;
@@ -376,7 +375,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         date: c.visitDatetime,
         type: 'COLLECTION',
         status: c.status,
-        amount: c.amount,
+        amount: c.amount.round(),
         subtitle: c.status == 'PAYMENT'
             ? 'Full Payment'
             : (c.status == 'PARTIAL_PAYMENT'

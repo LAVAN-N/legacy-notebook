@@ -101,7 +101,6 @@ class DatabaseHelper {
         weekday_id TEXT NOT NULL,
         place_id TEXT NOT NULL,
         area_id TEXT NOT NULL,
-        sequence_number INTEGER NOT NULL,
         status TEXT NOT NULL DEFAULT 'ACTIVE',
         guardian_name TEXT,
         dob TEXT,
@@ -144,7 +143,7 @@ class DatabaseHelper {
         customer_id TEXT NOT NULL,
         visit_datetime TEXT NOT NULL,
         status TEXT NOT NULL, -- PAYMENT, PARTIAL_PAYMENT, CARRY_FORWARD
-        amount INTEGER NOT NULL DEFAULT 0,
+        amount REAL NOT NULL DEFAULT 0.0,
         reason TEXT,
         collected_by TEXT NOT NULL,
         FOREIGN KEY (customer_id) REFERENCES customers (id) ON DELETE CASCADE
@@ -263,7 +262,6 @@ class DatabaseHelper {
         c.id AS customer_id,
         c.name AS customer_name,
         c.customer_code,
-        c.sequence_number,
         w.id AS weekday_id,
         w.name AS weekday_name,
         p.id AS place_id,
@@ -356,7 +354,6 @@ class DatabaseHelper {
         'weekday_id': c.weekdayId,
         'place_id': c.placeId,
         'area_id': c.areaId,
-        'sequence_number': c.sequenceNumber,
         'status': c.status,
         'guardian_name': c.guardianName,
         'dob': c.dob,

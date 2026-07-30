@@ -1000,3 +1000,32 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Refactored remote S3 paths to place proofs under a client-specific folder named after the `client_id`, with filenames structured as `<client_name>_<proof_type>.<extension>` (replacing non-alphanumeric characters with underscores) to support type-based overwriting directly.
 - **Rule for next agent:** ALWAYS name uploaded customer documents using a structured format containing the client's sanitized name and proof type under a customer-id directory context to enforce overwriting of existing document types.
 - **Guardrail:** Confirm that files uploaded to the `customer-proofs` bucket follow the `client_id/client_name_proof_type.ext` path pattern.
+
+### 2026-07-30 · Redundant sequence numbers and non-descriptive customer IDs
+
+- **Context:** Modeling customer identification and ordering attributes in the database schema, models, and repositories.
+- **Mistake:** Using random epoch timestamp IDs (`cust_1785...`) and non-descriptive customer codes (`LC-123456`), while maintaining a redundant `sequence_number` column for route sorting. Also, using primitive `INT` for collection monetary amounts instead of financial `NUMERIC(12,2)` / `double`.
+- **Root cause:** Missing alignment with financial DBMS primary key standards and route location context.
+- **Fix applied:** Replaced epoch customer IDs with sequential auto-incrementing integer IDs (`1, 2, 3...`), formatted `customer_code` as `<WEEK_ID>-<PLACE_ID>-<AREA_ID>-<PADDED_ID>` (e.g. `W4-P1-A1-001`), completely removed `sequence_number` (using `id ASC` for sequential visit order), updated collections schema to `NUMERIC(12,2)` / `double`, and re-indexed all seed data.
+- **Rule for next agent:** NEVER generate arbitrary timestamp customer codes or maintain redundant sequence number columns; ALWAYS use auto-incrementing integer IDs, composite `W1-P2-A3-001` customer codes, and `id ASC` sorting.
+- **Guardrail:** Confirm that new customers are assigned formatted codes like `W4-P1-A1-001` and sorted by sequential integer ID.
+
+### 2026-07-30 · Silent action failures on "Create & Sale" and "Create Only" buttons
+
+- **Context:** Submitting new client creation form in `new_client_screen.dart`.
+- **Mistake:** Clicking "Create & Sale" or "Create Only" did not trigger navigation or show feedback when validation or database insertion returned `null`.
+- **Root cause:** 
+  1. `SupabaseCustomerRepository.addCustomer` used `.order('id', ascending: false)` on a `TEXT` primary key column, causing string-sorting mismatches that returned duplicate IDs and triggered database primary key collision exceptions.
+  2. `new_client_screen.dart` returned silently on `customer == null` without displaying `state.errors` or a SnackBar explaining the failure.
+- **Fix applied:** Refactored `addCustomer` in `SupabaseCustomerRepository` to select and parse all numeric customer IDs to accurately compute the next max integer ID. Updated `new_client_screen.dart` button handlers to display a destructive SnackBar with the exact validation/submission error whenever creation returns `null`.
+- **Rule for next agent:** ALWAYS display error feedback SnackBars when form action callbacks return null, and ALWAYS parse integer IDs in memory when finding MAX(id) on TEXT columns in PostgreSQL.
+- **Guardrail:** Verify that clicking "Create & Sale" or "Create Only" either succeeds with navigation or shows a descriptive red error SnackBar.
+
+### 2026-07-30 · View column alias mismatch on `route_summary_view.customer_count`
+
+- **Context:** Executing `DashboardController.refresh()` to fetch route summary counters from PostgreSQL view `route_summary_view`.
+- **Mistake:** PostgreSQL view definition aliased `COUNT(DISTINCT c.id)` as `total_customers` instead of `customer_count`, causing `PostgrestException (42703)` when `SupabaseRouteRepository` queried `select('customer_count')`.
+- **Root cause:** View column alias in SQL migration script did not match the expected `customer_count` property name in the Flutter repository interface.
+- **Fix applied:** Re-created `route_summary_view` in Supabase and updated `001_schema_placeholder.sql` to explicitly alias `COUNT(DISTINCT c.id) AS customer_count`.
+- **Rule for next agent:** ALWAYS verify SQL view column aliases match repository `.select('column_name')` fields exactly.
+- **Guardrail:** Verify `DashboardController.refresh()` completes without PostgrestException 42703.

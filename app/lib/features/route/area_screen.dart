@@ -199,8 +199,7 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
                                           ),
                                           alignment: Alignment.center,
                                           child: Text(
-                                            item.customer.sequenceNumber
-                                                .toString(),
+                                            item.customer.id,
                                             style: AppTypography.labelLarge
                                                 .copyWith(
                                               color: colors.mutedFg,

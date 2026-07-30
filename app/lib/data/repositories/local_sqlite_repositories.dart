@@ -85,7 +85,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
   @override
   Future<List<Customer>> getAllCustomers() async {
     final db = await DatabaseHelper.instance.database;
-    final maps = await db.query('customers', orderBy: 'sequence_number ASC');
+    final maps = await db.query('customers', orderBy: 'CAST(id AS INTEGER) ASC');
     final List<Customer> results = [];
 
     for (final map in maps) {
@@ -136,7 +136,6 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
         weekdayId: map['weekday_id'] as String,
         placeId: map['place_id'] as String,
         areaId: map['area_id'] as String,
-        sequenceNumber: map['sequence_number'] as int,
         status: map['status'] as String,
         guardianName: map['guardian_name'] as String?,
         dob: map['dob'] as String?,
@@ -213,7 +212,6 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
       weekdayId: map['weekday_id'] as String,
       placeId: map['place_id'] as String,
       areaId: map['area_id'] as String,
-      sequenceNumber: map['sequence_number'] as int,
       status: map['status'] as String,
       guardianName: map['guardian_name'] as String?,
       dob: map['dob'] as String?,
@@ -423,15 +421,15 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
     Location? location,
   }) async {
     final db = await DatabaseHelper.instance.database;
-    final customerId = 'cust_${DateTime.now().millisecondsSinceEpoch}';
-    final customerCode = 'LC-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+    final idResult = await db.rawQuery('SELECT MAX(CAST(id AS INTEGER)) AS max_id FROM customers');
+    final nextIdNum = (Sqflite.firstIntValue(idResult) ?? 0) + 1;
+    final customerId = '$nextIdNum';
 
-    // Get next sequence number in area
-    final seqResult = await db.rawQuery(
-      'SELECT MAX(sequence_number) AS max_seq FROM customers WHERE area_id = ?',
-      [areaId],
-    );
-    final nextSeq = (Sqflite.firstIntValue(seqResult) ?? 0) + 1;
+    final wCode = weekdayId.replaceAll('w-', 'W').toUpperCase();
+    final pCode = placeId.replaceAll('p-', 'P').toUpperCase();
+    final aCode = areaId.replaceAll('a-', 'A').toUpperCase();
+    final paddedId = nextIdNum.toString().padLeft(3, '0');
+    final customerCode = '$wCode-$pCode-$aCode-$paddedId';
 
     final customerMap = {
       'id': customerId,
@@ -448,7 +446,6 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
       'weekday_id': weekdayId,
       'place_id': placeId,
       'area_id': areaId,
-      'sequence_number': nextSeq,
       'status': 'ACTIVE',
       'dob': dob,
       'occupation': occupation,
@@ -766,7 +763,7 @@ class LocalSqliteCollectionRepository implements CollectionRepository {
       customerId: m['customer_id'] as String,
       visitDatetime: DateTime.parse(m['visit_datetime'] as String),
       status: m['status'] as String,
-      amount: m['amount'] as int,
+      amount: (m['amount'] as num).toDouble(),
       reason: m['reason'] as String?,
       collectedBy: m['collected_by'] as String,
     )).toList();
@@ -795,7 +792,7 @@ class LocalSqliteCollectionRepository implements CollectionRepository {
       customerId: m['customer_id'] as String,
       visitDatetime: DateTime.parse(m['visit_datetime'] as String),
       status: m['status'] as String,
-      amount: m['amount'] as int,
+      amount: (m['amount'] as num).toDouble(),
       reason: m['reason'] as String?,
       collectedBy: m['collected_by'] as String,
     )).toList();
@@ -805,7 +802,7 @@ class LocalSqliteCollectionRepository implements CollectionRepository {
   Future<void> saveCollection({
     required String customerId,
     required String status,
-    required int amount,
+    required double amount,
     String? reason,
     required String collectedBy,
     DateTime? customDate,
@@ -814,7 +811,7 @@ class LocalSqliteCollectionRepository implements CollectionRepository {
     final collectionId = 'col_${DateTime.now().millisecondsSinceEpoch}';
 
     // Business Rule 9: Carry forward never changes outstanding. Force amount to 0.
-    final adjustedAmount = (status == 'CARRY_FORWARD') ? 0 : amount;
+    final adjustedAmount = (status == 'CARRY_FORWARD') ? 0.0 : amount;
 
     await db.insert('collections', {
       'id': collectionId,

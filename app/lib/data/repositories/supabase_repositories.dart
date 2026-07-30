@@ -61,7 +61,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
     return _client
         .from('customers')
         .stream(primaryKey: ['id'])
-        .order('sequence_number')
+        .order('id')
         .asyncMap((maps) async {
           final List<Customer> results = [];
           for (final map in maps) {
@@ -86,7 +86,6 @@ class SupabaseCustomerRepository implements CustomerRepository {
               weekdayId: (map['weekday_id'] as String?) ?? '',
               placeId: (map['place_id'] as String?) ?? '',
               areaId: (map['area_id'] as String?) ?? '',
-              sequenceNumber: (map['sequence_number'] as num?)?.toInt() ?? 0,
               status: (map['status'] as String?) ?? 'ACTIVE',
               guardianName: map['guardian_name'] as String?,
               dob: map['dob'] as String?,
@@ -125,7 +124,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
 
   @override
   Future<List<Customer>> getAllCustomers() async {
-    final maps = await _client.from('customers').select().order('sequence_number');
+    final maps = await _client.from('customers').select().order('id');
     final List<Customer> results = [];
     for (final map in maps) {
       final id = map['id'] as String;
@@ -149,7 +148,6 @@ class SupabaseCustomerRepository implements CustomerRepository {
         weekdayId: (map['weekday_id'] as String?) ?? '',
         placeId: (map['place_id'] as String?) ?? '',
         areaId: (map['area_id'] as String?) ?? '',
-        sequenceNumber: (map['sequence_number'] as num?)?.toInt() ?? 0,
         status: (map['status'] as String?) ?? 'ACTIVE',
         guardianName: map['guardian_name'] as String?,
         dob: map['dob'] as String?,
@@ -195,7 +193,6 @@ class SupabaseCustomerRepository implements CustomerRepository {
       weekdayId: (res['weekday_id'] as String?) ?? '',
       placeId: (res['place_id'] as String?) ?? '',
       areaId: (res['area_id'] as String?) ?? '',
-      sequenceNumber: (res['sequence_number'] as num?)?.toInt() ?? 0,
       status: (res['status'] as String?) ?? 'ACTIVE',
       guardianName: res['guardian_name'] as String?,
       dob: res['dob'] as String?,
@@ -484,18 +481,23 @@ class SupabaseCustomerRepository implements CustomerRepository {
     List<IdProof>? idProofs,
     Location? location,
   }) async {
-    final customerId = 'cust_${DateTime.now().millisecondsSinceEpoch}';
-    final code = 'LC-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+    final allRes = await _client.from('customers').select('id');
+    int maxId = 0;
+    for (final row in allRes) {
+      final rawId = row['id']?.toString() ?? '';
+      final parsed = int.tryParse(rawId);
+      if (parsed != null && parsed > maxId) {
+        maxId = parsed;
+      }
+    }
+    final nextIdNum = maxId + 1;
+    final customerId = '$nextIdNum';
 
-    // Get next sequence number in area
-    final seqRes = await _client
-        .from('customers')
-        .select('sequence_number')
-        .eq('area_id', areaId)
-        .order('sequence_number', ascending: false)
-        .limit(1)
-        .maybeSingle();
-    final nextSeq = seqRes == null ? 1 : ((seqRes['sequence_number'] as num?)?.toInt() ?? 0) + 1;
+    final wCode = weekdayId.replaceAll('w-', 'W').toUpperCase();
+    final pCode = placeId.replaceAll('p-', 'P').toUpperCase();
+    final aCode = areaId.replaceAll('a-', 'A').toUpperCase();
+    final paddedId = nextIdNum.toString().padLeft(3, '0');
+    final code = '$wCode-$pCode-$aCode-$paddedId';
 
     final customerData = {
       'id': customerId,
@@ -512,7 +514,6 @@ class SupabaseCustomerRepository implements CustomerRepository {
       'weekday_id': weekdayId,
       'place_id': placeId,
       'area_id': areaId,
-      'sequence_number': nextSeq,
       'status': 'ACTIVE',
       'dob': dob,
       'occupation': occupation,
@@ -851,7 +852,7 @@ class SupabaseCollectionRepository implements CollectionRepository {
   Future<void> saveCollection({
     required String customerId,
     required String status,
-    required int amount,
+    required double amount,
     String? reason,
     required String collectedBy,
     DateTime? customDate,

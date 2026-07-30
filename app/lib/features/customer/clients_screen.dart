@@ -83,7 +83,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
       final totalFinanced =
           customerSales.fold<int>(0, (sum, s) => sum + s.financedAmount);
       final totalCollected =
-          customerCollections.fold<int>(0, (sum, col) => sum + col.amount);
+          customerCollections.fold<int>(0, (sum, col) => sum + col.amount.round());
       return totalFinanced - totalCollected;
     }
 

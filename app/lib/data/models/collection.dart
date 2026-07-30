@@ -10,7 +10,7 @@ class Collection with _$Collection {
     required String customerId,
     required DateTime visitDatetime,
     required String status, // 'PAYMENT', 'PARTIAL_PAYMENT', 'CARRY_FORWARD'
-    required int amount,
+    required double amount,
     String? reason,
     required String collectedBy,
   }) = _Collection;

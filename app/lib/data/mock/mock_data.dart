@@ -478,8 +478,8 @@ final mockCategoriesList = [
 
 final mockCustomersList = [
   const Customer(
-    id: 'c-1',
-    customerCode: 'C-001',
+    id: '1',
+    customerCode: 'W4-P1-A1-001',
     name: 'Lakshmi Priya',
     phone: '9876543210',
     alternatePhone: '9876543211',
@@ -497,7 +497,6 @@ final mockCustomersList = [
     weekdayId: 'w-4', // Thursday
     placeId: 'p-1', // Melur
     areaId: 'a-1', // North Street
-    sequenceNumber: 1,
     status: 'ACTIVE',
     guardianName: 'Ramanathan (Spouse)',
     dob: '15-08-1985',
@@ -505,8 +504,8 @@ final mockCustomersList = [
     notes: 'Always pays in the morning. Likes Prestige brand.',
   ),
   const Customer(
-    id: 'c-2',
-    customerCode: 'C-002',
+    id: '2',
+    customerCode: 'W4-P1-A2-002',
     name: 'Muthu Pandian',
     phone: '9443210987',
     address: '45B, Bazaar Lane, Melur, Madurai - 625106',
@@ -518,15 +517,14 @@ final mockCustomersList = [
     weekdayId: 'w-4', // Thursday
     placeId: 'p-1', // Melur
     areaId: 'a-2', // Bazaar Lane
-    sequenceNumber: 2,
     status: 'ACTIVE',
     guardianName: 'Chinnasamy (Father)',
     occupation: 'Shop Owner',
     notes: 'Busy during noon. Call before visiting.',
   ),
   const Customer(
-    id: 'c-3',
-    customerCode: 'C-003',
+    id: '3',
+    customerCode: 'W4-P2-A3-003',
     name: 'Anitha Rajendran',
     phone: '9988776655',
     address: '8, NH Colony, Othakadai, Madurai - 625107',
@@ -539,76 +537,70 @@ final mockCustomersList = [
     weekdayId: 'w-4', // Thursday
     placeId: 'p-2', // Othakadai
     areaId: 'a-3', // NH Colony
-    sequenceNumber: 1,
     status: 'ACTIVE',
     guardianName: 'Rajendran (Spouse)',
     occupation: 'Teacher',
     notes: 'Check back after 5 PM.',
   ),
   const Customer(
-    id: 'c-4',
-    customerCode: 'C-004',
+    id: '4',
+    customerCode: 'W1-P3-A4-004',
     name: 'Karthik Raja',
     phone: '9123456789',
     address: '15, Mosque Road, Goripalayam, Madurai - 625002',
     weekdayId: 'w-1', // Monday
     placeId: 'p-3',
     areaId: 'a-4',
-    sequenceNumber: 1,
     status: 'ACTIVE',
     guardianName: 'Murugan (Father)',
     notes: 'No outstanding balance.',
   ),
   const Customer(
-    id: 'c-5',
-    customerCode: 'C-005',
+    id: '5',
+    customerCode: 'W2-P4-A5-005',
     name: 'Selvi Murugesan',
     phone: '9554433221',
     address: '22, Station Road, Thirunagar, Madurai - 625006',
     weekdayId: 'w-2', // Tuesday
     placeId: 'p-4',
     areaId: 'a-5',
-    sequenceNumber: 1,
     status: 'DO_NOT_VISIT', // Overdue/Flagged
     guardianName: 'Murugesan (Spouse)',
     notes: 'Payment dispute. Flagged do not visit.',
   ),
   const Customer(
-    id: 'c-6',
-    customerCode: 'C-006',
+    id: '6',
+    customerCode: 'W1-P3-A4-006',
     name: 'Rahim Khan',
     phone: '9888877777',
     address: '3, Mosque Road, Goripalayam, Madurai - 625002',
     weekdayId: 'w-1', // Monday
     placeId: 'p-3',
     areaId: 'a-4',
-    sequenceNumber: 2,
     status: 'ACTIVE',
     notes: 'Small outstanding, pays regularly.',
   ),
   const Customer(
-    id: 'c-7',
-    customerCode: 'C-007',
+    id: '7',
+    customerCode: 'W4-P1-A1-007',
     name: 'Meena Subramanian',
     phone: '9777766666',
     address: '56, North Street, Melur, Madurai - 625106',
     weekdayId: 'w-4', // Thursday
     placeId: 'p-1',
     areaId: 'a-1',
-    sequenceNumber: 3,
     status: 'ACTIVE',
     notes: 'Newly added customer.',
   ),
   const Customer(
-    id: 'c-8',
-    customerCode: 'C-008',
+    id: '8',
+    customerCode: 'W4-P2-A3-008',
     name: 'Venkatesan Alagar',
     phone: '9666655555',
     address: '102, NH Colony, Othakadai, Madurai - 625107',
     weekdayId: 'w-4', // Thursday
     placeId: 'p-2',
     areaId: 'a-3',
-    sequenceNumber: 2,
     status: 'ACTIVE',
     notes: 'Prefers credit sales.',
   ),
@@ -618,7 +610,7 @@ final mockSalesList = [
   // Lakshmi Priya (c-1): bought Refrigerator, price 16500, advance 5000, financed 11500
   Sale(
     id: 's-1',
-    customerId: 'c-1',
+    customerId: '1',
     saleDatetime: DateTime.now().subtract(const Duration(days: 15)),
     saleType: 'CREDIT',
     totalAmount: 16500,
@@ -629,7 +621,7 @@ final mockSalesList = [
   // Lakshmi Priya (c-1): bought Mixer Grinder, price 3200, advance 3200, financed 0 (Ready Sale)
   Sale(
     id: 's-2',
-    customerId: 'c-1',
+    customerId: '1',
     saleDatetime: DateTime.now().subtract(const Duration(days: 8)),
     saleType: 'READY',
     totalAmount: 3200,
@@ -640,7 +632,7 @@ final mockSalesList = [
   // Muthu Pandian (c-2): bought Induction Cooktop, price 2800, advance 500, financed 2300
   Sale(
     id: 's-3',
-    customerId: 'c-2',
+    customerId: '2',
     saleDatetime: DateTime.now().subtract(const Duration(days: 20)),
     saleType: 'CREDIT',
     totalAmount: 2800,
@@ -651,7 +643,7 @@ final mockSalesList = [
   // Anitha Rajendran (c-3): bought Washing Machine, price 28500, advance 8500, financed 20000
   Sale(
     id: 's-4',
-    customerId: 'c-3',
+    customerId: '3',
     saleDatetime: DateTime.now().subtract(const Duration(days: 30)),
     saleType: 'CREDIT',
     totalAmount: 28500,
@@ -662,7 +654,7 @@ final mockSalesList = [
   // Rahim Khan (c-6): bought Dry Iron, price 850, advance 0, financed 850
   Sale(
     id: 's-5',
-    customerId: 'c-6',
+    customerId: '6',
     saleDatetime: DateTime.now().subtract(const Duration(days: 5)),
     saleType: 'CREDIT',
     totalAmount: 850,
@@ -676,48 +668,48 @@ final mockCollectionsList = [
   // Lakshmi Priya (c-1): Paid 1500 (reducing 11500 -> 10000)
   Collection(
     id: 'col-1',
-    customerId: 'c-1',
+    customerId: '1',
     visitDatetime: DateTime.now().subtract(const Duration(days: 7)),
     status: 'PAYMENT',
-    amount: 1500,
+    amount: 1500.0,
     collectedBy: 'Ramesh (Collector)',
   ),
   // Lakshmi Priya (c-1): Carry forward (outstanding remains 10000)
   Collection(
     id: 'col-2',
-    customerId: 'c-1',
+    customerId: '1',
     visitDatetime: DateTime.now().subtract(const Duration(hours: 4)),
     status: 'CARRY_FORWARD',
-    amount: 0,
+    amount: 0.0,
     reason: 'Husband not in town, will pay in evening',
     collectedBy: 'Ramesh (Collector)',
   ),
   // Lakshmi Priya (c-1): Partial payment of 200 today (outstanding 10000 -> 9800)
   Collection(
     id: 'col-3',
-    customerId: 'c-1',
+    customerId: '1',
     visitDatetime: DateTime.now().subtract(const Duration(hours: 2)),
     status: 'PARTIAL_PAYMENT',
-    amount: 200,
+    amount: 200.0,
     reason: 'Will pay remaining in evening visit',
     collectedBy: 'Ramesh (Collector)',
   ),
   // Muthu Pandian (c-2): Paid 500 (reducing 2300 -> 1800)
   Collection(
     id: 'col-4',
-    customerId: 'c-2',
+    customerId: '2',
     visitDatetime: DateTime.now().subtract(const Duration(days: 10)),
     status: 'PAYMENT',
-    amount: 500,
+    amount: 500.0,
     collectedBy: 'Ramesh (Collector)',
   ),
   // Anitha Rajendran (c-3): Carry forward
   Collection(
     id: 'col-5',
-    customerId: 'c-3',
+    customerId: '3',
     visitDatetime: DateTime.now().subtract(const Duration(days: 6)),
     status: 'CARRY_FORWARD',
-    amount: 0,
+    amount: 0.0,
     reason: 'Salary delayed, check next week',
     collectedBy: 'Ramesh (Collector)',
   ),

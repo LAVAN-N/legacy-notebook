@@ -144,8 +144,8 @@ class AreaCustomersNotifier extends AutoDisposeFamilyAsyncNotifier<List<Customer
       ));
     }
 
-    // Sort by sequence number
-    list.sort((a, b) => a.customer.sequenceNumber.compareTo(b.customer.sequenceNumber));
+    // Sort by sequential customer ID
+    list.sort((a, b) => (int.tryParse(a.customer.id) ?? 0).compareTo(int.tryParse(b.customer.id) ?? 0));
     return list;
   }
 

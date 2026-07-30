@@ -238,7 +238,23 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
                   isEditing: widget.customer != null,
                   onCreateAndSale: () async {
                     final customer = await controller.createAndSale();
-                    if (customer == null) return;
+                    if (customer == null) {
+                      if (!context.mounted) return;
+                      final formErrors =
+                          ref.read(newClientControllerProvider).errors;
+                      final message = formErrors['submit'] ??
+                          (formErrors.values.isNotEmpty
+                              ? formErrors.values.first
+                              : 'Please fill all required fields correctly');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(message),
+                          backgroundColor: colors.destructive,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                      return;
+                    }
                     if (!context.mounted) return;
 
                     // Capture ref dependencies before showing snackbar
@@ -271,7 +287,23 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
                   },
                   onCreateOnly: () async {
                     final customer = await controller.createOnly();
-                    if (customer == null) return;
+                    if (customer == null) {
+                      if (!context.mounted) return;
+                      final formErrors =
+                          ref.read(newClientControllerProvider).errors;
+                      final message = formErrors['submit'] ??
+                          (formErrors.values.isNotEmpty
+                              ? formErrors.values.first
+                              : 'Please fill all required fields correctly');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(message),
+                          backgroundColor: colors.destructive,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                      return;
+                    }
                     if (!context.mounted) return;
 
                     if (widget.customer != null) {

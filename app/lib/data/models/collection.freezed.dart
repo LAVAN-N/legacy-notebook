@@ -25,7 +25,7 @@ mixin _$Collection {
   DateTime get visitDatetime => throw _privateConstructorUsedError;
   String get status =>
       throw _privateConstructorUsedError; // 'PAYMENT', 'PARTIAL_PAYMENT', 'CARRY_FORWARD'
-  int get amount => throw _privateConstructorUsedError;
+  double get amount => throw _privateConstructorUsedError;
   String? get reason => throw _privateConstructorUsedError;
   String get collectedBy => throw _privateConstructorUsedError;
 
@@ -50,7 +50,7 @@ abstract class $CollectionCopyWith<$Res> {
       String customerId,
       DateTime visitDatetime,
       String status,
-      int amount,
+      double amount,
       String? reason,
       String collectedBy});
 }
@@ -98,7 +98,7 @@ class _$CollectionCopyWithImpl<$Res, $Val extends Collection>
       amount: null == amount
           ? _value.amount
           : amount // ignore: cast_nullable_to_non_nullable
-              as int,
+              as double,
       reason: freezed == reason
           ? _value.reason
           : reason // ignore: cast_nullable_to_non_nullable
@@ -124,7 +124,7 @@ abstract class _$$CollectionImplCopyWith<$Res>
       String customerId,
       DateTime visitDatetime,
       String status,
-      int amount,
+      double amount,
       String? reason,
       String collectedBy});
 }
@@ -170,7 +170,7 @@ class __$$CollectionImplCopyWithImpl<$Res>
       amount: null == amount
           ? _value.amount
           : amount // ignore: cast_nullable_to_non_nullable
-              as int,
+              as double,
       reason: freezed == reason
           ? _value.reason
           : reason // ignore: cast_nullable_to_non_nullable
@@ -208,7 +208,7 @@ class _$CollectionImpl implements _Collection {
   final String status;
 // 'PAYMENT', 'PARTIAL_PAYMENT', 'CARRY_FORWARD'
   @override
-  final int amount;
+  final double amount;
   @override
   final String? reason;
   @override
@@ -263,7 +263,7 @@ abstract class _Collection implements Collection {
       required final String customerId,
       required final DateTime visitDatetime,
       required final String status,
-      required final int amount,
+      required final double amount,
       final String? reason,
       required final String collectedBy}) = _$CollectionImpl;
 
@@ -279,7 +279,7 @@ abstract class _Collection implements Collection {
   @override
   String get status; // 'PAYMENT', 'PARTIAL_PAYMENT', 'CARRY_FORWARD'
   @override
-  int get amount;
+  double get amount;
   @override
   String? get reason;
   @override

@@ -35,7 +35,6 @@ mixin _$Customer {
   String get weekdayId => throw _privateConstructorUsedError;
   String get placeId => throw _privateConstructorUsedError;
   String get areaId => throw _privateConstructorUsedError;
-  int get sequenceNumber => throw _privateConstructorUsedError;
   String get status =>
       throw _privateConstructorUsedError; // 'ACTIVE' or 'INACTIVE' or 'DO_NOT_VISIT'
   String? get guardianName => throw _privateConstructorUsedError;
@@ -74,7 +73,6 @@ abstract class $CustomerCopyWith<$Res> {
       String weekdayId,
       String placeId,
       String areaId,
-      int sequenceNumber,
       String status,
       String? guardianName,
       String? dob,
@@ -114,7 +112,6 @@ class _$CustomerCopyWithImpl<$Res, $Val extends Customer>
     Object? weekdayId = null,
     Object? placeId = null,
     Object? areaId = null,
-    Object? sequenceNumber = null,
     Object? status = null,
     Object? guardianName = freezed,
     Object? dob = freezed,
@@ -182,10 +179,6 @@ class _$CustomerCopyWithImpl<$Res, $Val extends Customer>
           ? _value.areaId
           : areaId // ignore: cast_nullable_to_non_nullable
               as String,
-      sequenceNumber: null == sequenceNumber
-          ? _value.sequenceNumber
-          : sequenceNumber // ignore: cast_nullable_to_non_nullable
-              as int,
       status: null == status
           ? _value.status
           : status // ignore: cast_nullable_to_non_nullable
@@ -248,7 +241,6 @@ abstract class _$$CustomerImplCopyWith<$Res>
       String weekdayId,
       String placeId,
       String areaId,
-      int sequenceNumber,
       String status,
       String? guardianName,
       String? dob,
@@ -287,7 +279,6 @@ class __$$CustomerImplCopyWithImpl<$Res>
     Object? weekdayId = null,
     Object? placeId = null,
     Object? areaId = null,
-    Object? sequenceNumber = null,
     Object? status = null,
     Object? guardianName = freezed,
     Object? dob = freezed,
@@ -355,10 +346,6 @@ class __$$CustomerImplCopyWithImpl<$Res>
           ? _value.areaId
           : areaId // ignore: cast_nullable_to_non_nullable
               as String,
-      sequenceNumber: null == sequenceNumber
-          ? _value.sequenceNumber
-          : sequenceNumber // ignore: cast_nullable_to_non_nullable
-              as int,
       status: null == status
           ? _value.status
           : status // ignore: cast_nullable_to_non_nullable
@@ -402,7 +389,6 @@ class _$CustomerImpl implements _Customer {
       required this.weekdayId,
       required this.placeId,
       required this.areaId,
-      required this.sequenceNumber,
       required this.status,
       this.guardianName,
       this.dob,
@@ -459,8 +445,6 @@ class _$CustomerImpl implements _Customer {
   @override
   final String areaId;
   @override
-  final int sequenceNumber;
-  @override
   final String status;
 // 'ACTIVE' or 'INACTIVE' or 'DO_NOT_VISIT'
   @override
@@ -474,7 +458,7 @@ class _$CustomerImpl implements _Customer {
 
   @override
   String toString() {
-    return 'Customer(id: $id, customerCode: $customerCode, name: $name, phone: $phone, alternatePhone: $alternatePhone, address: $address, landmark: $landmark, proofUrl: $proofUrl, locationUrl: $locationUrl, location: $location, nominees: $nominees, idProofs: $idProofs, weekdayId: $weekdayId, placeId: $placeId, areaId: $areaId, sequenceNumber: $sequenceNumber, status: $status, guardianName: $guardianName, dob: $dob, occupation: $occupation, notes: $notes)';
+    return 'Customer(id: $id, customerCode: $customerCode, name: $name, phone: $phone, alternatePhone: $alternatePhone, address: $address, landmark: $landmark, proofUrl: $proofUrl, locationUrl: $locationUrl, location: $location, nominees: $nominees, idProofs: $idProofs, weekdayId: $weekdayId, placeId: $placeId, areaId: $areaId, status: $status, guardianName: $guardianName, dob: $dob, occupation: $occupation, notes: $notes)';
   }
 
   @override
@@ -504,8 +488,6 @@ class _$CustomerImpl implements _Customer {
                 other.weekdayId == weekdayId) &&
             (identical(other.placeId, placeId) || other.placeId == placeId) &&
             (identical(other.areaId, areaId) || other.areaId == areaId) &&
-            (identical(other.sequenceNumber, sequenceNumber) ||
-                other.sequenceNumber == sequenceNumber) &&
             (identical(other.status, status) || other.status == status) &&
             (identical(other.guardianName, guardianName) ||
                 other.guardianName == guardianName) &&
@@ -534,7 +516,6 @@ class _$CustomerImpl implements _Customer {
         weekdayId,
         placeId,
         areaId,
-        sequenceNumber,
         status,
         guardianName,
         dob,
@@ -575,7 +556,6 @@ abstract class _Customer implements Customer {
       required final String weekdayId,
       required final String placeId,
       required final String areaId,
-      required final int sequenceNumber,
       required final String status,
       final String? guardianName,
       final String? dob,
@@ -615,8 +595,6 @@ abstract class _Customer implements Customer {
   String get placeId;
   @override
   String get areaId;
-  @override
-  int get sequenceNumber;
   @override
   String get status; // 'ACTIVE' or 'INACTIVE' or 'DO_NOT_VISIT'
   @override

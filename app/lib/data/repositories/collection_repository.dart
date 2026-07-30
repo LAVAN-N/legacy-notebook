@@ -8,7 +8,7 @@ abstract class CollectionRepository {
   Future<void> saveCollection({
     required String customerId,
     required String status,
-    required int amount,
+    required double amount,
     String? reason,
     required String collectedBy,
     DateTime? customDate,

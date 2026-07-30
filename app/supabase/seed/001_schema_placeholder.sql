@@ -38,7 +38,6 @@ CREATE TABLE IF NOT EXISTS customers (
     weekday_id TEXT NOT NULL REFERENCES weekdays(id),
     place_id TEXT NOT NULL REFERENCES places(id),
     area_id TEXT NOT NULL REFERENCES areas(id),
-    sequence_number INT NOT NULL,
     status TEXT NOT NULL CHECK (status IN ('ACTIVE', 'INACTIVE', 'DO_NOT_VISIT')),
     guardian_name TEXT,
     dob TEXT,
@@ -47,8 +46,8 @@ CREATE TABLE IF NOT EXISTS customers (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Index for area filtering and sorting sequence number
-CREATE INDEX IF NOT EXISTS idx_customers_area_seq ON customers(area_id, sequence_number);
+-- Index for area filtering
+CREATE INDEX IF NOT EXISTS idx_customers_area ON customers(area_id);
 
 -- 5. Products table
 CREATE TABLE IF NOT EXISTS products (
@@ -92,7 +91,7 @@ CREATE TABLE IF NOT EXISTS collections (
     customer_id TEXT NOT NULL REFERENCES customers(id) ON DELETE RESTRICT,
     visit_datetime TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     status TEXT NOT NULL CHECK (status IN ('PAYMENT', 'PARTIAL_PAYMENT', 'CARRY_FORWARD')),
-    amount INT NOT NULL CHECK (amount >= 0),
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount >= 0),
     reason TEXT,
     collected_by TEXT NOT NULL
 );
@@ -100,6 +99,7 @@ CREATE TABLE IF NOT EXISTS collections (
 -- Indexes for statistics and reports
 CREATE INDEX IF NOT EXISTS idx_sales_customer ON sales(customer_id);
 CREATE INDEX IF NOT EXISTS idx_collections_customer ON collections(customer_id);
+CREATE INDEX IF NOT EXISTS idx_collections_customer_datetime ON collections(customer_id, visit_datetime DESC);
 
 -- ─── Security & Row Level Security (RLS) ──────────────────
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
@@ -162,3 +162,41 @@ SELECT
     remarks AS remarks,
     sold_by AS handled_by
 FROM sales;
+
+-- View 3: customer_route_view
+CREATE OR REPLACE VIEW customer_route_view AS
+SELECT
+  c.id AS customer_id,
+  c.name AS customer_name,
+  c.customer_code,
+  w.id AS weekday_id,
+  w.name AS weekday_name,
+  p.id AS place_id,
+  p.name AS place_name,
+  a.id AS area_id,
+  a.name AS area_name,
+  COALESCE(v.outstanding_amount, 0) AS outstanding
+FROM customers c
+LEFT JOIN weekdays w ON c.weekday_id = w.id
+LEFT JOIN places p ON c.place_id = p.id
+LEFT JOIN areas a ON c.area_id = a.id
+LEFT JOIN customer_outstanding_view v ON v.customer_id = c.id;
+
+-- View 4: route_summary_view
+CREATE OR REPLACE VIEW route_summary_view AS
+SELECT
+  w.id AS weekday_id,
+  w.name AS weekday_name,
+  w.sort_order,
+  p.id AS place_id,
+  p.name AS place_name,
+  a.id AS area_id,
+  a.name AS area_name,
+  COUNT(DISTINCT c.id) AS customer_count,
+  COALESCE(SUM(v.outstanding_amount), 0) AS outstanding_amount
+FROM weekdays w
+LEFT JOIN places p ON p.weekday_id = w.id
+LEFT JOIN areas a ON a.place_id = p.id
+LEFT JOIN customers c ON c.area_id = a.id
+LEFT JOIN customer_outstanding_view v ON v.customer_id = c.id
+GROUP BY w.id, w.name, w.sort_order, p.id, p.name, a.id, a.name;

@@ -63,7 +63,6 @@ class CollectController extends StateNotifier<CollectScreenState> {
             weekdayId: '',
             placeId: '',
             areaId: '',
-            sequenceNumber: 0,
             status: 'ACTIVE',
           ),
           outstanding: const Outstanding(customerId: '', totalFinanced: 0, totalCollected: 0, outstandingAmount: 0),
@@ -160,7 +159,7 @@ class CollectController extends StateNotifier<CollectScreenState> {
       await collectionRepo.saveCollection(
         customerId: _customerId,
         status: state.status,
-        amount: state.status == 'CARRY_FORWARD' ? 0 : state.amount,
+        amount: state.status == 'CARRY_FORWARD' ? 0.0 : state.amount.toDouble(),
         reason: state.notes.isNotEmpty ? state.notes : null,
         collectedBy: 'Ramesh (Collector)',
         customDate: state.selectedDate,
