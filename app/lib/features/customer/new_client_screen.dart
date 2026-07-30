@@ -692,6 +692,65 @@ class _CustomerDetailsSection extends StatelessWidget {
     }
   }
 
+  void _showPhotoPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      builder: (BuildContext bc) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: Icon(Icons.photo_camera, color: colors.primary),
+                title: const Text('Take Photo'),
+                onTap: () async {
+                  Navigator.pop(bc);
+                  final picker = ImagePicker();
+                  final XFile? image = await picker.pickImage(
+                    source: ImageSource.camera,
+                    imageQuality: 85,
+                  );
+                  if (image != null) {
+                    controller.setProfileUrl(image.path);
+                  }
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.photo_library, color: colors.primary),
+                title: const Text('Choose from Gallery'),
+                onTap: () async {
+                  Navigator.pop(bc);
+                  final picker = ImagePicker();
+                  final XFile? image = await picker.pickImage(
+                    source: ImageSource.gallery,
+                    imageQuality: 85,
+                  );
+                  if (image != null) {
+                    controller.setProfileUrl(image.path);
+                  }
+                },
+              ),
+              if (state.profileUrl != null && state.profileUrl!.isNotEmpty)
+                ListTile(
+                  leading: const Icon(Icons.delete, color: Colors.red),
+                  title: const Text('Remove Photo', style: TextStyle(color: Colors.red)),
+                  onTap: () {
+                    Navigator.pop(bc);
+                    controller.setProfileUrl(null);
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -708,6 +767,51 @@ class _CustomerDetailsSection extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
+
+            // Profile Photo Uploader
+            Center(
+              child: Stack(
+                children: [
+                  GestureDetector(
+                    onTap: () => _showPhotoPicker(context),
+                    child: CircleAvatar(
+                      radius: 50,
+                      // ignore: deprecated_member_use
+                      backgroundColor: colors.primary.withOpacity(0.1),
+                      backgroundImage: state.profileUrl != null && state.profileUrl!.isNotEmpty
+                          ? (state.profileUrl!.startsWith('http')
+                              ? NetworkImage(state.profileUrl!)
+                              : FileImage(File(state.profileUrl!)) as ImageProvider)
+                          : null,
+                      child: state.profileUrl == null || state.profileUrl!.isEmpty
+                          ? Icon(Icons.person, size: 50, color: colors.primary)
+                          : null,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: () => _showPhotoPicker(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: colors.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
 
             // Full Name
             _buildTextField(

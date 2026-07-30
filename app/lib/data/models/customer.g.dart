@@ -15,7 +15,7 @@ _$CustomerImpl _$$CustomerImplFromJson(Map<String, dynamic> json) =>
       alternatePhone: json['alternatePhone'] as String?,
       address: json['address'] as String,
       landmark: json['landmark'] as String?,
-      proofUrl: json['proofUrl'] as String?,
+      profileUrl: json['profile_url'] as String?,
       locationUrl: json['locationUrl'] as String?,
       location: json['location'] == null
           ? null
@@ -32,7 +32,6 @@ _$CustomerImpl _$$CustomerImplFromJson(Map<String, dynamic> json) =>
       placeId: json['placeId'] as String,
       areaId: json['areaId'] as String,
       status: json['status'] as String,
-      guardianName: json['guardianName'] as String?,
       dob: json['dob'] as String?,
       occupation: json['occupation'] as String?,
       notes: json['notes'] as String?,
@@ -47,7 +46,7 @@ Map<String, dynamic> _$$CustomerImplToJson(_$CustomerImpl instance) =>
       'alternatePhone': instance.alternatePhone,
       'address': instance.address,
       'landmark': instance.landmark,
-      'proofUrl': instance.proofUrl,
+      'profile_url': instance.profileUrl,
       'locationUrl': instance.locationUrl,
       'location': instance.location,
       'nominees': instance.nominees,
@@ -56,7 +55,6 @@ Map<String, dynamic> _$$CustomerImplToJson(_$CustomerImpl instance) =>
       'placeId': instance.placeId,
       'areaId': instance.areaId,
       'status': instance.status,
-      'guardianName': instance.guardianName,
       'dob': instance.dob,
       'occupation': instance.occupation,
       'notes': instance.notes,

@@ -1047,3 +1047,30 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Replaced `number` property in `IdProof` model with `proofUrl` mapping to `proof_url` in the database. Restored standard `fromJson` redirect factory to prevent build runner compilation crashes, and defined a custom static `fromJsonCustom` helper to dynamically hydrate UI `document` metadata objects in memory.
 - **Rule for next agent:** ALWAYS store ID proof S3 paths/URLs under the key `proof_url` (mapped to property `proofUrl`) inside the customer `id_proofs` list.
 - **Guardrail:** Verify that `IdProof` objects serialize `proof_url` as their primary S3 document path and compile/hydrate metadata cleanly.
+
+### 2026-07-30 · Deleting redundant guardianName schema key and database column
+
+- **Context:** Cleaning up unused properties from customer records.
+- **Mistake:** Retained a redundant `guardian_name` database column and model field (`guardianName`) which was not utilized or rendered anywhere in the application.
+- **Root cause:** Legacy schema configuration residue that was missed during database optimization sweeps.
+- **Fix applied:** Completely removed `guardianName` from `Customer` model, mapping logic, mock data lists, and database creation queries. Dropped the `guardian_name` column from the remote PostgreSQL database and incremented local SQLite version to `6`.
+- **Rule for next agent:** NEVER retain dead or unused schema fields (like `guardianName`) in models or tables when they are completely bypassed by business logic and presentation layers.
+- **Guardrail:** Verify compilation runs cleanly and `guardianName` is not referenced anywhere in codebase maps or models.
+
+### 2026-07-30 · PostgrestException PGRST204 due to deleted proof_url column and stale schema cache
+
+- **Context:** Fetching or updating customer records from/to Supabase database.
+- **Mistake:** Encountered PGRST204 because the root-level customer `proof_url` column (used to store profile/primary proof URLs) was mistakenly deleted from the `customers` database table, and PostgREST schema cache was stale.
+- **Root cause:** The database column was dropped by accident during database alterations, and PostgREST cache wasn't notified.
+- **Fix applied:** Added the `proof_url TEXT` column back to the `customers` table in Supabase and executed `NOTIFY pgrst, 'reload schema';` to refresh the PostgREST cache.
+- **Rule for next agent:** ALWAYS notify PostgREST when altering database structures to prevent PGRST204 schema cache discrepancies.
+- **Guardrail:** Verify that the `proof_url` column exists on the `customers` table and queries resolve without PGRST204.
+
+### 2026-07-30 · Refactoring customer proof_url to profile_url and implementing interactive photo uploader
+
+- **Context:** Implementing profile photo selection in new client registration and profile edit screen.
+- **Mistake:** Retained a misleading field/column name `proof_url` representing the profile photo avatar, which clashed with ID proof documents, and lacked a dedicated interactive profile picture picker section.
+- **Root cause:** Ambiguous naming convention and missing profile picture capture control in customer registration forms.
+- **Fix applied:** Refactored all model, repository, database schema, and view references from `proof_url`/`proofUrl` to `profile_url`/`profileUrl`. Implemented an interactive `CircleAvatar` image upload field inside `_CustomerDetailsSection` that captures local gallery/camera paths using `ImagePicker` and synchronizes uploads to S3 bucket `customer-photos`.
+- **Rule for next agent:** ALWAYS refer to the primary customer avatar image URL as `profile_url` / `profileUrl`, and use the interactive uploader on `new_client_screen.dart` to pick or remove profile pictures.
+- **Guardrail:** Run `flutter analyze` and check that `profileUrl` maps cleanly to `profile_url` in both SQLite and Supabase serializers/repositories.

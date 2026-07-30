@@ -208,13 +208,13 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   }
 
   @override
-  Future<void> updateCustomerProfile(String id, {String? phone, String? proofUrl, String? locationUrl}) async {
+  Future<void> updateCustomerProfile(String id, {String? phone, String? profileUrl, String? locationUrl}) async {
     final index = _customers.indexWhere((c) => c.id == id);
     if (index != -1) {
       final old = _customers[index];
       _customers[index] = old.copyWith(
         phone: phone ?? old.phone,
-        proofUrl: proofUrl ?? old.proofUrl,
+        profileUrl: profileUrl ?? old.profileUrl,
         locationUrl: locationUrl ?? old.locationUrl,
       );
       _syncController();
@@ -282,6 +282,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     List<Nominee>? nominees,
     List<IdProof>? idProofs,
     Location? location,
+    String? profileUrl,
   }) async {
     int maxId = 0;
     for (final c in _customers) {
@@ -321,6 +322,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
       alternatePhone: alternatePhone,
       address: address,
       landmark: landmark,
+      profileUrl: profileUrl,
       weekdayId: weekdayId,
       placeId: placeId,
       areaId: areaId,

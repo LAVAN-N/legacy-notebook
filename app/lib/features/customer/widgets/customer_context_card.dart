@@ -114,7 +114,7 @@ class CustomerContextCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Avatar(name: customer.name, proofUrl: customer.proofUrl, size: 60),
+                Avatar(name: customer.name, profileUrl: customer.profileUrl, size: 60),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(

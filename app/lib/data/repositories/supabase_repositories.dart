@@ -84,7 +84,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
       alternatePhone: map['alternate_phone'] as String?,
       address: (map['address'] as String?) ?? '',
       landmark: map['landmark'] as String?,
-      proofUrl: map['proof_url'] as String?,
+      profileUrl: map['profile_url'] as String?,
       locationUrl: map['location_url'] as String?,
       location: (map['latitude'] != null && map['longitude'] != null)
           ? Location(lat: (map['latitude'] as num).toDouble(), lng: (map['longitude'] as num).toDouble())
@@ -95,7 +95,6 @@ class SupabaseCustomerRepository implements CustomerRepository {
       placeId: (map['place_id'] as String?) ?? '',
       areaId: (map['area_id'] as String?) ?? '',
       status: (map['status'] as String?) ?? 'ACTIVE',
-      guardianName: map['guardian_name'] as String?,
       dob: map['dob'] as String?,
       occupation: map['occupation'] as String?,
       notes: map['notes'] as String?,
@@ -352,16 +351,16 @@ class SupabaseCustomerRepository implements CustomerRepository {
   }
 
   @override
-  Future<void> updateCustomerProfile(String id, {String? phone, String? proofUrl, String? locationUrl}) async {
+  Future<void> updateCustomerProfile(String id, {String? phone, String? profileUrl, String? locationUrl}) async {
     final Map<String, dynamic> updates = {};
     if (phone != null) updates['phone'] = phone;
     if (locationUrl != null) updates['location_url'] = locationUrl;
 
-    if (proofUrl != null && proofUrl.isNotEmpty) {
-      final extension = proofUrl.split('.').last;
+    if (profileUrl != null && profileUrl.isNotEmpty) {
+      final extension = profileUrl.split('.').last;
       final remotePath = '$id/profile.$extension';
-      final remoteProofUrl = await _uploadFile('customer-photos', proofUrl, remotePath);
-      updates['proof_url'] = remoteProofUrl;
+      final remoteProfileUrl = await _uploadFile('customer-photos', profileUrl, remotePath);
+      updates['profile_url'] = remoteProfileUrl;
     }
 
     if (updates.isNotEmpty) {
@@ -425,6 +424,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
     List<Nominee>? nominees,
     List<IdProof>? idProofs,
     Location? location,
+    String? profileUrl,
   }) async {
     final allRes = await _client.from('customers').select('id');
     int maxId = 0;
@@ -444,6 +444,13 @@ class SupabaseCustomerRepository implements CustomerRepository {
     final aCode = areaId.replaceAll('a-', 'A').toUpperCase();
     final paddedId = nextIdNum.toString().padLeft(3, '0');
     final code = '$wCode-$pCode-$aCode-$paddedId';
+
+    String? remoteProfileUrl;
+    if (profileUrl != null && profileUrl.isNotEmpty) {
+      final extension = profileUrl.split('.').last.split('?').first;
+      final remotePath = '$customerId/profile.$extension';
+      remoteProfileUrl = await _uploadFile('customer-photos', profileUrl, remotePath);
+    }
 
     final updatedNominees = (nominees ?? []).map((n) {
       return n.copyWith(
@@ -483,7 +490,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
       'alternate_phone': alternatePhone,
       'address': address,
       'landmark': landmark,
-      'proof_url': null,
+      'profile_url': remoteProfileUrl,
       'location_url': location?.lat != null ? 'https://maps.google.com/?q=${location!.lat},${location.lng}' : null,
       'latitude': location?.lat,
       'longitude': location?.lng,
@@ -522,6 +529,13 @@ class SupabaseCustomerRepository implements CustomerRepository {
 
   @override
   Future<void> updateCustomer(Customer customer) async {
+    String? remoteProfileUrl = customer.profileUrl;
+    if (remoteProfileUrl != null && remoteProfileUrl.isNotEmpty && !remoteProfileUrl.startsWith('http')) {
+      final extension = remoteProfileUrl.split('.').last.split('?').first;
+      final remotePath = '${customer.id}/profile.$extension';
+      remoteProfileUrl = await _uploadFile('customer-photos', remoteProfileUrl, remotePath);
+    }
+
     final List<IdProof> uploadedProofs = [];
     for (var p in customer.idProofs) {
       final localPath = p.document?.localUri ?? '';
@@ -550,7 +564,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
       'alternate_phone': customer.alternatePhone,
       'address': customer.address,
       'landmark': customer.landmark,
-      'proof_url': customer.proofUrl,
+      'profile_url': remoteProfileUrl,
       'location_url': customer.locationUrl,
       'latitude': customer.location?.lat,
       'longitude': customer.location?.lng,
@@ -558,7 +572,6 @@ class SupabaseCustomerRepository implements CustomerRepository {
       'place_id': customer.placeId,
       'area_id': customer.areaId,
       'status': customer.status,
-      'guardian_name': customer.guardianName,
       'dob': customer.dob,
       'occupation': customer.occupation,
       'notes': customer.notes,

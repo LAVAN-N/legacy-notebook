@@ -1,3 +1,4 @@
+// ignore_for_file: invalid_annotation_target
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'id_proof.freezed.dart';
@@ -20,7 +21,6 @@ class IdProof with _$IdProof {
   const factory IdProof({
     required String id,
     required String type, // 'Aadhaar' | 'Voter' | 'DL' | 'PAN' | 'Other'
-    // ignore: invalid_annotation_target
     @JsonKey(name: 'proof_url') required String proofUrl,
     IdProofDocument? document,
   }) = _IdProof;

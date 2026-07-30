@@ -112,7 +112,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
         alternatePhone: map['alternate_phone'] as String?,
         address: map['address'] as String,
         landmark: map['landmark'] as String?,
-        proofUrl: map['proof_url'] as String?,
+        profileUrl: map['profile_url'] as String?,
         locationUrl: map['location_url'] as String?,
         location: map['latitude'] != null && map['longitude'] != null
             ? Location(lat: map['latitude'] as double, lng: map['longitude'] as double)
@@ -123,7 +123,6 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
         placeId: map['place_id'] as String,
         areaId: map['area_id'] as String,
         status: map['status'] as String,
-        guardianName: map['guardian_name'] as String?,
         dob: map['dob'] as String?,
         occupation: map['occupation'] as String?,
         notes: map['notes'] as String?,
@@ -175,7 +174,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
       alternatePhone: map['alternate_phone'] as String?,
       address: map['address'] as String,
       landmark: map['landmark'] as String?,
-      proofUrl: map['proof_url'] as String?,
+      profileUrl: map['profile_url'] as String?,
       locationUrl: map['location_url'] as String?,
       location: map['latitude'] != null && map['longitude'] != null
           ? Location(lat: map['latitude'] as double, lng: map['longitude'] as double)
@@ -186,7 +185,6 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
       placeId: map['place_id'] as String,
       areaId: map['area_id'] as String,
       status: map['status'] as String,
-      guardianName: map['guardian_name'] as String?,
       dob: map['dob'] as String?,
       occupation: map['occupation'] as String?,
       notes: map['notes'] as String?,
@@ -337,11 +335,11 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
   }
 
   @override
-  Future<void> updateCustomerProfile(String id, {String? phone, String? proofUrl, String? locationUrl}) async {
+  Future<void> updateCustomerProfile(String id, {String? phone, String? profileUrl, String? locationUrl}) async {
     final db = await DatabaseHelper.instance.database;
     final Map<String, dynamic> updates = {};
     if (phone != null) updates['phone'] = phone;
-    if (proofUrl != null) updates['proof_url'] = proofUrl;
+    if (profileUrl != null) updates['profile_url'] = profileUrl;
     if (locationUrl != null) updates['location_url'] = locationUrl;
 
     if (updates.isNotEmpty) {
@@ -406,6 +404,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
     List<Nominee>? nominees,
     List<IdProof>? idProofs,
     Location? location,
+    String? profileUrl,
   }) async {
     final db = await DatabaseHelper.instance.database;
     final idResult = await db.rawQuery("SELECT id FROM customers WHERE id LIKE 'CU-%'");
@@ -435,7 +434,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
       'alternate_phone': alternatePhone,
       'address': address,
       'landmark': landmark,
-      'proof_url': null,
+      'profile_url': profileUrl,
       'location_url': location != null ? 'https://maps.google.com/?q=${location.lat},${location.lng}' : null,
       'latitude': location?.lat,
       'longitude': location?.lng,
@@ -487,7 +486,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
       'alternate_phone': customer.alternatePhone,
       'address': customer.address,
       'landmark': customer.landmark,
-      'proof_url': customer.proofUrl,
+      'profile_url': customer.profileUrl,
       'location_url': customer.locationUrl,
       'latitude': customer.location?.lat,
       'longitude': customer.location?.lng,
@@ -495,7 +494,6 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
       'place_id': customer.placeId,
       'area_id': customer.areaId,
       'status': customer.status,
-      'guardian_name': customer.guardianName,
       'dob': customer.dob,
       'occupation': customer.occupation,
       'notes': customer.notes,

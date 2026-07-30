@@ -1,3 +1,4 @@
+// ignore_for_file: invalid_annotation_target
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'location.dart';
@@ -17,7 +18,7 @@ class Customer with _$Customer {
     String? alternatePhone,
     required String address,
     String? landmark,
-    String? proofUrl,
+    @JsonKey(name: 'profile_url') String? profileUrl,
     String? locationUrl,
     Location? location,
     @Default([]) List<Nominee> nominees,
@@ -26,7 +27,6 @@ class Customer with _$Customer {
     required String placeId,
     required String areaId,
     required String status, // 'ACTIVE' or 'INACTIVE' or 'DO_NOT_VISIT'
-    String? guardianName,
     String? dob,
     String? occupation,
     String? notes,

@@ -19,7 +19,7 @@ abstract class CustomerRepository {
   Stream<List<Activity>> watchCustomerTimeline(String customerId);
   Future<List<Activity>> getCustomerTimeline(String customerId);
 
-  Future<void> updateCustomerProfile(String id, {String? phone, String? proofUrl, String? locationUrl});
+  Future<void> updateCustomerProfile(String id, {String? phone, String? profileUrl, String? locationUrl});
   Future<void> addNominee(String customerId, String name, String phone, String relation);
   Future<void> addProofImage(String customerId, String proofType, String imageUrl);
   
@@ -39,6 +39,7 @@ abstract class CustomerRepository {
     List<Nominee>? nominees,
     List<IdProof>? idProofs,
     Location? location,
+    String? profileUrl,
   });
 
   Future<void> updateCustomer(Customer customer);

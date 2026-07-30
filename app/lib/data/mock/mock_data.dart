@@ -498,7 +498,6 @@ final mockCustomersList = [
     placeId: 'p-1', // Melur
     areaId: 'a-1', // North Street
     status: 'ACTIVE',
-    guardianName: 'Ramanathan (Spouse)',
     dob: '15-08-1985',
     occupation: 'Homemaker',
     notes: 'Always pays in the morning. Likes Prestige brand.',
@@ -518,7 +517,6 @@ final mockCustomersList = [
     placeId: 'p-1', // Melur
     areaId: 'a-2', // Bazaar Lane
     status: 'ACTIVE',
-    guardianName: 'Chinnasamy (Father)',
     occupation: 'Shop Owner',
     notes: 'Busy during noon. Call before visiting.',
   ),
@@ -538,7 +536,6 @@ final mockCustomersList = [
     placeId: 'p-2', // Othakadai
     areaId: 'a-3', // NH Colony
     status: 'ACTIVE',
-    guardianName: 'Rajendran (Spouse)',
     occupation: 'Teacher',
     notes: 'Check back after 5 PM.',
   ),
@@ -552,7 +549,6 @@ final mockCustomersList = [
     placeId: 'p-3',
     areaId: 'a-4',
     status: 'ACTIVE',
-    guardianName: 'Murugan (Father)',
     notes: 'No outstanding balance.',
   ),
   const Customer(
@@ -565,7 +561,6 @@ final mockCustomersList = [
     placeId: 'p-4',
     areaId: 'a-5',
     status: 'DO_NOT_VISIT', // Overdue/Flagged
-    guardianName: 'Murugesan (Spouse)',
     notes: 'Payment dispute. Flagged do not visit.',
   ),
   const Customer(

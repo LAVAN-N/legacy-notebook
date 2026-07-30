@@ -27,7 +27,8 @@ mixin _$Customer {
   String? get alternatePhone => throw _privateConstructorUsedError;
   String get address => throw _privateConstructorUsedError;
   String? get landmark => throw _privateConstructorUsedError;
-  String? get proofUrl => throw _privateConstructorUsedError;
+  @JsonKey(name: 'profile_url')
+  String? get profileUrl => throw _privateConstructorUsedError;
   String? get locationUrl => throw _privateConstructorUsedError;
   Location? get location => throw _privateConstructorUsedError;
   List<Nominee> get nominees => throw _privateConstructorUsedError;
@@ -37,7 +38,6 @@ mixin _$Customer {
   String get areaId => throw _privateConstructorUsedError;
   String get status =>
       throw _privateConstructorUsedError; // 'ACTIVE' or 'INACTIVE' or 'DO_NOT_VISIT'
-  String? get guardianName => throw _privateConstructorUsedError;
   String? get dob => throw _privateConstructorUsedError;
   String? get occupation => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
@@ -65,7 +65,7 @@ abstract class $CustomerCopyWith<$Res> {
       String? alternatePhone,
       String address,
       String? landmark,
-      String? proofUrl,
+      @JsonKey(name: 'profile_url') String? profileUrl,
       String? locationUrl,
       Location? location,
       List<Nominee> nominees,
@@ -74,7 +74,6 @@ abstract class $CustomerCopyWith<$Res> {
       String placeId,
       String areaId,
       String status,
-      String? guardianName,
       String? dob,
       String? occupation,
       String? notes});
@@ -104,7 +103,7 @@ class _$CustomerCopyWithImpl<$Res, $Val extends Customer>
     Object? alternatePhone = freezed,
     Object? address = null,
     Object? landmark = freezed,
-    Object? proofUrl = freezed,
+    Object? profileUrl = freezed,
     Object? locationUrl = freezed,
     Object? location = freezed,
     Object? nominees = null,
@@ -113,7 +112,6 @@ class _$CustomerCopyWithImpl<$Res, $Val extends Customer>
     Object? placeId = null,
     Object? areaId = null,
     Object? status = null,
-    Object? guardianName = freezed,
     Object? dob = freezed,
     Object? occupation = freezed,
     Object? notes = freezed,
@@ -147,9 +145,9 @@ class _$CustomerCopyWithImpl<$Res, $Val extends Customer>
           ? _value.landmark
           : landmark // ignore: cast_nullable_to_non_nullable
               as String?,
-      proofUrl: freezed == proofUrl
-          ? _value.proofUrl
-          : proofUrl // ignore: cast_nullable_to_non_nullable
+      profileUrl: freezed == profileUrl
+          ? _value.profileUrl
+          : profileUrl // ignore: cast_nullable_to_non_nullable
               as String?,
       locationUrl: freezed == locationUrl
           ? _value.locationUrl
@@ -183,10 +181,6 @@ class _$CustomerCopyWithImpl<$Res, $Val extends Customer>
           ? _value.status
           : status // ignore: cast_nullable_to_non_nullable
               as String,
-      guardianName: freezed == guardianName
-          ? _value.guardianName
-          : guardianName // ignore: cast_nullable_to_non_nullable
-              as String?,
       dob: freezed == dob
           ? _value.dob
           : dob // ignore: cast_nullable_to_non_nullable
@@ -233,7 +227,7 @@ abstract class _$$CustomerImplCopyWith<$Res>
       String? alternatePhone,
       String address,
       String? landmark,
-      String? proofUrl,
+      @JsonKey(name: 'profile_url') String? profileUrl,
       String? locationUrl,
       Location? location,
       List<Nominee> nominees,
@@ -242,7 +236,6 @@ abstract class _$$CustomerImplCopyWith<$Res>
       String placeId,
       String areaId,
       String status,
-      String? guardianName,
       String? dob,
       String? occupation,
       String? notes});
@@ -271,7 +264,7 @@ class __$$CustomerImplCopyWithImpl<$Res>
     Object? alternatePhone = freezed,
     Object? address = null,
     Object? landmark = freezed,
-    Object? proofUrl = freezed,
+    Object? profileUrl = freezed,
     Object? locationUrl = freezed,
     Object? location = freezed,
     Object? nominees = null,
@@ -280,7 +273,6 @@ class __$$CustomerImplCopyWithImpl<$Res>
     Object? placeId = null,
     Object? areaId = null,
     Object? status = null,
-    Object? guardianName = freezed,
     Object? dob = freezed,
     Object? occupation = freezed,
     Object? notes = freezed,
@@ -314,9 +306,9 @@ class __$$CustomerImplCopyWithImpl<$Res>
           ? _value.landmark
           : landmark // ignore: cast_nullable_to_non_nullable
               as String?,
-      proofUrl: freezed == proofUrl
-          ? _value.proofUrl
-          : proofUrl // ignore: cast_nullable_to_non_nullable
+      profileUrl: freezed == profileUrl
+          ? _value.profileUrl
+          : profileUrl // ignore: cast_nullable_to_non_nullable
               as String?,
       locationUrl: freezed == locationUrl
           ? _value.locationUrl
@@ -350,10 +342,6 @@ class __$$CustomerImplCopyWithImpl<$Res>
           ? _value.status
           : status // ignore: cast_nullable_to_non_nullable
               as String,
-      guardianName: freezed == guardianName
-          ? _value.guardianName
-          : guardianName // ignore: cast_nullable_to_non_nullable
-              as String?,
       dob: freezed == dob
           ? _value.dob
           : dob // ignore: cast_nullable_to_non_nullable
@@ -381,7 +369,7 @@ class _$CustomerImpl implements _Customer {
       this.alternatePhone,
       required this.address,
       this.landmark,
-      this.proofUrl,
+      @JsonKey(name: 'profile_url') this.profileUrl,
       this.locationUrl,
       this.location,
       final List<Nominee> nominees = const [],
@@ -390,7 +378,6 @@ class _$CustomerImpl implements _Customer {
       required this.placeId,
       required this.areaId,
       required this.status,
-      this.guardianName,
       this.dob,
       this.occupation,
       this.notes})
@@ -415,7 +402,8 @@ class _$CustomerImpl implements _Customer {
   @override
   final String? landmark;
   @override
-  final String? proofUrl;
+  @JsonKey(name: 'profile_url')
+  final String? profileUrl;
   @override
   final String? locationUrl;
   @override
@@ -448,8 +436,6 @@ class _$CustomerImpl implements _Customer {
   final String status;
 // 'ACTIVE' or 'INACTIVE' or 'DO_NOT_VISIT'
   @override
-  final String? guardianName;
-  @override
   final String? dob;
   @override
   final String? occupation;
@@ -458,7 +444,7 @@ class _$CustomerImpl implements _Customer {
 
   @override
   String toString() {
-    return 'Customer(id: $id, customerCode: $customerCode, name: $name, phone: $phone, alternatePhone: $alternatePhone, address: $address, landmark: $landmark, proofUrl: $proofUrl, locationUrl: $locationUrl, location: $location, nominees: $nominees, idProofs: $idProofs, weekdayId: $weekdayId, placeId: $placeId, areaId: $areaId, status: $status, guardianName: $guardianName, dob: $dob, occupation: $occupation, notes: $notes)';
+    return 'Customer(id: $id, customerCode: $customerCode, name: $name, phone: $phone, alternatePhone: $alternatePhone, address: $address, landmark: $landmark, profileUrl: $profileUrl, locationUrl: $locationUrl, location: $location, nominees: $nominees, idProofs: $idProofs, weekdayId: $weekdayId, placeId: $placeId, areaId: $areaId, status: $status, dob: $dob, occupation: $occupation, notes: $notes)';
   }
 
   @override
@@ -476,8 +462,8 @@ class _$CustomerImpl implements _Customer {
             (identical(other.address, address) || other.address == address) &&
             (identical(other.landmark, landmark) ||
                 other.landmark == landmark) &&
-            (identical(other.proofUrl, proofUrl) ||
-                other.proofUrl == proofUrl) &&
+            (identical(other.profileUrl, profileUrl) ||
+                other.profileUrl == profileUrl) &&
             (identical(other.locationUrl, locationUrl) ||
                 other.locationUrl == locationUrl) &&
             (identical(other.location, location) ||
@@ -489,8 +475,6 @@ class _$CustomerImpl implements _Customer {
             (identical(other.placeId, placeId) || other.placeId == placeId) &&
             (identical(other.areaId, areaId) || other.areaId == areaId) &&
             (identical(other.status, status) || other.status == status) &&
-            (identical(other.guardianName, guardianName) ||
-                other.guardianName == guardianName) &&
             (identical(other.dob, dob) || other.dob == dob) &&
             (identical(other.occupation, occupation) ||
                 other.occupation == occupation) &&
@@ -508,7 +492,7 @@ class _$CustomerImpl implements _Customer {
         alternatePhone,
         address,
         landmark,
-        proofUrl,
+        profileUrl,
         locationUrl,
         location,
         const DeepCollectionEquality().hash(_nominees),
@@ -517,7 +501,6 @@ class _$CustomerImpl implements _Customer {
         placeId,
         areaId,
         status,
-        guardianName,
         dob,
         occupation,
         notes
@@ -548,7 +531,7 @@ abstract class _Customer implements Customer {
       final String? alternatePhone,
       required final String address,
       final String? landmark,
-      final String? proofUrl,
+      @JsonKey(name: 'profile_url') final String? profileUrl,
       final String? locationUrl,
       final Location? location,
       final List<Nominee> nominees,
@@ -557,7 +540,6 @@ abstract class _Customer implements Customer {
       required final String placeId,
       required final String areaId,
       required final String status,
-      final String? guardianName,
       final String? dob,
       final String? occupation,
       final String? notes}) = _$CustomerImpl;
@@ -580,7 +562,8 @@ abstract class _Customer implements Customer {
   @override
   String? get landmark;
   @override
-  String? get proofUrl;
+  @JsonKey(name: 'profile_url')
+  String? get profileUrl;
   @override
   String? get locationUrl;
   @override
@@ -597,8 +580,6 @@ abstract class _Customer implements Customer {
   String get areaId;
   @override
   String get status; // 'ACTIVE' or 'INACTIVE' or 'DO_NOT_VISIT'
-  @override
-  String? get guardianName;
   @override
   String? get dob;
   @override

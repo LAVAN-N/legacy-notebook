@@ -23,6 +23,7 @@ class NewClientFormState {
     this.alternatePhone = '',
     this.address = '',
     this.landmark = '',
+    this.profileUrl,
     this.nominees = const [],
     this.idProofs = const [],
     this.location,
@@ -45,6 +46,7 @@ class NewClientFormState {
   final String alternatePhone;
   final String address;
   final String landmark;
+  final String? profileUrl;
   final List<Nominee> nominees;
   final List<IdProof> idProofs;
   final Location? location;
@@ -67,6 +69,7 @@ class NewClientFormState {
     String? alternatePhone,
     String? address,
     String? landmark,
+    String? profileUrl,
     List<Nominee>? nominees,
     List<IdProof>? idProofs,
     Location? location,
@@ -89,6 +92,7 @@ class NewClientFormState {
       alternatePhone: alternatePhone ?? this.alternatePhone,
       address: address ?? this.address,
       landmark: landmark ?? this.landmark,
+      profileUrl: profileUrl ?? this.profileUrl,
       nominees: nominees ?? this.nominees,
       idProofs: idProofs ?? this.idProofs,
       location: location ?? this.location,
@@ -355,6 +359,7 @@ class NewClientController extends StateNotifier<NewClientFormState> {
       alternatePhone: customer.alternatePhone ?? '',
       address: customer.address,
       landmark: customer.landmark ?? '',
+      profileUrl: customer.profileUrl,
       nominees: customer.nominees,
       idProofs: customer.idProofs,
       location: customer.location,
@@ -388,6 +393,7 @@ class NewClientController extends StateNotifier<NewClientFormState> {
           alternatePhone: state.alternatePhone.isNotEmpty ? state.alternatePhone : null,
           address: state.address,
           landmark: state.landmark.isNotEmpty ? state.landmark : null,
+          profileUrl: state.profileUrl,
           weekdayId: state.weekdayId,
           placeId: state.placeId,
           areaId: state.areaId,
@@ -415,6 +421,7 @@ class NewClientController extends StateNotifier<NewClientFormState> {
           notes: state.notes.isNotEmpty ? state.notes : null,
           dob: state.dob.isNotEmpty ? state.dob : null,
           occupation: state.occupation.isNotEmpty ? state.occupation : null,
+          profileUrl: state.profileUrl,
         );
       }
 
@@ -456,6 +463,7 @@ class NewClientController extends StateNotifier<NewClientFormState> {
           alternatePhone: state.alternatePhone.isNotEmpty ? state.alternatePhone : null,
           address: state.address,
           landmark: state.landmark.isNotEmpty ? state.landmark : null,
+          profileUrl: state.profileUrl,
           weekdayId: state.weekdayId,
           placeId: state.placeId,
           areaId: state.areaId,
@@ -483,6 +491,7 @@ class NewClientController extends StateNotifier<NewClientFormState> {
           notes: state.notes.isNotEmpty ? state.notes : null,
           dob: state.dob.isNotEmpty ? state.dob : null,
           occupation: state.occupation.isNotEmpty ? state.occupation : null,
+          profileUrl: state.profileUrl,
         );
       }
 
@@ -512,12 +521,17 @@ class NewClientController extends StateNotifier<NewClientFormState> {
     _initialize();
   }
 
+  void setProfileUrl(String? path) {
+    state = state.copyWith(profileUrl: path);
+  }
+
   bool get isDirty {
     return state.name.isNotEmpty ||
         state.phone.isNotEmpty ||
         state.address.isNotEmpty ||
         state.placeId.isNotEmpty ||
-        state.nominees.isNotEmpty;
+        state.nominees.isNotEmpty ||
+        (state.profileUrl != null && state.profileUrl!.isNotEmpty);
   }
 }
 
