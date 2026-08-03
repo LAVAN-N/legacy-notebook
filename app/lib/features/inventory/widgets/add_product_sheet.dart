@@ -257,51 +257,46 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
     }
   }
 
-  void _showEditCategorySheet(BuildContext context, String categoryId) async {
+  void _showEditCategorySheet(BuildContext context, String categoryId) {
     final categoriesAsync = ref.read(categoriesStreamProvider);
     final categories = categoriesAsync.value ?? [];
     final category = categories.firstWhere((c) => c.id == categoryId);
-    final editCtrl = TextEditingController(text: category.name);
     final colors = Theme.of(context).extension<AppColors>()!;
-    
-    final result = await showDialog<String>(
+
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: colors.background,
-        title: Text('Edit Category', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
-        content: TextField(
-          controller: editCtrl,
-          autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Category Name',
-            border: OutlineInputBorder(),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: colors.background,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          child: _EditCategoryDialogContent(
+            category: category,
+            colors: colors,
+            onSave: (updatedCategory) async {
+              final messenger = ScaffoldMessenger.of(context);
+              Navigator.pop(context);
+              final configRepo = ref.read(configRepositoryProvider);
+              final currentCategories = await configRepo.getCategories();
+              final idx = currentCategories.indexWhere((c) => c.id == categoryId);
+              if (idx != -1) {
+                currentCategories[idx] = updatedCategory;
+                await configRepo.saveCategories(currentCategories);
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text('Category "${updatedCategory.name}" updated successfully'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, editCtrl.text.trim()),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+        );
+      },
     );
-    
-    if (result != null && result.isNotEmpty && mounted) {
-      final configRepo = ref.read(configRepositoryProvider);
-      final currentCategories = await configRepo.getCategories();
-      final idx = currentCategories.indexWhere((c) => c.id == categoryId);
-      if (idx != -1) {
-        currentCategories[idx] = currentCategories[idx].copyWith(name: result);
-        await configRepo.saveCategories(currentCategories);
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Category updated successfully'), behavior: SnackBarBehavior.floating),
-      );
-    }
   }
 
   void _showDeleteCategoryDialog(BuildContext context, String categoryId) async {
@@ -844,6 +839,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
+                      menuMaxHeight: 200,
                       initialValue: brands.contains(_selectedBrand) ? _selectedBrand : null,
                       decoration: InputDecoration(
                         labelText: 'Brand *',
@@ -1579,51 +1575,46 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     }
   }
 
-  void _showEditCategorySheet(BuildContext context, String categoryId) async {
+  void _showEditCategorySheet(BuildContext context, String categoryId) {
     final categoriesAsync = ref.read(categoriesStreamProvider);
     final categories = categoriesAsync.value ?? [];
     final category = categories.firstWhere((c) => c.id == categoryId);
-    final editCtrl = TextEditingController(text: category.name);
     final colors = Theme.of(context).extension<AppColors>()!;
-    
-    final result = await showDialog<String>(
+
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: colors.background,
-        title: Text('Edit Category', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
-        content: TextField(
-          controller: editCtrl,
-          autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Category Name',
-            border: OutlineInputBorder(),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: colors.background,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          child: _EditCategoryDialogContent(
+            category: category,
+            colors: colors,
+            onSave: (updatedCategory) async {
+              final messenger = ScaffoldMessenger.of(context);
+              Navigator.pop(context);
+              final configRepo = ref.read(configRepositoryProvider);
+              final currentCategories = await configRepo.getCategories();
+              final idx = currentCategories.indexWhere((c) => c.id == categoryId);
+              if (idx != -1) {
+                currentCategories[idx] = updatedCategory;
+                await configRepo.saveCategories(currentCategories);
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text('Category "${updatedCategory.name}" updated successfully'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, editCtrl.text.trim()),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+        );
+      },
     );
-    
-    if (result != null && result.isNotEmpty && mounted) {
-      final configRepo = ref.read(configRepositoryProvider);
-      final currentCategories = await configRepo.getCategories();
-      final idx = currentCategories.indexWhere((c) => c.id == categoryId);
-      if (idx != -1) {
-        currentCategories[idx] = currentCategories[idx].copyWith(name: result);
-        await configRepo.saveCategories(currentCategories);
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Category updated successfully'), behavior: SnackBarBehavior.floating),
-      );
-    }
   }
 
   void _showDeleteCategoryDialog(BuildContext context, String categoryId) async {
@@ -2129,6 +2120,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
+                      menuMaxHeight: 200,
                       initialValue: brands.contains(_selectedBrand) ? _selectedBrand : null,
                       decoration: InputDecoration(
                         labelText: 'Brand *',
@@ -2756,6 +2748,205 @@ class _AddCategoryDialogContentState extends State<_AddCategoryDialogContent> {
           ),
         ],
       ),
+      ),
+    );
+  }
+}
+
+class _EditCategoryDialogContent extends StatefulWidget {
+  final Category category;
+  final AppColors colors;
+  final ValueChanged<Category> onSave;
+
+  const _EditCategoryDialogContent({
+    required this.category,
+    required this.colors,
+    required this.onSave,
+  });
+
+  @override
+  State<_EditCategoryDialogContent> createState() => _EditCategoryDialogContentState();
+}
+
+class _EditCategoryDialogContentState extends State<_EditCategoryDialogContent> {
+  late final TextEditingController _nameController;
+  late String _selectedIconName;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.category.name);
+    _selectedIconName = widget.category.icon;
+  }
+
+  bool get _isDirty {
+    return _nameController.text != widget.category.name || _selectedIconName != widget.category.icon;
+  }
+
+  void _handleBack() async {
+    if (_isDirty) {
+      final shouldDiscard = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Discard Changes'),
+          content: const Text('Are you sure you want to discard your edits?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Yes'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldDiscard == true && mounted) {
+        Navigator.pop(context);
+      }
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
+  final List<Map<String, dynamic>> _availableIcons = [
+    {'name': 'frying-pan', 'icon': Icons.kitchen, 'keywords': 'kitchen food frying pan cook pot'},
+    {'name': 'shirt', 'icon': Icons.checkroom, 'keywords': 'shirt clothes dress checkroom hanger'},
+    {'name': 'speaker', 'icon': Icons.speaker, 'keywords': 'speaker sound music audio device'},
+    {'name': 'lightbulb', 'icon': Icons.lightbulb, 'keywords': 'lightbulb light bulb electricity idea'},
+    {'name': 'wind', 'icon': Icons.air, 'keywords': 'wind air fan weather AC'},
+    {'name': 'shopping-bag', 'icon': Icons.shopping_bag, 'keywords': 'bag shopping purchase item store'},
+    {'name': 'phone', 'icon': Icons.phone_android, 'keywords': 'phone mobile android screen electronics'},
+    {'name': 'laptop', 'icon': Icons.laptop, 'keywords': 'laptop computer macbook pc screen office'},
+    {'name': 'chair', 'icon': Icons.chair, 'keywords': 'chair furniture seat table sofa home'},
+    {'name': 'tv', 'icon': Icons.tv, 'keywords': 'tv television display monitor video screen'},
+    {'name': 'book', 'icon': Icons.book, 'keywords': 'book read library school education paper'},
+    {'name': 'toy', 'icon': Icons.toys, 'keywords': 'toy game play kids robot controller'},
+  ];
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleBack();
+      },
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 24,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Edit Category', style: AppTypography.titleLarge),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _nameController,
+              decoration: InputDecoration(
+                labelText: 'Category name *',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Choose Category Icon',
+              style: AppTypography.labelMedium.copyWith(color: widget.colors.mutedFg),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              height: 160,
+              decoration: BoxDecoration(
+                border: Border.all(color: widget.colors.border),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: GridView.builder(
+                padding: const EdgeInsets.all(8),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 6,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                ),
+                itemCount: _availableIcons.length,
+                itemBuilder: (context, index) {
+                  final item = _availableIcons[index];
+                  final name = item['name'] as String;
+                  final isSelected = name == _selectedIconName;
+                  return InkWell(
+                    onTap: () {
+                      setState(() {
+                        _selectedIconName = name;
+                      });
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? widget.colors.primary.withValues(alpha: 0.15)
+                            : Colors.transparent,
+                        border: Border.all(
+                          color: isSelected
+                              ? widget.colors.primary
+                              : widget.colors.border,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        item['icon'] as IconData,
+                        color: isSelected
+                            ? widget.colors.primary
+                            : widget.colors.mutedFg,
+                        size: 24,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: _handleBack,
+                  child: const Text('Cancel'),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(100, 44),
+                  ),
+                  onPressed: () {
+                    final name = _nameController.text.trim();
+                    if (name.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please enter category name')),
+                      );
+                      return;
+                    }
+                    final updatedCategory = widget.category.copyWith(
+                      name: name,
+                      icon: _selectedIconName,
+                    );
+                    widget.onSave(updatedCategory);
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

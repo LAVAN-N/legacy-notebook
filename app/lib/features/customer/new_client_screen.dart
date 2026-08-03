@@ -651,6 +651,7 @@ class _RouteSectionState extends State<_RouteSection> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
+                    isExpanded: true,
                     initialValue: widget.state.places.any((p) => p.id == widget.state.placeId)
                         ? widget.state.placeId
                         : null,
@@ -662,6 +663,7 @@ class _RouteSectionState extends State<_RouteSection> {
                             value: p.id,
                             child: Text(
                               p.name,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                   color: widget.colors.foreground, fontSize: 14),
                             ),
@@ -751,22 +753,37 @@ class _RouteSectionState extends State<_RouteSection> {
             Row(
               children: [
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    initialValue: widget.state.areas.any((a) => a.id == widget.state.areaId)
-                        ? widget.state.areaId
+                  child: GestureDetector(
+                    onTap: widget.state.placeId.isEmpty
+                        ? () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please select a place first'),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
                         : null,
-                    dropdownColor: widget.colors.surface,
-                    icon:
-                        Icon(Icons.keyboard_arrow_down, color: widget.colors.mutedFg),
-                    items: [
-                      ...widget.state.areas.map((a) => DropdownMenuItem(
-                            value: a.id,
-                            child: Text(
-                              a.name,
-                              style: TextStyle(
-                                  color: widget.colors.foreground, fontSize: 14),
-                            ),
-                          )),
+                    child: AbsorbPointer(
+                      absorbing: widget.state.placeId.isEmpty,
+                      child: DropdownButtonFormField<String>(
+                        isExpanded: true,
+                        initialValue: widget.state.areas.any((a) => a.id == widget.state.areaId)
+                            ? widget.state.areaId
+                            : null,
+                        dropdownColor: widget.colors.surface,
+                        icon:
+                            Icon(Icons.keyboard_arrow_down, color: widget.colors.mutedFg),
+                        items: [
+                          ...widget.state.areas.map((a) => DropdownMenuItem(
+                                value: a.id,
+                                child: Text(
+                                  a.name,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      color: widget.colors.foreground, fontSize: 14),
+                                ),
+                              )),
                       DropdownMenuItem(
                         value: 'add_new_area',
                         child: Row(
@@ -826,10 +843,12 @@ class _RouteSectionState extends State<_RouteSection> {
                         borderSide:
                             BorderSide(color: widget.colors.destructive, width: 2),
                       ),
+                      ),
                     ),
                   ),
                 ),
-                if (widget.state.areaId.isNotEmpty) ...[
+              ),
+              if (widget.state.areaId.isNotEmpty) ...[
                   const SizedBox(width: 4),
                   IconButton(
                     icon: Icon(Icons.edit, color: widget.colors.primary, size: 20),
@@ -1518,6 +1537,7 @@ class _NomineesBlockState extends State<_NomineesBlock> {
                             .copyWith(color: widget.colors.mutedFg)),
                     const SizedBox(height: AppSpacing.xs),
                     DropdownButtonFormField<String>(
+                      isExpanded: true,
                       initialValue: rel,
                       dropdownColor: widget.colors.surface,
                       icon: Icon(Icons.keyboard_arrow_down,
@@ -2932,6 +2952,7 @@ class _IdProofsBlockState extends ConsumerState<_IdProofsBlock> {
           children: [
             Expanded(
               child: DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: proofTypes.contains(_selectedType) ? _selectedType : null,
                 dropdownColor: colors.surface,
                 icon: Icon(Icons.keyboard_arrow_down, color: colors.mutedFg),
