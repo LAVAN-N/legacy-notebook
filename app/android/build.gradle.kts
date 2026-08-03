@@ -31,6 +31,11 @@ subprojects {
     } else {
         afterEvaluate { configureAndroid() }
     }
+
+    tasks.withType(JavaCompile::class.java).configureEach {
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
+    }
 }
 
 tasks.register<Delete>("clean") {
