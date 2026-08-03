@@ -16,6 +16,7 @@ import '../../core/router/navigation_shell.dart';
 import '../../data/providers.dart';
 import 'controllers/route_controller.dart';
 
+
 class PlaceScreen extends ConsumerWidget {
   const PlaceScreen({
     super.key,
@@ -31,32 +32,20 @@ class PlaceScreen extends ConsumerWidget {
     final colors = context.colors;
     final areasState = ref.watch(placeAreasProvider(placeId));
 
-    // Get the place details from the repository sync-cache for the screen title
-    final placeName = ref
-        .watch(routeRepositoryProvider)
-        .watchPlacesByWeekday('w-4')
-        .map((list) {
-      try {
-        return list.firstWhere((p) => p.id == placeId).name;
-      } catch (_) {
-        return 'Place Route';
-      }
-    });
+    final placesAsync = ref.watch(placesStreamProvider);
+    final places = placesAsync.value ?? [];
+    String title = 'Place';
+    try {
+      title = places.firstWhere((p) => p.id == placeId).name;
+    } catch (_) {}
 
-    return StreamBuilder<String>(
-      stream: placeName,
-      initialData: 'Place Route',
-      builder: (context, snapshot) {
-        final title = snapshot.data ?? 'Place Route';
-
-        return AppScaffold(
-          blendHeader: true,
-          title: Text(
-            title,
-            style:
-                AppTypography.headlineMedium.copyWith(color: colors.foreground),
-          ),
-          body: areasState.when(
+    return AppScaffold(
+      blendHeader: true,
+      title: Text(
+        title,
+        style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
+      ),
+      body: areasState.when(
             loading: () => const _LoadingState(),
             error: (err, stack) => ErrorState(
               message: err.toString(),
@@ -214,8 +203,6 @@ class PlaceScreen extends ConsumerWidget {
             },
           ),
         );
-      },
-    );
   }
 }
 

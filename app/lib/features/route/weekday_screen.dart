@@ -28,7 +28,7 @@ class WeekdayScreen extends ConsumerWidget {
     return AppScaffold(
       blendHeader: true,
       title: Text(
-        '$dayName Route',
+        'Route',
         style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
       ),
       body: placesState.when(

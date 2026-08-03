@@ -62,30 +62,20 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
     final colors = context.colors;
     final customersState = ref.watch(areaCustomersProvider(widget.areaId));
 
-    // Get the place ID for the back button and the area details for the title
-    final areaData =
-        ref.watch(routeRepositoryProvider).watchAreasByPlace('p-1').map((list) {
-      try {
-        return list.firstWhere((a) => a.id == widget.areaId);
-      } catch (_) {
-        return null;
-      }
-    });
+    final areasAsync = ref.watch(areasStreamProvider);
+    final areas = areasAsync.value ?? [];
+    String title = 'Area';
+    try {
+      title = areas.firstWhere((a) => a.id == widget.areaId).name;
+    } catch (_) {}
 
-    return StreamBuilder(
-      stream: areaData,
-      builder: (context, snapshot) {
-        final area = snapshot.data;
-        final title = area?.name ?? 'Area Customers';
-
-        return AppScaffold(
-          blendHeader: true,
-          title: Text(
-            title,
-            style:
-                AppTypography.headlineMedium.copyWith(color: colors.foreground),
-          ),
-          body: customersState.when(
+    return AppScaffold(
+      blendHeader: true,
+      title: Text(
+        title,
+        style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
+      ),
+      body: customersState.when(
             loading: () => const _LoadingState(),
             error: (err, stack) => ErrorState(
               message: err.toString(),
@@ -299,8 +289,6 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
             },
           ),
         );
-      },
-    );
   }
 }
 
