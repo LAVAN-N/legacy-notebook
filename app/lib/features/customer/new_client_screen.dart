@@ -479,7 +479,9 @@ class _RouteSectionState extends State<_RouteSection> {
                     .copyWith(color: widget.colors.mutedFg)),
             const SizedBox(height: AppSpacing.sm),
             DropdownButtonFormField<String>(
-              initialValue: widget.state.placeId.isEmpty ? null : widget.state.placeId,
+              initialValue: widget.state.places.any((p) => p.id == widget.state.placeId)
+                  ? widget.state.placeId
+                  : null,
               dropdownColor: widget.colors.surface,
               icon:
                   Icon(Icons.keyboard_arrow_down, color: widget.colors.mutedFg),
@@ -559,7 +561,9 @@ class _RouteSectionState extends State<_RouteSection> {
                     .copyWith(color: widget.colors.mutedFg)),
             const SizedBox(height: AppSpacing.sm),
             DropdownButtonFormField<String>(
-              initialValue: widget.state.areaId.isEmpty ? null : widget.state.areaId,
+              initialValue: widget.state.areas.any((a) => a.id == widget.state.areaId)
+                  ? widget.state.areaId
+                  : null,
               dropdownColor: widget.colors.surface,
               icon:
                   Icon(Icons.keyboard_arrow_down, color: widget.colors.mutedFg),

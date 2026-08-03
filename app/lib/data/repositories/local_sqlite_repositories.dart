@@ -1019,7 +1019,13 @@ class LocalSqliteConfigRepository implements ConfigRepository {
   Future<List<Place>> getPlaces() async {
     final raw = await _readData('places');
     final List decoded = jsonDecode(raw);
-    return decoded.map((item) => Place.fromJson(item as Map<String, dynamic>)).toList();
+    return decoded.map((item) {
+      final map = Map<String, dynamic>.from(item as Map);
+      if (map.containsKey('weekday_id')) {
+        map['weekdayId'] = map['weekday_id'];
+      }
+      return Place.fromJson(map);
+    }).toList();
   }
 
   @override
@@ -1032,7 +1038,11 @@ class LocalSqliteConfigRepository implements ConfigRepository {
 
   @override
   Future<void> savePlaces(List<Place> places) async {
-    final raw = jsonEncode(places.map((p) => p.toJson()).toList());
+    final raw = jsonEncode(places.map((p) {
+      final map = p.toJson();
+      map['weekday_id'] = p.weekdayId;
+      return map;
+    }).toList());
     await _writeData('places', raw);
   }
 
@@ -1040,7 +1050,13 @@ class LocalSqliteConfigRepository implements ConfigRepository {
   Future<List<Area>> getAreas() async {
     final raw = await _readData('areas');
     final List decoded = jsonDecode(raw);
-    return decoded.map((item) => Area.fromJson(item as Map<String, dynamic>)).toList();
+    return decoded.map((item) {
+      final map = Map<String, dynamic>.from(item as Map);
+      if (map.containsKey('place_id')) {
+        map['placeId'] = map['place_id'];
+      }
+      return Area.fromJson(map);
+    }).toList();
   }
 
   @override
@@ -1053,7 +1069,11 @@ class LocalSqliteConfigRepository implements ConfigRepository {
 
   @override
   Future<void> saveAreas(List<Area> areas) async {
-    final raw = jsonEncode(areas.map((a) => a.toJson()).toList());
+    final raw = jsonEncode(areas.map((a) {
+      final map = a.toJson();
+      map['place_id'] = a.placeId;
+      return map;
+    }).toList());
     await _writeData('areas', raw);
   }
 

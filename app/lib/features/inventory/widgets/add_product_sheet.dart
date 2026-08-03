@@ -533,7 +533,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<String>(
-                initialValue: _selectedCategoryId,
+                initialValue: categories.any((c) => c.id == _selectedCategoryId) ? _selectedCategoryId : null,
                 decoration: InputDecoration(
                   labelText: 'Category *',
                   prefixIcon: Icon(Icons.category_outlined, color: colors.primary),
@@ -1531,7 +1531,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<String>(
-                initialValue: _selectedCategoryId,
+                initialValue: categories.any((c) => c.id == _selectedCategoryId) ? _selectedCategoryId : null,
                 decoration: InputDecoration(
                   labelText: 'Category *',
                   prefixIcon: Icon(Icons.category_outlined, color: colors.primary),
@@ -2194,9 +2194,12 @@ class _AddCategoryDialogContentState extends State<_AddCategoryDialogContent> {
                     );
                     return;
                   }
+                  final cleanName = name.trim();
+                  final firstWord = cleanName.split(RegExp(r'\s+')).first;
+                  final catId = 'cat-${firstWord.toLowerCase()}';
                   final newCategory = Category(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    name: name,
+                    id: catId,
+                    name: cleanName,
                     icon: _selectedIconName,
                     productCount: 0,
                   );

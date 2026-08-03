@@ -1101,3 +1101,30 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Created a single `config` table (`id TEXT PRIMARY KEY, data JSONB/TEXT`) in both local SQLite and remote PostgreSQL. Migrated separate relations to read and write dynamic lists (`places`, `areas`, `categories`, `brands`) from config, and converted the original tables to JSON-backed views in SQLite and Postgres so all other database queries remain untouched.
 - **Rule for next agent:** ALWAYS retrieve places, areas, categories, and brands from the reactive config repository providers.
 - **Guardrail:** Run `flutter analyze` and confirm `categoriesStreamProvider` and `brandsStreamProvider` compile cleanly without warning.
+
+### 2026-08-03 · Enabling Supabase Realtime and RLS policies on newly created tables
+
+- **Context:** Accessing lookup configs via Supabase streams and queries.
+- **Mistake:** Forgot to add the newly created `config` table to the `supabase_realtime` publication, and did not add permissive RLS policies/grants, which caused configuration lookups to silently hang/return zero records.
+- **Root cause:** Supabase tables do not enable Realtime or public access by default.
+- **Fix applied:** Added the `config` table to the `supabase_realtime` publication, created a public permissive RLS policy, granted table access permissions, and reloaded the PostgREST cache.
+- **Rule for next agent:** ALWAYS verify that newly created tables are added to the `supabase_realtime` publication and have appropriate RLS policies and role grants.
+- **Guardrail:** Query `pg_publication_tables` and `pg_policies` when creating new Supabase tables.
+
+### 2026-08-03 · JSON key mapping mismatch between Freezed models and config data
+
+- **Context:** Fetching places and areas configurations in dashboard and route screens.
+- **Mistake:** Triggered a `Null is not a subtype of String` type cast error during `Place.fromJson` and `Area.fromJson` calls.
+- **Root cause:** The dynamic `config` data stored snake_case keys (`weekday_id` and `place_id`), while the Freezed generated models `Place.fromJson` and `Area.fromJson` expected camelCase keys (`weekdayId` and `placeId`).
+- **Fix applied:** Added custom mappings in the local and remote config repositories to translate `weekday_id` to `weekdayId` and `place_id` to `placeId` during JSON deserialization, and vice versa on serializing.
+- **Rule for next agent:** ALWAYS map snake_case attributes to camelCase properties before passing raw JSON from configuration table data to Freezed model `fromJson` factories.
+- **Guardrail:** Verify that key case conversions are performed during both read and write configuration repository operations.
+
+### 2026-08-03 · DropdownButtonFormField crash due to selected value missing in items list
+
+- **Context:** Selecting places, areas, and categories inside form dropdowns.
+- **Mistake:** Triggered a dropdown assertion failure (`items.where(...) == 1`) when a new lookup item (e.g. category `"1785739431861"`) was added but the reactive items list hadn't finished updating/loading.
+- **Root cause:** `DropdownButtonFormField` will crash if the `initialValue` / `value` property is non-null but not present in the list of dropdown item values.
+- **Fix applied:** Configured the dropdowns to set their `initialValue` property using a containment check (e.g. `initialValue: items.any(...) ? value : null`).
+- **Rule for next agent:** ALWAYS wrap `DropdownButtonFormField` selected values in a containment check against the items list to prevent crash assertions during asynchronous list updates.
+- **Guardrail:** Verify that dropdown values are validated against the dropdown items list before assigning them.
