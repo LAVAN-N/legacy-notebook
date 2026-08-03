@@ -14,6 +14,8 @@ import 'models/sale.dart';
 import 'models/outstanding.dart';
 import 'repositories/config_repository.dart';
 import 'models/category.dart';
+import 'models/place.dart';
+import 'models/area.dart';
 
 /// Local SQLite Repository Providers
 final localSqliteCustomerRepositoryProvider = Provider<CustomerRepository>((ref) {
@@ -137,5 +139,17 @@ final brandsStreamProvider = StreamProvider<List<String>>((ref) {
 final proofTypesStreamProvider = StreamProvider<List<String>>((ref) {
   final repo = ref.watch(configRepositoryProvider);
   return repo.watchProofTypes();
+});
+
+/// Places Stream Provider
+final placesStreamProvider = StreamProvider<List<Place>>((ref) {
+  final repo = ref.watch(configRepositoryProvider);
+  return repo.watchPlaces();
+});
+
+/// Areas Stream Provider
+final areasStreamProvider = StreamProvider<List<Area>>((ref) {
+  final repo = ref.watch(configRepositoryProvider);
+  return repo.watchAreas();
 });
 

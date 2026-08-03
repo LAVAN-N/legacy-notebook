@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/floating_bottom_nav.dart';
 import 'routes.dart';
 import '../../data/models/customer.dart';
+import '../../data/providers.dart';
 
 /// Represents a breadcrumb in the navigation hierarchy
 class BreadcrumbItem {
@@ -27,8 +29,44 @@ String _getWeekdayNameById(String id) {
   return map[id] ?? 'Monday';
 }
 
+String _getPlaceName(BuildContext context, String placeId) {
+  try {
+    final container = ProviderScope.containerOf(context);
+    final placesAsync = container.read(placesStreamProvider);
+    final places = placesAsync.value ?? [];
+    final match = places.firstWhere((p) => p.id == placeId);
+    return match.name;
+  } catch (_) {
+    return 'Place $placeId';
+  }
+}
+
+String _getAreaName(BuildContext context, String areaId) {
+  try {
+    final container = ProviderScope.containerOf(context);
+    final areasAsync = container.read(areasStreamProvider);
+    final areas = areasAsync.value ?? [];
+    final match = areas.firstWhere((a) => a.id == areaId);
+    return match.name;
+  } catch (_) {
+    return 'Area $areaId';
+  }
+}
+
+String _getCustomerName(BuildContext context, String customerId) {
+  try {
+    final container = ProviderScope.containerOf(context);
+    final customersAsync = container.read(customersStreamProvider);
+    final customers = customersAsync.value ?? [];
+    final match = customers.firstWhere((c) => c.id == customerId);
+    return match.name;
+  } catch (_) {
+    return 'Client $customerId';
+  }
+}
+
 /// Builds breadcrumb list from current route
-List<BreadcrumbItem> _buildBreadcrumbs(GoRouterState state) {
+List<BreadcrumbItem> _buildBreadcrumbs(BuildContext context, GoRouterState state) {
   final path = state.uri.path;
   final params = state.pathParameters;
   final queryParams = state.uri.queryParameters;
@@ -70,9 +108,9 @@ List<BreadcrumbItem> _buildBreadcrumbs(GoRouterState state) {
           return [
             BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
             BreadcrumbItem(label: day, route: Routes.weekday(day)),
-            BreadcrumbItem(label: 'Place ${customer.placeId}', route: Routes.place(day, customer.placeId)),
-            BreadcrumbItem(label: 'Area ${customer.areaId}', route: Routes.area(day, customer.placeId, customer.areaId)),
-            BreadcrumbItem(label: 'Client ${customer.id}', route: clientRoute),
+            BreadcrumbItem(label: _getPlaceName(context, customer.placeId), route: Routes.place(day, customer.placeId)),
+            BreadcrumbItem(label: _getAreaName(context, customer.areaId), route: Routes.area(day, customer.placeId, customer.areaId)),
+            BreadcrumbItem(label: customer.name, route: clientRoute),
             BreadcrumbItem(label: 'New Sale', route: saleRoute),
             BreadcrumbItem(label: 'Edit'),
           ];
@@ -84,9 +122,9 @@ List<BreadcrumbItem> _buildBreadcrumbs(GoRouterState state) {
         return [
           BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
           BreadcrumbItem(label: day, route: Routes.weekday(day)),
-          BreadcrumbItem(label: 'Place ${customer.placeId}', route: Routes.place(day, customer.placeId)),
-          BreadcrumbItem(label: 'Area ${customer.areaId}', route: Routes.area(day, customer.placeId, customer.areaId)),
-          BreadcrumbItem(label: 'Client ${customer.id}', route: clientRoute),
+          BreadcrumbItem(label: _getPlaceName(context, customer.placeId), route: Routes.place(day, customer.placeId)),
+          BreadcrumbItem(label: _getAreaName(context, customer.areaId), route: Routes.area(day, customer.placeId, customer.areaId)),
+          BreadcrumbItem(label: customer.name, route: clientRoute),
           BreadcrumbItem(label: 'Edit'),
         ];
       }
@@ -105,20 +143,20 @@ List<BreadcrumbItem> _buildBreadcrumbs(GoRouterState state) {
       return [
         BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
         BreadcrumbItem(label: 'Transactions', route: '/transactions'),
-        BreadcrumbItem(label: 'Client $customerId', route: '${Routes.customer(day, placeId, areaId, customerId)}?source=transactions'),
+        BreadcrumbItem(label: _getCustomerName(context, customerId), route: '${Routes.customer(day, placeId, areaId, customerId)}?source=transactions'),
         BreadcrumbItem(label: 'New Sale'),
       ];
     } else if (source == 'clients') {
       return [
         BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
         BreadcrumbItem(label: 'Clients', route: '/profile'),
-        BreadcrumbItem(label: 'Client $customerId', route: '${Routes.customer(day, placeId, areaId, customerId)}?source=clients'),
+        BreadcrumbItem(label: _getCustomerName(context, customerId), route: '${Routes.customer(day, placeId, areaId, customerId)}?source=clients'),
         BreadcrumbItem(label: 'New Sale'),
       ];
     } else if (source == 'create') {
       return [
         BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
-        BreadcrumbItem(label: 'Client', route: Routes.customer(day, placeId, areaId, customerId)),
+        BreadcrumbItem(label: _getCustomerName(context, customerId), route: Routes.customer(day, placeId, areaId, customerId)),
         BreadcrumbItem(label: 'New Sale'),
       ];
     } else {
@@ -126,9 +164,9 @@ List<BreadcrumbItem> _buildBreadcrumbs(GoRouterState state) {
       return [
         BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
         BreadcrumbItem(label: day, route: Routes.weekday(day)),
-        BreadcrumbItem(label: 'Place $placeId', route: Routes.place(day, placeId)),
-        BreadcrumbItem(label: 'Area $areaId', route: Routes.area(day, placeId, areaId)),
-        BreadcrumbItem(label: 'Client $customerId', route: Routes.customer(day, placeId, areaId, customerId)),
+        BreadcrumbItem(label: _getPlaceName(context, placeId), route: Routes.place(day, placeId)),
+        BreadcrumbItem(label: _getAreaName(context, areaId), route: Routes.area(day, placeId, areaId)),
+        BreadcrumbItem(label: _getCustomerName(context, customerId), route: Routes.customer(day, placeId, areaId, customerId)),
         BreadcrumbItem(label: 'New Sale'),
       ];
     }
@@ -157,7 +195,7 @@ List<BreadcrumbItem> _buildBreadcrumbs(GoRouterState state) {
   if (path.contains('/place/')) {
     final placeId = params['placeId'] ?? '';
     breadcrumbs.add(BreadcrumbItem(
-      label: 'Place $placeId',
+      label: _getPlaceName(context, placeId),
       route: path.contains('/area/') ? Routes.place(day, placeId) : null
     ));
   }
@@ -166,7 +204,7 @@ List<BreadcrumbItem> _buildBreadcrumbs(GoRouterState state) {
     final areaId = params['areaId'] ?? '';
     final placeId = params['placeId'] ?? '';
     breadcrumbs.add(BreadcrumbItem(
-      label: 'Area $areaId',
+      label: _getAreaName(context, areaId),
       route: path.contains('/customer/') ? Routes.area(day, placeId, areaId) : null
     ));
   }
@@ -177,18 +215,18 @@ List<BreadcrumbItem> _buildBreadcrumbs(GoRouterState state) {
       return [
         BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
         BreadcrumbItem(label: 'Transactions', route: '/transactions'),
-        BreadcrumbItem(label: 'Client ${params['customerId'] ?? ''}'),
+        BreadcrumbItem(label: _getCustomerName(context, params['customerId'] ?? '')),
       ];
     } else if (source == 'clients') {
       return [
         BreadcrumbItem(label: 'Dashboard', route: Routes.dashboard),
         BreadcrumbItem(label: 'Clients', route: '/profile'),
-        BreadcrumbItem(label: 'Client ${params['customerId'] ?? ''}'),
+        BreadcrumbItem(label: _getCustomerName(context, params['customerId'] ?? '')),
       ];
     }
     final customerId = params['customerId'] ?? '';
     breadcrumbs.add(BreadcrumbItem(
-      label: 'Client $customerId',
+      label: _getCustomerName(context, customerId),
       route: null
     ));
   }
@@ -426,7 +464,7 @@ class _NavigationShellState extends State<NavigationShell> {
 // Extension for easier breadcrumb and back-nav computation
 extension NavigationExtension on BuildContext {
   List<BreadcrumbItem> getBreadcrumbs() {
-    return _buildBreadcrumbs(GoRouterState.of(this));
+    return _buildBreadcrumbs(this, GoRouterState.of(this));
   }
 
   String? getBackTarget() {
