@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/customer.dart';
 import '../../data/models/place.dart';
@@ -272,7 +273,8 @@ class NewClientController extends StateNotifier<NewClientFormState> {
       final updated = [...state.places, newPlace];
       state = state.copyWith(places: updated);
       return newPlace;
-    } catch (e) {
+    } catch (e, stack) {
+      developer.log('ERROR adding place', error: e, stackTrace: stack);
       return null;
     }
   }
@@ -289,7 +291,8 @@ class NewClientController extends StateNotifier<NewClientFormState> {
       final updated = [...state.areas, newArea];
       state = state.copyWith(areas: updated);
       return newArea;
-    } catch (e) {
+    } catch (e, stack) {
+      developer.log('ERROR adding area', error: e, stackTrace: stack);
       return null;
     }
   }

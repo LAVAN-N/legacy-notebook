@@ -1128,3 +1128,21 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Configured the dropdowns to set their `initialValue` property using a containment check (e.g. `initialValue: items.any(...) ? value : null`).
 - **Rule for next agent:** ALWAYS wrap `DropdownButtonFormField` selected values in a containment check against the items list to prevent crash assertions during asynchronous list updates.
 - **Guardrail:** Verify that dropdown values are validated against the dropdown items list before assigning them.
+
+### 2026-08-03 · Swallowed exceptions in database write catch blocks
+
+- **Context:** Saving places and areas configuration updates.
+- **Mistake:** Catch-all blocks returned `null` silently, hiding underlying database write exceptions (such as RLS violations or parsing errors) and making debugging hard.
+- **Root cause:** Swallowing exceptions without logging or rethrowing makes runtime errors invisible.
+- **Fix applied:** Configured the `try-catch` blocks in `NewClientController` to log the caught exception and stack trace using `developer.log`.
+- **Rule for next agent:** NEVER swallow exceptions silently in repository or controller catch blocks; always print or log them.
+- **Guardrail:** Verify that all catch blocks in async database writers contain a logging or rethrow mechanism.
+
+### 2026-08-03 · Non-incremental IDs for dynamic configurations
+
+- **Context:** Generating IDs for dynamically added places and areas.
+- **Mistake:** Used epoch timestamps (`plc_<timestamp>`, `area_<timestamp>`) instead of continuing the database's sequential/incremental ID patterns.
+- **Root cause:** Missed the database convention of sequential numeric IDs (`p-<number>` and `a-<number>`).
+- **Fix applied:** Implemented sequential ID calculators inside the local and remote config repositories to find the maximum existing sequence number and increment it.
+- **Rule for next agent:** ALWAYS use incremental sequential ID formats (e.g. `p-<number>` and `a-<number>`) when adding dynamic places and areas.
+- **Guardrail:** Verify that newly created places and areas parse the max ID from the current list and increment it.

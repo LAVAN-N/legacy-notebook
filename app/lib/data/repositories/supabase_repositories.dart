@@ -767,7 +767,20 @@ class SupabaseRouteRepository implements RouteRepository {
   Future<Place> addPlace({required String weekdayId, required String name}) async {
     final configRepo = SupabaseConfigRepository();
     final places = await configRepo.getPlaces();
-    final placeId = 'plc_${DateTime.now().millisecondsSinceEpoch}';
+    
+    final idPattern = RegExp(r'^p-(\d+)$');
+    int maxId = 0;
+    for (final p in places) {
+      final match = idPattern.firstMatch(p.id);
+      if (match != null) {
+        final val = int.tryParse(match.group(1) ?? '0') ?? 0;
+        if (val > maxId) {
+          maxId = val;
+        }
+      }
+    }
+    final placeId = 'p-${maxId + 1}';
+    
     final place = Place(id: placeId, weekdayId: weekdayId, name: name);
     places.add(place);
     await configRepo.savePlaces(places);
@@ -778,7 +791,20 @@ class SupabaseRouteRepository implements RouteRepository {
   Future<Area> addArea({required String placeId, required String name}) async {
     final configRepo = SupabaseConfigRepository();
     final areas = await configRepo.getAreas();
-    final areaId = 'area_${DateTime.now().millisecondsSinceEpoch}';
+    
+    final idPattern = RegExp(r'^a-(\d+)$');
+    int maxId = 0;
+    for (final a in areas) {
+      final match = idPattern.firstMatch(a.id);
+      if (match != null) {
+        final val = int.tryParse(match.group(1) ?? '0') ?? 0;
+        if (val > maxId) {
+          maxId = val;
+        }
+      }
+    }
+    final areaId = 'a-${maxId + 1}';
+    
     final area = Area(id: areaId, placeId: placeId, name: name);
     areas.add(area);
     await configRepo.saveAreas(areas);

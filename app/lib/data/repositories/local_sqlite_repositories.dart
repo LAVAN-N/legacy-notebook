@@ -659,7 +659,20 @@ class LocalSqliteRouteRepository implements RouteRepository {
   }) async {
     final configRepo = LocalSqliteConfigRepository();
     final places = await configRepo.getPlaces();
-    final placeId = 'plc_${DateTime.now().millisecondsSinceEpoch}';
+    
+    final idPattern = RegExp(r'^p-(\d+)$');
+    int maxId = 0;
+    for (final p in places) {
+      final match = idPattern.firstMatch(p.id);
+      if (match != null) {
+        final val = int.tryParse(match.group(1) ?? '0') ?? 0;
+        if (val > maxId) {
+          maxId = val;
+        }
+      }
+    }
+    final placeId = 'p-${maxId + 1}';
+    
     final place = Place(id: placeId, weekdayId: weekdayId, name: name);
     places.add(place);
     await configRepo.savePlaces(places);
@@ -673,7 +686,20 @@ class LocalSqliteRouteRepository implements RouteRepository {
   }) async {
     final configRepo = LocalSqliteConfigRepository();
     final areas = await configRepo.getAreas();
-    final areaId = 'area_${DateTime.now().millisecondsSinceEpoch}';
+    
+    final idPattern = RegExp(r'^a-(\d+)$');
+    int maxId = 0;
+    for (final a in areas) {
+      final match = idPattern.firstMatch(a.id);
+      if (match != null) {
+        final val = int.tryParse(match.group(1) ?? '0') ?? 0;
+        if (val > maxId) {
+          maxId = val;
+        }
+      }
+    }
+    final areaId = 'a-${maxId + 1}';
+    
     final area = Area(id: areaId, placeId: placeId, name: name);
     areas.add(area);
     await configRepo.saveAreas(areas);
