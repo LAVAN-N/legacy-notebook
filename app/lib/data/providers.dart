@@ -12,6 +12,8 @@ import 'models/customer.dart';
 import 'models/collection.dart';
 import 'models/sale.dart';
 import 'models/outstanding.dart';
+import 'repositories/config_repository.dart';
+import 'models/category.dart';
 
 /// Local SQLite Repository Providers
 final localSqliteCustomerRepositoryProvider = Provider<CustomerRepository>((ref) {
@@ -32,6 +34,10 @@ final localSqliteSaleRepositoryProvider = Provider<SaleRepository>((ref) {
 
 final localSqliteProductRepositoryProvider = Provider<ProductRepository>((ref) {
   return LocalSqliteProductRepository();
+});
+
+final localSqliteConfigRepositoryProvider = Provider<ConfigRepository>((ref) {
+  return LocalSqliteConfigRepository();
 });
 
 /// Set to true to read/write to your live Supabase DB,
@@ -73,6 +79,13 @@ final productRepositoryProvider = Provider<ProductRepository>((ref) {
       : ref.watch(localSqliteProductRepositoryProvider);
 });
 
+/// Config Repository Provider
+final configRepositoryProvider = Provider<ConfigRepository>((ref) {
+  return useSupabaseBackend
+      ? SupabaseConfigRepository()
+      : ref.watch(localSqliteConfigRepositoryProvider);
+});
+
 /// Products Stream Provider
 final productsStreamProvider = StreamProvider<List<Product>>((ref) {
   final repo = ref.watch(productRepositoryProvider);
@@ -106,4 +119,16 @@ final salesStreamProvider = StreamProvider<List<Sale>>((ref) {
 /// Mock Repository Provider (for development/testing)
 final mockRepositoryProvider = Provider<MockRepository>((ref) {
   return MockRepository(ref);
+});
+
+/// Categories Stream Provider
+final categoriesStreamProvider = StreamProvider<List<Category>>((ref) {
+  final repo = ref.watch(configRepositoryProvider);
+  return repo.watchCategories();
+});
+
+/// Brands Stream Provider
+final brandsStreamProvider = StreamProvider<List<String>>((ref) {
+  final repo = ref.watch(configRepositoryProvider);
+  return repo.watchBrands();
 });

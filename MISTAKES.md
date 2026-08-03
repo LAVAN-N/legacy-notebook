@@ -1092,3 +1092,12 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Implemented a comparison logic in `updateCustomer` inside `supabase_repositories.dart` which fetches the existing record and triggers `_deleteFile` to remove files from Supabase storage if they are no longer in the updated `idProofs` list or `profileUrl` field.
 - **Rule for next agent:** ALWAYS delete removed local files from remote S3 storage buckets when a user clears or modifies proof documents/profile photos.
 - **Guardrail:** Verify that the existing customer record is checked and any removed document URLs are cleaned up from Supabase storage during customer updates.
+
+### 2026-08-03 · Centralized config table migration for places, areas, categories, and brands
+
+- **Context:** Storing lookup configurations for places, areas, categories, and brands in a queryable JSON-based format.
+- **Mistake:** Used separate relations (`places`, `areas`) and hardcoded mock files for product metadata, which made adding, updating, or deleting layout values complex and non-dynamic.
+- **Root cause:** Standard relational lookup tables were used before consolidated configuration models were preferred.
+- **Fix applied:** Created a single `config` table (`id TEXT PRIMARY KEY, data JSONB/TEXT`) in both local SQLite and remote PostgreSQL. Migrated separate relations to read and write dynamic lists (`places`, `areas`, `categories`, `brands`) from config, and converted the original tables to JSON-backed views in SQLite and Postgres so all other database queries remain untouched.
+- **Rule for next agent:** ALWAYS retrieve places, areas, categories, and brands from the reactive config repository providers.
+- **Guardrail:** Run `flutter analyze` and confirm `categoriesStreamProvider` and `brandsStreamProvider` compile cleanly without warning.

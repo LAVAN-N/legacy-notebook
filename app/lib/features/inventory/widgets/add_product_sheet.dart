@@ -111,12 +111,19 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
   void initState() {
     super.initState();
     _selectedCategoryId = widget.initialCategoryId;
-    final uniqueBrands = mockProductsList.map((p) => p.brand).toSet().toList();
-    uniqueBrands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    _brands = uniqueBrands;
     _mrpController.addListener(_onMrpChanged);
     _costPriceController.addListener(_onCostPriceChanged);
     _sellingPriceController.addListener(_onSellingPriceChanged);
+
+    Future.microtask(() async {
+      final configRepo = ref.read(configRepositoryProvider);
+      final uniqueBrands = await configRepo.getBrands();
+      if (mounted) {
+        setState(() {
+          _brands = uniqueBrands;
+        });
+      }
+    });
   }
 
   void _showSearchableBrandDialog(BuildContext context) {
@@ -128,7 +135,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
           colors: colors,
           brands: _brands,
           initialBrand: _selectedBrand,
-          onSelect: (brand) {
+          onSelect: (brand) async {
             setState(() {
               if (!_brands.contains(brand)) {
                 _brands.add(brand);
@@ -137,6 +144,8 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
               _selectedBrand = brand;
               _brandController.text = brand;
             });
+            final configRepo = ref.read(configRepositoryProvider);
+            await configRepo.saveBrands(_brands);
           },
         );
       },
@@ -406,13 +415,17 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
           ),
           child: _AddCategoryDialogContent(
             colors: colors,
-            onSave: (newCategory) {
+            onSave: (newCategory) async {
+              final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(context);
+              final configRepo = ref.read(configRepositoryProvider);
+              final currentCategories = await configRepo.getCategories();
+              currentCategories.add(newCategory);
+              await configRepo.saveCategories(currentCategories);
               setState(() {
-                mockCategoriesList.add(newCategory);
                 _selectedCategoryId = newCategory.id;
               });
-              ScaffoldMessenger.of(context).showSnackBar(
+              messenger.showSnackBar(
                 SnackBar(
                   content: Text('Category "${newCategory.name}" created successfully'),
                   behavior: SnackBarBehavior.floating,
@@ -432,6 +445,9 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
     final rawMaxMarkup = _maxAllowedMarkup;
     final maxMarkup = ((rawMaxMarkup / 5).floor() * 5).toDouble().clamp(5.0, 100.0);
     final divisions = ((maxMarkup - 5) / 5).round().clamp(1, 20);
+
+    final categoriesAsync = ref.watch(categoriesStreamProvider);
+    final categories = categoriesAsync.value ?? mockCategoriesList;
 
     Widget buildSliderLabels(double maxMarkup, AppColors colors) {
       final list = <double>[];
@@ -523,7 +539,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                   prefixIcon: Icon(Icons.category_outlined, color: colors.primary),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                items: mockCategoriesList.map((c) {
+                items: categories.map((c) {
                   return DropdownMenuItem(
                     value: c.id,
                     child: Text(c.name),
@@ -1117,14 +1133,21 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     _minimumStockController = TextEditingController(text: widget.product.minimumStock.toString());
     _descriptionController = TextEditingController(text: widget.product.description ?? '');
 
-    final uniqueBrands = mockProductsList.map((p) => p.brand).toSet().toList();
-    uniqueBrands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    _brands = uniqueBrands;
     _selectedBrand = widget.product.brand;
-    if (_selectedBrand != null && !_brands.contains(_selectedBrand!)) {
-      _brands.add(_selectedBrand!);
-      _brands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    }
+
+    Future.microtask(() async {
+      final configRepo = ref.read(configRepositoryProvider);
+      final uniqueBrands = await configRepo.getBrands();
+      if (mounted) {
+        setState(() {
+          _brands = uniqueBrands;
+          if (_selectedBrand != null && !_brands.contains(_selectedBrand!)) {
+            _brands.add(_selectedBrand!);
+            _brands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+          }
+        });
+      }
+    });
 
     // Calculate initial markup percent
     final cost = widget.product.costPrice.toDouble();
@@ -1147,7 +1170,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
           colors: colors,
           brands: _brands,
           initialBrand: _selectedBrand,
-          onSelect: (brand) {
+          onSelect: (brand) async {
             setState(() {
               if (!_brands.contains(brand)) {
                 _brands.add(brand);
@@ -1156,6 +1179,8 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
               _selectedBrand = brand;
               _brandController.text = brand;
             });
+            final configRepo = ref.read(configRepositoryProvider);
+            await configRepo.saveBrands(_brands);
           },
         );
       },
@@ -1419,6 +1444,9 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     final maxMarkup = ((rawMaxMarkup / 5).floor() * 5).toDouble().clamp(5.0, 100.0);
     final divisions = ((maxMarkup - 5) / 5).round().clamp(1, 20);
 
+    final categoriesAsync = ref.watch(categoriesStreamProvider);
+    final categories = categoriesAsync.value ?? mockCategoriesList;
+
     Widget buildSliderLabels(double maxMarkup, AppColors colors) {
       final list = <double>[];
       for (double val = 5.0; val <= maxMarkup; val += 5.0) {
@@ -1509,7 +1537,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                   prefixIcon: Icon(Icons.category_outlined, color: colors.primary),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                items: mockCategoriesList.map((c) {
+                items: categories.map((c) {
                   return DropdownMenuItem(
                     value: c.id,
                     child: Text(c.name),

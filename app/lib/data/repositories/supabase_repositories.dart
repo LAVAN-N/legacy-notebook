@@ -19,6 +19,8 @@ import 'route_repository.dart';
 import 'collection_repository.dart';
 import 'sale_repository.dart';
 import 'product_repository.dart';
+import 'config_repository.dart';
+import '../models/category.dart';
 
 Future<String> _uploadFile(String bucket, String localPath, String remotePath) async {
   final client = Supabase.instance.client;
@@ -660,43 +662,27 @@ class SupabaseRouteRepository implements RouteRepository {
 
   @override
   Future<List<Place>> getPlacesByWeekday(String weekdayId) async {
-    final maps = await _client.from('places').select().eq('weekday_id', weekdayId).order('name');
-    return maps.map((p) => Place.fromJson({
-      'id': p['id'],
-      'weekdayId': p['weekday_id'],
-      'name': p['name'],
-    })).toList();
+    final places = await SupabaseConfigRepository().getPlaces();
+    return places.where((p) => p.weekdayId == weekdayId).toList();
   }
 
   @override
   Stream<List<Place>> watchPlacesByWeekday(String weekdayId) {
-    return _client.from('places').stream(primaryKey: ['id']).eq('weekday_id', weekdayId).map(
-      (list) => list.map((p) => Place.fromJson({
-        'id': p['id'],
-        'weekdayId': p['weekday_id'],
-        'name': p['name'],
-      })).toList()
+    return SupabaseConfigRepository().watchPlaces().map(
+      (places) => places.where((p) => p.weekdayId == weekdayId).toList()
     );
   }
 
   @override
   Future<List<Area>> getAreasByPlace(String placeId) async {
-    final maps = await _client.from('areas').select().eq('place_id', placeId).order('name');
-    return maps.map((a) => Area.fromJson({
-      'id': a['id'],
-      'placeId': a['place_id'],
-      'name': a['name'],
-    })).toList();
+    final areas = await SupabaseConfigRepository().getAreas();
+    return areas.where((a) => a.placeId == placeId).toList();
   }
 
   @override
   Stream<List<Area>> watchAreasByPlace(String placeId) {
-    return _client.from('areas').stream(primaryKey: ['id']).eq('place_id', placeId).map(
-      (list) => list.map((a) => Area.fromJson({
-        'id': a['id'],
-        'placeId': a['place_id'],
-        'name': a['name'],
-      })).toList()
+    return SupabaseConfigRepository().watchAreas().map(
+      (areas) => areas.where((a) => a.placeId == placeId).toList()
     );
   }
 
@@ -779,24 +765,24 @@ class SupabaseRouteRepository implements RouteRepository {
 
   @override
   Future<Place> addPlace({required String weekdayId, required String name}) async {
-    final placeId = 'place_${DateTime.now().millisecondsSinceEpoch}';
-    await _client.from('places').insert({
-      'id': placeId,
-      'weekday_id': weekdayId,
-      'name': name,
-    });
-    return Place(id: placeId, weekdayId: weekdayId, name: name);
+    final configRepo = SupabaseConfigRepository();
+    final places = await configRepo.getPlaces();
+    final placeId = 'plc_${DateTime.now().millisecondsSinceEpoch}';
+    final place = Place(id: placeId, weekdayId: weekdayId, name: name);
+    places.add(place);
+    await configRepo.savePlaces(places);
+    return place;
   }
 
   @override
   Future<Area> addArea({required String placeId, required String name}) async {
+    final configRepo = SupabaseConfigRepository();
+    final areas = await configRepo.getAreas();
     final areaId = 'area_${DateTime.now().millisecondsSinceEpoch}';
-    await _client.from('areas').insert({
-      'id': areaId,
-      'place_id': placeId,
-      'name': name,
-    });
-    return Area(id: areaId, placeId: placeId, name: name);
+    final area = Area(id: areaId, placeId: placeId, name: name);
+    areas.add(area);
+    await configRepo.saveAreas(areas);
+    return area;
   }
 }
 
@@ -1120,5 +1106,124 @@ class SupabaseProductRepository implements ProductRepository {
       'image_url': remoteUrl,
       'description': product.description,
     }).eq('id', product.id);
+  }
+}
+
+class SupabaseConfigRepository implements ConfigRepository {
+  final _client = Supabase.instance.client;
+
+  Future<String> _readData(String id) async {
+    try {
+      final res = await _client.from('config').select('data').eq('id', id).maybeSingle();
+      if (res == null || res['data'] == null) return '[]';
+      return jsonEncode(res['data']);
+    } catch (e) {
+      return '[]';
+    }
+  }
+
+  Future<void> _writeData(String id, String dataJson) async {
+    final decoded = jsonDecode(dataJson);
+    await _client.from('config').upsert({'id': id, 'data': decoded});
+  }
+
+  @override
+  Future<List<Place>> getPlaces() async {
+    final raw = await _readData('places');
+    final List decoded = jsonDecode(raw);
+    return decoded.map((item) => Place.fromJson(item as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Stream<List<Place>> watchPlaces() {
+    return _client.from('config').stream(primaryKey: ['id']).eq('id', 'places').map((list) {
+      if (list.isEmpty) return [];
+      final data = list.first['data'];
+      if (data is List) {
+        return data.map((item) => Place.fromJson(item as Map<String, dynamic>)).toList();
+      }
+      return [];
+    });
+  }
+
+  @override
+  Future<void> savePlaces(List<Place> places) async {
+    final raw = jsonEncode(places.map((p) => p.toJson()).toList());
+    await _writeData('places', raw);
+  }
+
+  @override
+  Future<List<Area>> getAreas() async {
+    final raw = await _readData('areas');
+    final List decoded = jsonDecode(raw);
+    return decoded.map((item) => Area.fromJson(item as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Stream<List<Area>> watchAreas() {
+    return _client.from('config').stream(primaryKey: ['id']).eq('id', 'areas').map((list) {
+      if (list.isEmpty) return [];
+      final data = list.first['data'];
+      if (data is List) {
+        return data.map((item) => Area.fromJson(item as Map<String, dynamic>)).toList();
+      }
+      return [];
+    });
+  }
+
+  @override
+  Future<void> saveAreas(List<Area> areas) async {
+    final raw = jsonEncode(areas.map((a) => a.toJson()).toList());
+    await _writeData('areas', raw);
+  }
+
+  @override
+  Future<List<Category>> getCategories() async {
+    final raw = await _readData('categories');
+    final List decoded = jsonDecode(raw);
+    return decoded.map((item) => Category.fromJson(item as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Stream<List<Category>> watchCategories() {
+    return _client.from('config').stream(primaryKey: ['id']).eq('id', 'categories').map((list) {
+      if (list.isEmpty) return [];
+      final data = list.first['data'];
+      if (data is List) {
+        return data.map((item) => Category.fromJson(item as Map<String, dynamic>)).toList();
+      }
+      return [];
+    });
+  }
+
+  @override
+  Future<void> saveCategories(List<Category> categories) async {
+    final raw = jsonEncode(categories.map((c) => c.toJson()).toList());
+    await _writeData('categories', raw);
+  }
+
+  @override
+  Future<List<String>> getBrands() async {
+    final raw = await _readData('brands');
+    final List decoded = jsonDecode(raw);
+    return decoded.map((item) => item as String).toList();
+  }
+
+  @override
+  Stream<List<String>> watchBrands() {
+    return _client.from('config').stream(primaryKey: ['id']).eq('id', 'brands').map((list) {
+      if (list.isEmpty) return [];
+      final data = list.first['data'];
+      if (data is List) {
+        return data.map((item) => item as String).toList();
+      }
+      return [];
+    });
+  }
+
+  @override
+  Future<void> saveBrands(List<String> brands) async {
+    final raw = jsonEncode(brands);
+    await _writeData('brands', raw);
   }
 }

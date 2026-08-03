@@ -13,6 +13,7 @@ import '../models/area.dart';
 import '../models/collection.dart';
 import '../models/sale.dart';
 import '../models/product.dart';
+import '../models/category.dart';
 import '../local/database_helper.dart';
 
 import 'customer_repository.dart';
@@ -20,6 +21,7 @@ import 'route_repository.dart';
 import 'collection_repository.dart';
 import 'sale_repository.dart';
 import 'product_repository.dart';
+import 'config_repository.dart';
 
 /// A lightweight broadcaster that notifies subscribers of updates on specific tables
 /// to mimic real-time reactive streams.
@@ -537,34 +539,24 @@ class LocalSqliteRouteRepository implements RouteRepository {
 
   @override
   Future<List<Place>> getPlacesByWeekday(String weekdayId) async {
-    final db = await DatabaseHelper.instance.database;
-    final maps = await db.query('places', where: 'weekday_id = ?', whereArgs: [weekdayId]);
-    return maps.map((m) => Place(
-      id: m['id'] as String,
-      weekdayId: m['weekday_id'] as String,
-      name: m['name'] as String,
-    )).toList();
+    final places = await LocalSqliteConfigRepository().getPlaces();
+    return places.where((p) => p.weekdayId == weekdayId).toList();
   }
 
   @override
   Stream<List<Place>> watchPlacesByWeekday(String weekdayId) {
-    return watchQuery(tables: ['places'], query: () => getPlacesByWeekday(weekdayId));
+    return watchQuery(tables: ['config'], query: () => getPlacesByWeekday(weekdayId));
   }
 
   @override
   Future<List<Area>> getAreasByPlace(String placeId) async {
-    final db = await DatabaseHelper.instance.database;
-    final maps = await db.query('areas', where: 'place_id = ?', whereArgs: [placeId]);
-    return maps.map((m) => Area(
-      id: m['id'] as String,
-      placeId: m['place_id'] as String,
-      name: m['name'] as String,
-    )).toList();
+    final areas = await LocalSqliteConfigRepository().getAreas();
+    return areas.where((a) => a.placeId == placeId).toList();
   }
 
   @override
   Stream<List<Area>> watchAreasByPlace(String placeId) {
-    return watchQuery(tables: ['areas'], query: () => getAreasByPlace(placeId));
+    return watchQuery(tables: ['config'], query: () => getAreasByPlace(placeId));
   }
 
   @override
@@ -665,15 +657,12 @@ class LocalSqliteRouteRepository implements RouteRepository {
     required String weekdayId,
     required String name,
   }) async {
-    final db = await DatabaseHelper.instance.database;
+    final configRepo = LocalSqliteConfigRepository();
+    final places = await configRepo.getPlaces();
     final placeId = 'plc_${DateTime.now().millisecondsSinceEpoch}';
     final place = Place(id: placeId, weekdayId: weekdayId, name: name);
-    await db.insert('places', {
-      'id': placeId,
-      'weekday_id': weekdayId,
-      'name': name,
-    });
-    TableBroadcaster.instance.notify('places');
+    places.add(place);
+    await configRepo.savePlaces(places);
     return place;
   }
 
@@ -682,15 +671,12 @@ class LocalSqliteRouteRepository implements RouteRepository {
     required String placeId,
     required String name,
   }) async {
-    final db = await DatabaseHelper.instance.database;
+    final configRepo = LocalSqliteConfigRepository();
+    final areas = await configRepo.getAreas();
     final areaId = 'area_${DateTime.now().millisecondsSinceEpoch}';
     final area = Area(id: areaId, placeId: placeId, name: name);
-    await db.insert('areas', {
-      'id': areaId,
-      'place_id': placeId,
-      'name': name,
-    });
-    TableBroadcaster.instance.notify('areas');
+    areas.add(area);
+    await configRepo.saveAreas(areas);
     return area;
   }
 }
@@ -1006,5 +992,110 @@ class LocalSqliteProductRepository implements ProductRepository {
     }, where: 'id = ?', whereArgs: [product.id]);
 
     TableBroadcaster.instance.notify('products');
+  }
+}
+
+class LocalSqliteConfigRepository implements ConfigRepository {
+  Future<Database> _getDb() => DatabaseHelper.instance.database;
+
+  Future<String> _readData(String id) async {
+    final db = await _getDb();
+    final res = await db.query('config', where: 'id = ?', whereArgs: [id]);
+    if (res.isEmpty) return '[]';
+    return res.first['data'] as String;
+  }
+
+  Future<void> _writeData(String id, String data) async {
+    final db = await _getDb();
+    await db.insert(
+      'config',
+      {'id': id, 'data': data},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    TableBroadcaster.instance.notify('config');
+  }
+
+  @override
+  Future<List<Place>> getPlaces() async {
+    final raw = await _readData('places');
+    final List decoded = jsonDecode(raw);
+    return decoded.map((item) => Place.fromJson(item as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Stream<List<Place>> watchPlaces() {
+    return watchQuery(
+      tables: ['config'],
+      query: getPlaces,
+    );
+  }
+
+  @override
+  Future<void> savePlaces(List<Place> places) async {
+    final raw = jsonEncode(places.map((p) => p.toJson()).toList());
+    await _writeData('places', raw);
+  }
+
+  @override
+  Future<List<Area>> getAreas() async {
+    final raw = await _readData('areas');
+    final List decoded = jsonDecode(raw);
+    return decoded.map((item) => Area.fromJson(item as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Stream<List<Area>> watchAreas() {
+    return watchQuery(
+      tables: ['config'],
+      query: getAreas,
+    );
+  }
+
+  @override
+  Future<void> saveAreas(List<Area> areas) async {
+    final raw = jsonEncode(areas.map((a) => a.toJson()).toList());
+    await _writeData('areas', raw);
+  }
+
+  @override
+  Future<List<Category>> getCategories() async {
+    final raw = await _readData('categories');
+    final List decoded = jsonDecode(raw);
+    return decoded.map((item) => Category.fromJson(item as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Stream<List<Category>> watchCategories() {
+    return watchQuery(
+      tables: ['config'],
+      query: getCategories,
+    );
+  }
+
+  @override
+  Future<void> saveCategories(List<Category> categories) async {
+    final raw = jsonEncode(categories.map((c) => c.toJson()).toList());
+    await _writeData('categories', raw);
+  }
+
+  @override
+  Future<List<String>> getBrands() async {
+    final raw = await _readData('brands');
+    final List decoded = jsonDecode(raw);
+    return decoded.map((item) => item as String).toList();
+  }
+
+  @override
+  Stream<List<String>> watchBrands() {
+    return watchQuery(
+      tables: ['config'],
+      query: getBrands,
+    );
+  }
+
+  @override
+  Future<void> saveBrands(List<String> brands) async {
+    final raw = jsonEncode(brands);
+    await _writeData('brands', raw);
   }
 }

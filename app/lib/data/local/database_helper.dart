@@ -27,7 +27,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 7,
+      version: 8,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
@@ -48,23 +48,11 @@ class DatabaseHelper {
       )
     ''');
 
-    // 2. Places Table
+    // 2. Config Table
     await db.execute('''
-      CREATE TABLE places (
+      CREATE TABLE config (
         id TEXT PRIMARY KEY,
-        weekday_id TEXT NOT NULL,
-        name TEXT NOT NULL,
-        FOREIGN KEY (weekday_id) REFERENCES weekdays (id) ON DELETE CASCADE
-      )
-    ''');
-
-    // 3. Areas Table
-    await db.execute('''
-      CREATE TABLE areas (
-        id TEXT PRIMARY KEY,
-        place_id TEXT NOT NULL,
-        name TEXT NOT NULL,
-        FOREIGN KEY (place_id) REFERENCES places (id) ON DELETE CASCADE
+        data TEXT NOT NULL
       )
     ''');
 
@@ -109,9 +97,7 @@ class DatabaseHelper {
         created_by TEXT NOT NULL,
         nominees TEXT NOT NULL DEFAULT '[]',
         id_proofs TEXT NOT NULL DEFAULT '[]',
-        FOREIGN KEY (weekday_id) REFERENCES weekdays (id),
-        FOREIGN KEY (place_id) REFERENCES places (id),
-        FOREIGN KEY (area_id) REFERENCES areas (id)
+        FOREIGN KEY (weekday_id) REFERENCES weekdays (id)
       )
     ''');
 
@@ -187,6 +173,26 @@ class DatabaseHelper {
         COALESCE((SELECT SUM(s.financed_amount) FROM sales s WHERE s.customer_id = c.id), 0) -
         COALESCE((SELECT SUM(col.amount) FROM collections col WHERE col.customer_id = c.id AND col.status IN ('PAYMENT', 'PARTIAL_PAYMENT')), 0) AS outstanding
       FROM customers c;
+    ''');
+
+    await db.execute('''
+      CREATE VIEW places AS
+      SELECT 
+        json_extract(value, '\$.id') AS id,
+        json_extract(value, '\$.weekday_id') AS weekday_id,
+        json_extract(value, '\$.name') AS name
+      FROM config, json_each(config.data)
+      WHERE config.id = 'places';
+    ''');
+
+    await db.execute('''
+      CREATE VIEW areas AS
+      SELECT 
+        json_extract(value, '\$.id') AS id,
+        json_extract(value, '\$.place_id') AS place_id,
+        json_extract(value, '\$.name') AS name
+      FROM config, json_each(config.data)
+      WHERE config.id = 'areas';
     ''');
 
     await db.execute('''
@@ -269,23 +275,28 @@ class DatabaseHelper {
       });
     }
 
-    // Seed Places
-    for (var p in mockPlacesList) {
-      await db.insert('places', {
-        'id': p.id,
-        'weekday_id': p.weekdayId,
-        'name': p.name,
-      });
-    }
+    // Seed Config (places, areas, categories, brands)
+    await db.insert('config', {
+      'id': 'places',
+      'data': jsonEncode(mockPlacesList.map((p) => p.toJson()).toList()),
+    });
 
-    // Seed Areas
-    for (var a in mockAreasList) {
-      await db.insert('areas', {
-        'id': a.id,
-        'place_id': a.placeId,
-        'name': a.name,
-      });
-    }
+    await db.insert('config', {
+      'id': 'areas',
+      'data': jsonEncode(mockAreasList.map((a) => a.toJson()).toList()),
+    });
+
+    await db.insert('config', {
+      'id': 'categories',
+      'data': jsonEncode(mockCategoriesList.map((c) => c.toJson()).toList()),
+    });
+
+    final uniqueBrands = mockProductsList.map((p) => p.brand).toSet().toList();
+    uniqueBrands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    await db.insert('config', {
+      'id': 'brands',
+      'data': jsonEncode(uniqueBrands),
+    });
 
     // Seed Products & Opening Transactions
     for (var pr in mockProductsList) {
@@ -419,9 +430,8 @@ class DatabaseHelper {
       'collections',
       'customers',
       'products',
-      'areas',
-      'places',
       'weekdays',
+      'config',
     ];
     for (var t in tables) {
       await db.execute('DROP TABLE IF EXISTS $t');
@@ -431,6 +441,8 @@ class DatabaseHelper {
       'product_stock_view',
       'route_summary_view',
       'customer_route_view',
+      'places',
+      'areas',
     ];
     for (var v in views) {
       await db.execute('DROP VIEW IF EXISTS $v');

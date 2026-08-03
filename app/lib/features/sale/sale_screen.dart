@@ -16,6 +16,7 @@ import '../../core/utils/formatters.dart';
 import '../../core/utils/haptics.dart';
 import '../../data/models/product.dart';
 import '../../data/mock/mock_data.dart';
+import '../../data/providers.dart';
 
 import 'controllers/sale_controller.dart';
 
@@ -746,6 +747,9 @@ class _ProductPickerSheetState extends ConsumerState<_ProductPickerSheet> {
     final colors = context.colors;
     final state = ref.watch(saleControllerProvider(widget.customerId));
 
+    final categoriesAsync = ref.watch(categoriesStreamProvider);
+    final categories = categoriesAsync.value ?? mockCategoriesList;
+
     final filtered = widget.products.where((p) {
       if (_selectedCategoryIds.isNotEmpty && !_selectedCategoryIds.contains(p.categoryId)) {
         return false;
@@ -833,7 +837,7 @@ class _ProductPickerSheetState extends ConsumerState<_ProductPickerSheet> {
                           ),
                         ),
                       ),
-                      ...mockCategoriesList.map((c) {
+                      ...categories.map((c) {
                         final isSelected = _selectedCategoryIds.contains(c.id);
                         return Padding(
                           padding: const EdgeInsets.only(right: 8.0),

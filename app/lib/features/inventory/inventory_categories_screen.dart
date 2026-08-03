@@ -69,6 +69,9 @@ class _InventoryCategoriesScreenState
     final productsAsync = ref.watch(productsStreamProvider);
     final allProducts = productsAsync.value ?? [];
 
+    final categoriesAsync = ref.watch(categoriesStreamProvider);
+    final categories = categoriesAsync.value ?? mockCategoriesList;
+
     // Filter products based on stock filter
     var filteredProducts = allProducts.where((p) {
       if (_filterType == 'In stock') {
@@ -94,7 +97,7 @@ class _InventoryCategoriesScreenState
               p.sku.toLowerCase().contains(query))
           .toList();
 
-      displayCategories = mockCategoriesList
+      displayCategories = categories
           .where((c) =>
               c.name.toLowerCase().contains(query) ||
               displayProducts.any((p) => p.categoryId == c.id))
@@ -104,7 +107,7 @@ class _InventoryCategoriesScreenState
       }).toList();
     } else {
       displayProducts = filteredProducts;
-      displayCategories = mockCategoriesList.map((c) {
+      displayCategories = categories.map((c) {
         final count = displayProducts.where((p) => p.categoryId == c.id).length;
         return c.copyWith(productCount: count);
       }).toList();
@@ -287,7 +290,7 @@ class _InventoryCategoriesScreenState
                         itemCount: displayProducts.length,
                         itemBuilder: (context, index) {
                           final product = displayProducts[index];
-                          return _buildProductCard(context, product, colors);
+                          return _buildProductCard(context, product, colors, categories);
                         },
                       ))
                 : (displayCategories.isEmpty
@@ -385,8 +388,8 @@ class _InventoryCategoriesScreenState
   }
 
   Widget _buildProductCard(
-      BuildContext context, Product product, AppColors colors) {
-    final category = mockCategoriesList.firstWhere(
+      BuildContext context, Product product, AppColors colors, List<Category> categories) {
+    final category = categories.firstWhere(
         (c) => c.id == product.categoryId,
         orElse: () => const Category(id: '', name: 'Unknown', icon: ''));
 

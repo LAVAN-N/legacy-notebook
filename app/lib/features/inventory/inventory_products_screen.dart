@@ -45,9 +45,7 @@ class _InventoryProductsScreenState
   @override
   void initState() {
     super.initState();
-    _category = mockCategoriesList.firstWhere((c) => c.id == widget.categoryId,
-        orElse: () =>
-            Category(id: widget.categoryId, name: 'Products', icon: ''));
+    _category = Category(id: widget.categoryId, name: 'Products', icon: '');
 
     if (widget.initialProductId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -74,6 +72,11 @@ class _InventoryProductsScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
+
+    final categoriesAsync = ref.watch(categoriesStreamProvider);
+    final categories = categoriesAsync.value ?? mockCategoriesList;
+    _category = categories.firstWhere((c) => c.id == widget.categoryId,
+        orElse: () => Category(id: widget.categoryId, name: 'Products', icon: ''));
 
     final productsAsync = ref.watch(productsStreamProvider);
     final allProducts = productsAsync.value ?? [];
