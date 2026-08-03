@@ -125,6 +125,17 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
   }
 
   void _showAddAreaSheet() async {
+    final placeId = ref.read(newClientControllerProvider).placeId;
+    if (placeId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a place before adding an area'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     final result = await showModalBottomSheet<String>(
       context: context,
       builder: (context) => _AddAreaSheet(controller: _areaNameController),
@@ -595,13 +606,15 @@ class _RouteSectionState extends State<_RouteSection> {
                   ),
                 ),
               ],
-              onChanged: (value) {
-                if (value == 'add_new_area') {
-                  widget.onAddArea();
-                } else if (value != null) {
-                  widget.controller.setArea(value);
-                }
-              },
+              onChanged: widget.state.placeId.isEmpty
+                  ? null
+                  : (value) {
+                      if (value == 'add_new_area') {
+                        widget.onAddArea();
+                      } else if (value != null) {
+                        widget.controller.setArea(value);
+                      }
+                    },
               decoration: InputDecoration(
                 prefixIcon:
                     Icon(Icons.explore_outlined, color: widget.colors.primary),
