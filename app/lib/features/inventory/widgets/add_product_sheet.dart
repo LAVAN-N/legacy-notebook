@@ -126,30 +126,224 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
     });
   }
 
-  void _showSearchableBrandDialog(BuildContext context) {
+  void _showAddBrandDialog(BuildContext context) async {
     final colors = Theme.of(context).extension<AppColors>()!;
-    showDialog(
+    final addCtrl = TextEditingController();
+    
+    final result = await showDialog<String>(
       context: context,
-      builder: (context) {
-        return _SearchableBrandDialog(
-          colors: colors,
-          brands: _brands,
-          initialBrand: _selectedBrand,
-          onSelect: (brand) async {
-            setState(() {
-              if (!_brands.contains(brand)) {
-                _brands.add(brand);
-                _brands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-              }
-              _selectedBrand = brand;
-              _brandController.text = brand;
-            });
-            final configRepo = ref.read(configRepositoryProvider);
-            await configRepo.saveBrands(_brands);
-          },
-        );
-      },
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.background,
+        title: Text('Add Brand', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: addCtrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Brand Name',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, addCtrl.text.trim()),
+            child: const Text('Add'),
+          ),
+        ],
+      ),
     );
+    
+    if (result != null && result.isNotEmpty && mounted) {
+      final configRepo = ref.read(configRepositoryProvider);
+      final currentBrands = await configRepo.getBrands();
+      if (!currentBrands.contains(result)) {
+        currentBrands.add(result);
+        currentBrands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+        await configRepo.saveBrands(currentBrands);
+      }
+      setState(() {
+        _selectedBrand = result;
+        _brandController.text = result;
+      });
+    }
+  }
+
+  void _showEditBrandDialog(BuildContext context, String oldBrand) async {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final editCtrl = TextEditingController(text: oldBrand);
+    
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.background,
+        title: Text('Edit Brand', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: editCtrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Brand Name',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, editCtrl.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    
+    if (result != null && result.isNotEmpty && result != oldBrand && mounted) {
+      final configRepo = ref.read(configRepositoryProvider);
+      final currentBrands = await configRepo.getBrands();
+      final idx = currentBrands.indexOf(oldBrand);
+      if (idx != -1) {
+        currentBrands[idx] = result;
+        currentBrands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+        await configRepo.saveBrands(currentBrands);
+      }
+      setState(() {
+        _selectedBrand = result;
+        _brandController.text = result;
+      });
+    }
+  }
+
+  void _showDeleteBrandDialog(BuildContext context, String brand) async {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.background,
+        title: Text('Delete Brand', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to delete brand "$brand"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: colors.destructive),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirm == true && mounted) {
+      final configRepo = ref.read(configRepositoryProvider);
+      final currentBrands = await configRepo.getBrands();
+      currentBrands.remove(brand);
+      await configRepo.saveBrands(currentBrands);
+      setState(() {
+        if (_selectedBrand == brand) {
+          _selectedBrand = null;
+          _brandController.clear();
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Brand deleted successfully'), behavior: SnackBarBehavior.floating),
+      );
+    }
+  }
+
+  void _showEditCategorySheet(BuildContext context, String categoryId) async {
+    final categoriesAsync = ref.read(categoriesStreamProvider);
+    final categories = categoriesAsync.value ?? [];
+    final category = categories.firstWhere((c) => c.id == categoryId);
+    final editCtrl = TextEditingController(text: category.name);
+    final colors = Theme.of(context).extension<AppColors>()!;
+    
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.background,
+        title: Text('Edit Category', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: editCtrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Category Name',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, editCtrl.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    
+    if (result != null && result.isNotEmpty && mounted) {
+      final configRepo = ref.read(configRepositoryProvider);
+      final currentCategories = await configRepo.getCategories();
+      final idx = currentCategories.indexWhere((c) => c.id == categoryId);
+      if (idx != -1) {
+        currentCategories[idx] = currentCategories[idx].copyWith(name: result);
+        await configRepo.saveCategories(currentCategories);
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Category updated successfully'), behavior: SnackBarBehavior.floating),
+      );
+    }
+  }
+
+  void _showDeleteCategoryDialog(BuildContext context, String categoryId) async {
+    final categoriesAsync = ref.read(categoriesStreamProvider);
+    final categories = categoriesAsync.value ?? [];
+    final category = categories.firstWhere((c) => c.id == categoryId);
+    final colors = Theme.of(context).extension<AppColors>()!;
+    
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.background,
+        title: Text('Delete Category', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to delete category "${category.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: colors.destructive),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirm == true && mounted) {
+      final configRepo = ref.read(configRepositoryProvider);
+      final currentCategories = await configRepo.getCategories();
+      currentCategories.removeWhere((c) => c.id == categoryId);
+      await configRepo.saveCategories(currentCategories);
+      setState(() {
+        if (_selectedCategoryId == categoryId) {
+          _selectedCategoryId = null;
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Category deleted successfully'), behavior: SnackBarBehavior.floating),
+      );
+    }
   }
 
   bool _isUpdatingPrice = false;
@@ -449,6 +643,9 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
     final categoriesAsync = ref.watch(categoriesStreamProvider);
     final categories = categoriesAsync.value ?? mockCategoriesList;
 
+    final brandsAsync = ref.watch(brandsStreamProvider);
+    final brands = brandsAsync.value ?? _brands;
+
     Widget buildSliderLabels(double maxMarkup, AppColors colors) {
       final list = <double>[];
       for (double val = 5.0; val <= maxMarkup; val += 5.0) {
@@ -532,21 +729,40 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
               const Divider(),
               const SizedBox(height: 16),
 
-              DropdownButtonFormField<String>(
-                initialValue: categories.any((c) => c.id == _selectedCategoryId) ? _selectedCategoryId : null,
-                decoration: InputDecoration(
-                  labelText: 'Category *',
-                  prefixIcon: Icon(Icons.category_outlined, color: colors.primary),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                items: categories.map((c) {
-                  return DropdownMenuItem(
-                    value: c.id,
-                    child: Text(c.name),
-                  );
-                }).toList(),
-                onChanged: (val) => setState(() => _selectedCategoryId = val),
-                validator: (val) => val == null ? 'Category is required' : null,
+                            Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: categories.any((c) => c.id == _selectedCategoryId) ? _selectedCategoryId : null,
+                      decoration: InputDecoration(
+                        labelText: 'Category *',
+                        prefixIcon: Icon(Icons.category_outlined, color: colors.primary),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      items: categories.map((c) {
+                        return DropdownMenuItem(
+                          value: c.id,
+                          child: Text(c.name),
+                        );
+                      }).toList(),
+                      onChanged: (val) => setState(() => _selectedCategoryId = val),
+                      validator: (val) => val == null ? 'Category is required' : null,
+                    ),
+                  ),
+                  if (_selectedCategoryId != null) ...[
+                    const SizedBox(width: 4),
+                    IconButton(
+                      icon: Icon(Icons.edit, color: colors.primary, size: 20),
+                      onPressed: () => _showEditCategorySheet(context, _selectedCategoryId!),
+                      tooltip: 'Edit Category',
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: colors.destructive, size: 20),
+                      onPressed: () => _showDeleteCategoryDialog(context, _selectedCategoryId!),
+                      tooltip: 'Delete Category',
+                    ),
+                  ],
+                ],
               ),
               Align(
                 alignment: Alignment.centerLeft,
@@ -624,20 +840,54 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
               ),
               const SizedBox(height: 12),
 
-              InkWell(
-                onTap: () => _showSearchableBrandDialog(context),
-                borderRadius: BorderRadius.circular(12),
-                child: IgnorePointer(
-                  child: TextFormField(
-                    controller: _brandController,
-                    decoration: InputDecoration(
-                      labelText: 'Brand *',
-                      prefixIcon: Icon(Icons.branding_watermark_outlined, color: colors.primary),
-                      suffixIcon: const Icon(Icons.arrow_drop_down),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: brands.contains(_selectedBrand) ? _selectedBrand : null,
+                      decoration: InputDecoration(
+                        labelText: 'Brand *',
+                        prefixIcon: Icon(Icons.branding_watermark_outlined, color: colors.primary),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      items: brands.map((b) {
+                        return DropdownMenuItem(
+                          value: b,
+                          child: Text(b),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() {
+                            _selectedBrand = val;
+                            _brandController.text = val;
+                          });
+                        }
+                      },
+                      validator: (val) => val == null ? 'Brand is required' : null,
                     ),
-                    validator: (val) => (val == null || val.trim().isEmpty) ? 'Brand is required' : null,
                   ),
+                  if (_selectedBrand != null && brands.contains(_selectedBrand)) ...[
+                    const SizedBox(width: 4),
+                    IconButton(
+                      icon: Icon(Icons.edit, color: colors.primary, size: 20),
+                      onPressed: () => _showEditBrandDialog(context, _selectedBrand!),
+                      tooltip: 'Edit Brand',
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: colors.destructive, size: 20),
+                      onPressed: () => _showDeleteBrandDialog(context, _selectedBrand!),
+                      tooltip: 'Delete Brand',
+                    ),
+                  ],
+                ],
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => _showAddBrandDialog(context),
+                  icon: const Icon(Icons.add_circle_outline, size: 16),
+                  label: const Text('Add new brand'),
                 ),
               ),
               const SizedBox(height: 12),
@@ -1161,30 +1411,261 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     _sellingPriceController.addListener(_onSellingPriceChanged);
   }
 
-  void _showSearchableBrandDialog(BuildContext context) {
+  void _showAddCategorySheet(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return _SearchableBrandDialog(
-          colors: colors,
-          brands: _brands,
-          initialBrand: _selectedBrand,
-          onSelect: (brand) async {
-            setState(() {
-              if (!_brands.contains(brand)) {
-                _brands.add(brand);
-                _brands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-              }
-              _selectedBrand = brand;
-              _brandController.text = brand;
-            });
-            final configRepo = ref.read(configRepositoryProvider);
-            await configRepo.saveBrands(_brands);
-          },
+        return Container(
+          decoration: BoxDecoration(
+            color: colors.background,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: _AddCategoryDialogContent(
+            colors: colors,
+            onSave: (newCategory) async {
+              final messenger = ScaffoldMessenger.of(context);
+              Navigator.pop(context);
+              final configRepo = ref.read(configRepositoryProvider);
+              final currentCategories = await configRepo.getCategories();
+              currentCategories.add(newCategory);
+              await configRepo.saveCategories(currentCategories);
+              setState(() {
+                _selectedCategoryId = newCategory.id;
+              });
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text('Category "${newCategory.name}" created successfully'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+          ),
         );
       },
     );
+  }
+
+  void _showAddBrandDialog(BuildContext context) async {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final addCtrl = TextEditingController();
+    
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.background,
+        title: Text('Add Brand', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: addCtrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Brand Name',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, addCtrl.text.trim()),
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+    
+    if (result != null && result.isNotEmpty && mounted) {
+      final configRepo = ref.read(configRepositoryProvider);
+      final currentBrands = await configRepo.getBrands();
+      if (!currentBrands.contains(result)) {
+        currentBrands.add(result);
+        currentBrands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+        await configRepo.saveBrands(currentBrands);
+      }
+      setState(() {
+        _selectedBrand = result;
+        _brandController.text = result;
+      });
+    }
+  }
+
+  void _showEditBrandDialog(BuildContext context, String oldBrand) async {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final editCtrl = TextEditingController(text: oldBrand);
+    
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.background,
+        title: Text('Edit Brand', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: editCtrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Brand Name',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, editCtrl.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    
+    if (result != null && result.isNotEmpty && result != oldBrand && mounted) {
+      final configRepo = ref.read(configRepositoryProvider);
+      final currentBrands = await configRepo.getBrands();
+      final idx = currentBrands.indexOf(oldBrand);
+      if (idx != -1) {
+        currentBrands[idx] = result;
+        currentBrands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+        await configRepo.saveBrands(currentBrands);
+      }
+      setState(() {
+        _selectedBrand = result;
+        _brandController.text = result;
+      });
+    }
+  }
+
+  void _showDeleteBrandDialog(BuildContext context, String brand) async {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.background,
+        title: Text('Delete Brand', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to delete brand "$brand"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: colors.destructive),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirm == true && mounted) {
+      final configRepo = ref.read(configRepositoryProvider);
+      final currentBrands = await configRepo.getBrands();
+      currentBrands.remove(brand);
+      await configRepo.saveBrands(currentBrands);
+      setState(() {
+        if (_selectedBrand == brand) {
+          _selectedBrand = null;
+          _brandController.clear();
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Brand deleted successfully'), behavior: SnackBarBehavior.floating),
+      );
+    }
+  }
+
+  void _showEditCategorySheet(BuildContext context, String categoryId) async {
+    final categoriesAsync = ref.read(categoriesStreamProvider);
+    final categories = categoriesAsync.value ?? [];
+    final category = categories.firstWhere((c) => c.id == categoryId);
+    final editCtrl = TextEditingController(text: category.name);
+    final colors = Theme.of(context).extension<AppColors>()!;
+    
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.background,
+        title: Text('Edit Category', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: editCtrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Category Name',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, editCtrl.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    
+    if (result != null && result.isNotEmpty && mounted) {
+      final configRepo = ref.read(configRepositoryProvider);
+      final currentCategories = await configRepo.getCategories();
+      final idx = currentCategories.indexWhere((c) => c.id == categoryId);
+      if (idx != -1) {
+        currentCategories[idx] = currentCategories[idx].copyWith(name: result);
+        await configRepo.saveCategories(currentCategories);
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Category updated successfully'), behavior: SnackBarBehavior.floating),
+      );
+    }
+  }
+
+  void _showDeleteCategoryDialog(BuildContext context, String categoryId) async {
+    final categoriesAsync = ref.read(categoriesStreamProvider);
+    final categories = categoriesAsync.value ?? [];
+    final category = categories.firstWhere((c) => c.id == categoryId);
+    final colors = Theme.of(context).extension<AppColors>()!;
+    
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.background,
+        title: Text('Delete Category', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to delete category "${category.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: colors.destructive),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirm == true && mounted) {
+      final configRepo = ref.read(configRepositoryProvider);
+      final currentCategories = await configRepo.getCategories();
+      currentCategories.removeWhere((c) => c.id == categoryId);
+      await configRepo.saveCategories(currentCategories);
+      setState(() {
+        if (_selectedCategoryId == categoryId) {
+          _selectedCategoryId = null;
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Category deleted successfully'), behavior: SnackBarBehavior.floating),
+      );
+    }
   }
 
   bool _isUpdatingPrice = false;
@@ -1447,6 +1928,9 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     final categoriesAsync = ref.watch(categoriesStreamProvider);
     final categories = categoriesAsync.value ?? mockCategoriesList;
 
+    final brandsAsync = ref.watch(brandsStreamProvider);
+    final brands = brandsAsync.value ?? _brands;
+
     Widget buildSliderLabels(double maxMarkup, AppColors colors) {
       final list = <double>[];
       for (double val = 5.0; val <= maxMarkup; val += 5.0) {
@@ -1530,23 +2014,50 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
               const Divider(),
               const SizedBox(height: 16),
 
-              DropdownButtonFormField<String>(
-                initialValue: categories.any((c) => c.id == _selectedCategoryId) ? _selectedCategoryId : null,
-                decoration: InputDecoration(
-                  labelText: 'Category *',
-                  prefixIcon: Icon(Icons.category_outlined, color: colors.primary),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                items: categories.map((c) {
-                  return DropdownMenuItem(
-                    value: c.id,
-                    child: Text(c.name),
-                  );
-                }).toList(),
-                onChanged: (val) => setState(() => _selectedCategoryId = val),
-                validator: (val) => val == null ? 'Category is required' : null,
+                            Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: categories.any((c) => c.id == _selectedCategoryId) ? _selectedCategoryId : null,
+                      decoration: InputDecoration(
+                        labelText: 'Category *',
+                        prefixIcon: Icon(Icons.category_outlined, color: colors.primary),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      items: categories.map((c) {
+                        return DropdownMenuItem(
+                          value: c.id,
+                          child: Text(c.name),
+                        );
+                      }).toList(),
+                      onChanged: (val) => setState(() => _selectedCategoryId = val),
+                      validator: (val) => val == null ? 'Category is required' : null,
+                    ),
+                  ),
+                  if (_selectedCategoryId != null) ...[
+                    const SizedBox(width: 4),
+                    IconButton(
+                      icon: Icon(Icons.edit, color: colors.primary, size: 20),
+                      onPressed: () => _showEditCategorySheet(context, _selectedCategoryId!),
+                      tooltip: 'Edit Category',
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: colors.destructive, size: 20),
+                      onPressed: () => _showDeleteCategoryDialog(context, _selectedCategoryId!),
+                      tooltip: 'Delete Category',
+                    ),
+                  ],
+                ],
               ),
-              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => _showAddCategorySheet(context),
+                  icon: const Icon(Icons.add_circle_outline, size: 16),
+                  label: const Text('Add new category'),
+                ),
+              ),
+              const SizedBox(height: 8),
 
               Center(
                 child: GestureDetector(
@@ -1614,20 +2125,54 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
               ),
               const SizedBox(height: 12),
 
-              InkWell(
-                onTap: () => _showSearchableBrandDialog(context),
-                borderRadius: BorderRadius.circular(12),
-                child: IgnorePointer(
-                  child: TextFormField(
-                    controller: _brandController,
-                    decoration: InputDecoration(
-                      labelText: 'Brand *',
-                      prefixIcon: Icon(Icons.branding_watermark_outlined, color: colors.primary),
-                      suffixIcon: const Icon(Icons.arrow_drop_down),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: brands.contains(_selectedBrand) ? _selectedBrand : null,
+                      decoration: InputDecoration(
+                        labelText: 'Brand *',
+                        prefixIcon: Icon(Icons.branding_watermark_outlined, color: colors.primary),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      items: brands.map((b) {
+                        return DropdownMenuItem(
+                          value: b,
+                          child: Text(b),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() {
+                            _selectedBrand = val;
+                            _brandController.text = val;
+                          });
+                        }
+                      },
+                      validator: (val) => val == null ? 'Brand is required' : null,
                     ),
-                    validator: (val) => (val == null || val.trim().isEmpty) ? 'Brand is required' : null,
                   ),
+                  if (_selectedBrand != null && brands.contains(_selectedBrand)) ...[
+                    const SizedBox(width: 4),
+                    IconButton(
+                      icon: Icon(Icons.edit, color: colors.primary, size: 20),
+                      onPressed: () => _showEditBrandDialog(context, _selectedBrand!),
+                      tooltip: 'Edit Brand',
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: colors.destructive, size: 20),
+                      onPressed: () => _showDeleteBrandDialog(context, _selectedBrand!),
+                      tooltip: 'Delete Brand',
+                    ),
+                  ],
+                ],
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => _showAddBrandDialog(context),
+                  icon: const Icon(Icons.add_circle_outline, size: 16),
+                  label: const Text('Add new brand'),
                 ),
               ),
               const SizedBox(height: 12),

@@ -151,6 +151,152 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
     }
   }
 
+  void _showEditPlaceDialog(String placeId) async {
+    final places = ref.read(newClientControllerProvider).places;
+    final place = places.firstWhere((p) => p.id == placeId);
+    final editCtrl = TextEditingController(text: place.name);
+    final colors = context.colors;
+    
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.background,
+        title: Text('Edit Place', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: editCtrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Place Name',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, editCtrl.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    
+    if (result != null && result.isNotEmpty && mounted) {
+      await ref.read(newClientControllerProvider.notifier).editPlace(placeId, result);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Place updated successfully'), behavior: SnackBarBehavior.floating),
+      );
+    }
+  }
+
+  void _showDeletePlaceDialog(String placeId) async {
+    final places = ref.read(newClientControllerProvider).places;
+    final place = places.firstWhere((p) => p.id == placeId);
+    final colors = context.colors;
+    
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.background,
+        title: Text('Delete Place', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to delete place "${place.name}" and all its areas?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: colors.destructive),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirm == true && mounted) {
+      await ref.read(newClientControllerProvider.notifier).deletePlace(placeId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Place deleted successfully'), behavior: SnackBarBehavior.floating),
+      );
+    }
+  }
+
+  void _showEditAreaDialog(String areaId) async {
+    final areas = ref.read(newClientControllerProvider).areas;
+    final area = areas.firstWhere((a) => a.id == areaId);
+    final editCtrl = TextEditingController(text: area.name);
+    final colors = context.colors;
+    
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.background,
+        title: Text('Edit Area', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: editCtrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Area Name',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, editCtrl.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    
+    if (result != null && result.isNotEmpty && mounted) {
+      await ref.read(newClientControllerProvider.notifier).editArea(areaId, result);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Area updated successfully'), behavior: SnackBarBehavior.floating),
+      );
+    }
+  }
+
+  void _showDeleteAreaDialog(String areaId) async {
+    final areas = ref.read(newClientControllerProvider).areas;
+    final area = areas.firstWhere((a) => a.id == areaId);
+    final colors = context.colors;
+    
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.background,
+        title: Text('Delete Area', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to delete area "${area.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: colors.destructive),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirm == true && mounted) {
+      await ref.read(newClientControllerProvider.notifier).deleteArea(areaId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Area deleted successfully'), behavior: SnackBarBehavior.floating),
+      );
+    }
+  }
+
   void _handleBack() async {
     final isDirty = ref.read(newClientControllerProvider.notifier).isDirty;
     if (isDirty) {
@@ -223,6 +369,10 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
                   controller: controller,
                   onAddPlace: _showAddPlaceSheet,
                   onAddArea: _showAddAreaSheet,
+                  onEditPlace: _showEditPlaceDialog,
+                  onDeletePlace: _showDeletePlaceDialog,
+                  onEditArea: _showEditAreaDialog,
+                  onDeleteArea: _showDeleteAreaDialog,
                   colors: colors,
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -377,6 +527,10 @@ class _RouteSection extends StatefulWidget {
     required this.controller,
     required this.onAddPlace,
     required this.onAddArea,
+    required this.onEditPlace,
+    required this.onDeletePlace,
+    required this.onEditArea,
+    required this.onDeleteArea,
     required this.colors,
   });
 
@@ -384,6 +538,10 @@ class _RouteSection extends StatefulWidget {
   final NewClientController controller;
   final VoidCallback onAddPlace;
   final VoidCallback onAddArea;
+  final ValueChanged<String> onEditPlace;
+  final ValueChanged<String> onDeletePlace;
+  final ValueChanged<String> onEditArea;
+  final ValueChanged<String> onDeleteArea;
   final AppColors colors;
 
   @override
@@ -489,80 +647,99 @@ class _RouteSectionState extends State<_RouteSection> {
                 style: AppTypography.labelSmall
                     .copyWith(color: widget.colors.mutedFg)),
             const SizedBox(height: AppSpacing.sm),
-            DropdownButtonFormField<String>(
-              initialValue: widget.state.places.any((p) => p.id == widget.state.placeId)
-                  ? widget.state.placeId
-                  : null,
-              dropdownColor: widget.colors.surface,
-              icon:
-                  Icon(Icons.keyboard_arrow_down, color: widget.colors.mutedFg),
-              items: [
-                ...widget.state.places.map((p) => DropdownMenuItem(
-                      value: p.id,
-                      child: Text(
-                        p.name,
-                        style: TextStyle(
-                            color: widget.colors.foreground, fontSize: 14),
-                      ),
-                    )),
-                DropdownMenuItem(
-                  value: 'add_new_place',
-                  child: Row(
-                    children: [
-                      Icon(Icons.add_circle_outline,
-                          color: widget.colors.primary, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Add new place...',
-                        style: TextStyle(
-                          color: widget.colors.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    initialValue: widget.state.places.any((p) => p.id == widget.state.placeId)
+                        ? widget.state.placeId
+                        : null,
+                    dropdownColor: widget.colors.surface,
+                    icon:
+                        Icon(Icons.keyboard_arrow_down, color: widget.colors.mutedFg),
+                    items: [
+                      ...widget.state.places.map((p) => DropdownMenuItem(
+                            value: p.id,
+                            child: Text(
+                              p.name,
+                              style: TextStyle(
+                                  color: widget.colors.foreground, fontSize: 14),
+                            ),
+                          )),
+                      DropdownMenuItem(
+                        value: 'add_new_place',
+                        child: Row(
+                          children: [
+                            Icon(Icons.add_circle_outline,
+                                color: widget.colors.primary, size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Add new place...',
+                              style: TextStyle(
+                                color: widget.colors.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
+                    onChanged: (value) {
+                      if (value == 'add_new_place') {
+                        widget.onAddPlace();
+                      } else if (value != null) {
+                        widget.controller.setPlace(value);
+                      }
+                    },
+                    decoration: InputDecoration(
+                      prefixIcon:
+                          Icon(Icons.place_outlined, color: widget.colors.primary),
+                      hintText: 'Select a place',
+                      hintStyle:
+                          TextStyle(color: widget.colors.mutedFg, fontSize: 14),
+                      errorText: widget.state.errors['place'],
+                      filled: true,
+                      fillColor: widget.colors.surface,
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide:
+                            BorderSide(color: widget.colors.border, width: 1.5),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide:
+                            BorderSide(color: widget.colors.primary, width: 2),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide:
+                            BorderSide(color: widget.colors.destructive, width: 1.5),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide:
+                            BorderSide(color: widget.colors.destructive, width: 2),
+                      ),
+                    ),
                   ),
                 ),
+                if (widget.state.placeId.isNotEmpty) ...[
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: Icon(Icons.edit, color: widget.colors.primary, size: 20),
+                    onPressed: () => widget.onEditPlace(widget.state.placeId),
+                    tooltip: 'Edit Place',
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete, color: widget.colors.destructive, size: 20),
+                    onPressed: () => widget.onDeletePlace(widget.state.placeId),
+                    tooltip: 'Delete Place',
+                  ),
+                ],
               ],
-              onChanged: (value) {
-                if (value == 'add_new_place') {
-                  widget.onAddPlace();
-                } else if (value != null) {
-                  widget.controller.setPlace(value);
-                }
-              },
-              decoration: InputDecoration(
-                prefixIcon:
-                    Icon(Icons.place_outlined, color: widget.colors.primary),
-                hintText: 'Select a place',
-                hintStyle:
-                    TextStyle(color: widget.colors.mutedFg, fontSize: 14),
-                errorText: widget.state.errors['place'],
-                filled: true,
-                fillColor: widget.colors.surface,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      BorderSide(color: widget.colors.border, width: 1.5),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      BorderSide(color: widget.colors.primary, width: 2),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      BorderSide(color: widget.colors.destructive, width: 1.5),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      BorderSide(color: widget.colors.destructive, width: 2),
-                ),
-              ),
             ),
             const SizedBox(height: AppSpacing.lg),
 
@@ -571,82 +748,101 @@ class _RouteSectionState extends State<_RouteSection> {
                 style: AppTypography.labelSmall
                     .copyWith(color: widget.colors.mutedFg)),
             const SizedBox(height: AppSpacing.sm),
-            DropdownButtonFormField<String>(
-              initialValue: widget.state.areas.any((a) => a.id == widget.state.areaId)
-                  ? widget.state.areaId
-                  : null,
-              dropdownColor: widget.colors.surface,
-              icon:
-                  Icon(Icons.keyboard_arrow_down, color: widget.colors.mutedFg),
-              items: [
-                ...widget.state.areas.map((a) => DropdownMenuItem(
-                      value: a.id,
-                      child: Text(
-                        a.name,
-                        style: TextStyle(
-                            color: widget.colors.foreground, fontSize: 14),
-                      ),
-                    )),
-                DropdownMenuItem(
-                  value: 'add_new_area',
-                  child: Row(
-                    children: [
-                      Icon(Icons.add_circle_outline,
-                          color: widget.colors.primary, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Add new area...',
-                        style: TextStyle(
-                          color: widget.colors.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    initialValue: widget.state.areas.any((a) => a.id == widget.state.areaId)
+                        ? widget.state.areaId
+                        : null,
+                    dropdownColor: widget.colors.surface,
+                    icon:
+                        Icon(Icons.keyboard_arrow_down, color: widget.colors.mutedFg),
+                    items: [
+                      ...widget.state.areas.map((a) => DropdownMenuItem(
+                            value: a.id,
+                            child: Text(
+                              a.name,
+                              style: TextStyle(
+                                  color: widget.colors.foreground, fontSize: 14),
+                            ),
+                          )),
+                      DropdownMenuItem(
+                        value: 'add_new_area',
+                        child: Row(
+                          children: [
+                            Icon(Icons.add_circle_outline,
+                                color: widget.colors.primary, size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Add new area...',
+                              style: TextStyle(
+                                color: widget.colors.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
+                    onChanged: widget.state.placeId.isEmpty
+                        ? null
+                        : (value) {
+                            if (value == 'add_new_area') {
+                              widget.onAddArea();
+                            } else if (value != null) {
+                              widget.controller.setArea(value);
+                            }
+                          },
+                    decoration: InputDecoration(
+                      prefixIcon:
+                          Icon(Icons.explore_outlined, color: widget.colors.primary),
+                      hintText: 'Select an area',
+                      hintStyle:
+                          TextStyle(color: widget.colors.mutedFg, fontSize: 14),
+                      errorText: widget.state.errors['area'],
+                      filled: true,
+                      fillColor: widget.colors.surface,
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide:
+                            BorderSide(color: widget.colors.border, width: 1.5),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide:
+                            BorderSide(color: widget.colors.primary, width: 2),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide:
+                            BorderSide(color: widget.colors.destructive, width: 1.5),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide:
+                            BorderSide(color: widget.colors.destructive, width: 2),
+                      ),
+                    ),
                   ),
                 ),
+                if (widget.state.areaId.isNotEmpty) ...[
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: Icon(Icons.edit, color: widget.colors.primary, size: 20),
+                    onPressed: () => widget.onEditArea(widget.state.areaId),
+                    tooltip: 'Edit Area',
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete, color: widget.colors.destructive, size: 20),
+                    onPressed: () => widget.onDeleteArea(widget.state.areaId),
+                    tooltip: 'Delete Area',
+                  ),
+                ],
               ],
-              onChanged: widget.state.placeId.isEmpty
-                  ? null
-                  : (value) {
-                      if (value == 'add_new_area') {
-                        widget.onAddArea();
-                      } else if (value != null) {
-                        widget.controller.setArea(value);
-                      }
-                    },
-              decoration: InputDecoration(
-                prefixIcon:
-                    Icon(Icons.explore_outlined, color: widget.colors.primary),
-                hintText: 'Select an area',
-                hintStyle:
-                    TextStyle(color: widget.colors.mutedFg, fontSize: 14),
-                errorText: widget.state.errors['area'],
-                filled: true,
-                fillColor: widget.colors.surface,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      BorderSide(color: widget.colors.border, width: 1.5),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      BorderSide(color: widget.colors.primary, width: 2),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      BorderSide(color: widget.colors.destructive, width: 1.5),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      BorderSide(color: widget.colors.destructive, width: 2),
-                ),
-              ),
             ),
             if (widget.state.errors.containsKey('area')) ...[
               const SizedBox(height: AppSpacing.sm),
@@ -2323,7 +2519,7 @@ class _LocationBlockState extends State<_LocationBlock> {
 }
 
 // ─── ID Proofs Block ─────────────────────────────────────
-class _IdProofsBlock extends StatefulWidget {
+class _IdProofsBlock extends ConsumerStatefulWidget {
   const _IdProofsBlock({
     required this.state,
     required this.controller,
@@ -2335,11 +2531,131 @@ class _IdProofsBlock extends StatefulWidget {
   final AppColors colors;
 
   @override
-  State<_IdProofsBlock> createState() => _IdProofsBlockState();
+  ConsumerState<_IdProofsBlock> createState() => _IdProofsBlockState();
 }
 
-class _IdProofsBlockState extends State<_IdProofsBlock> {
+class _IdProofsBlockState extends ConsumerState<_IdProofsBlock> {
   String? _selectedType;
+
+  void _showAddProofTypeDialog() async {
+    final colors = widget.colors;
+    final addCtrl = TextEditingController();
+    
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.background,
+        title: Text('Add Proof Type', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: addCtrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Proof Type Name',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, addCtrl.text.trim()),
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+    
+    if (result != null && result.isNotEmpty && mounted) {
+      final configRepo = ref.read(configRepositoryProvider);
+      final current = await configRepo.getProofTypes();
+      if (!current.contains(result)) {
+        current.add(result);
+        await configRepo.saveProofTypes(current);
+      }
+      setState(() {
+        _selectedType = result;
+      });
+    }
+  }
+
+  void _showEditProofTypeDialog(String oldType) async {
+    final colors = widget.colors;
+    final editCtrl = TextEditingController(text: oldType);
+    
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.background,
+        title: Text('Edit Proof Type', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: editCtrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Proof Type Name',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, editCtrl.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    
+    if (result != null && result.isNotEmpty && result != oldType && mounted) {
+      final configRepo = ref.read(configRepositoryProvider);
+      final current = await configRepo.getProofTypes();
+      final idx = current.indexOf(oldType);
+      if (idx != -1) {
+        current[idx] = result;
+        await configRepo.saveProofTypes(current);
+      }
+      setState(() {
+        _selectedType = result;
+      });
+    }
+  }
+
+  void _showDeleteProofTypeDialog(String type) async {
+    final colors = widget.colors;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colors.background,
+        title: Text('Delete Proof Type', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to delete proof type "$type"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: colors.destructive),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirm == true && mounted) {
+      final configRepo = ref.read(configRepositoryProvider);
+      final current = await configRepo.getProofTypes();
+      current.remove(type);
+      await configRepo.saveProofTypes(current);
+      setState(() {
+        _selectedType = null;
+      });
+    }
+  }
 
   Future<void> _processPickedFile(
       String path, String filename, int sizeBytes) async {
@@ -2603,59 +2919,90 @@ class _IdProofsBlockState extends State<_IdProofsBlock> {
     final colors = widget.colors;
     final proofs = widget.state.idProofs;
 
+    final proofTypesAsync = ref.watch(proofTypesStreamProvider);
+    final proofTypes = proofTypesAsync.value ?? ['Aadhaar', 'Voter', 'DL', 'PAN', 'Other'];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('ID Proofs Type',
             style: AppTypography.labelSmall.copyWith(color: colors.mutedFg)),
         const SizedBox(height: AppSpacing.xs),
-        DropdownButtonFormField<String>(
-          initialValue: _selectedType,
-          dropdownColor: colors.surface,
-          icon: Icon(Icons.keyboard_arrow_down, color: colors.mutedFg),
-          hint: Text('Select proof type',
-              style: TextStyle(color: colors.mutedFg, fontSize: 14)),
-          items: ['Aadhaar', 'Voter', 'DL', 'PAN', 'Other']
-              .map((e) => DropdownMenuItem(
-                    value: e,
-                    onTap: () {
-                      if (_selectedType == e) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          setState(() {
-                            _selectedType = null;
-                          });
-                        });
-                      }
-                    },
-                    child: Text(e,
-                        style:
-                            TextStyle(color: colors.foreground, fontSize: 14)),
-                  ))
-              .toList(),
-          onChanged: (val) {
-            setState(() {
-              if (_selectedType == val) {
-                _selectedType = null;
-              } else {
-                _selectedType = val;
-              }
-            });
-          },
-          decoration: InputDecoration(
-            prefixIcon: Icon(Icons.badge_outlined, color: colors.primary),
-            filled: true,
-            fillColor: colors.surface,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: colors.border, width: 1.5),
+        Row(
+          children: [
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                initialValue: proofTypes.contains(_selectedType) ? _selectedType : null,
+                dropdownColor: colors.surface,
+                icon: Icon(Icons.keyboard_arrow_down, color: colors.mutedFg),
+                hint: Text('Select proof type',
+                    style: TextStyle(color: colors.mutedFg, fontSize: 14)),
+                items: [
+                  ...proofTypes.map((e) => DropdownMenuItem(
+                        value: e,
+                        child: Text(e,
+                            style:
+                                TextStyle(color: colors.foreground, fontSize: 14)),
+                      )),
+                  DropdownMenuItem(
+                    value: 'add_new_prooftype',
+                    child: Row(
+                      children: [
+                        Icon(Icons.add_circle_outline,
+                            color: colors.primary, size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Add new proof type...',
+                          style: TextStyle(
+                            color: colors.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                onChanged: (val) {
+                  if (val == 'add_new_prooftype') {
+                    _showAddProofTypeDialog();
+                  } else if (val != null) {
+                    setState(() {
+                      _selectedType = val;
+                    });
+                  }
+                },
+                decoration: InputDecoration(
+                  prefixIcon: Icon(Icons.badge_outlined, color: colors.primary),
+                  filled: true,
+                  fillColor: colors.surface,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: colors.border, width: 1.5),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: colors.primary, width: 2),
+                  ),
+                ),
+              ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: colors.primary, width: 2),
-            ),
-          ),
+            if (_selectedType != null && _selectedType != 'add_new_prooftype' && proofTypes.contains(_selectedType)) ...[
+              const SizedBox(width: 4),
+              IconButton(
+                icon: Icon(Icons.edit, color: colors.primary, size: 20),
+                onPressed: () => _showEditProofTypeDialog(_selectedType!),
+                tooltip: 'Edit Proof Type',
+              ),
+              IconButton(
+                icon: Icon(Icons.delete, color: colors.destructive, size: 20),
+                onPressed: () => _showDeleteProofTypeDialog(_selectedType!),
+                tooltip: 'Delete Proof Type',
+              ),
+            ],
+          ],
         ),
         const SizedBox(height: AppSpacing.md),
         Text('ID Proofs',

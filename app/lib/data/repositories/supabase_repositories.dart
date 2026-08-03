@@ -1284,4 +1284,29 @@ class SupabaseConfigRepository implements ConfigRepository {
     final raw = jsonEncode(brands);
     await _writeData('brands', raw);
   }
+
+  @override
+  Future<List<String>> getProofTypes() async {
+    final raw = await _readData('proof_types');
+    final List decoded = jsonDecode(raw);
+    return decoded.map((item) => item as String).toList();
+  }
+
+  @override
+  Stream<List<String>> watchProofTypes() {
+    return _client.from('config').stream(primaryKey: ['id']).eq('id', 'proof_types').map((list) {
+      if (list.isEmpty) return [];
+      final data = list.first['data'];
+      if (data is List) {
+        return data.map((item) => item as String).toList();
+      }
+      return [];
+    });
+  }
+
+  @override
+  Future<void> saveProofTypes(List<String> proofTypes) async {
+    final raw = jsonEncode(proofTypes);
+    await _writeData('proof_types', raw);
+  }
 }

@@ -298,6 +298,11 @@ class DatabaseHelper {
       'data': jsonEncode(uniqueBrands),
     });
 
+    await db.insert('config', {
+      'id': 'proof_types',
+      'data': jsonEncode(['Aadhaar', 'Voter', 'DL', 'PAN', 'Other']),
+    });
+
     // Seed Products & Opening Transactions
     for (var pr in mockProductsList) {
       await db.insert('products', {

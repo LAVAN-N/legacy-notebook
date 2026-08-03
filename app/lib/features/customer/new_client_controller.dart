@@ -297,6 +297,88 @@ class NewClientController extends StateNotifier<NewClientFormState> {
     }
   }
 
+  Future<void> editPlace(String placeId, String newName) async {
+    try {
+      final configRepo = ref.read(configRepositoryProvider);
+      final places = await configRepo.getPlaces();
+      final updatedPlaces = places.map((p) {
+        if (p.id == placeId) {
+          return p.copyWith(name: newName);
+        }
+        return p;
+      }).toList();
+      await configRepo.savePlaces(updatedPlaces);
+      // Reload places for the current weekday
+      final updatedPlacesForWeekday = await routeRepo.getPlacesByWeekday(state.weekdayId);
+      state = state.copyWith(places: updatedPlacesForWeekday);
+    } catch (e, stack) {
+      developer.log('ERROR editing place', error: e, stackTrace: stack);
+    }
+  }
+
+  Future<void> deletePlace(String placeId) async {
+    try {
+      final configRepo = ref.read(configRepositoryProvider);
+      final places = await configRepo.getPlaces();
+      final updatedPlaces = places.where((p) => p.id != placeId).toList();
+      await configRepo.savePlaces(updatedPlaces);
+      
+      // Also delete areas associated with this place
+      final areas = await configRepo.getAreas();
+      final updatedAreas = areas.where((a) => a.placeId != placeId).toList();
+      await configRepo.saveAreas(updatedAreas);
+      
+      // Clear selected place if deleted
+      final newPlaceId = state.placeId == placeId ? '' : state.placeId;
+      state = state.copyWith(placeId: newPlaceId, areaId: newPlaceId == '' ? '' : state.areaId);
+      
+      // Reload places & areas
+      final updatedPlacesForWeekday = await routeRepo.getPlacesByWeekday(state.weekdayId);
+      final updatedAreasForPlace = newPlaceId.isEmpty ? <Area>[] : await routeRepo.getAreasByPlace(newPlaceId);
+      state = state.copyWith(places: updatedPlacesForWeekday, areas: updatedAreasForPlace);
+    } catch (e, stack) {
+      developer.log('ERROR deleting place', error: e, stackTrace: stack);
+    }
+  }
+
+  Future<void> editArea(String areaId, String newName) async {
+    try {
+      final configRepo = ref.read(configRepositoryProvider);
+      final areas = await configRepo.getAreas();
+      final updatedAreas = areas.map((a) {
+        if (a.id == areaId) {
+          return a.copyWith(name: newName);
+        }
+        return a;
+      }).toList();
+      await configRepo.saveAreas(updatedAreas);
+      // Reload areas for the current place
+      final updatedAreasForPlace = await routeRepo.getAreasByPlace(state.placeId);
+      state = state.copyWith(areas: updatedAreasForPlace);
+    } catch (e, stack) {
+      developer.log('ERROR editing area', error: e, stackTrace: stack);
+    }
+  }
+
+  Future<void> deleteArea(String areaId) async {
+    try {
+      final configRepo = ref.read(configRepositoryProvider);
+      final areas = await configRepo.getAreas();
+      final updatedAreas = areas.where((a) => a.id != areaId).toList();
+      await configRepo.saveAreas(updatedAreas);
+      
+      // Clear selected area if deleted
+      final newAreaId = state.areaId == areaId ? '' : state.areaId;
+      state = state.copyWith(areaId: newAreaId);
+      
+      // Reload areas
+      final updatedAreasForPlace = await routeRepo.getAreasByPlace(state.placeId);
+      state = state.copyWith(areas: updatedAreasForPlace);
+    } catch (e, stack) {
+      developer.log('ERROR deleting area', error: e, stackTrace: stack);
+    }
+  }
+
   Map<String, String> _validate() {
     final errors = <String, String>{};
 

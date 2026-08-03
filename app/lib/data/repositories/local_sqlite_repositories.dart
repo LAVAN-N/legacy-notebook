@@ -1144,4 +1144,25 @@ class LocalSqliteConfigRepository implements ConfigRepository {
     final raw = jsonEncode(brands);
     await _writeData('brands', raw);
   }
+
+  @override
+  Future<List<String>> getProofTypes() async {
+    final raw = await _readData('proof_types');
+    final List decoded = jsonDecode(raw);
+    return decoded.map((item) => item as String).toList();
+  }
+
+  @override
+  Stream<List<String>> watchProofTypes() {
+    return watchQuery(
+      tables: ['config'],
+      query: getProofTypes,
+    );
+  }
+
+  @override
+  Future<void> saveProofTypes(List<String> proofTypes) async {
+    final raw = jsonEncode(proofTypes);
+    await _writeData('proof_types', raw);
+  }
 }

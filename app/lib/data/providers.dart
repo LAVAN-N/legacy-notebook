@@ -132,3 +132,10 @@ final brandsStreamProvider = StreamProvider<List<String>>((ref) {
   final repo = ref.watch(configRepositoryProvider);
   return repo.watchBrands();
 });
+
+/// Proof Types Stream Provider
+final proofTypesStreamProvider = StreamProvider<List<String>>((ref) {
+  final repo = ref.watch(configRepositoryProvider);
+  return repo.watchProofTypes();
+});
+
