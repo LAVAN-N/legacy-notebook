@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../router/navigation_shell.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../../data/providers.dart';
 
-class BreadcrumbsBar extends StatelessWidget {
+class BreadcrumbsBar extends ConsumerWidget {
   const BreadcrumbsBar({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(placesStreamProvider);
+    ref.watch(areasStreamProvider);
+    ref.watch(customersStreamProvider);
+
     final breadcrumbs = context.getBreadcrumbs();
     final colors = context.colors;
 
