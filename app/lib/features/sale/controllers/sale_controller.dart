@@ -32,6 +32,8 @@ class SaleScreenState {
     required this.errorMessage,
     required this.isSaving,
     required this.selectedDate,
+    this.isLend = false,
+    this.lendAmount = 0,
   });
 
   final Customer customer;
@@ -46,8 +48,10 @@ class SaleScreenState {
   final String? errorMessage;
   final bool isSaving;
   final DateTime selectedDate;
+  final bool isLend;
+  final int lendAmount;
 
-  int get totalAmount => lineItems.fold<int>(0, (sum, item) => sum + item.subtotal) ~/ 100;
+  int get totalAmount => isLend ? lendAmount : (lineItems.fold<int>(0, (sum, item) => sum + item.subtotal) ~/ 100);
 
   int get creditChargeAmount {
     if (isDiscounted) return 0;
@@ -77,6 +81,8 @@ class SaleScreenState {
     String? errorMessage,
     bool? isSaving,
     DateTime? selectedDate,
+    bool? isLend,
+    int? lendAmount,
   }) {
     return SaleScreenState(
       customer: customer ?? this.customer,
@@ -91,6 +97,8 @@ class SaleScreenState {
       errorMessage: errorMessage, // Nullable override
       isSaving: isSaving ?? this.isSaving,
       selectedDate: selectedDate ?? this.selectedDate,
+      isLend: isLend ?? this.isLend,
+      lendAmount: lendAmount ?? this.lendAmount,
     );
   }
 }
@@ -124,6 +132,8 @@ class SaleController extends StateNotifier<SaleScreenState> {
           errorMessage: null,
           isSaving: false,
           selectedDate: DateTime.now(),
+          isLend: false,
+          lendAmount: 0,
         )) {
     _init();
 
@@ -159,6 +169,20 @@ class SaleController extends StateNotifier<SaleScreenState> {
         catalog: products,
       );
     }
+  }
+
+  void setLendMode(bool isLend) {
+    state = state.copyWith(
+      isLend: isLend,
+      advanceAmount: 0, // Reset advance in lend mode
+      isDiscounted: false, // Reset discount in lend mode
+      errorMessage: null,
+    );
+  }
+
+  void updateLendAmount(int amount) {
+    if (amount < 0) return;
+    state = state.copyWith(lendAmount: amount, errorMessage: null);
   }
 
   void addProduct(Product product, {int? quantity, int? price}) {
@@ -215,7 +239,7 @@ class SaleController extends StateNotifier<SaleScreenState> {
 
     // Reset advance if it exceeds new total
     int newAdvance = state.advanceAmount;
-    final newTotal = list.fold<int>(0, (sum, i) => sum + i.subtotal);
+    final newTotal = list.fold<int>(0, (sum, i) => sum + i.subtotal) ~/ 100;
     if (newAdvance > newTotal) {
       newAdvance = newTotal;
     }
@@ -265,8 +289,13 @@ class SaleController extends StateNotifier<SaleScreenState> {
   Future<bool> saveSale() async {
     if (state.isSaving) return false;
 
-    if (state.lineItems.isEmpty) {
+    if (!state.isLend && state.lineItems.isEmpty) {
       state = state.copyWith(errorMessage: 'Please add at least one item to purchase.');
+      return false;
+    }
+
+    if (state.isLend && state.lendAmount <= 0) {
+      state = state.copyWith(errorMessage: 'Lend amount must be greater than zero.');
       return false;
     }
 
@@ -285,11 +314,13 @@ class SaleController extends StateNotifier<SaleScreenState> {
     try {
       final saleRepo = _ref.read(saleRepositoryProvider);
       
-      final mappedItems = state.lineItems.map((item) => {
-        'productId': item.product.id,
-        'quantity': item.quantity,
-        'unitPrice': item.price ~/ 100,
-      }).toList();
+      final mappedItems = state.isLend
+          ? <Map<String, dynamic>>[]
+          : state.lineItems.map((item) => {
+              'productId': item.product.id,
+              'quantity': item.quantity,
+              'unitPrice': item.price ~/ 100,
+            }).toList();
 
       await saleRepo.saveSale(
         customerId: _customerId,
@@ -300,6 +331,7 @@ class SaleController extends StateNotifier<SaleScreenState> {
         soldBy: 'Ramesh (Collector)',
         remarks: state.remarks.isNotEmpty ? state.remarks : null,
         customDate: state.selectedDate,
+        lendAmount: state.isLend ? state.lendAmount : null,
       );
 
       state = state.copyWith(isSaving: false);

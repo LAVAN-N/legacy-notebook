@@ -11,6 +11,7 @@ abstract class SaleRepository {
     int creditCharge = 0,
     String? remarks,
     DateTime? customDate,
+    int? lendAmount,
   });
 
   Future<void> undoSale(String saleId);

@@ -915,13 +915,18 @@ class SupabaseSaleRepository implements SaleRepository {
     int creditCharge = 0,
     String? remarks,
     DateTime? customDate,
+    int? lendAmount,
   }) async {
     final saleId = 'sale_${DateTime.now().millisecondsSinceEpoch}';
     final date = customDate ?? DateTime.now();
 
     int totalAmount = 0;
-    for (var item in items) {
-      totalAmount += (item['quantity'] as int) * (item['unitPrice'] as int);
+    if (lendAmount != null) {
+      totalAmount = lendAmount;
+    } else {
+      for (var item in items) {
+        totalAmount += (item['quantity'] as int) * (item['unitPrice'] as int);
+      }
     }
     totalAmount = totalAmount - discount + creditCharge;
     final financedAmount = totalAmount - advanceAmount;

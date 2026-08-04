@@ -33,6 +33,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
   final TextEditingController _advanceController = TextEditingController();
   final TextEditingController _creditChargeController = TextEditingController();
   final TextEditingController _remarksController = TextEditingController();
+  final TextEditingController _lendAmountController = TextEditingController();
 
   bool get _isDirty {
     final state = ref.read(saleControllerProvider(widget.customerId));
@@ -40,6 +41,9 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
       return true;
     }
     if (_advanceController.text != '0' && _advanceController.text.isNotEmpty) {
+      return true;
+    }
+    if (_lendAmountController.text != '0' && _lendAmountController.text.isNotEmpty) {
       return true;
     }
     if (_creditChargeController.text.isNotEmpty && _creditChargeController.text != '0') {
@@ -92,6 +96,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
   void initState() {
     super.initState();
     _advanceController.text = '0';
+    _lendAmountController.text = '0';
   }
 
   @override
@@ -99,6 +104,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
     _advanceController.dispose();
     _creditChargeController.dispose();
     _remarksController.dispose();
+    _lendAmountController.dispose();
     super.dispose();
   }
 
@@ -149,7 +155,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
           onPressed: _handleBack,
         ),
         title: Text(
-          'Record Home Appliance Sale',
+          state.isLend ? 'Record Cash Loan / Lend' : 'Record Home Appliance Sale',
           style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
         ),
       body: SingleChildScrollView(
@@ -175,143 +181,189 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                 },
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
             _buildDatePickerRow(context, ref, state.selectedDate),
+            const SizedBox(height: AppSpacing.md),
+            _buildToggleBar(context, ref, state),
             const SizedBox(height: AppSpacing.lg),
 
-            // Products Catalog Selection trigger
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Line Items / Items Sold',
-                  style: AppTypography.titleSmall.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: colors.foreground,
+            if (!state.isLend) ...[
+              // Products Catalog Selection trigger
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Line Items / Items Sold',
+                    style: AppTypography.titleSmall.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colors.foreground,
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => _showProductPicker(state.catalog),
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('ADD ITEM'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+
+              // Line items list
+              if (state.lineItems.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppSpacing.xxl),
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    border: Border.all(color: colors.border),
+                  ),
+                  alignment: Alignment.center,
+                  child: Column(
+                    children: [
+                      Icon(Icons.shopping_bag, size: 36, color: colors.mutedFg.withValues(alpha: 0.5)),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No products added yet',
+                        style: AppTypography.labelMedium.copyWith(color: colors.mutedFg),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Card(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: state.lineItems.length,
+                    separatorBuilder: (_, __) => const Divider(),
+                    itemBuilder: (context, index) {
+                      final item = state.lineItems[index];
+
+                      return ListTile(
+                        title: Text(
+                          item.product.name,
+                          style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        subtitle: Text(
+                          '${rupees(item.price ~/ 100)} x ${item.quantity}',
+                          style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              rupees(item.subtotal ~/ 100),
+                              style: AppTypography.currencySmall.copyWith(color: colors.foreground),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            IconButton(
+                              icon: Icon(Icons.remove_circle_outline, color: colors.danger, size: 18),
+                              onPressed: () {
+                                ref
+                                    .read(saleControllerProvider(widget.customerId).notifier)
+                                    .updateQuantity(item.product.id, item.quantity - 1);
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.add_circle_outline, color: colors.primary, size: 18),
+                              onPressed: () {
+                                ref
+                                    .read(saleControllerProvider(widget.customerId).notifier)
+                                    .updateQuantity(item.product.id, item.quantity + 1);
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
-                TextButton.icon(
-                  onPressed: () => _showProductPicker(state.catalog),
-                  icon: const Icon(Icons.add, size: 16),
-                  label: const Text('ADD ITEM'),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-
-            // Line items list
-            if (state.lineItems.isEmpty)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(AppSpacing.xxl),
-                decoration: BoxDecoration(
-                  color: colors.surface,
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
-                  border: Border.all(color: colors.border),
-                ),
-                alignment: Alignment.center,
-                child: Column(
-                  children: [
-                    Icon(Icons.shopping_bag, size: 36, color: colors.mutedFg.withValues(alpha: 0.5)),
-                    const SizedBox(height: 8),
-                    Text(
-                      'No products added yet',
-                      style: AppTypography.labelMedium.copyWith(color: colors.mutedFg),
-                    ),
-                  ],
-                ),
-              )
-            else
-              Card(
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: state.lineItems.length,
-                  separatorBuilder: (_, __) => const Divider(),
-                  itemBuilder: (context, index) {
-                    final item = state.lineItems[index];
-
-                    return ListTile(
-                      title: Text(
-                        item.product.name,
-                        style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                      subtitle: Text(
-                        '${rupees(item.price ~/ 100)} x ${item.quantity}',
-                        style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            rupees(item.subtotal ~/ 100),
-                            style: AppTypography.currencySmall.copyWith(color: colors.foreground),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          IconButton(
-                            icon: Icon(Icons.remove_circle_outline, color: colors.danger, size: 18),
-                            onPressed: () {
-                              ref
-                                  .read(saleControllerProvider(widget.customerId).notifier)
-                                  .updateQuantity(item.product.id, item.quantity - 1);
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.add_circle_outline, color: colors.primary, size: 18),
-                            onPressed: () {
-                              ref
-                                  .read(saleControllerProvider(widget.customerId).notifier)
-                                  .updateQuantity(item.product.id, item.quantity + 1);
-                            },
-                          ),
-                        ],
-                      ),
+              const SizedBox(height: AppSpacing.lg),
+            ] else ...[
+              // Lend Amount input field
+              Text(
+                'Lend Amount (₹) *',
+                style: AppTypography.labelMedium.copyWith(color: colors.mutedFg),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              TextField(
+                controller: _lendAmountController,
+                keyboardType: TextInputType.number,
+                style: AppTypography.currencyMedium.copyWith(color: colors.foreground),
+                onTap: () {
+                  if (_lendAmountController.text == '0') {
+                    _lendAmountController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _lendAmountController.text.length),
                     );
-                  },
+                  }
+                },
+                onChanged: (val) {
+                  // Strip negative signs and non-numeric characters
+                  String sanitized = val.replaceAll(RegExp(r'[^0-9]'), '');
+                  // Strip leading zeros
+                  sanitized = sanitized.replaceAll(RegExp(r'^0+'), '');
+                  if (sanitized.isEmpty) {
+                    sanitized = '0';
+                  }
+                  if (sanitized != val) {
+                    _lendAmountController.value = TextEditingValue(
+                      text: sanitized,
+                      selection: TextSelection.collapsed(offset: sanitized.length),
+                    );
+                  }
+                  final amount = int.tryParse(sanitized) ?? 0;
+                  ref.read(saleControllerProvider(widget.customerId).notifier).updateLendAmount(amount);
+                },
+                decoration: const InputDecoration(
+                  prefixText: '₹ ',
+                  hintText: 'Enter principal amount to lend',
                 ),
               ),
-            const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.lg),
+            ],
 
-            // Advance cash input field
-            Text(
-              'Down Payment / Advance Received Today (₹)',
-              style: AppTypography.labelMedium.copyWith(color: colors.mutedFg),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-             TextField(
-              controller: _advanceController,
-              keyboardType: TextInputType.number,
-              style: AppTypography.currencyMedium.copyWith(color: colors.foreground),
-              onTap: () {
-                if (_advanceController.text == '0') {
-                  _advanceController.selection = TextSelection.fromPosition(
-                    TextPosition(offset: _advanceController.text.length),
-                  );
-                }
-              },
-              onChanged: (val) {
-                // Strip negative signs and non-numeric characters
-                String sanitized = val.replaceAll(RegExp(r'[^0-9]'), '');
-                // Strip leading zeros
-                sanitized = sanitized.replaceAll(RegExp(r'^0+'), '');
-                if (sanitized.isEmpty) {
-                  sanitized = '0';
-                }
-                if (sanitized != val) {
-                  _advanceController.value = TextEditingValue(
-                    text: sanitized,
-                    selection: TextSelection.collapsed(offset: sanitized.length),
-                  );
-                }
-                final adv = int.tryParse(sanitized) ?? 0;
-                ref.read(saleControllerProvider(widget.customerId).notifier).updateAdvance(adv);
-              },
-              decoration: const InputDecoration(
-                prefixText: '₹ ',
-                hintText: 'Enter cash down payment collected',
+            if (!state.isLend) ...[
+              // Advance cash input field
+              Text(
+                'Down Payment / Advance Received Today (₹)',
+                style: AppTypography.labelMedium.copyWith(color: colors.mutedFg),
               ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.sm),
+               TextField(
+                controller: _advanceController,
+                keyboardType: TextInputType.number,
+                style: AppTypography.currencyMedium.copyWith(color: colors.foreground),
+                onTap: () {
+                  if (_advanceController.text == '0') {
+                    _advanceController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _advanceController.text.length),
+                    );
+                  }
+                },
+                onChanged: (val) {
+                  // Strip negative signs and non-numeric characters
+                  String sanitized = val.replaceAll(RegExp(r'[^0-9]'), '');
+                  // Strip leading zeros
+                  sanitized = sanitized.replaceAll(RegExp(r'^0+'), '');
+                  if (sanitized.isEmpty) {
+                    sanitized = '0';
+                  }
+                  if (sanitized != val) {
+                    _advanceController.value = TextEditingValue(
+                      text: sanitized,
+                      selection: TextSelection.collapsed(offset: sanitized.length),
+                    );
+                  }
+                  final adv = int.tryParse(sanitized) ?? 0;
+                  ref.read(saleControllerProvider(widget.customerId).notifier).updateAdvance(adv);
+                },
+                decoration: const InputDecoration(
+                  prefixText: '₹ ',
+                  hintText: 'Enter cash down payment collected',
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
 
             // Credit Charge input field
             Text(
@@ -421,37 +473,38 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
             ),
             const SizedBox(height: AppSpacing.md),
 
-            Row(
-              children: [
-                Checkbox(
-                  value: state.isDiscounted,
-                  activeColor: colors.primary,
-                  onChanged: (val) {
-                    if (val != null) {
-                      ref
-                          .read(saleControllerProvider(widget.customerId).notifier)
-                          .toggleDiscounted(val);
-                    }
-                  },
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Discounted Ready Cash Sale',
-                        style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      Text(
-                        'Overrides the total price to match the down payment (zero credit).',
-                        style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
-                      ),
-                    ],
+            if (!state.isLend) ...[
+              Row(
+                children: [
+                  Checkbox(
+                    value: state.isDiscounted,
+                    activeColor: colors.primary,
+                    onChanged: (val) {
+                      if (val != null) {
+                        ref
+                            .read(saleControllerProvider(widget.customerId).notifier)
+                            .toggleDiscounted(val);
+                      }
+                    },
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.lg),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Discounted Ready Cash Sale',
+                          style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        Text(
+                          'Overrides the total price to match the down payment (zero credit).',
+                          style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
 
             // Remarks field
             Text(
@@ -490,7 +543,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Total Purchase Value', style: AppTypography.bodyMedium),
+                        Text(state.isLend ? 'Principal Lent Amount' : 'Total Purchase Value', style: AppTypography.bodyMedium),
                         AmountText(amount: totalSale, style: AppTypography.currencySmall),
                       ],
                     ),
@@ -528,19 +581,21 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                         ],
                       ),
                     ],
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Down Payment (Cash)', style: AppTypography.bodyMedium.copyWith(color: colors.success)),
-                        Text('- ${rupees(state.advanceAmount)}', style: AppTypography.currencySmall.copyWith(color: colors.success)),
-                      ],
-                    ),
+                    if (state.advanceAmount > 0) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Down Payment (Cash)', style: AppTypography.bodyMedium.copyWith(color: colors.success)),
+                          Text('- ${rupees(state.advanceAmount)}', style: AppTypography.currencySmall.copyWith(color: colors.success)),
+                        ],
+                      ),
+                    ],
                     const Divider(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Credit Added (Financed)', style: AppTypography.bodyMedium.copyWith(color: colors.danger)),
+                        Text(state.isLend ? 'Credit Added' : 'Credit Added (Financed)', style: AppTypography.bodyMedium.copyWith(color: colors.danger)),
                         Text('+ ${rupees(creditAdded)}', style: AppTypography.currencySmall.copyWith(color: colors.danger)),
                       ],
                     ),
@@ -548,19 +603,19 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Sale Type Classification', style: AppTypography.bodyMedium),
+                        Text(state.isLend ? 'Classification' : 'Sale Type Classification', style: AppTypography.bodyMedium),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: state.saleType == 'READY'
-                                ? colors.success.withValues(alpha: 0.12)
-                                : colors.warning.withValues(alpha: 0.12),
+                            color: state.isLend || state.saleType == 'CREDIT'
+                                ? colors.warning.withValues(alpha: 0.12)
+                                : colors.success.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(AppRadius.sm),
                           ),
                           child: Text(
-                            state.saleType,
+                            state.isLend ? 'LEND' : state.saleType,
                             style: AppTypography.labelSmall.copyWith(
-                              color: state.saleType == 'READY' ? colors.success : colors.warning,
+                              color: state.isLend || state.saleType == 'CREDIT' ? colors.warning : colors.success,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -718,6 +773,65 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
             Icon(Icons.edit_calendar_outlined, color: colors.primary, size: 18),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildToggleBar(BuildContext context, WidgetRef ref, SaleScreenState state) {
+    final colors = context.colors;
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: colors.muted.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.border),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                ref.read(saleControllerProvider(widget.customerId).notifier).setLendMode(false);
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: !state.isLend ? colors.primary : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  'Sale',
+                  style: AppTypography.labelMedium.copyWith(
+                    color: !state.isLend ? colors.primaryFg : colors.mutedFg,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                ref.read(saleControllerProvider(widget.customerId).notifier).setLendMode(true);
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: state.isLend ? colors.primary : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  'Lend',
+                  style: AppTypography.labelMedium.copyWith(
+                    color: state.isLend ? colors.primaryFg : colors.mutedFg,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

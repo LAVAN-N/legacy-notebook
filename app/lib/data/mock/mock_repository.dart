@@ -605,18 +605,23 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     int creditCharge = 0,
     String? remarks,
     DateTime? customDate,
+    int? lendAmount,
   }) async {
     int total = 0;
-    for (final item in items) {
-      final qty = item['quantity'] as int;
-      final price = item['unitPrice'] as int;
-      total += qty * price;
- 
-      // Atomic inventory deduction
-      final pIndex = _products.indexWhere((p) => p.id == item['productId']);
-      if (pIndex != -1) {
-        final p = _products[pIndex];
-        _products[pIndex] = p.copyWith(stock: p.stock - qty);
+    if (lendAmount != null) {
+      total = lendAmount;
+    } else {
+      for (final item in items) {
+        final qty = item['quantity'] as int;
+        final price = item['unitPrice'] as int;
+        total += qty * price;
+   
+        // Atomic inventory deduction
+        final pIndex = _products.indexWhere((p) => p.id == item['productId']);
+        if (pIndex != -1) {
+          final p = _products[pIndex];
+          _products[pIndex] = p.copyWith(stock: p.stock - qty);
+        }
       }
     }
  

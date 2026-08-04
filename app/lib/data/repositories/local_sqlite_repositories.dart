@@ -828,16 +828,21 @@ class LocalSqliteSaleRepository implements SaleRepository {
     int creditCharge = 0,
     String? remarks,
     DateTime? customDate,
+    int? lendAmount,
   }) async {
     final db = await DatabaseHelper.instance.database;
     final saleId = 'sale_${DateTime.now().millisecondsSinceEpoch}';
 
     // Calculate totals
     int totalAmount = 0;
-    for (var item in items) {
-      final qty = item['quantity'] as int;
-      final unitPrice = item['unitPrice'] as int;
-      totalAmount += qty * unitPrice;
+    if (lendAmount != null) {
+      totalAmount = lendAmount;
+    } else {
+      for (var item in items) {
+        final qty = item['quantity'] as int;
+        final unitPrice = item['unitPrice'] as int;
+        totalAmount += qty * unitPrice;
+      }
     }
     totalAmount -= discount;
     totalAmount += creditCharge;
