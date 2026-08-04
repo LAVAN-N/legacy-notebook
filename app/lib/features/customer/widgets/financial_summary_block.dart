@@ -576,8 +576,13 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
 
                                                     Color cellColor = colors.border.withValues(alpha: 0.12);
                                                     if (hasSales) {
-                                                      final hasCredit = daySales.sales.any((s) => s.saleType.toUpperCase() == 'CREDIT');
-                                                      cellColor = hasCredit ? colors.danger : colors.success;
+                                                      final hasLend = daySales.sales.any((s) => s.saleType.toUpperCase() == 'LEND');
+                                                      if (hasLend) {
+                                                        cellColor = Colors.orange;
+                                                      } else {
+                                                        final hasCredit = daySales.sales.any((s) => s.saleType.toUpperCase() == 'CREDIT');
+                                                        cellColor = hasCredit ? colors.danger : colors.success;
+                                                      }
                                                     }
 
                                                     return GestureDetector(
@@ -622,9 +627,11 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           _buildLegendItem(colors.success, 'Ready Sale', colors),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 12),
                           _buildLegendItem(colors.danger, 'Credit Sale', colors),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 12),
+                          _buildLegendItem(Colors.orange, 'Lend', colors),
+                          const SizedBox(width: 12),
                           _buildLegendItem(colors.border.withValues(alpha: 0.25), 'No Sale', colors),
                         ],
                       ),
@@ -693,9 +700,11 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                                     width: 6,
                                     height: 6,
                                     decoration: BoxDecoration(
-                                      color: grouped.saleType.toUpperCase() == 'CREDIT'
-                                          ? colors.danger
-                                          : colors.success,
+                                      color: grouped.saleType.toUpperCase() == 'LEND'
+                                          ? Colors.orange
+                                          : (grouped.saleType.toUpperCase() == 'CREDIT'
+                                              ? colors.danger
+                                              : colors.success),
                                       shape: BoxShape.circle,
                                     ),
                                   ),
@@ -703,7 +712,9 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                                   // Items text
                                   Expanded(
                                     child: Text(
-                                      grouped.sales.expand((s) => s.items).map((i) => i.productName).join(', '),
+                                      grouped.saleType.toUpperCase() == 'LEND'
+                                          ? 'Cash Loan / Lend'
+                                          : grouped.sales.expand((s) => s.items).map((i) => i.productName).join(', '),
                                       style: AppTypography.labelSmall.copyWith(
                                         color: colors.foreground.withValues(alpha: 0.8),
                                         fontSize: 8,

@@ -624,6 +624,18 @@ final mockSalesList = [
     financedAmount: 0,
     soldBy: 'Ramesh (Collector)',
   ),
+  // Lakshmi Priya (c-1): Cash loan / Lend, total 5500, advance 0, financed 5500
+  Sale(
+    id: 's-lend-mock',
+    customerId: 'CU-001',
+    saleDatetime: DateTime.now().subtract(const Duration(days: 4)),
+    saleType: 'LEND',
+    totalAmount: 5500,
+    advanceAmount: 0,
+    financedAmount: 5500,
+    soldBy: 'Ramesh (Collector)',
+    remarks: 'LEND_DETAILS:principal=5000&charge=500&note=Emergency cash helper',
+  ),
   // Muthu Pandian (c-2): bought Induction Cooktop, price 2800, advance 500, financed 2300
   Sale(
     id: 's-3',

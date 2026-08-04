@@ -70,36 +70,62 @@ class TimelineEntryTile extends StatelessWidget {
         );
       },
       sale: (id, at, items, total, advance, creditAdded, saleType, collectorName, note) {
-        icon = Icons.shopping_bag_outlined;
-        iconColor = colors.primary;
-        iconBg = colors.primary.withValues(alpha: 0.1);
-        title = customTitle ?? '${saleType == 'CREDIT' ? 'Credit' : 'Ready'} Sale';
-        subtitle = '${dateShort(at)} · By $collectorName';
+        if (saleType.toUpperCase() == 'LEND') {
+          final lend = _LendDetails.parse(note ?? '');
+          icon = Icons.handshake_outlined;
+          iconColor = Colors.orange;
+          iconBg = Colors.orange.withValues(alpha: 0.1);
+          title = customTitle ?? 'Cash Loan / Lend';
+          subtitle = '${dateShort(at)} · By $collectorName';
+          subtitle += '\nPrincipal: ${rupees(lend.principal)} · Surcharge: ${rupees(lend.charge)}';
+          if (lend.note.isNotEmpty) {
+            subtitle += '\n"${lend.note}"';
+          }
 
-        final itemNames = items.map((i) => '${i.productName} (x${i.quantity})').join(', ');
-        subtitle += '\n$itemNames';
-
-        if (note != null && note.isNotEmpty) {
-          subtitle += '\n"$note"';
-        }
-
-        trailing = Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              '+${rupees(creditAdded)}',
-              style: AppTypography.currencySmall.copyWith(
-                color: creditAdded > 0 ? colors.danger : colors.foreground,
-              ),
-            ),
-            if (advance > 0)
+          trailing = Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
               Text(
-                'Paid: ${rupees(advance)}',
-                style: AppTypography.labelSmall.copyWith(color: colors.success, fontSize: 10),
+                '+${rupees(creditAdded)}',
+                style: AppTypography.currencySmall.copyWith(
+                  color: Colors.orange,
+                ),
               ),
-          ],
-        );
+            ],
+          );
+        } else {
+          icon = Icons.shopping_bag_outlined;
+          iconColor = colors.primary;
+          iconBg = colors.primary.withValues(alpha: 0.1);
+          title = customTitle ?? '${saleType == 'CREDIT' ? 'Credit' : 'Ready'} Sale';
+          subtitle = '${dateShort(at)} · By $collectorName';
+
+          final itemNames = items.map((i) => '${i.productName} (x${i.quantity})').join(', ');
+          subtitle += '\n$itemNames';
+
+          if (note != null && note.isNotEmpty) {
+            subtitle += '\n"$note"';
+          }
+
+          trailing = Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '+${rupees(creditAdded)}',
+                style: AppTypography.currencySmall.copyWith(
+                  color: creditAdded > 0 ? colors.danger : colors.foreground,
+                ),
+              ),
+              if (advance > 0)
+                Text(
+                  'Paid: ${rupees(advance)}',
+                  style: AppTypography.labelSmall.copyWith(color: colors.success, fontSize: 10),
+                ),
+            ],
+          );
+        }
       },
     );
 
@@ -148,5 +174,30 @@ class TimelineEntryTile extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _LendDetails {
+  final int principal;
+  final int charge;
+  final String note;
+
+  _LendDetails({required this.principal, required this.charge, required this.note});
+
+  factory _LendDetails.parse(String remarks) {
+    if (!remarks.startsWith('LEND_DETAILS:')) {
+      return _LendDetails(principal: 0, charge: 0, note: remarks);
+    }
+    try {
+      final query = remarks.substring('LEND_DETAILS:'.length);
+      final params = Uri.splitQueryString(query);
+      return _LendDetails(
+        principal: int.parse(params['principal'] ?? '0'),
+        charge: int.parse(params['charge'] ?? '0'),
+        note: params['note'] ?? '',
+      );
+    } catch (_) {
+      return _LendDetails(principal: 0, charge: 0, note: remarks);
+    }
   }
 }

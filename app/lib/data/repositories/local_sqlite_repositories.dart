@@ -297,12 +297,14 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
     for (final sale in saleMaps) {
       final id = sale['id'] as String;
       final at = DateTime.parse(sale['sale_datetime'] as String);
-      final saleType = sale['sale_type'] as String;
+      final remarks = sale['remarks'] as String?;
+      final dbSaleType = sale['sale_type'] as String;
+      final isLend = remarks != null && remarks.startsWith('LEND_DETAILS:');
+      final saleType = isLend ? 'LEND' : dbSaleType;
       final total = sale['total_amount'] as int;
       final advance = sale['advance_amount'] as int;
       final creditAdded = sale['financed_amount'] as int;
       final soldBy = sale['sold_by'] as String;
-      final remarks = sale['remarks'] as String?;
 
       // Query sale items left join products to get the product name
       final itemMaps = await db.rawQuery('''
@@ -805,17 +807,22 @@ class LocalSqliteSaleRepository implements SaleRepository {
   Future<List<Sale>> _getAllSales() async {
     final db = await DatabaseHelper.instance.database;
     final maps = await db.query('sales', orderBy: 'sale_datetime DESC');
-    return maps.map((m) => Sale(
-      id: m['id'] as String,
-      customerId: m['customer_id'] as String,
-      saleDatetime: DateTime.parse(m['sale_datetime'] as String),
-      saleType: m['sale_type'] as String,
-      totalAmount: m['total_amount'] as int,
-      advanceAmount: m['advance_amount'] as int,
-      financedAmount: m['financed_amount'] as int,
-      soldBy: m['sold_by'] as String,
-      remarks: m['remarks'] as String?,
-    )).toList();
+    return maps.map((m) {
+      final remarks = m['remarks'] as String?;
+      final dbSaleType = m['sale_type'] as String;
+      final isLend = remarks != null && remarks.startsWith('LEND_DETAILS:');
+      return Sale(
+        id: m['id'] as String,
+        customerId: m['customer_id'] as String,
+        saleDatetime: DateTime.parse(m['sale_datetime'] as String),
+        saleType: isLend ? 'LEND' : dbSaleType,
+        totalAmount: m['total_amount'] as int,
+        advanceAmount: m['advance_amount'] as int,
+        financedAmount: m['financed_amount'] as int,
+        soldBy: m['sold_by'] as String,
+        remarks: remarks,
+      );
+    }).toList();
   }
 
   @override
@@ -855,7 +862,7 @@ class LocalSqliteSaleRepository implements SaleRepository {
     final financedAmount = totalAmount - advanceAmount;
 
     // Business Rule 3: Derived Sale Type
-    final saleType = (financedAmount == 0) ? 'READY' : 'CREDIT';
+    final saleType = lendAmount != null ? 'LEND' : ((financedAmount == 0) ? 'READY' : 'CREDIT');
 
     await db.transaction((txn) async {
       // Save sale

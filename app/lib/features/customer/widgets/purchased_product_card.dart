@@ -84,11 +84,17 @@ class PurchaseSummaryCard extends StatelessWidget {
                     children: groupedSale.sales.asMap().entries.map((entry) {
                       final idx = entry.key;
                       final sale = entry.value;
+                      final isLend = sale.saleType.toUpperCase() == 'LEND';
                       final isCredit = sale.saleType.toUpperCase() == 'CREDIT';
-                      final badgeColor = isCredit ? colors.danger : colors.success;
+                      final badgeColor = isLend ? Colors.orange : (isCredit ? colors.danger : colors.success);
                       
-                      final itemsTotal = sale.items.fold<int>(0, (sum, item) => sum + item.quantity * item.unitPrice);
-                      final creditCharge = (sale.total - itemsTotal).clamp(0, 9999999);
+                      final lend = isLend ? _LendDetails.parse(sale.note ?? '') : null;
+                      final itemsTotal = isLend
+                          ? lend!.principal
+                          : sale.items.fold<int>(0, (sum, item) => sum + item.quantity * item.unitPrice);
+                      final creditCharge = isLend
+                          ? lend!.charge
+                          : (sale.total - itemsTotal).clamp(0, 9999999);
                       final timeStr = DateFormat('hh:mm a').format(sale.at);
 
                       return Column(
@@ -119,16 +125,16 @@ class PurchaseSummaryCard extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          // Products list
-                          ...sale.items.map((item) {
-                            return Padding(
+                          // Products list or Lend principal amount
+                          if (isLend)
+                            Padding(
                               padding: const EdgeInsets.only(bottom: 6.0),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      '${item.productName} (x${item.quantity})',
+                                      'Cash Loan / Lend',
                                       style: AppTypography.bodyMedium.copyWith(color: colors.foreground.withValues(alpha: 0.8)),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
@@ -136,13 +142,36 @@ class PurchaseSummaryCard extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 12),
                                   Text(
-                                    rupees(item.unitPrice * item.quantity),
+                                    rupees(lend!.principal),
                                     style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                                   ),
                                 ],
                               ),
-                            );
-                          }),
+                            )
+                          else
+                            ...sale.items.map((item) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 6.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '${item.productName} (x${item.quantity})',
+                                        style: AppTypography.bodyMedium.copyWith(color: colors.foreground.withValues(alpha: 0.8)),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      rupees(item.unitPrice * item.quantity),
+                                      style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
                           const SizedBox(height: 12),
                           // Elevated Financial Card
                           Card(
@@ -160,7 +189,7 @@ class PurchaseSummaryCard extends StatelessWidget {
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text('Items Total', style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg)),
+                                      Text(isLend ? 'Principal Amount' : 'Items Total', style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg)),
                                       Text(rupees(itemsTotal), style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
                                     ],
                                   ),
@@ -178,25 +207,27 @@ class PurchaseSummaryCard extends StatelessWidget {
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text('Grand Total', style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
-                                      Text(rupees(sale.total), style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: colors.primary)),
+                                      Text(isLend ? 'Lend Total' : 'Grand Total', style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+                                      Text(rupees(sale.total), style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: isLend ? Colors.orange : colors.primary)),
                                     ],
                                   ),
-                                  const SizedBox(height: 6),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text('Down Payment', style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg)),
-                                      Text('- ${rupees(sale.advance)}', style: AppTypography.bodyMedium.copyWith(color: colors.success, fontWeight: FontWeight.w600)),
-                                    ],
-                                  ),
-                                  if (isCredit) ...[
+                                  if (!isLend) ...[
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text('Down Payment', style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg)),
+                                        Text('- ${rupees(sale.advance)}', style: AppTypography.bodyMedium.copyWith(color: colors.success, fontWeight: FontWeight.w600)),
+                                      ],
+                                    ),
+                                  ],
+                                  if (isCredit || isLend) ...[
                                     const SizedBox(height: 6),
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text('Financed Outstanding', style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg)),
-                                        Text('+ ${rupees(sale.creditAdded)}', style: AppTypography.bodyMedium.copyWith(color: colors.danger, fontWeight: FontWeight.bold)),
+                                        Text('+ ${rupees(sale.creditAdded)}', style: AppTypography.bodyMedium.copyWith(color: isLend ? Colors.orange : colors.danger, fontWeight: FontWeight.bold)),
                                       ],
                                     ),
                                   ],
@@ -220,8 +251,9 @@ class PurchaseSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final isLend = groupedSale.saleType.toUpperCase() == 'LEND';
     final isCredit = groupedSale.saleType.toUpperCase() == 'CREDIT';
-    final badgeColor = isCredit ? colors.danger : colors.success;
+    final badgeColor = isLend ? Colors.orange : (isCredit ? colors.danger : colors.success);
 
     return GestureDetector(
       onTap: () => _showFinancialsSheet(context, colors),
@@ -294,36 +326,9 @@ class PurchaseSummaryCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: colors.success.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'READY',
-                              style: AppTypography.labelSmall.copyWith(
-                                color: colors.success,
-                                fontSize: 6.5,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: colors.danger.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'CREDIT',
-                              style: AppTypography.labelSmall.copyWith(
-                                color: colors.danger,
-                                fontSize: 6.5,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
+                          _buildYAxisLabel('READY', colors.success),
+                          _buildYAxisLabel('CREDIT', colors.danger),
+                          _buildYAxisLabel('LEND', Colors.orange),
                         ],
                       ),
                     ),
@@ -377,57 +382,72 @@ class PurchaseSummaryCard extends StatelessWidget {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: groupedSale.sales.map((sale) {
-                                final isCredit = sale.saleType.toUpperCase() == 'CREDIT';
-                                final color = isCredit ? colors.danger : colors.success;
+                                final type = sale.saleType.toUpperCase();
+                                final double nodeVal; // 1.0 for READY, 0.5 for CREDIT, 0.0 for LEND
+                                final Color nodeColor;
+                                if (type == 'LEND') {
+                                  nodeVal = 0.0;
+                                  nodeColor = Colors.orange;
+                                } else if (type == 'CREDIT') {
+                                  nodeVal = 0.5;
+                                  nodeColor = colors.danger;
+                                } else {
+                                  nodeVal = 1.0;
+                                  nodeColor = colors.success;
+                                }
                                 final timeStr = DateFormat('hh:mm a').format(sale.at);
                                 return Expanded(
-                                  child: Stack(
-                                    clipBehavior: Clip.none,
-                                    alignment: Alignment.center,
-                                    children: [
-                                      // Trace Line to X-Axis
-                                      Positioned(
-                                        top: isCredit ? null : 6,
-                                        bottom: isCredit ? 6 : null,
-                                        child: Container(
-                                          width: 0.8,
-                                          height: 28,
-                                          color: color.withValues(alpha: 0.3),
-                                        ),
-                                      ),
-                                      // Node Circle
-                                      Positioned(
-                                        top: isCredit ? null : 6,
-                                        bottom: isCredit ? 6 : null,
-                                        child: Container(
-                                          width: 8,
-                                          height: 8,
-                                          decoration: BoxDecoration(
-                                            color: colors.surface,
-                                            shape: BoxShape.circle,
-                                            border: Border.all(color: color, width: 2),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: color.withValues(alpha: 0.2),
-                                                blurRadius: 3,
-                                                spreadRadius: 0.5,
+                                  child: LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      final totalHeight = constraints.maxHeight;
+                                      final double topOffset = (1.0 - nodeVal) * totalHeight;
+                                      return Stack(
+                                        clipBehavior: Clip.none,
+                                        alignment: Alignment.center,
+                                        children: [
+                                          // Trace Line to X-Axis
+                                          Positioned(
+                                            top: topOffset,
+                                            bottom: 0,
+                                            child: Container(
+                                              width: 0.8,
+                                              color: nodeColor.withValues(alpha: 0.3),
+                                            ),
+                                          ),
+                                          // Node Circle
+                                          Positioned(
+                                            top: topOffset - 4, // center the circle
+                                            child: Container(
+                                              width: 8,
+                                              height: 8,
+                                              decoration: BoxDecoration(
+                                                color: colors.surface,
+                                                shape: BoxShape.circle,
+                                                border: Border.all(color: nodeColor, width: 2),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: nodeColor.withValues(alpha: 0.2),
+                                                    blurRadius: 3,
+                                                    spreadRadius: 0.5,
+                                                  ),
+                                                ],
                                               ),
-                                            ],
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                      // Time Label (X-axis ticks)
-                                      Positioned(
-                                        bottom: -14,
-                                        child: Text(
-                                          timeStr,
-                                          style: AppTypography.labelSmall.copyWith(
-                                            color: colors.mutedFg,
-                                            fontSize: 7,
+                                          // Time Label (X-axis ticks)
+                                          Positioned(
+                                            bottom: -14,
+                                            child: Text(
+                                              timeStr,
+                                              style: AppTypography.labelSmall.copyWith(
+                                                color: colors.mutedFg,
+                                                fontSize: 7,
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                    ],
+                                        ],
+                                      );
+                                    }
                                   ),
                                 );
                               }).toList(),
@@ -469,5 +489,48 @@ class PurchaseSummaryCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildYAxisLabel(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        text,
+        style: AppTypography.labelSmall.copyWith(
+          color: color,
+          fontSize: 6.5,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+}
+
+class _LendDetails {
+  final int principal;
+  final int charge;
+  final String note;
+
+  _LendDetails({required this.principal, required this.charge, required this.note});
+
+  factory _LendDetails.parse(String remarks) {
+    if (!remarks.startsWith('LEND_DETAILS:')) {
+      return _LendDetails(principal: 0, charge: 0, note: remarks);
+    }
+    try {
+      final query = remarks.substring('LEND_DETAILS:'.length);
+      final params = Uri.splitQueryString(query);
+      return _LendDetails(
+        principal: int.parse(params['principal'] ?? '0'),
+        charge: int.parse(params['charge'] ?? '0'),
+        note: params['note'] ?? '',
+      );
+    } catch (_) {
+      return _LendDetails(principal: 0, charge: 0, note: remarks);
+    }
   }
 }

@@ -340,9 +340,11 @@ class SupabaseCustomerRepository implements CustomerRepository {
       final total = (sale['total_amount'] as num?)?.toInt() ?? 0;
       final advance = (sale['advance_amount'] as num?)?.toInt() ?? 0;
       final creditAdded = (sale['financed_amount'] as num?)?.toInt() ?? 0;
-      final saleTypeStr = sale['sale_type'] as String;
+      final dbSaleType = sale['sale_type'] as String;
       final soldBy = sale['sold_by'] as String;
       final remarks = sale['remarks'] as String?;
+      final isLend = remarks != null && remarks.startsWith('LEND_DETAILS:');
+      final saleTypeStr = isLend ? 'LEND' : dbSaleType;
 
       final List<SaleItemDetail> items = [];
       for (final item in sale['sale_items'] as List<dynamic>) {
@@ -361,7 +363,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
         total: total,
         advance: advance,
         creditAdded: creditAdded,
-        saleType: saleTypeStr == 'READY' ? 'READY' : 'CREDIT',
+        saleType: saleTypeStr,
         collectorName: soldBy,
         note: remarks,
       ));
@@ -891,17 +893,22 @@ class SupabaseSaleRepository implements SaleRepository {
   @override
   Stream<List<Sale>> watchAllSales() {
     return _client.from('sales').stream(primaryKey: ['id']).order('sale_datetime').map(
-      (list) => list.map((s) => Sale.fromJson({
-        'id': s['id'],
-        'customerId': s['customer_id'],
-        'saleDatetime': s['sale_datetime'],
-        'saleType': s['sale_type'],
-        'totalAmount': s['total_amount'],
-        'advanceAmount': s['advance_amount'],
-        'financedAmount': s['financed_amount'],
-        'soldBy': s['sold_by'],
-        'remarks': s['remarks'],
-      })).toList()
+      (list) => list.map((s) {
+        final remarks = s['remarks'] as String?;
+        final isLend = remarks != null && remarks.startsWith('LEND_DETAILS:');
+        final saleType = isLend ? 'LEND' : s['sale_type'];
+        return Sale.fromJson({
+          'id': s['id'],
+          'customerId': s['customer_id'],
+          'saleDatetime': s['sale_datetime'],
+          'saleType': saleType,
+          'totalAmount': s['total_amount'],
+          'advanceAmount': s['advance_amount'],
+          'financedAmount': s['financed_amount'],
+          'soldBy': s['sold_by'],
+          'remarks': remarks,
+        });
+      }).toList()
     );
   }
 
@@ -930,7 +937,7 @@ class SupabaseSaleRepository implements SaleRepository {
     }
     totalAmount = totalAmount - discount + creditCharge;
     final financedAmount = totalAmount - advanceAmount;
-    final saleType = financedAmount == 0 ? 'READY' : 'CREDIT';
+    final saleType = lendAmount != null ? 'LEND' : (financedAmount == 0 ? 'READY' : 'CREDIT');
 
     // 1. Save Sale
     await _client.from('sales').insert({

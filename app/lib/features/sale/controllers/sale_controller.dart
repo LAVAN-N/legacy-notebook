@@ -322,6 +322,10 @@ class SaleController extends StateNotifier<SaleScreenState> {
               'unitPrice': item.price ~/ 100,
             }).toList();
 
+      final finalRemarks = state.isLend
+          ? 'LEND_DETAILS:principal=${state.lendAmount}&charge=${state.creditChargeAmount}&note=${state.remarks}'
+          : (state.remarks.isNotEmpty ? state.remarks : null);
+
       await saleRepo.saveSale(
         customerId: _customerId,
         items: mappedItems,
@@ -329,7 +333,7 @@ class SaleController extends StateNotifier<SaleScreenState> {
         discount: state.discountAmount,
         creditCharge: state.creditChargeAmount,
         soldBy: 'Ramesh (Collector)',
-        remarks: state.remarks.isNotEmpty ? state.remarks : null,
+        remarks: finalRemarks,
         customDate: state.selectedDate,
         lendAmount: state.isLend ? state.lendAmount : null,
       );

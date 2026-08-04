@@ -632,7 +632,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
       id: 's-${DateTime.now().millisecondsSinceEpoch}',
       customerId: customerId,
       saleDatetime: customDate ?? DateTime.now(),
-      saleType: creditAdded == 0 ? 'READY' : 'CREDIT',
+      saleType: lendAmount != null ? 'LEND' : (creditAdded == 0 ? 'READY' : 'CREDIT'),
       totalAmount: totalSaleAmount,
       advanceAmount: advanceAmount,
       financedAmount: creditAdded,

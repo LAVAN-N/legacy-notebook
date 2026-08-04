@@ -175,10 +175,12 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
         
         final groupedSales = groupedSalesMap.entries.map((e) {
           final sales = e.value;
+          final hasLend = sales.any((s) => s.saleType.toUpperCase() == 'LEND');
           final hasCredit = sales.any((s) => s.saleType.toUpperCase() == 'CREDIT');
+          final derivedType = hasLend ? 'LEND' : (hasCredit ? 'CREDIT' : 'READY');
           return GroupedSales(
             date: e.key,
-            saleType: hasCredit ? 'CREDIT' : 'READY',
+            saleType: derivedType,
             sales: sales,
           );
         }).toList();

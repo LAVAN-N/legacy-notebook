@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS sales (
     id TEXT PRIMARY KEY,
     customer_id TEXT NOT NULL REFERENCES customers(id) ON DELETE RESTRICT,
     sale_datetime TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    sale_type TEXT NOT NULL CHECK (sale_type IN ('READY', 'CREDIT')),
+    sale_type TEXT NOT NULL CHECK (sale_type IN ('READY', 'CREDIT', 'LEND')),
     total_amount INT NOT NULL CHECK (total_amount >= 0),
     advance_amount INT NOT NULL CHECK (advance_amount >= 0),
     financed_amount INT NOT NULL CHECK (financed_amount >= 0),
