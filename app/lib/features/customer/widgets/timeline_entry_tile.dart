@@ -30,8 +30,8 @@ class TimelineEntryTile extends StatelessWidget {
       payment: (id, at, amount, note, collectorName) {
         final col = _CollectionDetails.parse(note);
         icon = Icons.check_circle_outline;
-        iconColor = col.target == 'LEND' ? Colors.orange : colors.success;
-        iconBg = iconColor.withValues(alpha: 0.1);
+        iconColor = colors.success;
+        iconBg = colors.success.withValues(alpha: 0.1);
         title = customTitle ?? (col.target == 'LEND' ? 'Loan Repayment' : 'Full Payment');
         subtitle = '${dateShort(at)} · By $collectorName';
         if (col.note.isNotEmpty) {
@@ -39,13 +39,13 @@ class TimelineEntryTile extends StatelessWidget {
         }
         trailing = Text(
           '-${rupees(amount)}',
-          style: AppTypography.currencySmall.copyWith(color: iconColor),
+          style: AppTypography.currencySmall.copyWith(color: colors.success),
         );
       },
       partialPayment: (id, at, amount, note, collectorName) {
         final col = _CollectionDetails.parse(note);
         icon = Icons.pie_chart_outline;
-        iconColor = col.target == 'LEND' ? Colors.orange : colors.primary;
+        iconColor = col.target == 'LEND' ? colors.success : colors.primary;
         iconBg = iconColor.withValues(alpha: 0.1);
         title = customTitle ?? (col.target == 'LEND' ? 'Loan Partial Repayment' : 'Partial Payment');
         subtitle = '${dateShort(at)} · By $collectorName';

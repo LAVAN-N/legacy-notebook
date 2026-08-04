@@ -741,14 +741,18 @@ class _TransactionCardState extends State<_TransactionCard> {
     final isPartial = item.status == 'PARTIAL_PAYMENT';
     final isCarry = item.status == 'CARRY_FORWARD';
 
-    final isLend = item.status == 'LEND' || item.status == 'LEND_COLLECTION';
+    final isLendSale = item.status == 'LEND';
     final isLendRepayment = item.status == 'LEND_COLLECTION';
 
     Color statusBg;
     Color statusFg;
     IconData icon;
 
-    if (isLend) {
+    if (isLendRepayment) {
+      statusBg = colors.success.withValues(alpha: 0.08);
+      statusFg = colors.success;
+      icon = Icons.check_circle_outline;
+    } else if (isLendSale) {
       statusBg = Colors.orange.withValues(alpha: 0.08);
       statusFg = Colors.orange;
       icon = Icons.handshake_outlined;
@@ -899,9 +903,11 @@ class _TransactionCardState extends State<_TransactionCard> {
                       fontWeight: FontWeight.bold,
                       color: isCarry
                           ? colors.danger
-                          : (isLend
-                              ? Colors.orange
-                              : (isSale ? colors.primary : colors.success)),
+                          : (isLendRepayment
+                              ? colors.success
+                              : (isLendSale
+                                  ? Colors.orange
+                                  : (isSale ? colors.primary : colors.success))),
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -913,9 +919,9 @@ class _TransactionCardState extends State<_TransactionCard> {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      isLend
-                          ? (isLendRepayment ? 'Repayment' : 'Lend')
-                          : (isSale ? 'Sale' : (isCarry ? 'Carry-Fwd' : 'Payment')),
+                      isLendRepayment
+                          ? 'Repayment'
+                          : (isLendSale ? 'Lend' : (isCarry ? 'Carry-Fwd' : (isSale ? 'Sale' : 'Payment'))),
                       style: AppTypography.labelSmall.copyWith(
                         color: statusFg,
                         fontWeight: FontWeight.bold,

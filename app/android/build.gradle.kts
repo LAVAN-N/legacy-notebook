@@ -24,6 +24,7 @@ subprojects {
         if (plugins.hasPlugin("com.android.library") || plugins.hasPlugin("com.android.application")) {
             val android = extensions.findByName("android") as? com.android.build.gradle.BaseExtension
             android?.compileSdkVersion(36)
+            dependencies.add("implementation", "androidx.concurrent:concurrent-futures:1.2.0")
         }
     }
     if (state.executed) {
