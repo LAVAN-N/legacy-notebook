@@ -181,6 +181,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                 },
               ),
             ),
+            const SizedBox(height: AppSpacing.lg),
             _buildDatePickerRow(context, ref, state.selectedDate),
             const SizedBox(height: AppSpacing.md),
             _buildToggleBar(context, ref, state),
@@ -471,7 +472,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.lg),
 
             if (!state.isLend) ...[
               Row(
@@ -504,6 +505,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: AppSpacing.lg),
             ],
 
             // Remarks field
@@ -522,7 +524,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                 hintText: 'Add remarks about this sales credit purchase...',
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.xl),
 
             // Financial Summary Block
             Card(
