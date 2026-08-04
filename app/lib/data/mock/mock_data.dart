@@ -604,7 +604,7 @@ final mockCustomersList = [
 final mockSalesList = [
   // Lakshmi Priya (c-1): bought Refrigerator, price 16500, advance 5000, financed 11500
   Sale(
-    id: 's-1',
+    id: 'e0c704f0-466d-4952-b883-999df5e449a1',
     customerId: 'CU-001',
     saleDatetime: DateTime.now().subtract(const Duration(days: 15)),
     saleType: 'CREDIT',
@@ -615,7 +615,7 @@ final mockSalesList = [
   ),
   // Lakshmi Priya (c-1): bought Mixer Grinder, price 3200, advance 3200, financed 0 (Ready Sale)
   Sale(
-    id: 's-2',
+    id: 'f95cf896-1c88-4667-bb03-8d68ef61ea24',
     customerId: 'CU-001',
     saleDatetime: DateTime.now().subtract(const Duration(days: 8)),
     saleType: 'READY',
@@ -626,7 +626,7 @@ final mockSalesList = [
   ),
   // Lakshmi Priya (c-1): Cash loan / Lend, total 5500, advance 0, financed 5500
   Sale(
-    id: 's-lend-mock',
+    id: '8c72834b-bc54-4632-ad9a-6c18fdfcb796',
     customerId: 'CU-001',
     saleDatetime: DateTime.now().subtract(const Duration(days: 4)),
     saleType: 'LEND',
@@ -638,7 +638,7 @@ final mockSalesList = [
   ),
   // Muthu Pandian (c-2): bought Induction Cooktop, price 2800, advance 500, financed 2300
   Sale(
-    id: 's-3',
+    id: 'd1d36154-1598-4c9f-bbd7-cd1626f25be2',
     customerId: 'CU-002',
     saleDatetime: DateTime.now().subtract(const Duration(days: 20)),
     saleType: 'CREDIT',
@@ -649,7 +649,7 @@ final mockSalesList = [
   ),
   // Anitha Rajendran (c-3): bought Washing Machine, price 28500, advance 8500, financed 20000
   Sale(
-    id: 's-4',
+    id: 'ab5e66d9-5f25-419b-b0b3-96b5275e7a9e',
     customerId: 'CU-003',
     saleDatetime: DateTime.now().subtract(const Duration(days: 30)),
     saleType: 'CREDIT',
@@ -660,21 +660,21 @@ final mockSalesList = [
   ),
   // Rahim Khan (c-6): bought Dry Iron, price 850, advance 0, financed 850
   Sale(
-    id: 's-5',
+    id: '3d6d0dfc-0cfc-40ad-be0f-b258cf145695',
     customerId: 'CU-006',
     saleDatetime: DateTime.now().subtract(const Duration(days: 5)),
     saleType: 'CREDIT',
     totalAmount: 850,
     advanceAmount: 0,
     financedAmount: 850,
-    soldBy: 'Kumar (Owner)',
+    soldBy: 'Owner',
   ),
 ];
 
 final mockCollectionsList = [
   // Lakshmi Priya (c-1): Paid 1500 (reducing 11500 -> 10000)
   Collection(
-    id: 'col-1',
+    id: 'b96cb57f-1d89-43c7-9b2f-7634d28e7e11',
     customerId: 'CU-001',
     visitDatetime: DateTime.now().subtract(const Duration(days: 7)),
     status: 'PAYMENT',
@@ -683,7 +683,7 @@ final mockCollectionsList = [
   ),
   // Lakshmi Priya (c-1): Carry forward (outstanding remains 10000)
   Collection(
-    id: 'col-2',
+    id: '5f32a265-d018-4e4b-9f44-998fde29ad22',
     customerId: 'CU-001',
     visitDatetime: DateTime.now().subtract(const Duration(hours: 4)),
     status: 'CARRY_FORWARD',
@@ -693,7 +693,7 @@ final mockCollectionsList = [
   ),
   // Lakshmi Priya (c-1): Partial payment of 200 today (outstanding 10000 -> 9800)
   Collection(
-    id: 'col-3',
+    id: '42c864be-87b6-455b-b9d9-fa986d0b2f33',
     customerId: 'CU-001',
     visitDatetime: DateTime.now().subtract(const Duration(hours: 2)),
     status: 'PARTIAL_PAYMENT',
@@ -703,7 +703,7 @@ final mockCollectionsList = [
   ),
   // Muthu Pandian (c-2): Paid 500 (reducing 2300 -> 1800)
   Collection(
-    id: 'col-4',
+    id: '18c7e6c4-12ea-4d8b-9e45-128fdfdcb444',
     customerId: 'CU-002',
     visitDatetime: DateTime.now().subtract(const Duration(days: 10)),
     status: 'PAYMENT',
@@ -712,7 +712,7 @@ final mockCollectionsList = [
   ),
   // Anitha Rajendran (c-3): Carry forward
   Collection(
-    id: 'col-5',
+    id: 'e6840742-df24-4ea4-89d9-cde8fdcb8555',
     customerId: 'CU-003',
     visitDatetime: DateTime.now().subtract(const Duration(days: 6)),
     status: 'CARRY_FORWARD',

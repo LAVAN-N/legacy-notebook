@@ -21,6 +21,7 @@ import 'sale_repository.dart';
 import 'product_repository.dart';
 import 'config_repository.dart';
 import '../models/category.dart';
+import '../../core/utils/uuid.dart';
 
 Future<String> _uploadFile(String bucket, String localPath, String remotePath) async {
   final client = Supabase.instance.client;
@@ -910,7 +911,7 @@ class SupabaseCollectionRepository implements CollectionRepository {
   }) async {
     final date = customDate ?? DateTime.now();
     await _client.from('collections').insert({
-      'id': 'col_${DateTime.now().millisecondsSinceEpoch}',
+      'id': UuidUtils.generate(),
       'customer_id': customerId,
       'visit_datetime': date.toIso8601String(),
       'status': status,
@@ -963,7 +964,7 @@ class SupabaseSaleRepository implements SaleRepository {
     DateTime? customDate,
     int? lendAmount,
   }) async {
-    final saleId = 'sale_${DateTime.now().millisecondsSinceEpoch}';
+    final saleId = UuidUtils.generate();
     final date = customDate ?? DateTime.now();
 
     int totalAmount = 0;
@@ -998,7 +999,7 @@ class SupabaseSaleRepository implements SaleRepository {
       final unitPrice = item['unitPrice'] as int;
 
       await _client.from('sale_items').insert({
-        'id': 'sitem_${DateTime.now().microsecondsSinceEpoch}',
+        'id': UuidUtils.generate(),
         'sale_id': saleId,
         'product_id': productId,
         'quantity': qty,
@@ -1007,7 +1008,7 @@ class SupabaseSaleRepository implements SaleRepository {
       });
 
       await _client.from('inventory_transactions').insert({
-        'id': 'tx_sale_${DateTime.now().microsecondsSinceEpoch}',
+        'id': UuidUtils.generate(),
         'product_id': productId,
         'transaction_type': 'SALE',
         'quantity': qty,
@@ -1146,7 +1147,7 @@ class SupabaseProductRepository implements ProductRepository {
 
     if (stock > 0) {
       await _client.from('inventory_transactions').insert({
-        'id': 'tx_purch_${DateTime.now().millisecondsSinceEpoch}',
+        'id': UuidUtils.generate(),
         'product_id': productId,
         'transaction_type': 'PURCHASE',
         'quantity': stock,

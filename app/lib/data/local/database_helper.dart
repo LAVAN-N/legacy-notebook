@@ -4,6 +4,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import '../mock/mock_data.dart';
+import '../../core/utils/uuid.dart';
 
 class DatabaseHelper {
   DatabaseHelper._init();
@@ -388,7 +389,7 @@ class DatabaseHelper {
       }
 
       await db.insert('sale_items', {
-        'id': 'si_${s.id}',
+        'id': UuidUtils.generate(),
         'sale_id': s.id,
         'product_id': matchedProductId,
         'quantity': 1,
@@ -398,7 +399,7 @@ class DatabaseHelper {
 
       // Deduct inventory
       await db.insert('inventory_transactions', {
-        'id': 'tx_sale_${s.id}',
+        'id': UuidUtils.generate(),
         'product_id': matchedProductId,
         'transaction_type': 'SALE',
         'quantity': 1,

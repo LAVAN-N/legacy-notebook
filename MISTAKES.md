@@ -1146,3 +1146,14 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Implemented sequential ID calculators inside the local and remote config repositories to find the maximum existing sequence number and increment it.
 - **Rule for next agent:** ALWAYS use incremental sequential ID formats (e.g. `p-<number>` and `a-<number>`) when adding dynamic places and areas.
 - **Guardrail:** Verify that newly created places and areas parse the max ID from the current list and increment it.
+
+---
+
+### 2026-08-04 · Import paths in database helpers and UUID migrations
+
+- **Context:** Implementing UUID data types for transactional tables (sales, collections, sale items, inventory transactions) and refactoring ID generation.
+- **Mistake:** Imported helper file `uuid.dart` using a single-dot parent relative path (`../core/utils/uuid.dart`) instead of double-dot parent relative path (`../../core/utils/uuid.dart`) in `database_helper.dart`.
+- **Root cause:** Misestimated the folder depth of `lib/data/local/database_helper.dart` relative to `lib/core/utils/uuid.dart`.
+- **Fix applied:** Corrected the import path to `../../core/utils/uuid.dart` and verified compilation with `flutter analyze`.
+- **Rule for next agent:** ALWAYS verify import paths relative to project root folders when adding new utilities.
+- **Guardrail:** Run `flutter analyze` immediately after resolving path additions to catch import resolution errors.

@@ -53,27 +53,27 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 6. Seed sales
 INSERT INTO sales (id, customer_id, sale_datetime, sale_type, total_amount, advance_amount, financed_amount, sold_by, remarks) VALUES
-('s-1', '1', NOW() - INTERVAL '15 days', 'CREDIT', 16500, 5000, 11500, 'Owner', NULL),
-('s-2', '1', NOW() - INTERVAL '8 days', 'READY', 3200, 3200, 0, 'Owner', NULL),
-('s-3', '2', NOW() - INTERVAL '20 days', 'CREDIT', 2800, 500, 2300, 'Owner', NULL),
-('s-4', '3', NOW() - INTERVAL '30 days', 'CREDIT', 28500, 8500, 20000, 'Owner', NULL),
-('s-5', '6', NOW() - INTERVAL '5 days', 'CREDIT', 850, 0, 850, 'Kumar (Owner)', NULL)
+('e0c704f0-466d-4952-b883-999df5e449a1', '1', NOW() - INTERVAL '15 days', 'CREDIT', 16500, 5000, 11500, 'Owner', NULL),
+('f95cf896-1c88-4667-bb03-8d68ef61ea24', '1', NOW() - INTERVAL '8 days', 'READY', 3200, 3200, 0, 'Owner', NULL),
+('d1d36154-1598-4c9f-bbd7-cd1626f25be2', '2', NOW() - INTERVAL '20 days', 'CREDIT', 2800, 500, 2300, 'Owner', NULL),
+('ab5e66d9-5f25-419b-b0b3-96b5275e7a9e', '3', NOW() - INTERVAL '30 days', 'CREDIT', 28500, 8500, 20000, 'Owner', NULL),
+('3d6d0dfc-0cfc-40ad-be0f-b258cf145695', '6', NOW() - INTERVAL '5 days', 'CREDIT', 850, 0, 850, 'Owner', NULL)
 ON CONFLICT (id) DO NOTHING;
 
 -- Seed sale items
 INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price, total_price) VALUES
-('si-1', 's-1', 'pr-3', 1, 16500, 16500),
-('si-2', 's-2', 'pr-1', 1, 3200, 3200),
-('si-3', 's-3', 'pr-2', 1, 2800, 2800),
-('si-4', 's-4', 'pr-5', 1, 28500, 28500),
-('si-5', 's-5', 'pr-6', 1, 850, 850)
+('f47ac10b-58cc-4372-a567-0e02b2c3d471', 'e0c704f0-466d-4952-b883-999df5e449a1', 'pr-3', 1, 16500, 16500),
+('f47ac10b-58cc-4372-a567-0e02b2c3d472', 'f95cf896-1c88-4667-bb03-8d68ef61ea24', 'pr-1', 1, 3200, 3200),
+('f47ac10b-58cc-4372-a567-0e02b2c3d473', 'd1d36154-1598-4c9f-bbd7-cd1626f25be2', 'pr-2', 1, 2800, 2800),
+('f47ac10b-58cc-4372-a567-0e02b2c3d474', 'ab5e66d9-5f25-419b-b0b3-96b5275e7a9e', 'pr-5', 1, 28500, 28500),
+('f47ac10b-58cc-4372-a567-0e02b2c3d475', '3d6d0dfc-0cfc-40ad-be0f-b258cf145695', 'pr-6', 1, 850, 850)
 ON CONFLICT (id) DO NOTHING;
 
 -- 7. Seed collections
 INSERT INTO collections (id, customer_id, visit_datetime, status, amount, reason, collected_by) VALUES
-('col-1', '1', NOW() - INTERVAL '7 days', 'PAYMENT', 1500.00, NULL, 'Owner'),
-('col-2', '1', NOW() - INTERVAL '4 hours', 'CARRY_FORWARD', 0.00, 'Husband not in town, will pay in evening', 'Owner'),
-('col-3', '1', NOW() - INTERVAL '2 hours', 'PARTIAL_PAYMENT', 200.00, 'Will pay remaining in evening visit', 'Owner'),
-('col-4', '2', NOW() - INTERVAL '10 days', 'PAYMENT', 500.00, NULL, 'Owner'),
-('col-5', '3', NOW() - INTERVAL '6 days', 'CARRY_FORWARD', 0.00, 'Salary delayed, check next week', 'Owner')
+('b96cb57f-1d89-43c7-9b2f-7634d28e7e11', '1', NOW() - INTERVAL '7 days', 'PAYMENT', 1500.00, NULL, 'Owner'),
+('5f32a265-d018-4e4b-9f44-998fde29ad22', '1', NOW() - INTERVAL '4 hours', 'CARRY_FORWARD', 0.00, 'Husband not in town, will pay in evening', 'Owner'),
+('42c864be-87b6-455b-b9d9-fa986d0b2f33', '1', NOW() - INTERVAL '2 hours', 'PARTIAL_PAYMENT', 200.00, 'Will pay remaining in evening visit', 'Owner'),
+('18c7e6c4-12ea-4d8b-9e45-128fdfdcb444', '2', NOW() - INTERVAL '10 days', 'PAYMENT', 500.00, NULL, 'Owner'),
+('e6840742-df24-4ea4-89d9-cde8fdcb8555', '3', NOW() - INTERVAL '6 days', 'CARRY_FORWARD', 0.00, 'Salary delayed, check next week', 'Owner')
 ON CONFLICT (id) DO NOTHING;

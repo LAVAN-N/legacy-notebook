@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/sync_status_indicator.dart';
+import '../../core/utils/uuid.dart';
 import '../models/customer.dart';
 import '../models/outstanding.dart';
 import '../models/activity.dart';
@@ -358,7 +359,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     // If opening balance > 0, create synthetic SALE
     if (openingBalance > 0) {
       final syntheticSale = Sale(
-        id: 's-opening-${DateTime.now().millisecondsSinceEpoch}',
+        id: UuidUtils.generate(),
         customerId: customerId,
         saleDatetime: DateTime.now(),
         saleType: 'CREDIT',
@@ -584,7 +585,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     DateTime? customDate,
   }) async {
     final collection = Collection(
-      id: 'col-${DateTime.now().millisecondsSinceEpoch}',
+      id: UuidUtils.generate(),
       customerId: customerId,
       visitDatetime: customDate ?? DateTime.now(),
       status: status,
@@ -647,7 +648,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     final creditAdded = totalSaleAmount - advanceAmount;
  
     final sale = Sale(
-      id: 's-${DateTime.now().millisecondsSinceEpoch}',
+      id: UuidUtils.generate(),
       customerId: customerId,
       saleDatetime: customDate ?? DateTime.now(),
       saleType: lendAmount != null ? 'LEND' : (creditAdded == 0 ? 'READY' : 'CREDIT'),

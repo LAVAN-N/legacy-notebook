@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS products (
 
 -- 6. Sales table
 CREATE TABLE IF NOT EXISTS sales (
-    id TEXT PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id TEXT NOT NULL REFERENCES customers(id) ON DELETE RESTRICT,
     sale_datetime TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     sale_type TEXT NOT NULL CHECK (sale_type IN ('READY', 'CREDIT', 'LEND')),
@@ -77,8 +77,8 @@ CREATE TABLE IF NOT EXISTS sales (
 
 -- 7. Sale items table
 CREATE TABLE IF NOT EXISTS sale_items (
-    id TEXT PRIMARY KEY,
-    sale_id TEXT NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    sale_id UUID NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
     product_id TEXT NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
     quantity INT NOT NULL CHECK (quantity > 0),
     unit_price INT NOT NULL CHECK (unit_price >= 0),
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS sale_items (
 
 -- 8. Collections table (PAYMENT, PARTIAL_PAYMENT, CARRY_FORWARD)
 CREATE TABLE IF NOT EXISTS collections (
-    id TEXT PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id TEXT NOT NULL REFERENCES customers(id) ON DELETE RESTRICT,
     visit_datetime TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     status TEXT NOT NULL CHECK (status IN ('PAYMENT', 'PARTIAL_PAYMENT', 'CARRY_FORWARD')),
@@ -96,10 +96,22 @@ CREATE TABLE IF NOT EXISTS collections (
     collected_by TEXT NOT NULL
 );
 
+-- 9. Inventory Transactions table
+CREATE TABLE IF NOT EXISTS inventory_transactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id TEXT NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
+    transaction_type TEXT NOT NULL CHECK (transaction_type IN ('PURCHASE', 'SALE', 'ADJUSTMENT')),
+    quantity INT NOT NULL,
+    reference_id TEXT,
+    remarks TEXT,
+    created_by TEXT NOT NULL
+);
+
 -- Indexes for statistics and reports
 CREATE INDEX IF NOT EXISTS idx_sales_customer ON sales(customer_id);
 CREATE INDEX IF NOT EXISTS idx_collections_customer ON collections(customer_id);
 CREATE INDEX IF NOT EXISTS idx_collections_customer_datetime ON collections(customer_id, visit_datetime DESC);
+CREATE INDEX IF NOT EXISTS idx_inventory_product ON inventory_transactions(product_id);
 
 -- ─── Security & Row Level Security (RLS) ──────────────────
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
@@ -112,6 +124,7 @@ ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sales ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sale_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE collections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE inventory_transactions ENABLE ROW LEVEL SECURITY;
 
 -- ─── Database Views ──────────────────────────────────────
 
@@ -200,3 +213,29 @@ LEFT JOIN areas a ON a.place_id = p.id
 LEFT JOIN customers c ON c.area_id = a.id
 LEFT JOIN customer_outstanding_view v ON v.customer_id = c.id
 GROUP BY w.id, w.name, w.sort_order, p.id, p.name, a.id, a.name;
+
+-- View 5: product_stock_view
+CREATE OR REPLACE VIEW product_stock_view AS
+SELECT 
+  p.id AS product_id,
+  p.sku,
+  p.name,
+  p.brand,
+  p.category_id,
+  p.cost_price,
+  p.selling_price,
+  p.mrp,
+  p.minimum_stock,
+  p.image_url,
+  p.description,
+  COALESCE(SUM(
+    CASE 
+      WHEN it.transaction_type = 'PURCHASE' THEN it.quantity
+      WHEN it.transaction_type = 'SALE' THEN -it.quantity
+      WHEN it.transaction_type = 'ADJUSTMENT' THEN it.quantity
+      ELSE 0 
+    END
+  ), 0) AS current_stock
+FROM products p
+LEFT JOIN inventory_transactions it ON it.product_id = p.id
+GROUP BY p.id, p.sku, p.name, p.brand, p.category_id, p.cost_price, p.selling_price, p.mrp, p.minimum_stock, p.image_url, p.description;

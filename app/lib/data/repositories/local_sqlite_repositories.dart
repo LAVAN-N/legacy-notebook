@@ -16,6 +16,7 @@ import '../models/product.dart';
 import '../models/category.dart';
 import '../local/database_helper.dart';
 
+import '../../core/utils/uuid.dart';
 import 'customer_repository.dart';
 import 'route_repository.dart';
 import 'collection_repository.dart';
@@ -798,7 +799,7 @@ class LocalSqliteCollectionRepository implements CollectionRepository {
     DateTime? customDate,
   }) async {
     final db = await DatabaseHelper.instance.database;
-    final collectionId = 'col_${DateTime.now().millisecondsSinceEpoch}';
+    final collectionId = UuidUtils.generate();
 
     // Business Rule 9: Carry forward never changes outstanding. Force amount to 0.
     final adjustedAmount = (status == 'CARRY_FORWARD') ? 0.0 : amount;
@@ -866,7 +867,7 @@ class LocalSqliteSaleRepository implements SaleRepository {
     int? lendAmount,
   }) async {
     final db = await DatabaseHelper.instance.database;
-    final saleId = 'sale_${DateTime.now().millisecondsSinceEpoch}';
+    final saleId = UuidUtils.generate();
 
     // Calculate totals
     int totalAmount = 0;
@@ -911,7 +912,7 @@ class LocalSqliteSaleRepository implements SaleRepository {
         final productId = item['productId'] as String;
         final qty = item['quantity'] as int;
         final unitPrice = item['unitPrice'] as int;
-        final itemId = 'si_${DateTime.now().millisecondsSinceEpoch}_${productId.hashCode}';
+        final itemId = UuidUtils.generate();
 
         await txn.insert('sale_items', {
           'id': itemId,
@@ -924,7 +925,7 @@ class LocalSqliteSaleRepository implements SaleRepository {
 
         // Rule 11: Transaction-driven inventory deduct
         await txn.insert('inventory_transactions', {
-          'id': 'tx_sale_${saleId}_$productId',
+          'id': UuidUtils.generate(),
           'product_id': productId,
           'transaction_type': 'SALE',
           'quantity': qty,
@@ -1023,7 +1024,7 @@ class LocalSqliteProductRepository implements ProductRepository {
       // 2. Insert inventory purchase transaction for opening stock
       if (stock > 0) {
         await txn.insert('inventory_transactions', {
-          'id': 'tx_purch_${DateTime.now().millisecondsSinceEpoch}',
+          'id': UuidUtils.generate(),
           'product_id': productId,
           'transaction_type': 'PURCHASE',
           'quantity': stock,
