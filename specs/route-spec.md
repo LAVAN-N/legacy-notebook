@@ -362,7 +362,7 @@ Single-hand thumb reach:
 
 - Minimum touch target 48 dp; row targets are much larger.
 - All icon-only controls (sync indicator, sort, overflow) have content descriptions.
-- Announce rows naturally: "Ramesh Kumar, outstanding twelve thousand rupees, pending, visited two hours ago. Double tap to open."
+- Announce rows naturally: "Owner Kumar, outstanding twelve thousand rupees, pending, visited two hours ago. Double tap to open."
 - Announce breadcrumbs as: "You are in Thursday, Village A, North Street."
 - Support text scaling to 200% without truncation of critical numbers; amount text wraps to a second line before shrinking.
 - Every status chip carries an icon in addition to color.

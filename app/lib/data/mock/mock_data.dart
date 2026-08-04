@@ -611,7 +611,7 @@ final mockSalesList = [
     totalAmount: 16500,
     advanceAmount: 5000,
     financedAmount: 11500,
-    soldBy: 'Ramesh (Collector)',
+    soldBy: 'Owner',
   ),
   // Lakshmi Priya (c-1): bought Mixer Grinder, price 3200, advance 3200, financed 0 (Ready Sale)
   Sale(
@@ -622,7 +622,7 @@ final mockSalesList = [
     totalAmount: 3200,
     advanceAmount: 3200,
     financedAmount: 0,
-    soldBy: 'Ramesh (Collector)',
+    soldBy: 'Owner',
   ),
   // Lakshmi Priya (c-1): Cash loan / Lend, total 5500, advance 0, financed 5500
   Sale(
@@ -633,7 +633,7 @@ final mockSalesList = [
     totalAmount: 5500,
     advanceAmount: 0,
     financedAmount: 5500,
-    soldBy: 'Ramesh (Collector)',
+    soldBy: 'Owner',
     remarks: 'LEND_DETAILS:principal=5000&charge=500&note=Emergency cash helper',
   ),
   // Muthu Pandian (c-2): bought Induction Cooktop, price 2800, advance 500, financed 2300
@@ -645,7 +645,7 @@ final mockSalesList = [
     totalAmount: 2800,
     advanceAmount: 500,
     financedAmount: 2300,
-    soldBy: 'Ramesh (Collector)',
+    soldBy: 'Owner',
   ),
   // Anitha Rajendran (c-3): bought Washing Machine, price 28500, advance 8500, financed 20000
   Sale(
@@ -656,7 +656,7 @@ final mockSalesList = [
     totalAmount: 28500,
     advanceAmount: 8500,
     financedAmount: 20000,
-    soldBy: 'Ramesh (Collector)',
+    soldBy: 'Owner',
   ),
   // Rahim Khan (c-6): bought Dry Iron, price 850, advance 0, financed 850
   Sale(
@@ -679,7 +679,7 @@ final mockCollectionsList = [
     visitDatetime: DateTime.now().subtract(const Duration(days: 7)),
     status: 'PAYMENT',
     amount: 1500.0,
-    collectedBy: 'Ramesh (Collector)',
+    collectedBy: 'Owner',
   ),
   // Lakshmi Priya (c-1): Carry forward (outstanding remains 10000)
   Collection(
@@ -689,7 +689,7 @@ final mockCollectionsList = [
     status: 'CARRY_FORWARD',
     amount: 0.0,
     reason: 'Husband not in town, will pay in evening',
-    collectedBy: 'Ramesh (Collector)',
+    collectedBy: 'Owner',
   ),
   // Lakshmi Priya (c-1): Partial payment of 200 today (outstanding 10000 -> 9800)
   Collection(
@@ -699,7 +699,7 @@ final mockCollectionsList = [
     status: 'PARTIAL_PAYMENT',
     amount: 200.0,
     reason: 'Will pay remaining in evening visit',
-    collectedBy: 'Ramesh (Collector)',
+    collectedBy: 'Owner',
   ),
   // Muthu Pandian (c-2): Paid 500 (reducing 2300 -> 1800)
   Collection(
@@ -708,7 +708,7 @@ final mockCollectionsList = [
     visitDatetime: DateTime.now().subtract(const Duration(days: 10)),
     status: 'PAYMENT',
     amount: 500.0,
-    collectedBy: 'Ramesh (Collector)',
+    collectedBy: 'Owner',
   ),
   // Anitha Rajendran (c-3): Carry forward
   Collection(
@@ -718,6 +718,6 @@ final mockCollectionsList = [
     status: 'CARRY_FORWARD',
     amount: 0.0,
     reason: 'Salary delayed, check next week',
-    collectedBy: 'Ramesh (Collector)',
+    collectedBy: 'Owner',
   ),
 ];

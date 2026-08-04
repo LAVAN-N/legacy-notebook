@@ -332,7 +332,7 @@ class SaleController extends StateNotifier<SaleScreenState> {
         advanceAmount: state.advanceAmount,
         discount: state.discountAmount,
         creditCharge: state.creditChargeAmount,
-        soldBy: 'Ramesh (Collector)',
+        soldBy: 'Owner',
         remarks: finalRemarks,
         customDate: state.selectedDate,
         lendAmount: state.isLend ? state.lendAmount : null,

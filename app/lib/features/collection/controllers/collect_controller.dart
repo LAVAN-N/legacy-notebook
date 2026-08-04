@@ -183,7 +183,7 @@ class CollectController extends StateNotifier<CollectScreenState> {
         status: state.status,
         amount: state.status == 'CARRY_FORWARD' ? 0.0 : state.amount.toDouble(),
         reason: finalReason,
-        collectedBy: 'Ramesh (Collector)',
+        collectedBy: 'Owner',
         customDate: state.selectedDate,
       );
       state = state.copyWith(isSaving: false);

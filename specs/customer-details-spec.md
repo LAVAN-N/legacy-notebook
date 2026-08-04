@@ -34,7 +34,7 @@ Assume outdoor use, one-handed operation, weak network. Elderly-friendly type si
 - Customer List (Area) → tap a row.
 - Global Customer Search → tap a result.
 - Dashboard → Recent Activity row → tap.
-- Notification: "Payment received from Ramesh" → tap.
+- Notification: "Payment received from Owner" → tap.
 - Deep link (shared by owner) → opens with full back stack rebuilt (Weekday → Place → Area → Customer List → Customer Details).
 - Back from Collection or Sale screen after completing the activity (returns here with the new activity visible in the timeline).
 
@@ -327,7 +327,7 @@ CustomerDetailsScreen
 ## 13. Accessibility
 
 - Touch targets min 48 dp; bottom action buttons 56 dp.
-- Announce identity: "Ramesh Kumar, outstanding twelve thousand rupees, updated ten minutes ago."
+- Announce identity: "Owner Kumar, outstanding twelve thousand rupees, updated ten minutes ago."
 - Amounts read as words (locale-aware) for screen readers.
 - Every icon-only control has a content description.
 - Semantic headings: customer name is H1; section titles are H2; day dividers are H3.

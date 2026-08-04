@@ -53,10 +53,10 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 6. Seed sales
 INSERT INTO sales (id, customer_id, sale_datetime, sale_type, total_amount, advance_amount, financed_amount, sold_by, remarks) VALUES
-('s-1', '1', NOW() - INTERVAL '15 days', 'CREDIT', 16500, 5000, 11500, 'Ramesh (Collector)', NULL),
-('s-2', '1', NOW() - INTERVAL '8 days', 'READY', 3200, 3200, 0, 'Ramesh (Collector)', NULL),
-('s-3', '2', NOW() - INTERVAL '20 days', 'CREDIT', 2800, 500, 2300, 'Ramesh (Collector)', NULL),
-('s-4', '3', NOW() - INTERVAL '30 days', 'CREDIT', 28500, 8500, 20000, 'Ramesh (Collector)', NULL),
+('s-1', '1', NOW() - INTERVAL '15 days', 'CREDIT', 16500, 5000, 11500, 'Owner', NULL),
+('s-2', '1', NOW() - INTERVAL '8 days', 'READY', 3200, 3200, 0, 'Owner', NULL),
+('s-3', '2', NOW() - INTERVAL '20 days', 'CREDIT', 2800, 500, 2300, 'Owner', NULL),
+('s-4', '3', NOW() - INTERVAL '30 days', 'CREDIT', 28500, 8500, 20000, 'Owner', NULL),
 ('s-5', '6', NOW() - INTERVAL '5 days', 'CREDIT', 850, 0, 850, 'Kumar (Owner)', NULL)
 ON CONFLICT (id) DO NOTHING;
 
@@ -71,9 +71,9 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 7. Seed collections
 INSERT INTO collections (id, customer_id, visit_datetime, status, amount, reason, collected_by) VALUES
-('col-1', '1', NOW() - INTERVAL '7 days', 'PAYMENT', 1500.00, NULL, 'Ramesh (Collector)'),
-('col-2', '1', NOW() - INTERVAL '4 hours', 'CARRY_FORWARD', 0.00, 'Husband not in town, will pay in evening', 'Ramesh (Collector)'),
-('col-3', '1', NOW() - INTERVAL '2 hours', 'PARTIAL_PAYMENT', 200.00, 'Will pay remaining in evening visit', 'Ramesh (Collector)'),
-('col-4', '2', NOW() - INTERVAL '10 days', 'PAYMENT', 500.00, NULL, 'Ramesh (Collector)'),
-('col-5', '3', NOW() - INTERVAL '6 days', 'CARRY_FORWARD', 0.00, 'Salary delayed, check next week', 'Ramesh (Collector)')
+('col-1', '1', NOW() - INTERVAL '7 days', 'PAYMENT', 1500.00, NULL, 'Owner'),
+('col-2', '1', NOW() - INTERVAL '4 hours', 'CARRY_FORWARD', 0.00, 'Husband not in town, will pay in evening', 'Owner'),
+('col-3', '1', NOW() - INTERVAL '2 hours', 'PARTIAL_PAYMENT', 200.00, 'Will pay remaining in evening visit', 'Owner'),
+('col-4', '2', NOW() - INTERVAL '10 days', 'PAYMENT', 500.00, NULL, 'Owner'),
+('col-5', '3', NOW() - INTERVAL '6 days', 'CARRY_FORWARD', 0.00, 'Salary delayed, check next week', 'Owner')
 ON CONFLICT (id) DO NOTHING;

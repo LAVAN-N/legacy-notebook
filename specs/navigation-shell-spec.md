@@ -92,7 +92,7 @@ The Weekday route is being computed from `new Date()` on remount instead of from
 Every screen below Dashboard renders a crumb bar under the title:
 
 ```
-Dashboard › Monday › Village B › South Colony › Ramesh K.
+Dashboard › Monday › Village B › South Colony › Owner K.
 ```
 
 - Each crumb is a `<Link>` with the correct `to` + `params` derived like the table above.
