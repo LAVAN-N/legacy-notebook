@@ -414,13 +414,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       }).toList();
     }
 
-    // Filter by kind
     if (kindParam == 'Payments') {
       filtered = filtered
           .where((item) =>
               item.type == 'COLLECTION' &&
-              item.status != 'LEND_COLLECTION' &&
-              (item.status == 'PAYMENT' || item.status == 'PARTIAL_PAYMENT'))
+              (item.status == 'PAYMENT' || item.status == 'PARTIAL_PAYMENT' || item.status == 'LEND_COLLECTION'))
           .toList();
     } else if (kindParam == 'Lends') {
       filtered = filtered
