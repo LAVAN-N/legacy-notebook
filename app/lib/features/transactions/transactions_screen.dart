@@ -350,6 +350,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final List<TransactionItem> allItems = [];
 
     for (final s in sales) {
+      final isLend = s.saleType == 'LEND';
+      final formattedRemarks = isLend
+          ? _LendDetails.parse(s.remarks ?? '').toSimpleInfo()
+          : (s.remarks ?? '');
+
       allItems.add(TransactionItem(
         id: s.id,
         customerId: s.customerId,
@@ -364,7 +369,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             : (s.saleType == 'CREDIT'
                 ? 'Credit Sale · Financed ₹${s.financedAmount}'
                 : 'Ready Sale'),
-        remarks: s.remarks ?? '',
+        remarks: formattedRemarks,
       ));
     }
 
@@ -950,5 +955,36 @@ class _CollectionDetails {
     } catch (_) {
       return _CollectionDetails(target: 'SALE', note: reason);
     }
+  }
+}
+
+class _LendDetails {
+  final int principal;
+  final int charge;
+  final String note;
+
+  _LendDetails({required this.principal, required this.charge, required this.note});
+
+  factory _LendDetails.parse(String remarks) {
+    if (!remarks.startsWith('LEND_DETAILS:')) {
+      return _LendDetails(principal: 0, charge: 0, note: remarks);
+    }
+    try {
+      final query = remarks.substring('LEND_DETAILS:'.length);
+      final params = Uri.splitQueryString(query);
+      return _LendDetails(
+        principal: int.parse(params['principal'] ?? '0'),
+        charge: int.parse(params['charge'] ?? '0'),
+        note: params['note'] ?? '',
+      );
+    } catch (_) {
+      return _LendDetails(principal: 0, charge: 0, note: remarks);
+    }
+  }
+
+  String toSimpleInfo() {
+    if (principal == 0 && charge == 0) return note;
+    final notePart = note.isNotEmpty ? ' ($note)' : '';
+    return 'Principal: ${rupees(principal)} + Charge: ${rupees(charge)}$notePart';
   }
 }
