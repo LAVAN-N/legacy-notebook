@@ -222,14 +222,42 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
       [customerId],
     );
 
+    final lendSaleResult = await db.rawQuery(
+      'SELECT SUM(financed_amount) AS total FROM sales WHERE customer_id = ? AND sale_type = \'LEND\'',
+      [customerId],
+    );
+    final saleSaleResult = await db.rawQuery(
+      'SELECT SUM(financed_amount) AS total FROM sales WHERE customer_id = ? AND sale_type != \'LEND\'',
+      [customerId],
+    );
+
+    final lendCollectionResult = await db.rawQuery(
+      'SELECT SUM(amount) AS total FROM collections WHERE customer_id = ? AND status IN (\'PAYMENT\', \'PARTIAL_PAYMENT\') AND reason LIKE \'COLLECTION_TARGET:target=LEND%\'',
+      [customerId],
+    );
+    final saleCollectionResult = await db.rawQuery(
+      'SELECT SUM(amount) AS total FROM collections WHERE customer_id = ? AND status IN (\'PAYMENT\', \'PARTIAL_PAYMENT\') AND (reason IS NULL OR reason NOT LIKE \'COLLECTION_TARGET:target=LEND%\')',
+      [customerId],
+    );
+
     final totalFinanced = Sqflite.firstIntValue(saleResult) ?? 0;
     final totalCollected = Sqflite.firstIntValue(collectionResult) ?? 0;
+
+    final totalLendFinanced = Sqflite.firstIntValue(lendSaleResult) ?? 0;
+    final totalSaleFinanced = Sqflite.firstIntValue(saleSaleResult) ?? 0;
+
+    final totalLendCollected = Sqflite.firstIntValue(lendCollectionResult) ?? 0;
+    final totalSaleCollected = Sqflite.firstIntValue(saleCollectionResult) ?? 0;
 
     return Outstanding(
       customerId: customerId,
       totalFinanced: totalFinanced,
       totalCollected: totalCollected,
       outstandingAmount: totalFinanced - totalCollected,
+      totalLendFinanced: totalLendFinanced,
+      totalLendCollected: totalLendCollected,
+      totalSaleFinanced: totalSaleFinanced,
+      totalSaleCollected: totalSaleCollected,
     );
   }
 

@@ -13,6 +13,7 @@ class CollectScreenState {
     required this.errorMessage,
     required this.isSaving,
     required this.selectedDate,
+    required this.collectionTarget, // 'SALE' or 'LEND'
   });
 
   final Customer customer;
@@ -23,6 +24,7 @@ class CollectScreenState {
   final String? errorMessage;
   final bool isSaving;
   final DateTime selectedDate;
+  final String collectionTarget;
 
   CollectScreenState copyWith({
     Customer? customer,
@@ -33,6 +35,7 @@ class CollectScreenState {
     String? errorMessage,
     bool? isSaving,
     DateTime? selectedDate,
+    String? collectionTarget,
   }) {
     return CollectScreenState(
       customer: customer ?? this.customer,
@@ -43,6 +46,7 @@ class CollectScreenState {
       errorMessage: errorMessage, // Nullable override
       isSaving: isSaving ?? this.isSaving,
       selectedDate: selectedDate ?? this.selectedDate,
+      collectionTarget: collectionTarget ?? this.collectionTarget,
     );
   }
 }
@@ -72,6 +76,7 @@ class CollectController extends StateNotifier<CollectScreenState> {
           errorMessage: null,
           isSaving: false,
           selectedDate: DateTime.now(),
+          collectionTarget: 'SALE',
         )) {
     _init();
   }
@@ -88,15 +93,27 @@ class CollectController extends StateNotifier<CollectScreenState> {
       state = state.copyWith(
         customer: customer,
         outstanding: outstanding,
-        amount: outstanding.outstandingAmount, // Default to full outstanding for PAYMENT
+        amount: outstanding.saleOutstanding, // Default to sale outstanding for PAYMENT
       );
     }
   }
 
+  void updateCollectionTarget(String target) {
+    state = state.copyWith(
+      collectionTarget: target,
+      errorMessage: null,
+    );
+    updateStatus(state.status);
+  }
+
   void updateStatus(String status) {
     int defaultAmount = 0;
+    final maxOutstanding = state.collectionTarget == 'LEND'
+        ? state.outstanding.lendOutstanding
+        : state.outstanding.saleOutstanding;
+
     if (status == 'PAYMENT') {
-      defaultAmount = state.outstanding.outstandingAmount;
+      defaultAmount = maxOutstanding;
     } else if (status == 'PARTIAL_PAYMENT') {
       defaultAmount = 0;
     } else {
@@ -112,9 +129,13 @@ class CollectController extends StateNotifier<CollectScreenState> {
 
   void updateAmount(int amount) {
     String? error;
+    final maxOutstanding = state.collectionTarget == 'LEND'
+        ? state.outstanding.lendOutstanding
+        : state.outstanding.saleOutstanding;
+
     if (amount < 0) {
       error = 'Amount cannot be negative';
-    } else if (state.status == 'PAYMENT' && amount > state.outstanding.outstandingAmount) {
+    } else if (state.status == 'PAYMENT' && amount > maxOutstanding) {
       error = 'Payment exceeds outstanding balance!';
     }
     state = state.copyWith(
@@ -156,11 +177,12 @@ class CollectController extends StateNotifier<CollectScreenState> {
 
     try {
       final collectionRepo = _ref.read(collectionRepositoryProvider);
+      final finalReason = 'COLLECTION_TARGET:target=${state.collectionTarget}&note=${state.notes}';
       await collectionRepo.saveCollection(
         customerId: _customerId,
         status: state.status,
         amount: state.status == 'CARRY_FORWARD' ? 0.0 : state.amount.toDouble(),
-        reason: state.notes.isNotEmpty ? state.notes : null,
+        reason: finalReason,
         collectedBy: 'Ramesh (Collector)',
         customDate: state.selectedDate,
       );

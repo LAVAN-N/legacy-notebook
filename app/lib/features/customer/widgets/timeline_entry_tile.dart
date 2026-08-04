@@ -28,41 +28,44 @@ class TimelineEntryTile extends StatelessWidget {
 
     activity.when(
       payment: (id, at, amount, note, collectorName) {
+        final col = _CollectionDetails.parse(note);
         icon = Icons.check_circle_outline;
-        iconColor = colors.success;
-        iconBg = colors.success.withValues(alpha: 0.1);
-        title = customTitle ?? 'Full Payment';
+        iconColor = col.target == 'LEND' ? Colors.orange : colors.success;
+        iconBg = iconColor.withValues(alpha: 0.1);
+        title = customTitle ?? (col.target == 'LEND' ? 'Loan Repayment' : 'Full Payment');
         subtitle = '${dateShort(at)} · By $collectorName';
-        if (note != null && note.isNotEmpty) {
-          subtitle += '\n"$note"';
+        if (col.note.isNotEmpty) {
+          subtitle += '\n"${col.note}"';
         }
         trailing = Text(
           '-${rupees(amount)}',
-          style: AppTypography.currencySmall.copyWith(color: colors.success),
+          style: AppTypography.currencySmall.copyWith(color: iconColor),
         );
       },
       partialPayment: (id, at, amount, note, collectorName) {
+        final col = _CollectionDetails.parse(note);
         icon = Icons.pie_chart_outline;
-        iconColor = colors.primary;
-        iconBg = colors.primary.withValues(alpha: 0.1);
-        title = customTitle ?? 'Partial Payment';
+        iconColor = col.target == 'LEND' ? Colors.orange : colors.primary;
+        iconBg = iconColor.withValues(alpha: 0.1);
+        title = customTitle ?? (col.target == 'LEND' ? 'Loan Partial Repayment' : 'Partial Payment');
         subtitle = '${dateShort(at)} · By $collectorName';
-        if (note.isNotEmpty) {
-          subtitle += '\n"$note"';
+        if (col.note.isNotEmpty) {
+          subtitle += '\n"${col.note}"';
         }
         trailing = Text(
           '-${rupees(amount)}',
-          style: AppTypography.currencySmall.copyWith(color: colors.primary),
+          style: AppTypography.currencySmall.copyWith(color: iconColor),
         );
       },
       carryForward: (id, at, note, collectorName) {
+        final col = _CollectionDetails.parse(note);
         icon = Icons.arrow_forward;
-        iconColor = colors.warning;
-        iconBg = colors.warning.withValues(alpha: 0.1);
-        title = customTitle ?? 'Carry Forward';
+        iconColor = col.target == 'LEND' ? Colors.orange : colors.warning;
+        iconBg = iconColor.withValues(alpha: 0.1);
+        title = customTitle ?? (col.target == 'LEND' ? 'Loan Carry Forward' : 'Carry Forward');
         subtitle = '${dateShort(at)} · By $collectorName';
-        if (note.isNotEmpty) {
-          subtitle += '\n"$note"';
+        if (col.note.isNotEmpty) {
+          subtitle += '\n"${col.note}"';
         }
         trailing = Text(
           '₹0',
@@ -198,6 +201,29 @@ class _LendDetails {
       );
     } catch (_) {
       return _LendDetails(principal: 0, charge: 0, note: remarks);
+    }
+  }
+}
+
+class _CollectionDetails {
+  final String target;
+  final String note;
+
+  _CollectionDetails({required this.target, required this.note});
+
+  factory _CollectionDetails.parse(String? reason) {
+    if (reason == null || !reason.startsWith('COLLECTION_TARGET:')) {
+      return _CollectionDetails(target: 'SALE', note: reason ?? '');
+    }
+    try {
+      final query = reason.substring('COLLECTION_TARGET:'.length);
+      final params = Uri.splitQueryString(query);
+      return _CollectionDetails(
+        target: params['target'] ?? 'SALE',
+        note: params['note'] ?? '',
+      );
+    } catch (_) {
+      return _CollectionDetails(target: 'SALE', note: reason);
     }
   }
 }

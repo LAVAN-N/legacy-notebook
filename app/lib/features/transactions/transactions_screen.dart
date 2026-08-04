@@ -359,14 +359,18 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         type: 'SALE',
         status: s.saleType,
         amount: s.totalAmount,
-        subtitle: s.saleType == 'CREDIT'
-            ? 'Credit Sale · Financed ₹${s.financedAmount}'
-            : 'Ready Sale',
+        subtitle: s.saleType == 'LEND'
+            ? 'Cash Loan / Lend'
+            : (s.saleType == 'CREDIT'
+                ? 'Credit Sale · Financed ₹${s.financedAmount}'
+                : 'Ready Sale'),
         remarks: s.remarks ?? '',
       ));
     }
 
     for (final c in collections) {
+      final col = _CollectionDetails.parse(c.reason);
+      final isLend = col.target == 'LEND';
       allItems.add(TransactionItem(
         id: c.id,
         customerId: c.customerId,
@@ -374,14 +378,20 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         customer: getCustomer(c.customerId),
         date: c.visitDatetime,
         type: 'COLLECTION',
-        status: c.status,
+        status: isLend ? 'LEND_COLLECTION' : c.status,
         amount: c.amount.round(),
-        subtitle: c.status == 'PAYMENT'
-            ? 'Full Payment'
-            : (c.status == 'PARTIAL_PAYMENT'
-                ? 'Partial Payment'
-                : 'Carry Forward'),
-        remarks: c.reason ?? '',
+        subtitle: isLend
+            ? (c.status == 'PAYMENT'
+                ? 'Loan Repayment'
+                : (c.status == 'PARTIAL_PAYMENT'
+                    ? 'Loan Partial Repayment'
+                    : 'Loan Carry Forward'))
+            : (c.status == 'PAYMENT'
+                ? 'Full Payment'
+                : (c.status == 'PARTIAL_PAYMENT'
+                    ? 'Partial Payment'
+                    : 'Carry Forward')),
+        remarks: col.note,
       ));
     }
 
@@ -404,7 +414,13 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       filtered = filtered
           .where((item) =>
               item.type == 'COLLECTION' &&
+              item.status != 'LEND_COLLECTION' &&
               (item.status == 'PAYMENT' || item.status == 'PARTIAL_PAYMENT'))
+          .toList();
+    } else if (kindParam == 'Lends') {
+      filtered = filtered
+          .where((item) =>
+              item.status == 'LEND' || item.status == 'LEND_COLLECTION')
           .toList();
     } else if (kindParam == 'Partial') {
       filtered = filtered
@@ -417,7 +433,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               item.type == 'COLLECTION' && item.status == 'CARRY_FORWARD')
           .toList();
     } else if (kindParam == 'Sales') {
-      filtered = filtered.where((item) => item.type == 'SALE').toList();
+      filtered = filtered.where((item) => item.type == 'SALE' && item.status != 'LEND').toList();
     }
 
     // Filter by date range
@@ -597,7 +613,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Row(
-              children: ['All', 'Sales', 'Payments', 'Partial', 'Carry-forward']
+              children: ['All', 'Sales', 'Payments', 'Lends', 'Partial', 'Carry-forward']
                   .map((kind) {
                 final isSelected = kindParam == kind;
                 return Padding(
@@ -722,11 +738,18 @@ class _TransactionCardState extends State<_TransactionCard> {
     final isPartial = item.status == 'PARTIAL_PAYMENT';
     final isCarry = item.status == 'CARRY_FORWARD';
 
+    final isLend = item.status == 'LEND' || item.status == 'LEND_COLLECTION';
+    final isLendRepayment = item.status == 'LEND_COLLECTION';
+
     Color statusBg;
     Color statusFg;
     IconData icon;
 
-    if (isSale) {
+    if (isLend) {
+      statusBg = Colors.orange.withValues(alpha: 0.08);
+      statusFg = Colors.orange;
+      icon = Icons.handshake_outlined;
+    } else if (isSale) {
       statusBg = colors.primary.withValues(alpha: 0.08);
       statusFg = colors.primary;
       icon = Icons.shopping_cart_rounded;
@@ -873,7 +896,9 @@ class _TransactionCardState extends State<_TransactionCard> {
                       fontWeight: FontWeight.bold,
                       color: isCarry
                           ? colors.danger
-                          : (isSale ? colors.primary : colors.success),
+                          : (isLend
+                              ? Colors.orange
+                              : (isSale ? colors.primary : colors.success)),
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -885,7 +910,9 @@ class _TransactionCardState extends State<_TransactionCard> {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      isSale ? 'Sale' : (isCarry ? 'Carry-Fwd' : 'Payment'),
+                      isLend
+                          ? (isLendRepayment ? 'Repayment' : 'Lend')
+                          : (isSale ? 'Sale' : (isCarry ? 'Carry-Fwd' : 'Payment')),
                       style: AppTypography.labelSmall.copyWith(
                         color: statusFg,
                         fontWeight: FontWeight.bold,
@@ -900,5 +927,28 @@ class _TransactionCardState extends State<_TransactionCard> {
         ),
       ),
     );
+  }
+}
+
+class _CollectionDetails {
+  final String target;
+  final String note;
+
+  _CollectionDetails({required this.target, required this.note});
+
+  factory _CollectionDetails.parse(String? reason) {
+    if (reason == null || !reason.startsWith('COLLECTION_TARGET:')) {
+      return _CollectionDetails(target: 'SALE', note: reason ?? '');
+    }
+    try {
+      final query = reason.substring('COLLECTION_TARGET:'.length);
+      final params = Uri.splitQueryString(query);
+      return _CollectionDetails(
+        target: params['target'] ?? 'SALE',
+        note: params['note'] ?? '',
+      );
+    } catch (_) {
+      return _CollectionDetails(target: 'SALE', note: reason);
+    }
   }
 }

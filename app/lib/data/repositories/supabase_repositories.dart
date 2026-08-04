@@ -216,20 +216,59 @@ class SupabaseCustomerRepository implements CustomerRepository {
 
   @override
   Future<Outstanding> getCustomerOutstanding(String customerId) async {
-    final res = await _client.from('customer_outstanding_view').select().eq('customer_id', customerId).maybeSingle();
-    if (res == null) {
-      return Outstanding(
-        customerId: customerId,
-        totalFinanced: 0,
-        totalCollected: 0,
-        outstandingAmount: 0,
-      );
+    // Query sales total and lend total
+    final salesRes = await _client
+        .from('sales')
+        .select('financed_amount, sale_type')
+        .eq('customer_id', customerId);
+
+    // Query collections total and target totals
+    final collectionsRes = await _client
+        .from('collections')
+        .select('amount, status, reason')
+        .eq('customer_id', customerId)
+        .inFilter('status', ['PAYMENT', 'PARTIAL_PAYMENT']);
+
+    int totalFinanced = 0;
+    int totalLendFinanced = 0;
+    int totalSaleFinanced = 0;
+
+    for (final s in salesRes) {
+      final amount = (s['financed_amount'] as num?)?.toInt() ?? 0;
+      final type = s['sale_type'] as String;
+      totalFinanced += amount;
+      if (type == 'LEND') {
+        totalLendFinanced += amount;
+      } else {
+        totalSaleFinanced += amount;
+      }
     }
+
+    int totalCollected = 0;
+    int totalLendCollected = 0;
+    int totalSaleCollected = 0;
+
+    for (final col in collectionsRes) {
+      final amount = (col['amount'] as num?)?.toInt() ?? 0;
+      final reason = col['reason'] as String?;
+      totalCollected += amount;
+      final isLend = reason != null && reason.startsWith('COLLECTION_TARGET:target=LEND');
+      if (isLend) {
+        totalLendCollected += amount;
+      } else {
+        totalSaleCollected += amount;
+      }
+    }
+
     return Outstanding(
       customerId: customerId,
-      totalFinanced: (res['total_financed'] as num?)?.toInt() ?? 0,
-      totalCollected: (res['total_collected'] as num?)?.toInt() ?? 0,
-      outstandingAmount: (res['outstanding_amount'] as num?)?.toInt() ?? 0,
+      totalFinanced: totalFinanced,
+      totalCollected: totalCollected,
+      outstandingAmount: totalFinanced - totalCollected,
+      totalLendFinanced: totalLendFinanced,
+      totalLendCollected: totalLendCollected,
+      totalSaleFinanced: totalSaleFinanced,
+      totalSaleCollected: totalSaleCollected,
     );
   }
 

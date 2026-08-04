@@ -78,13 +78,31 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
     // Helper to calculate outstanding
     int getOutstanding(String customerId) {
       final customerSales = allSales.where((s) => s.customerId == customerId);
-      final customerCollections =
-          allCollections.where((col) => col.customerId == customerId);
+      final customerCollections = allCollections.where((col) =>
+          col.customerId == customerId &&
+          (col.status == 'PAYMENT' || col.status == 'PARTIAL_PAYMENT'));
       final totalFinanced =
           customerSales.fold<int>(0, (sum, s) => sum + s.financedAmount);
       final totalCollected =
           customerCollections.fold<int>(0, (sum, col) => sum + col.amount.round());
       return totalFinanced - totalCollected;
+    }
+
+    int getLendOutstanding(String customerId) {
+      final customerSales = allSales.where((s) => s.customerId == customerId);
+      final customerCollections = allCollections.where((col) =>
+          col.customerId == customerId &&
+          (col.status == 'PAYMENT' || col.status == 'PARTIAL_PAYMENT'));
+
+      final totalLendFinanced = customerSales
+          .where((s) => s.saleType.toUpperCase() == 'LEND')
+          .fold<int>(0, (sum, s) => sum + s.financedAmount);
+
+      final totalLendCollected = customerCollections
+          .where((c) => c.reason != null && c.reason!.startsWith('COLLECTION_TARGET:target=LEND'))
+          .fold<int>(0, (sum, c) => sum + c.amount.round());
+
+      return totalLendFinanced - totalLendCollected;
     }
 
     // Filter logic
@@ -100,10 +118,14 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
 
       // Status filter
       final out = getOutstanding(c.id);
+      final lendOut = getLendOutstanding(c.id);
       if (_selectedStatus == 'Outstanding' && out <= 0) {
         return false;
       }
       if (_selectedStatus == 'Settled' && out > 0) {
+        return false;
+      }
+      if (_selectedStatus == 'Lend' && lendOut <= 0) {
         return false;
       }
 
@@ -122,15 +144,15 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
 
     // Sort: Keep outstandings on top (descending by amount), settled at the bottom
     filtered.sort((a, b) {
-      final outA = getOutstanding(a.id);
-      final outB = getOutstanding(b.id);
+      final outA = _selectedStatus == 'Lend' ? getLendOutstanding(a.id) : getOutstanding(a.id);
+      final outB = _selectedStatus == 'Lend' ? getLendOutstanding(b.id) : getOutstanding(b.id);
       return outB.compareTo(outA);
     });
 
     // Dynamic stats based on filtered results
     int totalOutstanding = 0;
     for (final c in filtered) {
-      final out = getOutstanding(c.id);
+      final out = _selectedStatus == 'Lend' ? getLendOutstanding(c.id) : getOutstanding(c.id);
       if (out > 0) {
         totalOutstanding += out;
       }
@@ -159,7 +181,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
 
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     final rawSafeAreaBottom = MediaQueryData.fromView(View.of(context)).padding.bottom;
-    final statusOptions = ['All', 'Outstanding', 'Settled'];
+    final statusOptions = ['All', 'Outstanding', 'Lend', 'Settled'];
 
     return AppScaffold(
       blendHeader: true,
@@ -229,21 +251,24 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: colors.danger.withValues(alpha: 0.08),
+                      color: (_selectedStatus == 'Lend' ? Colors.orange : colors.danger).withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                          color: colors.danger.withValues(alpha: 0.15)),
+                          color: (_selectedStatus == 'Lend' ? Colors.orange : colors.danger).withValues(alpha: 0.15)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.error_outline_rounded,
-                                color: colors.danger, size: 16),
+                            Icon(
+                              _selectedStatus == 'Lend' ? Icons.handshake_outlined : Icons.error_outline_rounded,
+                              color: _selectedStatus == 'Lend' ? Colors.orange : colors.danger,
+                              size: 16,
+                            ),
                             const SizedBox(width: AppSpacing.xs),
                             Text(
-                              'Outstanding',
+                              _selectedStatus == 'Lend' ? 'Lend Outstanding' : 'Outstanding',
                               style: AppTypography.labelMedium
                                   .copyWith(color: colors.mutedFg),
                             ),
@@ -253,7 +278,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                         Text(
                           rupees(totalOutstanding),
                           style: AppTypography.currencyMedium
-                              .copyWith(color: colors.danger),
+                              .copyWith(color: _selectedStatus == 'Lend' ? Colors.orange : colors.danger),
                         ),
                       ],
                     ),
@@ -322,6 +347,8 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
             child: Row(
               children: statusOptions.map((status) {
                 final isSelected = _selectedStatus == status;
+                final isLendChip = status == 'Lend';
+                final chipColor = isLendChip ? Colors.orange : colors.primary;
                 return Padding(
                   padding: const EdgeInsets.only(right: AppSpacing.sm),
                   child: FilterChip(
@@ -331,13 +358,13 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                       if (selected) setState(() => _selectedStatus = status);
                     },
                     backgroundColor: colors.surface,
-                    selectedColor: colors.primary.withValues(alpha: 0.15),
-                    checkmarkColor: colors.primary,
+                    selectedColor: chipColor.withValues(alpha: 0.15),
+                    checkmarkColor: chipColor,
                     side: BorderSide(
-                      color: isSelected ? colors.primary : colors.border,
+                      color: isSelected ? chipColor : colors.border,
                     ),
                     labelStyle: TextStyle(
-                      color: isSelected ? colors.primary : colors.mutedFg,
+                      color: isSelected ? chipColor : colors.mutedFg,
                       fontWeight:
                           isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
@@ -419,7 +446,8 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                         const SizedBox(height: AppSpacing.sm),
                     itemBuilder: (context, index) {
                       final c = filtered[index];
-                      final out = getOutstanding(c.id);
+                      final isLendFilter = _selectedStatus == 'Lend';
+                      final displayOutstanding = isLendFilter ? getLendOutstanding(c.id) : getOutstanding(c.id);
 
                       return Card(
                         elevation: 0,
@@ -464,7 +492,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                                         ),
                                       ),
                                     ),
-                                    if (out > 0)
+                                    if (displayOutstanding > 0)
                                       Positioned(
                                         right: 0,
                                         top: 0,
@@ -472,7 +500,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                                           width: 12,
                                           height: 12,
                                           decoration: BoxDecoration(
-                                            color: colors.danger,
+                                            color: isLendFilter ? Colors.orange : colors.danger,
                                             shape: BoxShape.circle,
                                             border: Border.all(
                                                 color: colors.surface,
@@ -529,12 +557,12 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text(
-                                      rupees(out),
+                                      rupees(displayOutstanding),
                                       style:
                                           AppTypography.currencySmall.copyWith(
                                         fontWeight: FontWeight.bold,
-                                        color: out > 0
-                                            ? colors.danger
+                                        color: displayOutstanding > 0
+                                            ? (isLendFilter ? Colors.orange : colors.danger)
                                             : colors.mutedFg,
                                       ),
                                     ),
@@ -543,19 +571,17 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 8, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: out > 0
-                                            ? colors.danger
-                                                .withValues(alpha: 0.08)
-                                            : colors.success
-                                                .withValues(alpha: 0.08),
+                                        color: displayOutstanding > 0
+                                            ? (isLendFilter ? Colors.orange.withValues(alpha: 0.08) : colors.danger.withValues(alpha: 0.08))
+                                            : colors.success.withValues(alpha: 0.08),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
-                                        out > 0 ? 'Pending' : 'Settled',
+                                        displayOutstanding > 0 ? (isLendFilter ? 'Lend Pending' : 'Pending') : 'Settled',
                                         style:
                                             AppTypography.labelSmall.copyWith(
-                                          color: out > 0
-                                              ? colors.danger
+                                          color: displayOutstanding > 0
+                                              ? (isLendFilter ? Colors.orange : colors.danger)
                                               : colors.success,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 10,
@@ -586,7 +612,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
     List<String> places,
   ) {
     final colors = context.colors;
-    final statusOptions = ['All', 'Outstanding', 'Settled'];
+    final statusOptions = ['All', 'Outstanding', 'Lend', 'Settled'];
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,
@@ -644,6 +670,8 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                     child: Row(
                       children: statusOptions.map((status) {
                         final isSelected = _selectedStatus == status;
+                        final isLendChip = status == 'Lend';
+                        final chipColor = isLendChip ? Colors.orange : colors.primary;
                         return Padding(
                           padding: const EdgeInsets.only(right: 8.0),
                           child: ChoiceChip(
@@ -657,13 +685,13 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                             },
                             backgroundColor: colors.surface,
                             selectedColor:
-                                colors.primary.withValues(alpha: 0.15),
-                            checkmarkColor: colors.primary,
+                                chipColor.withValues(alpha: 0.15),
+                            checkmarkColor: chipColor,
                             side: BorderSide(
-                              color: isSelected ? colors.primary : colors.border,
+                              color: isSelected ? chipColor : colors.border,
                             ),
                             labelStyle: TextStyle(
-                              color: isSelected ? colors.primary : colors.mutedFg,
+                              color: isSelected ? chipColor : colors.mutedFg,
                             ),
                           ),
                         );

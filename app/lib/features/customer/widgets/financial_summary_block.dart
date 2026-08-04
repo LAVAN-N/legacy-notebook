@@ -357,7 +357,7 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
             const SizedBox(height: AppSpacing.md),
             const Divider(),
             const SizedBox(height: AppSpacing.md),
-            Row(
+             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
@@ -365,12 +365,62 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                   style: AppTypography.labelMedium.copyWith(
                     color: colors.mutedFg,
                     letterSpacing: 0.5,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 AmountText(
                   amount: widget.outstanding.outstandingAmount,
                   style: AppTypography.currencyLarge.copyWith(
                     color: widget.outstanding.outstandingAmount > 0 ? colors.danger : colors.success,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '  • Product Sale Outstanding',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: colors.mutedFg,
+                  ),
+                ),
+                AmountText(
+                  amount: widget.outstanding.saleOutstanding,
+                  style: AppTypography.currencySmall.copyWith(
+                    color: widget.outstanding.saleOutstanding > 0 ? colors.danger : colors.success,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      '  • Cash Loan / Lend Outstanding',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: colors.mutedFg,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: Colors.orange,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ],
+                ),
+                AmountText(
+                  amount: widget.outstanding.lendOutstanding,
+                  style: AppTypography.currencySmall.copyWith(
+                    color: widget.outstanding.lendOutstanding > 0 ? Colors.orange : colors.success,
                   ),
                 ),
               ],

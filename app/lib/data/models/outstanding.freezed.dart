@@ -23,7 +23,12 @@ mixin _$Outstanding {
   String get customerId => throw _privateConstructorUsedError;
   int get totalFinanced => throw _privateConstructorUsedError;
   int get totalCollected => throw _privateConstructorUsedError;
-  int get outstandingAmount => throw _privateConstructorUsedError;
+  int get outstandingAmount =>
+      throw _privateConstructorUsedError; // totalFinanced - totalCollected
+  int get totalLendFinanced => throw _privateConstructorUsedError;
+  int get totalLendCollected => throw _privateConstructorUsedError;
+  int get totalSaleFinanced => throw _privateConstructorUsedError;
+  int get totalSaleCollected => throw _privateConstructorUsedError;
 
   /// Serializes this Outstanding to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -45,7 +50,11 @@ abstract class $OutstandingCopyWith<$Res> {
       {String customerId,
       int totalFinanced,
       int totalCollected,
-      int outstandingAmount});
+      int outstandingAmount,
+      int totalLendFinanced,
+      int totalLendCollected,
+      int totalSaleFinanced,
+      int totalSaleCollected});
 }
 
 /// @nodoc
@@ -67,6 +76,10 @@ class _$OutstandingCopyWithImpl<$Res, $Val extends Outstanding>
     Object? totalFinanced = null,
     Object? totalCollected = null,
     Object? outstandingAmount = null,
+    Object? totalLendFinanced = null,
+    Object? totalLendCollected = null,
+    Object? totalSaleFinanced = null,
+    Object? totalSaleCollected = null,
   }) {
     return _then(_value.copyWith(
       customerId: null == customerId
@@ -85,6 +98,22 @@ class _$OutstandingCopyWithImpl<$Res, $Val extends Outstanding>
           ? _value.outstandingAmount
           : outstandingAmount // ignore: cast_nullable_to_non_nullable
               as int,
+      totalLendFinanced: null == totalLendFinanced
+          ? _value.totalLendFinanced
+          : totalLendFinanced // ignore: cast_nullable_to_non_nullable
+              as int,
+      totalLendCollected: null == totalLendCollected
+          ? _value.totalLendCollected
+          : totalLendCollected // ignore: cast_nullable_to_non_nullable
+              as int,
+      totalSaleFinanced: null == totalSaleFinanced
+          ? _value.totalSaleFinanced
+          : totalSaleFinanced // ignore: cast_nullable_to_non_nullable
+              as int,
+      totalSaleCollected: null == totalSaleCollected
+          ? _value.totalSaleCollected
+          : totalSaleCollected // ignore: cast_nullable_to_non_nullable
+              as int,
     ) as $Val);
   }
 }
@@ -101,7 +130,11 @@ abstract class _$$OutstandingImplCopyWith<$Res>
       {String customerId,
       int totalFinanced,
       int totalCollected,
-      int outstandingAmount});
+      int outstandingAmount,
+      int totalLendFinanced,
+      int totalLendCollected,
+      int totalSaleFinanced,
+      int totalSaleCollected});
 }
 
 /// @nodoc
@@ -121,6 +154,10 @@ class __$$OutstandingImplCopyWithImpl<$Res>
     Object? totalFinanced = null,
     Object? totalCollected = null,
     Object? outstandingAmount = null,
+    Object? totalLendFinanced = null,
+    Object? totalLendCollected = null,
+    Object? totalSaleFinanced = null,
+    Object? totalSaleCollected = null,
   }) {
     return _then(_$OutstandingImpl(
       customerId: null == customerId
@@ -139,18 +176,39 @@ class __$$OutstandingImplCopyWithImpl<$Res>
           ? _value.outstandingAmount
           : outstandingAmount // ignore: cast_nullable_to_non_nullable
               as int,
+      totalLendFinanced: null == totalLendFinanced
+          ? _value.totalLendFinanced
+          : totalLendFinanced // ignore: cast_nullable_to_non_nullable
+              as int,
+      totalLendCollected: null == totalLendCollected
+          ? _value.totalLendCollected
+          : totalLendCollected // ignore: cast_nullable_to_non_nullable
+              as int,
+      totalSaleFinanced: null == totalSaleFinanced
+          ? _value.totalSaleFinanced
+          : totalSaleFinanced // ignore: cast_nullable_to_non_nullable
+              as int,
+      totalSaleCollected: null == totalSaleCollected
+          ? _value.totalSaleCollected
+          : totalSaleCollected // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$OutstandingImpl implements _Outstanding {
+class _$OutstandingImpl extends _Outstanding {
   const _$OutstandingImpl(
       {required this.customerId,
       required this.totalFinanced,
       required this.totalCollected,
-      required this.outstandingAmount});
+      required this.outstandingAmount,
+      this.totalLendFinanced = 0,
+      this.totalLendCollected = 0,
+      this.totalSaleFinanced = 0,
+      this.totalSaleCollected = 0})
+      : super._();
 
   factory _$OutstandingImpl.fromJson(Map<String, dynamic> json) =>
       _$$OutstandingImplFromJson(json);
@@ -163,10 +221,23 @@ class _$OutstandingImpl implements _Outstanding {
   final int totalCollected;
   @override
   final int outstandingAmount;
+// totalFinanced - totalCollected
+  @override
+  @JsonKey()
+  final int totalLendFinanced;
+  @override
+  @JsonKey()
+  final int totalLendCollected;
+  @override
+  @JsonKey()
+  final int totalSaleFinanced;
+  @override
+  @JsonKey()
+  final int totalSaleCollected;
 
   @override
   String toString() {
-    return 'Outstanding(customerId: $customerId, totalFinanced: $totalFinanced, totalCollected: $totalCollected, outstandingAmount: $outstandingAmount)';
+    return 'Outstanding(customerId: $customerId, totalFinanced: $totalFinanced, totalCollected: $totalCollected, outstandingAmount: $outstandingAmount, totalLendFinanced: $totalLendFinanced, totalLendCollected: $totalLendCollected, totalSaleFinanced: $totalSaleFinanced, totalSaleCollected: $totalSaleCollected)';
   }
 
   @override
@@ -181,13 +252,29 @@ class _$OutstandingImpl implements _Outstanding {
             (identical(other.totalCollected, totalCollected) ||
                 other.totalCollected == totalCollected) &&
             (identical(other.outstandingAmount, outstandingAmount) ||
-                other.outstandingAmount == outstandingAmount));
+                other.outstandingAmount == outstandingAmount) &&
+            (identical(other.totalLendFinanced, totalLendFinanced) ||
+                other.totalLendFinanced == totalLendFinanced) &&
+            (identical(other.totalLendCollected, totalLendCollected) ||
+                other.totalLendCollected == totalLendCollected) &&
+            (identical(other.totalSaleFinanced, totalSaleFinanced) ||
+                other.totalSaleFinanced == totalSaleFinanced) &&
+            (identical(other.totalSaleCollected, totalSaleCollected) ||
+                other.totalSaleCollected == totalSaleCollected));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, customerId, totalFinanced,
-      totalCollected, outstandingAmount);
+  int get hashCode => Object.hash(
+      runtimeType,
+      customerId,
+      totalFinanced,
+      totalCollected,
+      outstandingAmount,
+      totalLendFinanced,
+      totalLendCollected,
+      totalSaleFinanced,
+      totalSaleCollected);
 
   /// Create a copy of Outstanding
   /// with the given fields replaced by the non-null parameter values.
@@ -205,12 +292,17 @@ class _$OutstandingImpl implements _Outstanding {
   }
 }
 
-abstract class _Outstanding implements Outstanding {
+abstract class _Outstanding extends Outstanding {
   const factory _Outstanding(
       {required final String customerId,
       required final int totalFinanced,
       required final int totalCollected,
-      required final int outstandingAmount}) = _$OutstandingImpl;
+      required final int outstandingAmount,
+      final int totalLendFinanced,
+      final int totalLendCollected,
+      final int totalSaleFinanced,
+      final int totalSaleCollected}) = _$OutstandingImpl;
+  const _Outstanding._() : super._();
 
   factory _Outstanding.fromJson(Map<String, dynamic> json) =
       _$OutstandingImpl.fromJson;
@@ -222,7 +314,15 @@ abstract class _Outstanding implements Outstanding {
   @override
   int get totalCollected;
   @override
-  int get outstandingAmount;
+  int get outstandingAmount; // totalFinanced - totalCollected
+  @override
+  int get totalLendFinanced;
+  @override
+  int get totalLendCollected;
+  @override
+  int get totalSaleFinanced;
+  @override
+  int get totalSaleCollected;
 
   /// Create a copy of Outstanding
   /// with the given fields replaced by the non-null parameter values.

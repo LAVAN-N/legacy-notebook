@@ -128,13 +128,15 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
 
     // Update text fields if notifier defaults them
     ref.listen(collectControllerProvider(widget.customerId), (prev, next) {
-      if (prev?.status != next.status) {
+      if (prev?.status != next.status || prev?.collectionTarget != next.collectionTarget) {
         _amountController.text = next.amount.toString();
         _notesController.clear();
       }
     });
 
-    final currentOutstanding = state.outstanding.outstandingAmount;
+    final currentOutstanding = state.collectionTarget == 'LEND'
+        ? state.outstanding.lendOutstanding
+        : state.outstanding.saleOutstanding;
     final newOutstanding = (currentOutstanding - state.amount).clamp(0, 99999999);
 
     return PopScope(
@@ -173,7 +175,40 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            _buildDatePickerRow(context, ref, state.selectedDate),
+             _buildDatePickerRow(context, ref, state.selectedDate),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Segmented Target selector (Sale vs Lend)
+            Text(
+              'Collection Target',
+              style: AppTypography.labelMedium.copyWith(color: colors.mutedFg),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Container(
+              decoration: BoxDecoration(
+                color: colors.border.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              padding: const EdgeInsets.all(4),
+              child: Row(
+                children: [
+                  _SegmentButton(
+                    label: 'Product Sale',
+                    isSelected: state.collectionTarget == 'SALE',
+                    onTap: () => ref
+                        .read(collectControllerProvider(widget.customerId).notifier)
+                        .updateCollectionTarget('SALE'),
+                  ),
+                  _SegmentButton(
+                    label: 'Cash Loan / Lend',
+                    isSelected: state.collectionTarget == 'LEND',
+                    onTap: () => ref
+                        .read(collectControllerProvider(widget.customerId).notifier)
+                        .updateCollectionTarget('LEND'),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: AppSpacing.lg),
 
             // Segmented Status selector
