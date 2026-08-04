@@ -1151,7 +1151,7 @@ Read before starting. Never edit past entries.
 
 ### 2026-08-04 · Import paths in database helpers and UUID migrations
 
-- **Context:** Implementing UUID data types for transactional tables (sales, collections, sale items, inventory transactions) and refactoring ID generation.
+- **Context:** Implementing UUID data types for transactional tables (sales, collections, sale items, inventory transactions) and the products table, and refactoring ID generation.
 - **Mistake:** Imported helper file `uuid.dart` using a single-dot parent relative path (`../core/utils/uuid.dart`) instead of double-dot parent relative path (`../../core/utils/uuid.dart`) in `database_helper.dart`.
 - **Root cause:** Misestimated the folder depth of `lib/data/local/database_helper.dart` relative to `lib/core/utils/uuid.dart`.
 - **Fix applied:** Corrected the import path to `../../core/utils/uuid.dart` and verified compilation with `flutter analyze`.

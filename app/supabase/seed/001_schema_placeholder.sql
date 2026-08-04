@@ -51,7 +51,7 @@ CREATE INDEX IF NOT EXISTS idx_customers_area ON customers(area_id);
 
 -- 5. Products table
 CREATE TABLE IF NOT EXISTS products (
-    id TEXT PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     sku TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
     brand TEXT NOT NULL,
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS sales (
 CREATE TABLE IF NOT EXISTS sale_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     sale_id UUID NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
-    product_id TEXT NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
+    product_id UUID NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
     quantity INT NOT NULL CHECK (quantity > 0),
     unit_price INT NOT NULL CHECK (unit_price >= 0),
     total_price INT NOT NULL CHECK (total_price >= 0)
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS collections (
 -- 9. Inventory Transactions table
 CREATE TABLE IF NOT EXISTS inventory_transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id TEXT NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
+    product_id UUID NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
     transaction_type TEXT NOT NULL CHECK (transaction_type IN ('PURCHASE', 'SALE', 'ADJUSTMENT')),
     quantity INT NOT NULL,
     reference_id TEXT,

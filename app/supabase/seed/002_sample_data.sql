@@ -31,12 +31,12 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 4. Seed products
 INSERT INTO products (id, sku, name, brand, category, minimum_stock, stock, price, image_url) VALUES
-('pr-1', 'MIX-PRE-3J', 'Prestige Mixer Grinder 3 Jar', 'Prestige', 'Kitchen Appliances', 5, 12, 3200, NULL),
-('pr-2', 'IND-PHI-HD', 'Philips Induction Cooktop HD4928', 'Philips', 'Kitchen Appliances', 3, 8, 2800, NULL),
-('pr-3', 'REF-LG-190L', 'LG 190L Single Door Refrigerator', 'LG', 'Home Appliances', 2, 4, 16500, NULL),
-('pr-4', 'TV-SAM-32', 'Samsung 32-inch Smart LED TV', 'Samsung', 'Electronics', 2, 0, 14500, NULL),
-('pr-5', 'WM-IFB-7KG', 'IFB 7Kg Front Load Washing Machine', 'IFB', 'Home Appliances', 1, 3, 28500, NULL),
-('pr-6', 'IRO-USHA-1K', 'Usha Dry Iron 1000W', 'Usha', 'Home Appliances', 10, 25, 850, NULL)
+('06085a69-6330-4e55-9b24-f7b5993de401', 'MIX-PRE-3J', 'Prestige Mixer Grinder 3 Jar', 'Prestige', 'Kitchen Appliances', 5, 12, 3200, NULL),
+('06085a69-6330-4e55-9b24-f7b5993de402', 'IND-PHI-HD', 'Philips Induction Cooktop HD4928', 'Philips', 'Kitchen Appliances', 3, 8, 2800, NULL),
+('06085a69-6330-4e55-9b24-f7b5993de403', 'REF-LG-190L', 'LG 190L Single Door Refrigerator', 'LG', 'Home Appliances', 2, 4, 16500, NULL),
+('06085a69-6330-4e55-9b24-f7b5993de404', 'TV-SAM-32', 'Samsung 32-inch Smart LED TV', 'Samsung', 'Electronics', 2, 0, 14500, NULL),
+('06085a69-6330-4e55-9b24-f7b5993de405', 'WM-IFB-7KG', 'IFB 7Kg Front Load Washing Machine', 'IFB', 'Home Appliances', 1, 3, 28500, NULL),
+('06085a69-6330-4e55-9b24-f7b5993de406', 'IRO-USHA-1K', 'Usha Dry Iron 1000W', 'Usha', 'Home Appliances', 10, 25, 850, NULL)
 ON CONFLICT (id) DO NOTHING;
 
 -- 5. Seed customers
@@ -62,11 +62,11 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Seed sale items
 INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price, total_price) VALUES
-('f47ac10b-58cc-4372-a567-0e02b2c3d471', 'e0c704f0-466d-4952-b883-999df5e449a1', 'pr-3', 1, 16500, 16500),
-('f47ac10b-58cc-4372-a567-0e02b2c3d472', 'f95cf896-1c88-4667-bb03-8d68ef61ea24', 'pr-1', 1, 3200, 3200),
-('f47ac10b-58cc-4372-a567-0e02b2c3d473', 'd1d36154-1598-4c9f-bbd7-cd1626f25be2', 'pr-2', 1, 2800, 2800),
-('f47ac10b-58cc-4372-a567-0e02b2c3d474', 'ab5e66d9-5f25-419b-b0b3-96b5275e7a9e', 'pr-5', 1, 28500, 28500),
-('f47ac10b-58cc-4372-a567-0e02b2c3d475', '3d6d0dfc-0cfc-40ad-be0f-b258cf145695', 'pr-6', 1, 850, 850)
+('f47ac10b-58cc-4372-a567-0e02b2c3d471', 'e0c704f0-466d-4952-b883-999df5e449a1', '06085a69-6330-4e55-9b24-f7b5993de403', 1, 16500, 16500),
+('f47ac10b-58cc-4372-a567-0e02b2c3d472', 'f95cf896-1c88-4667-bb03-8d68ef61ea24', '06085a69-6330-4e55-9b24-f7b5993de401', 1, 3200, 3200),
+('f47ac10b-58cc-4372-a567-0e02b2c3d473', 'd1d36154-1598-4c9f-bbd7-cd1626f25be2', '06085a69-6330-4e55-9b24-f7b5993de402', 1, 2800, 2800),
+('f47ac10b-58cc-4372-a567-0e02b2c3d474', 'ab5e66d9-5f25-419b-b0b3-96b5275e7a9e', '06085a69-6330-4e55-9b24-f7b5993de405', 1, 28500, 28500),
+('f47ac10b-58cc-4372-a567-0e02b2c3d475', '3d6d0dfc-0cfc-40ad-be0f-b258cf145695', '06085a69-6330-4e55-9b24-f7b5993de406', 1, 850, 850)
 ON CONFLICT (id) DO NOTHING;
 
 -- 7. Seed collections

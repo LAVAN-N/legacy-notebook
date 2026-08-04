@@ -44,7 +44,7 @@ final mockAreasList = <Area>[
 final mockProductsList = [
   // Kitchen Appliances (cat-kat)
   const Product(
-    id: 'pr-1',
+    id: '06085a69-6330-4e55-9b24-f7b5993de401',
     sku: 'MIX-PRE-3J',
     name: 'Prestige Mixer Grinder 3 Jar',
     brand: 'Prestige',
@@ -57,7 +57,7 @@ final mockProductsList = [
     description: 'Heavy-duty mixer grinder with 3 stainless steel jars',
   ),
   const Product(
-    id: 'pr-2',
+    id: '06085a69-6330-4e55-9b24-f7b5993de402',
     sku: 'IND-PHI-HD',
     name: 'Philips Induction Cooktop HD4928',
     brand: 'Philips',
@@ -70,7 +70,7 @@ final mockProductsList = [
     description: 'Portable induction cooktop with touch controls',
   ),
   const Product(
-    id: 'pr-3',
+    id: '06085a69-6330-4e55-9b24-f7b5993de403',
     sku: 'TOA-VID-2S',
     name: 'Vidiem 2-Slice Toaster',
     brand: 'Vidiem',
@@ -83,7 +83,7 @@ final mockProductsList = [
     description: 'Automatic pop-up toaster with 6 browning levels',
   ),
   const Product(
-    id: 'pr-4',
+    id: '06085a69-6330-4e55-9b24-f7b5993de404',
     sku: 'KET-BLA-1L',
     name: 'Black+Decker Electric Kettle 1L',
     brand: 'Black+Decker',
@@ -96,7 +96,7 @@ final mockProductsList = [
     description: 'Stainless steel electric kettle with auto shut-off',
   ),
   const Product(
-    id: 'pr-5',
+    id: '06085a69-6330-4e55-9b24-f7b5993de405',
     sku: 'BLE-PR-750',
     name: 'Preethi Blender 750W',
     brand: 'Preethi',
@@ -109,7 +109,7 @@ final mockProductsList = [
     description: 'Powerful blender for smoothies and juices',
   ),
   const Product(
-    id: 'pr-6',
+    id: '06085a69-6330-4e55-9b24-f7b5993de406',
     sku: 'MIC-IFB-20L',
     name: 'IFB Microwave Oven 20L',
     brand: 'IFB',
@@ -124,7 +124,7 @@ final mockProductsList = [
 
   // Laundry (cat-laundry)
   const Product(
-    id: 'pr-7',
+    id: '06085a69-6330-4e55-9b24-f7b5993de407',
     sku: 'WM-IFB-7KG',
     name: 'IFB 7Kg Front Load Washing Machine',
     brand: 'IFB',
@@ -137,7 +137,7 @@ final mockProductsList = [
     description: 'Front-loading automatic washing machine',
   ),
   const Product(
-    id: 'pr-8',
+    id: '06085a69-6330-4e55-9b24-f7b5993de408',
     sku: 'WM-LG-8KG',
     name: 'LG 8Kg Fully Automatic Top Load',
     brand: 'LG',
@@ -150,7 +150,7 @@ final mockProductsList = [
     description: 'Top-loading automatic washing machine with inverter',
   ),
   const Product(
-    id: 'pr-9',
+    id: '06085a69-6330-4e55-9b24-f7b5993de409',
     sku: 'DRY-GODREJ',
     name: 'Godrej Semi-Auto Washing Machine 6.5Kg',
     brand: 'Godrej',
@@ -163,7 +163,7 @@ final mockProductsList = [
     description: 'Durable semi-automatic washing machine',
   ),
   const Product(
-    id: 'pr-10',
+    id: '06085a69-6330-4e55-9b24-f7b5993de410',
     sku: 'IRO-USHA-1K',
     name: 'Usha Dry Iron 1000W',
     brand: 'Usha',
@@ -176,7 +176,7 @@ final mockProductsList = [
     description: 'Lightweight electric iron for all fabric types',
   ),
   const Product(
-    id: 'pr-11',
+    id: '06085a69-6330-4e55-9b24-f7b5993de411',
     sku: 'STM-PHILIPS-2K',
     name: 'Philips Steam Iron 2000W',
     brand: 'Philips',
@@ -189,7 +189,7 @@ final mockProductsList = [
     description: 'Steam iron with vertical steaming capability',
   ),
   const Product(
-    id: 'pr-12',
+    id: '06085a69-6330-4e55-9b24-f7b5993de412',
     sku: 'DRY-AGARO',
     name: 'Agaro Fabric Steamer',
     brand: 'Agaro',
@@ -204,7 +204,7 @@ final mockProductsList = [
 
   // Home Audio (cat-audio)
   const Product(
-    id: 'pr-13',
+    id: '06085a69-6330-4e55-9b24-f7b5993de413',
     sku: 'SPK-BT-30W',
     name: 'boAt Stone 1200 Bluetooth Speaker 30W',
     brand: 'boAt',
@@ -217,7 +217,7 @@ final mockProductsList = [
     description: 'Portable Bluetooth speaker with 12-hour battery',
   ),
   const Product(
-    id: 'pr-14',
+    id: '06085a69-6330-4e55-9b24-f7b5993de414',
     sku: 'SPEAKER-JBL',
     name: 'JBL Go 3 Portable Speaker',
     brand: 'JBL',
@@ -230,7 +230,7 @@ final mockProductsList = [
     description: 'Compact waterproof speaker with ultra-portable design',
   ),
   const Product(
-    id: 'pr-15',
+    id: '06085a69-6330-4e55-9b24-f7b5993de415',
     sku: 'HP-SONY-WH1000',
     name: 'Sony WH-CH720N Wireless Headphones',
     brand: 'Sony',
@@ -243,7 +243,7 @@ final mockProductsList = [
     description: 'Noise-cancelling wireless headphones with 35-hour battery',
   ),
   const Product(
-    id: 'pr-16',
+    id: '06085a69-6330-4e55-9b24-f7b5993de416',
     sku: 'SND-HF-QUICK',
     name: 'Soundcore Space A40 Earbuds',
     brand: 'Soundcore',
@@ -256,7 +256,7 @@ final mockProductsList = [
     description: 'True wireless earbuds with active noise cancelling',
   ),
   const Product(
-    id: 'pr-17',
+    id: '06085a69-6330-4e55-9b24-f7b5993de417',
     sku: 'SNDBAR-ONE',
     name: 'One Plus Soundbar 20W',
     brand: 'OnePlus',
@@ -269,7 +269,7 @@ final mockProductsList = [
     description: 'Premium soundbar for TV and entertainment',
   ),
   const Product(
-    id: 'pr-18',
+    id: '06085a69-6330-4e55-9b24-f7b5993de418',
     sku: 'MICRO-RODE-USB',
     name: 'Rode NT-USB Mini Microphone',
     brand: 'Rode',
@@ -284,7 +284,7 @@ final mockProductsList = [
 
   // Lighting (cat-lighting)
   const Product(
-    id: 'pr-19',
+    id: '06085a69-6330-4e55-9b24-f7b5993de419',
     sku: 'LED-PHILIPS-9W',
     name: 'Philips LED Bulb 9W B22',
     brand: 'Philips',
@@ -297,7 +297,7 @@ final mockProductsList = [
     description: 'Energy-efficient LED bulb with 50,000-hour lifespan',
   ),
   const Product(
-    id: 'pr-20',
+    id: '06085a69-6330-4e55-9b24-f7b5993de420',
     sku: 'LED-GODREJ-12W',
     name: 'Godrej LED Bulb 12W E27',
     brand: 'Godrej',
@@ -310,7 +310,7 @@ final mockProductsList = [
     description: '12W LED bulb for bright, efficient lighting',
   ),
   const Product(
-    id: 'pr-21',
+    id: '06085a69-6330-4e55-9b24-f7b5993de421',
     sku: 'STRIP-RGB-5M',
     name: 'RGB LED Strip Lights 5M',
     brand: 'Generic',
@@ -323,7 +323,7 @@ final mockProductsList = [
     description: 'Color-changing LED strip with remote control',
   ),
   const Product(
-    id: 'pr-22',
+    id: '06085a69-6330-4e55-9b24-f7b5993de422',
     sku: 'TUBE-LED-2FT',
     name: 'LED Tube Light 2ft 18W',
     brand: 'Surya',
@@ -336,7 +336,7 @@ final mockProductsList = [
     description: 'Bright T5 LED tube for office and home',
   ),
   const Product(
-    id: 'pr-23',
+    id: '06085a69-6330-4e55-9b24-f7b5993de423',
     sku: 'LAMP-DESK-LED',
     name: 'LED Desk Lamp 12W',
     brand: 'Luminous',
@@ -349,7 +349,7 @@ final mockProductsList = [
     description: 'Adjustable LED desk lamp with dimming feature',
   ),
   const Product(
-    id: 'pr-24',
+    id: '06085a69-6330-4e55-9b24-f7b5993de424',
     sku: 'BULB-SMART-WIZ',
     name: 'Wipro Smart LED Bulb WiFi',
     brand: 'Wipro',
@@ -364,7 +364,7 @@ final mockProductsList = [
 
   // Cooling (cat-cooling)
   const Product(
-    id: 'pr-25',
+    id: '06085a69-6330-4e55-9b24-f7b5993de425',
     sku: 'FAN-ORIENT-400',
     name: 'Orient Electric Ceiling Fan 400RPM',
     brand: 'Orient',
@@ -377,7 +377,7 @@ final mockProductsList = [
     description: 'Energy-efficient ceiling fan with 3 speed controls',
   ),
   const Product(
-    id: 'pr-26',
+    id: '06085a69-6330-4e55-9b24-f7b5993de426',
     sku: 'FAN-HAVELLS-1200',
     name: 'Havells Table Fan 1200mm',
     brand: 'Havells',
@@ -390,7 +390,7 @@ final mockProductsList = [
     description: 'Portable table fan with metal blades',
   ),
   const Product(
-    id: 'pr-27',
+    id: '06085a69-6330-4e55-9b24-f7b5993de427',
     sku: 'AC-LG-1TON',
     name: 'LG 1 Ton 3-Star Air Conditioner',
     brand: 'LG',
@@ -403,7 +403,7 @@ final mockProductsList = [
     description: '1 Ton inverter AC with Wi-Fi control',
   ),
   const Product(
-    id: 'pr-28',
+    id: '06085a69-6330-4e55-9b24-f7b5993de428',
     sku: 'AC-CARRIER-1TON',
     name: 'Carrier 1 Ton 5-Star AC',
     brand: 'Carrier',
@@ -416,7 +416,7 @@ final mockProductsList = [
     description: 'Premium 1-ton air conditioner with eco mode',
   ),
   const Product(
-    id: 'pr-29',
+    id: '06085a69-6330-4e55-9b24-f7b5993de429',
     sku: 'COOLER-BOSS-TOWER',
     name: 'Boss Tower Air Cooler 45L',
     brand: 'Boss',
@@ -429,7 +429,7 @@ final mockProductsList = [
     description: 'Honeycomb cooling air cooler for large rooms',
   ),
   const Product(
-    id: 'pr-30',
+    id: '06085a69-6330-4e55-9b24-f7b5993de430',
     sku: 'FAN-PORTABLE-USB',
     name: 'Portable USB Fan Mini',
     brand: 'Generic',

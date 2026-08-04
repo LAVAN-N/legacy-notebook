@@ -1120,7 +1120,7 @@ class SupabaseProductRepository implements ProductRepository {
     String? description,
     String? imageUrl,
   }) async {
-    final productId = 'prod_${DateTime.now().millisecondsSinceEpoch}';
+    final productId = UuidUtils.generate();
 
     String? remoteUrl = imageUrl;
     if (imageUrl != null && imageUrl.isNotEmpty) {

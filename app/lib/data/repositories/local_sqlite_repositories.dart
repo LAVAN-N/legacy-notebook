@@ -1003,7 +1003,7 @@ class LocalSqliteProductRepository implements ProductRepository {
     String? imageUrl,
   }) async {
     final db = await DatabaseHelper.instance.database;
-    final productId = 'prod_${DateTime.now().millisecondsSinceEpoch}';
+    final productId = UuidUtils.generate();
 
     await db.transaction((txn) async {
       // 1. Insert product

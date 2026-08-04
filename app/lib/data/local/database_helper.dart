@@ -375,17 +375,17 @@ class DatabaseHelper {
       });
 
       // Match corresponding mock products by price/SKU for correct items
-      String matchedProductId = 'pr-1'; // fallback
+      String matchedProductId = '06085a69-6330-4e55-9b24-f7b5993de401'; // fallback
       if (s.totalAmount == 16500) {
-        matchedProductId = 'pr-8'; // LG Refrigerator
+        matchedProductId = '06085a69-6330-4e55-9b24-f7b5993de408'; // LG Refrigerator
       } else if (s.totalAmount == 3200) {
-        matchedProductId = 'pr-1'; // Prestige Mixer
+        matchedProductId = '06085a69-6330-4e55-9b24-f7b5993de401'; // Prestige Mixer
       } else if (s.totalAmount == 2800) {
-        matchedProductId = 'pr-2'; // Philips Induction
+        matchedProductId = '06085a69-6330-4e55-9b24-f7b5993de402'; // Philips Induction
       } else if (s.totalAmount == 28500) {
-        matchedProductId = 'pr-7'; // IFB Front Load
+        matchedProductId = '06085a69-6330-4e55-9b24-f7b5993de407'; // IFB Front Load
       } else if (s.totalAmount == 850) {
-        matchedProductId = 'pr-10'; // Usha Dry Iron
+        matchedProductId = '06085a69-6330-4e55-9b24-f7b5993de410'; // Usha Dry Iron
       }
 
       await db.insert('sale_items', {
