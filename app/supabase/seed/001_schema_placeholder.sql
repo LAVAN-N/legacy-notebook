@@ -126,6 +126,12 @@ ALTER TABLE sale_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE collections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE inventory_transactions ENABLE ROW LEVEL SECURITY;
 
+CREATE POLICY "Allow anonymous all" ON products FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anonymous all" ON sales FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anonymous all" ON collections FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anonymous all" ON sale_items FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anonymous all" ON inventory_transactions FOR ALL TO public USING (true) WITH CHECK (true);
+
 -- ─── Database Views ──────────────────────────────────────
 
 
