@@ -348,8 +348,16 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
             child: Row(
               children: statusOptions.map((status) {
                 final isSelected = _selectedStatus == status;
-                final isLendChip = status == 'Lend';
-                final chipColor = isLendChip ? Colors.orange : colors.primary;
+                Color chipColor;
+                if (status == 'Lend') {
+                  chipColor = Colors.orange;
+                } else if (status == 'Outstanding') {
+                  chipColor = colors.danger;
+                } else if (status == 'Settled') {
+                  chipColor = colors.success;
+                } else {
+                  chipColor = colors.primary;
+                }
                 return Padding(
                   padding: const EdgeInsets.only(right: AppSpacing.sm),
                   child: FilterChip(
@@ -450,6 +458,35 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                       final isLendFilter = _selectedStatus == 'Lend';
                       final displayOutstanding = isLendFilter ? getLendOutstanding(c.id) : getOutstanding(c.id);
 
+                      // Calculate dynamic status label and colors
+                      final totalOut = getOutstanding(c.id);
+                      final lendOut = getLendOutstanding(c.id);
+                      final saleOut = (totalOut - lendOut).clamp(0, 99999999);
+
+                      String cardLabel;
+                      Color cardColor;
+
+                      if (totalOut <= 0) {
+                        cardLabel = 'Settled';
+                        cardColor = colors.success;
+                      } else {
+                        if (saleOut > 0 && lendOut > 0) {
+                          if (saleOut >= lendOut) {
+                            cardLabel = 'Sale Pending';
+                            cardColor = colors.danger;
+                          } else {
+                            cardLabel = 'Lend Pending';
+                            cardColor = Colors.orange;
+                          }
+                        } else if (lendOut > 0) {
+                          cardLabel = 'Lend Pending';
+                          cardColor = Colors.orange;
+                        } else {
+                          cardLabel = 'Sale Pending';
+                          cardColor = colors.danger;
+                        }
+                      }
+
                       return Card(
                         elevation: 0,
                         margin: EdgeInsets.zero,
@@ -501,7 +538,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                                           width: 12,
                                           height: 12,
                                           decoration: BoxDecoration(
-                                            color: isLendFilter ? Colors.orange : colors.danger,
+                                            color: cardColor,
                                             shape: BoxShape.circle,
                                             border: Border.all(
                                                 color: colors.surface,
@@ -562,9 +599,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                                       style:
                                           AppTypography.currencySmall.copyWith(
                                         fontWeight: FontWeight.bold,
-                                        color: displayOutstanding > 0
-                                            ? (isLendFilter ? Colors.orange : colors.danger)
-                                            : colors.mutedFg,
+                                        color: displayOutstanding > 0 ? cardColor : colors.mutedFg,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -572,18 +607,14 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 8, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: displayOutstanding > 0
-                                            ? (isLendFilter ? Colors.orange.withValues(alpha: 0.08) : colors.danger.withValues(alpha: 0.08))
-                                            : colors.success.withValues(alpha: 0.08),
+                                        color: cardColor.withValues(alpha: 0.08),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
-                                        displayOutstanding > 0 ? (isLendFilter ? 'Lend Pending' : 'Pending') : 'Settled',
+                                        cardLabel,
                                         style:
                                             AppTypography.labelSmall.copyWith(
-                                          color: displayOutstanding > 0
-                                              ? (isLendFilter ? Colors.orange : colors.danger)
-                                              : colors.success,
+                                          color: cardColor,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 10,
                                         ),
@@ -671,8 +702,16 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                     child: Row(
                       children: statusOptions.map((status) {
                         final isSelected = _selectedStatus == status;
-                        final isLendChip = status == 'Lend';
-                        final chipColor = isLendChip ? Colors.orange : colors.primary;
+                        Color chipColor;
+                        if (status == 'Lend') {
+                          chipColor = Colors.orange;
+                        } else if (status == 'Outstanding') {
+                          chipColor = colors.danger;
+                        } else if (status == 'Settled') {
+                          chipColor = colors.success;
+                        } else {
+                          chipColor = colors.primary;
+                        }
                         return Padding(
                           padding: const EdgeInsets.only(right: 8.0),
                           child: ChoiceChip(
