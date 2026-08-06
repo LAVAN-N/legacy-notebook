@@ -165,7 +165,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
   }
 
   @override
-  Stream<Outstanding> watchCustomerOutstanding(String customerId) {
+  Stream<Outstanding> watchCustomerOutstanding(String customerId, {bool skipInitialFetch = false}) {
     final controller = StreamController<Outstanding>();
     Future<void> reload() async {
       try {
@@ -180,7 +180,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
       }
     }
 
-    reload();
+    if (!skipInitialFetch) reload();
 
     final channel = _client.channel('outstanding_$customerId')
       ..onPostgresChanges(
@@ -274,7 +274,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
   }
 
   @override
-  Stream<List<Activity>> watchCustomerTimeline(String customerId) {
+  Stream<List<Activity>> watchCustomerTimeline(String customerId, {bool skipInitialFetch = false}) {
     final controller = StreamController<List<Activity>>();
     Future<void> reload() async {
       try {
@@ -289,7 +289,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
       }
     }
 
-    reload();
+    if (!skipInitialFetch) reload();
 
     final channel = _client.channel('timeline_$customerId')
       ..onPostgresChanges(

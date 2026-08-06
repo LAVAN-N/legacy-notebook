@@ -13,10 +13,10 @@ abstract class CustomerRepository {
   Future<Customer?> getCustomerById(String id);
   Stream<Customer?> watchCustomerById(String id);
   
-  Stream<Outstanding> watchCustomerOutstanding(String customerId);
+  Stream<Outstanding> watchCustomerOutstanding(String customerId, {bool skipInitialFetch = false});
   Future<Outstanding> getCustomerOutstanding(String customerId);
   
-  Stream<List<Activity>> watchCustomerTimeline(String customerId);
+  Stream<List<Activity>> watchCustomerTimeline(String customerId, {bool skipInitialFetch = false});
   Future<List<Activity>> getCustomerTimeline(String customerId);
 
   Future<void> updateCustomerProfile(String id, {String? phone, String? profileUrl, String? locationUrl});

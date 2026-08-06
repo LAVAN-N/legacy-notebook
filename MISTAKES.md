@@ -1157,3 +1157,36 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Corrected the import path to `../../core/utils/uuid.dart` and verified compilation with `flutter analyze`.
 - **Rule for next agent:** ALWAYS verify import paths relative to project root folders when adding new utilities.
 - **Guardrail:** Run `flutter analyze` immediately after resolving path additions to catch import resolution errors.
+
+---
+
+### 2026-08-06 · Uncanceled stream subscriptions in StateNotifiers
+
+- **Context:** Resolving ANR crashes and freezing when navigating back during screen/state loading.
+- **Mistake:** Subscribed to streams using `.listen` inside the controller notifier `build` method without registering cleanup callbacks on provider disposal.
+- **Root cause:** Forgot that Dart stream subscriptions remain active and continue executing callbacks (which attempt to write state to the disposed notifier) unless explicitly cancelled.
+- **Fix applied:** Registered cancel callbacks inside `ref.onDispose` for all active stream subscriptions, delayed stream listening until initial loads complete, and guarded callbacks with a `_isDisposed` flag.
+- **Rule for next agent:** ALWAYS cancel stream subscriptions by registering `.cancel()` callbacks within `ref.onDispose`, defer listening until initial data is loaded, and guard state modifications with a disposed check flag in Riverpod notifier build methods.
+- **Guardrail:** Look for any use of `.listen()` inside notifier or state class initialization, ensuring there is a corresponding `onDispose` or lifecycle cancel call.
+
+---
+
+### 2026-08-06 · Stale Supabase Realtime channels causing ANRs on navigation stress-test
+
+- **Context:** Resolving ANR freezes when rapidly opening and closing screens that watch Supabase Realtime channels.
+- **Mistake:** Unsubscribed the channel inside `StreamController.onCancel` but did not remove the channel from the Supabase client list.
+- **Root cause:** Unsubscribing a channel changes its status, but the channel instance remains registered and cached inside the Supabase client. Creating new duplicate channel objects and calling `.subscribe()` multiple times on the same connection leads to thread locking and ANR freezes.
+- **Fix applied:** Added `await _client.removeChannel(channel)` inside `onCancel` and appended `DateTime.now().microsecondsSinceEpoch` to channel names in `supabase_repositories.dart` to make each subscription instance unique.
+- **Rule for next agent:** ALWAYS make Supabase Realtime channel names instance-unique using a timestamp/UUID and call both `channel.unsubscribe()` and `client.removeChannel(channel)` during teardown to avoid resource cache conflicts.
+- **Guardrail:** Grep search for `.channel(` in repositories and ensure they use dynamic instance-unique names.
+
+---
+
+### 2026-08-06 · Embedded native GoogleMap platform view causing Android GL unbinding ANRs
+
+- **Context:** Resolving main-thread ANR freezes when rapidly opening and popping the Client Details screen from Transactions.
+- **Mistake:** Embedded a native `GoogleMap` platform view inside a scrollable card (`CustomerContextCard`) with gestures disabled.
+- **Root cause:** Creating and destroying native Android `MapView` platform views rapidly during page transitions causes GLSurfaceView/OpenGL texture context unbinding deadlocks on the main thread (blocking Android's `CameraXLibraryPigeonInstanceManager` and native message handlers).
+- **Fix applied:** Replaced the embedded native `GoogleMap` widget in `CustomerContextCard` with a pure Flutter location card containing a map pin and an interactive "Tap to Open in Maps" action that launches external maps via `launchUrl`.
+- **Rule for next agent:** NEVER embed live native `GoogleMap` platform views inside scrollable list items or cards unless explicitly necessary; use pure Flutter static card previews with external map launcher actions instead.
+- **Guardrail:** Grep for `GoogleMap(` inside card or list item widgets.

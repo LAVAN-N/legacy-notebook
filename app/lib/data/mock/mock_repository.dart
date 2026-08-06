@@ -103,8 +103,8 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   }
 
   @override
-  Stream<Outstanding> watchCustomerOutstanding(String customerId) async* {
-    yield _calculateOutstanding(customerId);
+  Stream<Outstanding> watchCustomerOutstanding(String customerId, {bool skipInitialFetch = false}) async* {
+    if (!skipInitialFetch) yield _calculateOutstanding(customerId);
     yield* _updateController.stream.map((_) {
       return _calculateOutstanding(customerId);
     });
@@ -151,8 +151,8 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   }
 
   @override
-  Stream<List<Activity>> watchCustomerTimeline(String customerId) async* {
-    yield _buildTimeline(customerId);
+  Stream<List<Activity>> watchCustomerTimeline(String customerId, {bool skipInitialFetch = false}) async* {
+    if (!skipInitialFetch) yield _buildTimeline(customerId);
     yield* _updateController.stream.map((_) => _buildTimeline(customerId));
   }
 

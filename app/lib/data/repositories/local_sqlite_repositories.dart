@@ -203,7 +203,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
   }
 
   @override
-  Stream<Outstanding> watchCustomerOutstanding(String customerId) {
+  Stream<Outstanding> watchCustomerOutstanding(String customerId, {bool skipInitialFetch = false}) {
     return watchQuery(
       tables: ['sales', 'collections'],
       query: () => getCustomerOutstanding(customerId),
@@ -263,7 +263,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
   }
 
   @override
-  Stream<List<Activity>> watchCustomerTimeline(String customerId) {
+  Stream<List<Activity>> watchCustomerTimeline(String customerId, {bool skipInitialFetch = false}) {
     return watchQuery(
       tables: ['sales', 'collections', 'sale_items', 'products'],
       query: () => getCustomerTimeline(customerId),

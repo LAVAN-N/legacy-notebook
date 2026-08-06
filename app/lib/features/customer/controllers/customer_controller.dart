@@ -21,25 +21,32 @@ final customerDetailControllerProvider = AutoDisposeAsyncNotifierProviderFamily<
 });
 
 class CustomerDetailNotifier extends AutoDisposeFamilyAsyncNotifier<CustomerDetailData, String> {
+  bool _isDisposed = false;
+
   @override
   Future<CustomerDetailData> build(String arg) async {
     final customerRepo = ref.read(customerRepositoryProvider);
 
-    // Watch values so the UI rebuilds immediately when underlying data mutates (e.g. from collections/sales)
-    final customerStream = customerRepo.watchCustomerById(arg);
-    final outstandingStream = customerRepo.watchCustomerOutstanding(arg);
-    final timelineStream = customerRepo.watchCustomerTimeline(arg);
+    // 1. Fetch all 3 initial snapshots in PARALLEL — not sequentially
+    final results = await Future.wait([
+      customerRepo.getCustomerById(arg),
+      customerRepo.getCustomerOutstanding(arg),
+      customerRepo.getCustomerTimeline(arg),
+    ]);
 
-    // Let's grab the current snapshot values asynchronously
-    final customer = await customerRepo.getCustomerById(arg);
+    final customer = results[0] as Customer?;
     if (customer == null) throw Exception('Customer not found');
+    final outstanding = results[1] as Outstanding;
+    final timeline = results[2] as List<Activity>;
 
-    final outstanding = await customerRepo.getCustomerOutstanding(arg);
-    final timeline = await customerRepo.getCustomerTimeline(arg);
+    // 2. Subscribe to real-time streams ONLY for change notifications.
+    //    skipInitialFetch: true so they DON'T duplicate the fetches above.
+    final customerStream = customerRepo.watchCustomerById(arg);
+    final outstandingStream = customerRepo.watchCustomerOutstanding(arg, skipInitialFetch: true);
+    final timelineStream = customerRepo.watchCustomerTimeline(arg, skipInitialFetch: true);
 
-    // Listen to changes to rebuild state
-    customerStream.listen((c) {
-      if (c != null && state.hasValue) {
+    final customerSub = customerStream.listen((c) {
+      if (!_isDisposed && c != null && state.hasValue) {
         state = AsyncValue.data(CustomerDetailData(
           customer: c,
           outstanding: state.value!.outstanding,
@@ -48,8 +55,8 @@ class CustomerDetailNotifier extends AutoDisposeFamilyAsyncNotifier<CustomerDeta
       }
     });
 
-    outstandingStream.listen((o) {
-      if (state.hasValue) {
+    final outstandingSub = outstandingStream.listen((o) {
+      if (!_isDisposed && state.hasValue) {
         state = AsyncValue.data(CustomerDetailData(
           customer: state.value!.customer,
           outstanding: o,
@@ -58,14 +65,21 @@ class CustomerDetailNotifier extends AutoDisposeFamilyAsyncNotifier<CustomerDeta
       }
     });
 
-    timelineStream.listen((t) {
-      if (state.hasValue) {
+    final timelineSub = timelineStream.listen((t) {
+      if (!_isDisposed && state.hasValue) {
         state = AsyncValue.data(CustomerDetailData(
           customer: state.value!.customer,
           outstanding: state.value!.outstanding,
           timeline: t,
         ));
       }
+    });
+
+    ref.onDispose(() {
+      _isDisposed = true;
+      customerSub.cancel();
+      outstandingSub.cancel();
+      timelineSub.cancel();
     });
 
     return CustomerDetailData(
