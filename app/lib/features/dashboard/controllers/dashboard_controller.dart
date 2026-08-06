@@ -74,35 +74,41 @@ class DashboardController extends StateNotifier<AsyncValue<DashboardData>> {
       // We will fetch all customers on this route first.
       int pending = customerCount;
       final placesInWeekday = await routeRepo.getPlacesByWeekday(weekdayId);
+      final List<String> customerIdsOnRoute = [];
       for (final p in placesInWeekday) {
         final areas = await routeRepo.getAreasByPlace(p.id);
         for (final a in areas) {
           final customers = await customerRepo.getCustomersByArea(a.id);
           for (final c in customers) {
-            final todayCol = await _ref.read(collectionRepositoryProvider).getCollectionsForCustomerToday(c.id);
-            if (todayCol.isNotEmpty) {
-              pending--;
-            }
+            customerIdsOnRoute.add(c.id);
           }
+        }
+      }
+
+      final collectionRepo = _ref.read(collectionRepositoryProvider);
+      final collectionFutures = customerIdsOnRoute.map((cid) => collectionRepo.getCollectionsForCustomerToday(cid));
+      final collectionResults = await Future.wait(collectionFutures);
+      for (final todayCol in collectionResults) {
+        if (todayCol.isNotEmpty) {
+          pending--;
         }
       }
 
       // Compute total business outstanding
       int totalOutstanding = 0;
       
-      // Let's sum all outstanding across all mock customers
-      final allCustomers = [
-        'c-1', 'c-2', 'c-3', 'c-4', 'c-5', 'c-6', 'c-7', 'c-8'
-      ];
-      for (final cid in allCustomers) {
-        final out = await customerRepo.getCustomerOutstanding(cid);
+      final allCustomers = await customerRepo.getAllCustomers();
+      final outstandingFutures = allCustomers.map((c) => customerRepo.getCustomerOutstanding(c.id));
+      final outstandingResults = await Future.wait(outstandingFutures);
+      for (final out in outstandingResults) {
         totalOutstanding += out.outstandingAmount;
       }
 
-      // Recent activities: we can get the timeline of main customers and sort
+      // Recent activities: we can get the timeline of all customers and sort
+      final timelineFutures = allCustomers.map((c) => customerRepo.getCustomerTimeline(c.id));
+      final timelineResults = await Future.wait(timelineFutures);
       final List<Activity> recent = [];
-      for (final cid in ['c-1', 'c-2', 'c-3', 'c-6']) {
-        final timeline = await customerRepo.getCustomerTimeline(cid);
+      for (final timeline in timelineResults) {
         recent.addAll(timeline);
       }
       recent.sort((a, b) => b.at.compareTo(a.at));
