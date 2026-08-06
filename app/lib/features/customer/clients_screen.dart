@@ -202,6 +202,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
             child: Opacity(
               opacity: 0.85,
               child: FloatingActionButton(
+                heroTag: 'clients_fab',
                 onPressed: () => context.push(Routes.newClient),
                 shape: const CircleBorder(),
                 backgroundColor: colors.primary,

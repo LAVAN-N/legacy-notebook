@@ -132,6 +132,7 @@ class _InventoryCategoriesScreenState
             child: Opacity(
               opacity: 0.85,
               child: FloatingActionButton(
+                heroTag: 'categories_fab',
                 onPressed: () => showAddProductSheet(context),
                 shape: const CircleBorder(),
                 backgroundColor: colors.primary,

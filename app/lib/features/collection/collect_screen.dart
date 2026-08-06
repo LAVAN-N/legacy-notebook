@@ -195,6 +195,7 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
                   _SegmentButton(
                     label: 'Product Sale',
                     isSelected: state.collectionTarget == 'SALE',
+                    enabled: state.outstanding.saleOutstanding > 0 || (state.outstanding.saleOutstanding <= 0 && state.outstanding.lendOutstanding <= 0),
                     onTap: () => ref
                         .read(collectControllerProvider(widget.customerId).notifier)
                         .updateCollectionTarget('SALE'),
@@ -202,6 +203,7 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
                   _SegmentButton(
                     label: 'Cash Loan / Lend',
                     isSelected: state.collectionTarget == 'LEND',
+                    enabled: state.outstanding.lendOutstanding > 0,
                     onTap: () => ref
                         .read(collectControllerProvider(widget.customerId).notifier)
                         .updateCollectionTarget('LEND'),
@@ -577,11 +579,13 @@ class _SegmentButton extends StatelessWidget {
     required this.label,
     required this.isSelected,
     required this.onTap,
+    this.enabled = true,
   });
 
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -589,21 +593,27 @@ class _SegmentButton extends StatelessWidget {
 
     return Expanded(
       child: GestureDetector(
-        onTap: () {
-          AppHaptics.selectionClick();
-          onTap();
-        },
+        onTap: enabled
+            ? () {
+                AppHaptics.selectionClick();
+                onTap();
+              }
+            : null,
         child: Container(
           height: 40,
           decoration: BoxDecoration(
-            color: isSelected ? colors.primary : Colors.transparent,
+            color: isSelected 
+                ? (enabled ? colors.primary : colors.muted) 
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(AppRadius.sm),
           ),
           alignment: Alignment.center,
           child: Text(
             label,
             style: AppTypography.labelMedium.copyWith(
-              color: isSelected ? Colors.white : colors.mutedFg,
+              color: isSelected 
+                  ? (enabled ? Colors.white : colors.mutedFg) 
+                  : (enabled ? colors.mutedFg : colors.mutedFg.withValues(alpha: 0.4)),
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             ),
           ),

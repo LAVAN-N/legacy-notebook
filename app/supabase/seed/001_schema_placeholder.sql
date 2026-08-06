@@ -245,3 +245,13 @@ SELECT
 FROM products p
 LEFT JOIN inventory_transactions it ON it.product_id = p.id
 GROUP BY p.id, p.sku, p.name, p.brand, p.category_id, p.cost_price, p.selling_price, p.mrp, p.minimum_stock, p.image_url, p.description;
+
+-- Enable Realtime for core tables
+DO $$
+BEGIN
+  DROP PUBLICATION IF EXISTS supabase_realtime;
+  CREATE PUBLICATION supabase_realtime FOR TABLE sales, collections, customers, products, weekdays, config;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Fallback/ignore if run in environment without replication permissions
+END $$;

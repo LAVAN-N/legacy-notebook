@@ -129,6 +129,7 @@ class _InventoryProductsScreenState
             child: Opacity(
               opacity: 0.85,
               child: FloatingActionButton(
+                heroTag: 'products_fab',
                 onPressed: () {
                   showAddProductSheet(context, initialCategoryId: widget.categoryId);
                 },

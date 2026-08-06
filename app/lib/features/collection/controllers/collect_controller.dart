@@ -90,10 +90,22 @@ class CollectController extends StateNotifier<CollectScreenState> {
     final outstanding = await customerRepo.getCustomerOutstanding(_customerId);
 
     if (customer != null) {
+      final isLendEnabled = outstanding.lendOutstanding > 0;
+      final isSaleEnabled = outstanding.saleOutstanding > 0;
+
+      String defaultTarget = 'SALE';
+      int defaultAmount = outstanding.saleOutstanding;
+
+      if (!isSaleEnabled && isLendEnabled) {
+        defaultTarget = 'LEND';
+        defaultAmount = outstanding.lendOutstanding;
+      }
+
       state = state.copyWith(
         customer: customer,
         outstanding: outstanding,
-        amount: outstanding.saleOutstanding, // Default to sale outstanding for PAYMENT
+        collectionTarget: defaultTarget,
+        amount: defaultAmount,
       );
     }
   }
