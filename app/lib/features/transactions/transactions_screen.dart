@@ -862,29 +862,33 @@ class _TransactionCardState extends State<_TransactionCard> {
                         if (item.remarks.isNotEmpty) ...[
                           const Spacer(),
                           GestureDetector(
+                            behavior: HitTestBehavior.opaque,
                             onTap: () {
                               setState(() {
                                 _isExpanded = !_isExpanded;
                               });
                             },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  _isExpanded ? 'Hide Note' : 'Show Note',
-                                  style: AppTypography.labelSmall.copyWith(
-                                    color: colors.primary,
-                                    fontWeight: FontWeight.bold,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _isExpanded ? 'Hide Note' : 'Show Note',
+                                    style: AppTypography.labelSmall.copyWith(
+                                      color: colors.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                                Icon(
-                                  _isExpanded
-                                      ? Icons.keyboard_arrow_up_rounded
-                                      : Icons.keyboard_arrow_down_rounded,
-                                  size: 16,
-                                  color: colors.primary,
-                                ),
-                              ],
+                                  Icon(
+                                    _isExpanded
+                                        ? Icons.keyboard_arrow_up_rounded
+                                        : Icons.keyboard_arrow_down_rounded,
+                                    size: 16,
+                                    color: colors.primary,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
