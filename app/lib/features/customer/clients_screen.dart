@@ -76,7 +76,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
     final allSales = salesAsync.value ?? [];
     final allCollections = collectionsAsync.value ?? [];
 
-    // Helper to calculate outstanding
+    // Helper to calculate total, lend, and sale outstanding
     int getOutstanding(String customerId) {
       final customerSales = allSales.where((s) => s.customerId == customerId);
       final customerCollections = allCollections.where((col) =>
@@ -106,6 +106,35 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
       return totalLendFinanced - totalLendCollected;
     }
 
+    int getSaleOutstanding(String customerId) {
+      final customerSales = allSales.where((s) => s.customerId == customerId);
+      final customerCollections = allCollections.where((col) =>
+          col.customerId == customerId &&
+          (col.status == 'PAYMENT' || col.status == 'PARTIAL_PAYMENT'));
+
+      final totalSaleFinanced = customerSales
+          .where((s) => s.saleType.toUpperCase() != 'LEND')
+          .fold<int>(0, (sum, s) => sum + s.financedAmount);
+
+      final totalSaleCollected = customerCollections
+          .where((c) => c.reason == null || !c.reason!.startsWith('COLLECTION_TARGET:target=LEND'))
+          .fold<int>(0, (sum, c) => sum + c.amount.round());
+
+      return totalSaleFinanced - totalSaleCollected;
+    }
+
+    int getDisplayOutstanding(String customerId) {
+      if (_selectedStatus == 'Outstanding') {
+        return getSaleOutstanding(customerId);
+      } else if (_selectedStatus == 'Lend') {
+        return getLendOutstanding(customerId);
+      } else if (_selectedStatus == 'Settled') {
+        return 0;
+      } else {
+        return getOutstanding(customerId);
+      }
+    }
+
     // Filter logic
     final filtered = allCustomers.where((c) {
       final q = _searchQuery.toLowerCase();
@@ -118,15 +147,17 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
       }
 
       // Status filter
-      final out = getOutstanding(c.id);
+      final totalOut = getOutstanding(c.id);
+      final saleOut = getSaleOutstanding(c.id);
       final lendOut = getLendOutstanding(c.id);
-      if (_selectedStatus == 'Outstanding' && out <= 0) {
-        return false;
-      }
-      if (_selectedStatus == 'Settled' && out > 0) {
+
+      if (_selectedStatus == 'Outstanding' && saleOut <= 0) {
         return false;
       }
       if (_selectedStatus == 'Lend' && lendOut <= 0) {
+        return false;
+      }
+      if (_selectedStatus == 'Settled' && totalOut > 0) {
         return false;
       }
 
@@ -145,15 +176,15 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
 
     // Sort: Keep outstandings on top (descending by amount), settled at the bottom
     filtered.sort((a, b) {
-      final outA = _selectedStatus == 'Lend' ? getLendOutstanding(a.id) : getOutstanding(a.id);
-      final outB = _selectedStatus == 'Lend' ? getLendOutstanding(b.id) : getOutstanding(b.id);
+      final outA = getDisplayOutstanding(a.id);
+      final outB = getDisplayOutstanding(b.id);
       return outB.compareTo(outA);
     });
 
     // Dynamic stats based on filtered results
     int totalOutstanding = 0;
     for (final c in filtered) {
-      final out = _selectedStatus == 'Lend' ? getLendOutstanding(c.id) : getOutstanding(c.id);
+      final out = getDisplayOutstanding(c.id);
       if (out > 0) {
         totalOutstanding += out;
       }
@@ -253,10 +284,10 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: (_selectedStatus == 'Lend' ? Colors.orange : colors.danger).withValues(alpha: 0.08),
+                      color: (_selectedStatus == 'Lend' ? Colors.orange : (_selectedStatus == 'Settled' ? colors.success : colors.danger)).withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                          color: (_selectedStatus == 'Lend' ? Colors.orange : colors.danger).withValues(alpha: 0.15)),
+                          color: (_selectedStatus == 'Lend' ? Colors.orange : (_selectedStatus == 'Settled' ? colors.success : colors.danger)).withValues(alpha: 0.15)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,13 +295,13 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                         Row(
                           children: [
                             Icon(
-                              _selectedStatus == 'Lend' ? Icons.handshake_outlined : Icons.error_outline_rounded,
-                              color: _selectedStatus == 'Lend' ? Colors.orange : colors.danger,
+                              _selectedStatus == 'Lend' ? Icons.handshake_outlined : (_selectedStatus == 'Outstanding' ? Icons.shopping_bag_outlined : (_selectedStatus == 'Settled' ? Icons.check_circle_outline : Icons.error_outline_rounded)),
+                              color: _selectedStatus == 'Lend' ? Colors.orange : (_selectedStatus == 'Settled' ? colors.success : colors.danger),
                               size: 16,
                             ),
                             const SizedBox(width: AppSpacing.xs),
                             Text(
-                              _selectedStatus == 'Lend' ? 'Lend Outstanding' : 'Outstanding',
+                              _selectedStatus == 'Lend' ? 'Lend Outstanding' : (_selectedStatus == 'Outstanding' ? 'Sale Outstanding' : (_selectedStatus == 'Settled' ? 'Settled Clients' : 'Outstanding')),
                               style: AppTypography.labelMedium
                                   .copyWith(color: colors.mutedFg),
                             ),
@@ -278,9 +309,9 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
-                          rupees(totalOutstanding),
+                          _selectedStatus == 'Settled' ? '${filtered.length}' : rupees(totalOutstanding),
                           style: AppTypography.currencyMedium
-                              .copyWith(color: _selectedStatus == 'Lend' ? Colors.orange : colors.danger),
+                              .copyWith(color: _selectedStatus == 'Lend' ? Colors.orange : (_selectedStatus == 'Settled' ? colors.success : colors.danger)),
                         ),
                       ],
                     ),
@@ -456,35 +487,45 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                         const SizedBox(height: AppSpacing.sm),
                     itemBuilder: (context, index) {
                       final c = filtered[index];
-                      final isLendFilter = _selectedStatus == 'Lend';
-                      final displayOutstanding = isLendFilter ? getLendOutstanding(c.id) : getOutstanding(c.id);
+                      final displayOutstanding = getDisplayOutstanding(c.id);
 
                       // Calculate dynamic status label and colors
                       final totalOut = getOutstanding(c.id);
                       final lendOut = getLendOutstanding(c.id);
-                      final saleOut = (totalOut - lendOut).clamp(0, 99999999);
+                      final saleOut = getSaleOutstanding(c.id);
 
                       String cardLabel;
                       Color cardColor;
 
-                      if (totalOut <= 0) {
+                      if (_selectedStatus == 'Outstanding') {
+                        cardLabel = 'Sale Pending';
+                        cardColor = colors.danger;
+                      } else if (_selectedStatus == 'Lend') {
+                        cardLabel = 'Lend Pending';
+                        cardColor = Colors.orange;
+                      } else if (_selectedStatus == 'Settled') {
                         cardLabel = 'Settled';
                         cardColor = colors.success;
                       } else {
-                        if (saleOut > 0 && lendOut > 0) {
-                          if (saleOut >= lendOut) {
-                            cardLabel = 'Sale Pending';
-                            cardColor = colors.danger;
-                          } else {
+                        if (totalOut <= 0) {
+                          cardLabel = 'Settled';
+                          cardColor = colors.success;
+                        } else {
+                          if (saleOut > 0 && lendOut > 0) {
+                            if (saleOut >= lendOut) {
+                              cardLabel = 'Sale Pending';
+                              cardColor = colors.danger;
+                            } else {
+                              cardLabel = 'Lend Pending';
+                              cardColor = Colors.orange;
+                            }
+                          } else if (lendOut > 0) {
                             cardLabel = 'Lend Pending';
                             cardColor = Colors.orange;
+                          } else {
+                            cardLabel = 'Sale Pending';
+                            cardColor = colors.danger;
                           }
-                        } else if (lendOut > 0) {
-                          cardLabel = 'Lend Pending';
-                          cardColor = Colors.orange;
-                        } else {
-                          cardLabel = 'Sale Pending';
-                          cardColor = colors.danger;
                         }
                       }
 
