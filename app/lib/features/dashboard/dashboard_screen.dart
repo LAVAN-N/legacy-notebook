@@ -19,7 +19,7 @@ import 'widgets/hero_outstanding_card.dart';
 import 'widgets/weekday_scroller.dart';
 import 'widgets/todays_places_list.dart';
 import 'widgets/quick_actions_row.dart';
-import '../customer/widgets/timeline_entry_tile.dart';
+import '../transactions/widgets/transaction_card.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -192,7 +192,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         },
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      if (data.recentActivities.isEmpty)
+                      if (data.recentTransactions.isEmpty)
                         Container(
                           padding: const EdgeInsets.all(AppSpacing.xxl),
                           alignment: Alignment.center,
@@ -202,37 +202,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ),
                         )
                       else
-                        Card(
-                          child: ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            itemCount: data.recentActivities.length,
-                            separatorBuilder: (_, __) => const Divider(height: 1),
-                            itemBuilder: (context, index) {
-                              final act = data.recentActivities[index];
-                              // Map activity back to customer name mapping for UI context display
-                              final customerName = act.when(
-                                payment: (_, __, ___, ____, _____) => 'Lakshmi Priya',
-                                partialPayment: (_, __, ___, ____, _____) => 'Lakshmi Priya',
-                                carryForward: (_, __, ___, ____) => 'Lakshmi Priya',
-                                sale: (_, __, ___, ____, _____, ______, _______, ________, _________) => 'Lakshmi Priya',
-                              );
-
-                              final activityType = act.when(
-                                payment: (_, __, ___, ____, _____) => 'Payment',
-                                partialPayment: (_, __, ___, ____, _____) => 'Partial Payment',
-                                carryForward: (_, __, ___, ____) => 'Carry Forward',
-                                sale: (_, __, ___, ____, _____, ______, _______, ________, _________) => 'New Sale',
-                              );
-                              final title = '$customerName · $activityType';
-
-                              return TimelineEntryTile(
-                                activity: act,
-                                customTitle: title,
-                              );
-                            },
-                          ),
+                        ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: EdgeInsets.zero,
+                          itemCount: data.recentTransactions.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+                          itemBuilder: (context, index) {
+                            return TransactionCard(
+                              item: data.recentTransactions[index],
+                              colors: colors,
+                              source: 'dashboard',
+                            );
+                          },
                         ),
                       // Bottom padding to avoid floating nav overlap
                       const SizedBox(height: AppSpacing.lg),
