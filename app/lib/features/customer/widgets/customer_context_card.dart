@@ -12,6 +12,7 @@ import '../../../data/models/customer.dart';
 import '../../../data/models/id_proof.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class CustomerContextCard extends StatelessWidget {
   const CustomerContextCard({
@@ -331,57 +332,27 @@ class CustomerContextCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: double.infinity,
-                          height: 140,
-                          decoration: BoxDecoration(
-                            color: colors.primary.withValues(alpha: 0.05),
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.md)),
-                          ),
-                          child: InkWell(
-                            onTap: () => _openMap(customer.location!.lat, customer.location!.lng),
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.md)),
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Icon(
-                                  Icons.map_rounded,
-                                  size: 90,
-                                  color: colors.primary.withValues(alpha: 0.08),
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.md)),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 180,
+                            child: GoogleMap(
+                              initialCameraPosition: CameraPosition(
+                                target: LatLng(customer.location!.lat, customer.location!.lng),
+                                zoom: 15,
+                              ),
+                              markers: {
+                                Marker(
+                                  markerId: MarkerId(customer.id),
+                                  position: LatLng(customer.location!.lat, customer.location!.lng),
+                                  infoWindow: InfoWindow(title: customer.name),
                                 ),
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: colors.primary,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: colors.primary.withValues(alpha: 0.3),
-                                            blurRadius: 6,
-                                            offset: const Offset(0, 3),
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(
-                                        Icons.location_on_rounded,
-                                        color: Colors.white,
-                                        size: 22,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      'Tap to Open Location in Maps',
-                                      style: AppTypography.labelMedium.copyWith(
-                                        color: colors.primary,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                              },
+                              zoomControlsEnabled: false,
+                              mapToolbarEnabled: false,
+                              myLocationButtonEnabled: false,
+                              onTap: (_) => _openMap(customer.location!.lat, customer.location!.lng),
                             ),
                           ),
                         ),
