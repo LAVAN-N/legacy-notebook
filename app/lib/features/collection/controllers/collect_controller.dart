@@ -94,11 +94,11 @@ class CollectController extends StateNotifier<CollectScreenState> {
       final isSaleEnabled = outstanding.saleOutstanding > 0;
 
       String defaultTarget = 'SALE';
-      int defaultAmount = outstanding.saleOutstanding;
+      int defaultAmount = outstanding.saleOutstanding > 0 ? outstanding.saleOutstanding : 0;
 
       if (!isSaleEnabled && isLendEnabled) {
         defaultTarget = 'LEND';
-        defaultAmount = outstanding.lendOutstanding;
+        defaultAmount = outstanding.lendOutstanding > 0 ? outstanding.lendOutstanding : 0;
       }
 
       state = state.copyWith(
@@ -111,11 +111,24 @@ class CollectController extends StateNotifier<CollectScreenState> {
   }
 
   void updateCollectionTarget(String target) {
+    final maxOutstanding = target == 'LEND'
+        ? state.outstanding.lendOutstanding
+        : state.outstanding.saleOutstanding;
+
+    int defaultAmount = 0;
+    if (state.status == 'PAYMENT') {
+      defaultAmount = maxOutstanding > 0 ? maxOutstanding : 0;
+    } else if (state.status == 'PARTIAL_PAYMENT') {
+      defaultAmount = 0;
+    } else {
+      defaultAmount = 0;
+    }
+
     state = state.copyWith(
       collectionTarget: target,
+      amount: defaultAmount,
       errorMessage: null,
     );
-    updateStatus(state.status);
   }
 
   void updateStatus(String status) {
@@ -125,7 +138,7 @@ class CollectController extends StateNotifier<CollectScreenState> {
         : state.outstanding.saleOutstanding;
 
     if (status == 'PAYMENT') {
-      defaultAmount = maxOutstanding;
+      defaultAmount = maxOutstanding > 0 ? maxOutstanding : 0;
     } else if (status == 'PARTIAL_PAYMENT') {
       defaultAmount = 0;
     } else {
