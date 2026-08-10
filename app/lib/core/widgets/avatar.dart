@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../theme/app_typography.dart';
 
@@ -42,6 +43,16 @@ class Avatar extends StatelessWidget {
     final initials = _getInitials(name);
     final bgColor = _getDeterministicColor(name);
 
+    ImageProvider? imageProvider;
+    if (hasPhoto) {
+      final url = profileUrl!;
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        imageProvider = NetworkImage(url);
+      } else {
+        imageProvider = FileImage(File(url));
+      }
+    }
+
     return Semantics(
       label: 'Avatar of $name',
       child: Container(
@@ -50,9 +61,9 @@ class Avatar extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: bgColor,
-          image: hasPhoto
+          image: imageProvider != null
               ? DecorationImage(
-                  image: NetworkImage(profileUrl!),
+                  image: imageProvider,
                   fit: BoxFit.cover,
                   onError: (_, __) {},
                 )

@@ -10,6 +10,7 @@ import '../../core/widgets/loading_skeleton.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/router/routes.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/widgets/avatar.dart';
 import '../../data/providers.dart';
 
 class ClientsScreen extends ConsumerStatefulWidget {
@@ -513,22 +514,10 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                               children: [
                                 Stack(
                                   children: [
-                                    CircleAvatar(
-                                      radius: 24,
-                                      backgroundColor: colors.primary
-                                          .withValues(alpha: 0.08),
-                                      child: Text(
-                                        c.name.isNotEmpty
-                                            ? c.name
-                                                .substring(0, 1)
-                                                .toUpperCase()
-                                            : '?',
-                                        style: TextStyle(
-                                          color: colors.primary,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
-                                      ),
+                                    Avatar(
+                                      name: c.name,
+                                      profileUrl: c.profileUrl,
+                                      size: 48,
                                     ),
                                     if (displayOutstanding > 0)
                                       Positioned(
