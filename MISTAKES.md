@@ -1280,6 +1280,30 @@ Read before starting. Never edit past entries.
 - **Rule for next agent:** ALWAYS wrap `Row`s containing `VerticalDivider` in `IntrinsicHeight` or use fixed `Container(width: 1)` lines, and ALWAYS defer `ListWheelScrollView.onSelectedItemChanged` state updates to `addPostFrameCallback`.
 - **Guardrail:** Never call `setState` directly inside `ListWheelScrollView.onSelectedItemChanged` without post-frame callback protection.
 
+---
+
+### 2026-08-10 · RenderPhysicalShape hasSize assertion with InkWell during bottom sheet animations
+
+- **Context:** Embedding custom calendar date range picker inside modal bottom sheet (`_showFiltersSheet`).
+- **Mistake:** Used bare `InkWell`s on multiple calendar grid and list cells inside a modal bottom sheet without immediate `Material` parent widgets and used `Container(height: double.infinity)` inside `Row`.
+- **Root cause:** `InkWell` requires a `Material` widget to host its ink splash. When placed inside a modal bottom sheet without a local `Material`, `InkWell` references the root modal `Material` (`RenderPhysicalShape`). During the entry slide animation, child layout queries `RenderPhysicalShape.size` before the modal animation frame finishes layout, throwing `RenderBox was not laid out: RenderPhysicalShape#... Failed assertion: hasSize`.
+- **Fix applied:** Replaced `InkWell`s in calendar grid and month selector with `GestureDetector(behavior: HitTestBehavior.opaque)` and set explicit bounded constraints (`crossAxisAlignment: CrossAxisAlignment.stretch` with defined child heights).
+- **Rule for next agent:** NEVER use bare `InkWell` inside modal sheets without local `Material` parents; use `GestureDetector(behavior: HitTestBehavior.opaque)` for custom cell components.
+- **Guardrail:** Grep for `InkWell` without `Material` in modal bottom sheets.
+
+---
+
+### 2026-08-10 · BoxConstraints forces an infinite width on unexpanded Button in Row
+
+- **Context:** Action buttons (Cancel & Apply Filters) in `_showFiltersSheet` within `transactions_screen.dart`.
+- **Mistake:** Placed an unexpanded `OutlinedButton` next to an `Expanded(child: FilledButton)` inside a `Row` under a stretched `Column` in a bottom sheet.
+- **Root cause:** In stretched flex containers inside scrollable sheets, `OutlinedButton` calculates width with unbounded horizontal/vertical constraints (`BoxConstraints(w=Infinity, 56.0<=h<=Infinity)`), causing `RenderConstrainedBox.performLayout` to throw `BoxConstraints forces an infinite width. Failed assertion: hasSize`.
+- **Fix applied:** Wrapped both buttons in `Expanded` (e.g. `flex: 1` for `OutlinedButton`, `flex: 2` for `FilledButton`) inside the `Row` to ensure exact, bounded constraint distribution.
+- **Rule for next agent:** ALWAYS wrap all button siblings in `Expanded` when placing buttons side-by-side in a `Row` inside stretched bottom sheets or dialogs.
+- **Guardrail:** Ensure buttons in bottom action rows have bounded width or are wrapped in `Expanded`.
+
+
+
 
 
 

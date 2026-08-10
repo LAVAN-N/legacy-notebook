@@ -12,6 +12,7 @@ import '../../data/models/customer.dart';
 import '../../data/providers.dart';
 import 'models/transaction_item.dart';
 import 'widgets/transaction_card.dart';
+import 'widgets/custom_date_range_sheet.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
@@ -56,40 +57,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     context.go(newUri.toString());
   }
 
-  Future<void> _selectCustomDateRange(BuildContext context) async {
-    final DateTimeRange? picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      initialDateRange: _selectedDateRange ??
-          DateTimeRange(
-            start: DateTime.now().subtract(const Duration(days: 7)),
-            end: DateTime.now(),
-          ),
-      builder: (context, child) {
-        final colors = context.colors;
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: colors.primary,
-              onPrimary: colors.primaryFg,
-              surface: colors.surface,
-              onSurface: colors.foreground,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null) {
-      setState(() {
-        _selectedDateRange = picked;
-      });
-      _updateFilters(range: 'Custom...');
-    }
-  }
-
   void _showFiltersSheet(BuildContext context, String currentRange) {
     showModalBottomSheet(
       context: context,
@@ -97,20 +64,56 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       isScrollControlled: true,
       backgroundColor: context.colors.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (BuildContext sheetContext) {
         String tempRange = currentRange;
+        DateTime? tempStartDate = _selectedDateRange?.start;
+        DateTime? tempEndDate = _selectedDateRange?.end;
+
+        final now = DateTime.now();
+        if (tempStartDate == null) {
+          if (tempRange == 'Today') {
+            tempStartDate = DateTime(now.year, now.month, now.day);
+            tempEndDate = tempStartDate;
+          } else if (tempRange == 'This week') {
+            tempStartDate = now.subtract(Duration(days: now.weekday - 1));
+            tempEndDate = DateTime(now.year, now.month, now.day);
+          } else if (tempRange == 'This month') {
+            tempStartDate = DateTime(now.year, now.month, 1);
+            tempEndDate = DateTime(now.year, now.month, DateUtils.getDaysInMonth(now.year, now.month));
+          }
+        }
+
         return StatefulBuilder(
           builder: (context, setModalState) {
             final colors = context.colors;
             return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(
+                  top: AppSpacing.md,
+                  left: AppSpacing.lg,
+                  right: AppSpacing.lg,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.md,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Drag handle
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: colors.border.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+
+                    // Sheet Header
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -133,11 +136,13 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                         ),
                       ],
                     ),
-                    const Divider(),
+                    Divider(height: 1, color: colors.border.withValues(alpha: 0.6)),
                     const SizedBox(height: AppSpacing.sm),
+
+                    // Quick Date Range Presets
                     Text(
-                      'Date Range',
-                      style: AppTypography.labelLarge.copyWith(
+                      'Quick Presets',
+                      style: AppTypography.labelMedium.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colors.foreground,
                       ),
@@ -145,98 +150,114 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     const SizedBox(height: AppSpacing.xs),
                     Wrap(
                       spacing: AppSpacing.sm,
-                      runSpacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.xs,
+                      children: ['Today', 'This week', 'This month'].map((range) {
+                        final isSelected = tempRange == range;
+                        return FilterChip(
+                          label: Text(range),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setModalState(() {
+                                tempRange = range;
+                                if (range == 'Today') {
+                                  tempStartDate = DateTime(now.year, now.month, now.day);
+                                  tempEndDate = tempStartDate;
+                                } else if (range == 'This week') {
+                                  tempStartDate = now.subtract(Duration(days: now.weekday - 1));
+                                  tempEndDate = DateTime(now.year, now.month, now.day);
+                                } else if (range == 'This month') {
+                                  tempStartDate = DateTime(now.year, now.month, 1);
+                                  tempEndDate = DateTime(now.year, now.month, DateUtils.getDaysInMonth(now.year, now.month));
+                                }
+                              });
+                            }
+                          },
+                          backgroundColor: colors.surface,
+                          selectedColor: colors.primary.withValues(alpha: 0.15),
+                          checkmarkColor: colors.primary,
+                          side: BorderSide(
+                            color: isSelected ? colors.primary : colors.border,
+                          ),
+                          labelStyle: TextStyle(
+                            color: isSelected ? colors.primary : colors.foreground,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+
+                    // Embedded Interactive Date Range Picker
+                    CustomDateRangePicker(
+                      startDate: tempStartDate,
+                      endDate: tempEndDate,
+                      onRangeChanged: (start, end) {
+                        setModalState(() {
+                          tempStartDate = start;
+                          tempEndDate = end;
+                          tempRange = 'Custom...';
+                        });
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // Bottom Action Buttons
+                    Row(
                       children: [
-                        ...['Today', 'This week', 'This month'].map((range) {
-                          final isSelected = tempRange == range &&
-                              _selectedDateRange == null;
-                          return FilterChip(
-                            label: Text(range),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              if (selected) {
+                        Expanded(
+                          flex: 1,
+                          child: OutlinedButton(
+                            onPressed: () => context.pop(),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: colors.border),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(color: colors.foreground),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          flex: 2,
+                          child: FilledButton(
+                            onPressed: () {
+                              if (tempRange == 'Today' || tempRange == 'This week' || tempRange == 'This month') {
                                 setState(() {
                                   _selectedDateRange = null;
                                 });
-                                _updateFilters(range: range);
-                                context.pop();
-                              }
-                            },
-                            backgroundColor: colors.surface,
-                            selectedColor:
-                                colors.primary.withValues(alpha: 0.15),
-                            checkmarkColor: colors.primary,
-                            side: BorderSide(
-                              color: isSelected ? colors.primary : colors.border,
-                            ),
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? colors.primary
-                                  : colors.foreground,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          );
-                        }),
-                        Builder(
-                          builder: (context) {
-                            final isCustom = tempRange == 'Custom...' ||
-                                _selectedDateRange != null;
-                            final customLabel = (_selectedDateRange != null &&
-                                    isCustom)
-                                ? '${dateShort(_selectedDateRange!.start)} - ${dateShort(_selectedDateRange!.end)}'
-                                : 'Custom';
-                            return ActionChip(
-                              avatar: Icon(
-                                Icons.edit_calendar_rounded,
-                                size: 16,
-                                color: isCustom
-                                    ? colors.primary
-                                    : colors.mutedFg,
-                              ),
-                              label: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(customLabel),
-                                  const SizedBox(width: 4),
-                                  Icon(
-                                    Icons.edit_rounded,
-                                    size: 14,
-                                    color: isCustom
-                                        ? colors.primary
-                                        : colors.mutedFg,
-                                  ),
-                                ],
-                              ),
-                              backgroundColor: isCustom
-                                  ? colors.primary.withValues(alpha: 0.15)
-                                  : colors.surface,
-                              side: BorderSide(
-                                color:
-                                    isCustom ? colors.primary : colors.border,
-                              ),
-                              labelStyle: TextStyle(
-                                color: isCustom
-                                    ? colors.primary
-                                    : colors.foreground,
-                                fontWeight: isCustom
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
-                              onPressed: () {
-                                _selectCustomDateRange(context).then((_) {
-                                  if (_selectedDateRange != null && context.mounted) {
-                                    context.pop();
-                                  }
+                                _updateFilters(range: tempRange);
+                              } else if (tempStartDate != null) {
+                                final start = tempStartDate!;
+                                final end = tempEndDate ?? tempStartDate!;
+                                setState(() {
+                                  _selectedDateRange = DateTimeRange(start: start, end: end);
                                 });
-                              },
-                            );
-                          },
+                                _updateFilters(range: 'Custom...');
+                              }
+                              context.pop();
+                            },
+                            style: FilledButton.styleFrom(
+                              backgroundColor: colors.primary,
+                              foregroundColor: colors.primaryFg,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            child: const Text(
+                              'Apply Filters',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.md),
                   ],
                 ),
               ),
