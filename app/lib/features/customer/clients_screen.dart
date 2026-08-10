@@ -791,7 +791,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                     ),
                     const SizedBox(height: AppSpacing.md),
 
-                    // Side-by-Side 3 Column Vertical Scroll Filter: Weekday | Place | Area
+                    // Side-by-Side 3 Column Scroll Wheel Filter: Weekday | Place | Area
                     Text(
                       'Route Filter',
                       style: AppTypography.labelLarge.copyWith(
@@ -801,160 +801,144 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Container(
-                      height: 220,
                       decoration: BoxDecoration(
                         color: colors.surface,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: colors.border.withValues(alpha: 0.8)),
                       ),
-                      child: Row(
-                        children: [
-                          // Column 1: Weekday
-                          Expanded(
-                            child: _buildFilterColumn(
-                              title: 'Weekday',
-                              items: [
-                                _FilterItem(
-                                  id: null,
-                                  name: 'Any',
-                                  isSelected: _selectedWeekday == null,
-                                  onTap: () {
-                                    setState(() {
-                                      _selectedWeekday = null;
-                                    });
-                                    setModalState(() {});
-                                  },
-                                ),
-                                ...allWeekdays.map((w) => _FilterItem(
-                                      id: w.id,
-                                      name: w.name,
-                                      isSelected: _selectedWeekday == w.id,
-                                      onTap: () {
-                                        setState(() {
-                                          if (_selectedWeekday == w.id) {
-                                            _selectedWeekday = null;
-                                          } else {
-                                            _selectedWeekday = w.id;
-                                            if (_selectedPlace != null) {
-                                              final currentPlace = allPlaces.firstWhere(
-                                                (p) => p.id == _selectedPlace,
-                                                orElse: () => const Place(id: '', weekdayId: '', name: ''),
-                                              );
-                                              if (currentPlace.weekdayId != w.id) {
-                                                _selectedPlace = null;
-                                                _selectedArea = null;
-                                              }
-                                            }
-                                          }
-                                        });
-                                        setModalState(() {});
-                                      },
-                                    )),
-                              ],
-                              colors: colors,
+                      child: IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Column 1: Weekday
+                            Expanded(
+                              child: _ScrollWheelColumn(
+                                title: 'Weekday',
+                                items: [
+                                  const _WheelItem(id: null, name: 'Any'),
+                                  ...allWeekdays.map((w) => _WheelItem(id: w.id, name: w.name)),
+                                ],
+                                selectedIndex: _selectedWeekday == null
+                                    ? 0
+                                    : (allWeekdays.indexWhere((w) => w.id == _selectedWeekday) + 1).clamp(0, allWeekdays.length),
+                                onSelectedIndexChanged: (index) {
+                                  final weekdayItems = [
+                                    const _WheelItem(id: null, name: 'Any'),
+                                    ...allWeekdays.map((w) => _WheelItem(id: w.id, name: w.name)),
+                                  ];
+                                  final wId = weekdayItems[index].id;
+                                  setState(() {
+                                    _selectedWeekday = wId;
+                                    if (_selectedPlace != null && wId != null) {
+                                      final currentPlace = allPlaces.firstWhere(
+                                        (p) => p.id == _selectedPlace,
+                                        orElse: () => const Place(id: '', weekdayId: '', name: ''),
+                                      );
+                                      if (currentPlace.weekdayId != wId) {
+                                        _selectedPlace = null;
+                                        _selectedArea = null;
+                                      }
+                                    }
+                                  });
+                                  setModalState(() {});
+                                },
+                                colors: colors,
+                              ),
                             ),
-                          ),
-                          VerticalDivider(
-                            width: 1,
-                            thickness: 1,
-                            color: colors.border.withValues(alpha: 0.5),
-                          ),
+                            Container(
+                              width: 1,
+                              color: colors.border.withValues(alpha: 0.5),
+                            ),
 
-                          // Column 2: Place (dynamically loaded/filtered by Weekday)
-                          Expanded(
-                            child: _buildFilterColumn(
-                              title: 'Place',
-                              items: [
-                                _FilterItem(
-                                  id: null,
-                                  name: 'Any',
-                                  isSelected: _selectedPlace == null,
-                                  onTap: () {
-                                    setState(() {
-                                      _selectedPlace = null;
-                                    });
-                                    setModalState(() {});
-                                  },
-                                ),
-                                ...visiblePlaces.map((p) => _FilterItem(
-                                      id: p.id,
-                                      name: p.name,
-                                      isSelected: _selectedPlace == p.id,
-                                      onTap: () {
-                                        setState(() {
-                                          if (_selectedPlace == p.id) {
-                                            _selectedPlace = null;
-                                          } else {
-                                            _selectedPlace = p.id;
-                                            _selectedWeekday = p.weekdayId;
-                                            if (_selectedArea != null) {
-                                              final currentArea = allAreas.firstWhere(
-                                                (a) => a.id == _selectedArea,
-                                                orElse: () => const Area(id: '', placeId: '', name: ''),
-                                              );
-                                              if (currentArea.placeId != p.id) {
-                                                _selectedArea = null;
-                                              }
-                                            }
-                                          }
-                                        });
-                                        setModalState(() {});
-                                      },
-                                    )),
-                              ],
-                              colors: colors,
+                            // Column 2: Place (dynamically loaded/filtered by Weekday)
+                            Expanded(
+                              child: _ScrollWheelColumn(
+                                title: 'Place',
+                                items: [
+                                  const _WheelItem(id: null, name: 'Any'),
+                                  ...visiblePlaces.map((p) => _WheelItem(id: p.id, name: p.name)),
+                                ],
+                                selectedIndex: _selectedPlace == null
+                                    ? 0
+                                    : (visiblePlaces.indexWhere((p) => p.id == _selectedPlace) + 1).clamp(0, visiblePlaces.length),
+                                onSelectedIndexChanged: (index) {
+                                  final placeItems = [
+                                    const _WheelItem(id: null, name: 'Any'),
+                                    ...visiblePlaces.map((p) => _WheelItem(id: p.id, name: p.name)),
+                                  ];
+                                  final pId = placeItems[index].id;
+                                  setState(() {
+                                    _selectedPlace = pId;
+                                    if (pId != null) {
+                                      final selectedP = visiblePlaces.firstWhere(
+                                        (p) => p.id == pId,
+                                        orElse: () => const Place(id: '', weekdayId: '', name: ''),
+                                      );
+                                      if (selectedP.weekdayId.isNotEmpty) {
+                                        _selectedWeekday = selectedP.weekdayId;
+                                      }
+                                    }
+                                    if (_selectedArea != null && pId != null) {
+                                      final currentArea = allAreas.firstWhere(
+                                        (a) => a.id == _selectedArea,
+                                        orElse: () => const Area(id: '', placeId: '', name: ''),
+                                      );
+                                      if (currentArea.placeId != pId) {
+                                        _selectedArea = null;
+                                      }
+                                    }
+                                  });
+                                  setModalState(() {});
+                                },
+                                colors: colors,
+                              ),
                             ),
-                          ),
-                          VerticalDivider(
-                            width: 1,
-                            thickness: 1,
-                            color: colors.border.withValues(alpha: 0.5),
-                          ),
+                            Container(
+                              width: 1,
+                              color: colors.border.withValues(alpha: 0.5),
+                            ),
 
-                          // Column 3: Area (dynamically loaded/filtered by Place/Weekday)
-                          Expanded(
-                            child: _buildFilterColumn(
-                              title: 'Area',
-                              items: [
-                                _FilterItem(
-                                  id: null,
-                                  name: 'Any',
-                                  isSelected: _selectedArea == null,
-                                  onTap: () {
-                                    setState(() {
-                                      _selectedArea = null;
-                                    });
-                                    setModalState(() {});
-                                  },
-                                ),
-                                ...visibleAreas.map((a) => _FilterItem(
-                                      id: a.id,
-                                      name: a.name,
-                                      isSelected: _selectedArea == a.id,
-                                      onTap: () {
-                                        setState(() {
-                                          if (_selectedArea == a.id) {
-                                            _selectedArea = null;
-                                          } else {
-                                            _selectedArea = a.id;
-                                            _selectedPlace = a.placeId;
-                                            final parentPlace = allPlaces.firstWhere(
-                                              (p) => p.id == a.placeId,
-                                              orElse: () => const Place(id: '', weekdayId: '', name: ''),
-                                            );
-                                            if (parentPlace.weekdayId.isNotEmpty) {
-                                              _selectedWeekday = parentPlace.weekdayId;
-                                            }
-                                          }
-                                        });
-                                        setModalState(() {});
-                                      },
-                                    )),
-                              ],
-                              colors: colors,
+                            // Column 3: Area (dynamically loaded/filtered by Place/Weekday)
+                            Expanded(
+                              child: _ScrollWheelColumn(
+                                title: 'Area',
+                                items: [
+                                  const _WheelItem(id: null, name: 'Any'),
+                                  ...visibleAreas.map((a) => _WheelItem(id: a.id, name: a.name)),
+                                ],
+                                selectedIndex: _selectedArea == null
+                                    ? 0
+                                    : (visibleAreas.indexWhere((a) => a.id == _selectedArea) + 1).clamp(0, visibleAreas.length),
+                                onSelectedIndexChanged: (index) {
+                                  final areaItems = [
+                                    const _WheelItem(id: null, name: 'Any'),
+                                    ...visibleAreas.map((a) => _WheelItem(id: a.id, name: a.name)),
+                                  ];
+                                  final aId = areaItems[index].id;
+                                  setState(() {
+                                    _selectedArea = aId;
+                                    if (aId != null) {
+                                      final selectedA = visibleAreas.firstWhere(
+                                        (a) => a.id == aId,
+                                        orElse: () => const Area(id: '', placeId: '', name: ''),
+                                      );
+                                      _selectedPlace = selectedA.placeId;
+                                      final parentPlace = allPlaces.firstWhere(
+                                        (p) => p.id == selectedA.placeId,
+                                        orElse: () => const Place(id: '', weekdayId: '', name: ''),
+                                      );
+                                      if (parentPlace.weekdayId.isNotEmpty) {
+                                        _selectedWeekday = parentPlace.weekdayId;
+                                      }
+                                    }
+                                  });
+                                  setModalState(() {});
+                                },
+                                colors: colors,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -967,76 +951,152 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
       },
     );
   }
+}
 
-  Widget _buildFilterColumn({
-    required String title,
-    required List<_FilterItem> items,
-    required AppColors colors,
-  }) {
+class _ScrollWheelColumn extends StatefulWidget {
+  final String title;
+  final List<_WheelItem> items;
+  final int selectedIndex;
+  final ValueChanged<int> onSelectedIndexChanged;
+  final AppColors colors;
+
+  const _ScrollWheelColumn({
+    required this.title,
+    required this.items,
+    required this.selectedIndex,
+    required this.onSelectedIndexChanged,
+    required this.colors,
+  });
+
+  @override
+  State<_ScrollWheelColumn> createState() => _ScrollWheelColumnState();
+}
+
+class _ScrollWheelColumnState extends State<_ScrollWheelColumn> {
+  late FixedExtentScrollController _controller;
+  int _lastReportedIndex = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.selectedIndex.clamp(0, widget.items.isEmpty ? 0 : widget.items.length - 1);
+    _lastReportedIndex = initial;
+    _controller = FixedExtentScrollController(initialItem: initial);
+  }
+
+  @override
+  void didUpdateWidget(covariant _ScrollWheelColumn oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedIndex != oldWidget.selectedIndex || widget.items.length != oldWidget.items.length) {
+      final target = widget.selectedIndex.clamp(0, widget.items.isEmpty ? 0 : widget.items.length - 1);
+      _lastReportedIndex = target;
+      if (_controller.hasClients && _controller.selectedItem != target) {
+        _controller.jumpToItem(target);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const double itemHeight = 38.0;
+    const double totalHeight = itemHeight * 3; // Exactly 3 items visible in viewport
+
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           decoration: BoxDecoration(
-            color: colors.muted.withValues(alpha: 0.5),
+            color: widget.colors.muted.withValues(alpha: 0.5),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
           ),
           child: Text(
-            title,
+            widget.title,
             style: AppTypography.labelSmall.copyWith(
               fontWeight: FontWeight.bold,
-              color: colors.mutedFg,
+              color: widget.colors.mutedFg,
             ),
             textAlign: TextAlign.center,
           ),
         ),
         const Divider(height: 1, thickness: 0.5),
-        Expanded(
-          child: items.isEmpty
-              ? Center(
+        SizedBox(
+          height: totalHeight,
+          child: Stack(
+            children: [
+              // Highlight band for the centered item slot
+              Positioned(
+                top: itemHeight,
+                left: 4,
+                right: 4,
+                height: itemHeight,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: widget.colors.primary.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: widget.colors.primary.withValues(alpha: 0.25),
+                      width: 1.0,
+                    ),
+                  ),
+                ),
+              ),
+              // Wheel Scroll View with fading opacity for top & bottom elements
+              if (widget.items.isEmpty)
+                Center(
                   child: Text(
                     'None',
-                    style: TextStyle(fontSize: 10, color: colors.mutedFg),
+                    style: TextStyle(fontSize: 11, color: widget.colors.mutedFg),
                   ),
                 )
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  itemCount: items.length,
-                  itemBuilder: (context, idx) {
-                    final item = items[idx];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 3.0),
-                      child: Material(
-                        color: item.isSelected
-                            ? colors.primary.withValues(alpha: 0.15)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(6),
-                        child: InkWell(
-                          onTap: item.onTap,
-                          borderRadius: BorderRadius.circular(6),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 4, vertical: 6),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: item.isSelected
-                                    ? colors.primary
-                                    : Colors.transparent,
-                                width: 1,
-                              ),
-                            ),
+              else
+                ListWheelScrollView.useDelegate(
+                  controller: _controller,
+                  itemExtent: itemHeight,
+                  physics: const FixedExtentScrollPhysics(),
+                  perspective: 0.0001,
+                  diameterRatio: 50.0,
+                  overAndUnderCenterOpacity: 0.35,
+                  onSelectedItemChanged: (index) {
+                    if (index >= 0 && index < widget.items.length && index != _lastReportedIndex) {
+                      _lastReportedIndex = index;
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) {
+                          widget.onSelectedIndexChanged(index);
+                        }
+                      });
+                    }
+                  },
+                  childDelegate: ListWheelChildBuilderDelegate(
+                    childCount: widget.items.length,
+                    builder: (context, index) {
+                      final item = widget.items[index];
+                      final isSelected = widget.selectedIndex == index;
+
+                      return GestureDetector(
+                        onTap: () {
+                          _controller.animateToItem(
+                            index,
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeInOut,
+                          );
+                        },
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
                             child: Text(
                               item.name,
                               style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: item.isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.w500,
-                                color: item.isSelected
-                                    ? colors.primary
-                                    : colors.foreground,
+                                fontSize: isSelected ? 12 : 11,
+                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                color: isSelected ? widget.colors.primary : widget.colors.foreground,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -1044,26 +1104,24 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
+            ],
+          ),
         ),
       ],
     );
   }
 }
 
-class _FilterItem {
+class _WheelItem {
   final String? id;
   final String name;
-  final bool isSelected;
-  final VoidCallback onTap;
 
-  const _FilterItem({
+  const _WheelItem({
     required this.id,
     required this.name,
-    required this.isSelected,
-    required this.onTap,
   });
 }

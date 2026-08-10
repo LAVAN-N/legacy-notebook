@@ -1269,6 +1269,19 @@ Read before starting. Never edit past entries.
 - **Rule for next agent:** ALWAYS invalidate parent controller providers upon completing write operations and upon returning from `await context.push(...)`.
 - **Guardrail:** Verify `ref.invalidate` calls after `context.push` in detail screens.
 
+---
+
+### 2026-08-10 · ListWheelScrollView build-time setState and VerticalDivider unbounded height in Row
+
+- **Context:** Implementing 3-column scroll-wheel filters for Route Filter in `clients_screen.dart`.
+- **Mistake:** (1) `ListWheelScrollView.onSelectedItemChanged` invoked `setState` synchronously during initial layout/build. (2) `VerticalDivider` inside a `Row` without `IntrinsicHeight` caused an unbounded height expansion resulting in `A RenderFlex overflowed by 99341 pixels on the bottom`.
+- **Root cause:** `VerticalDivider` attempts to expand to max vertical constraints of the parent `Row`. If the parent `Row` is not wrapped in `IntrinsicHeight` or given fixed bounds, height becomes infinite. Additionally, `ListWheelScrollView` fires initial item position changes during build, throwing `setState() or markNeedsBuild() called during build`.
+- **Fix applied:** (1) Wrapped `Row` in `IntrinsicHeight` and used fixed-width `Container(width: 1)` divider lines. (2) Tracked `_lastReportedIndex` and deferred `onSelectedIndexChanged` calls via `WidgetsBinding.instance.addPostFrameCallback`.
+- **Rule for next agent:** ALWAYS wrap `Row`s containing `VerticalDivider` in `IntrinsicHeight` or use fixed `Container(width: 1)` lines, and ALWAYS defer `ListWheelScrollView.onSelectedItemChanged` state updates to `addPostFrameCallback`.
+- **Guardrail:** Never call `setState` directly inside `ListWheelScrollView.onSelectedItemChanged` without post-frame callback protection.
+
+
+
 
 
 
