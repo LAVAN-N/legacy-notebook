@@ -159,8 +159,10 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                     children: grouped.sales.asMap().entries.map((entry) {
                       final idx = entry.key;
                       final sale = entry.value;
+                      final isLend = sale.saleType.toUpperCase() == 'LEND';
                       final isCredit = sale.saleType.toUpperCase() == 'CREDIT';
-                      final badgeColor = isCredit ? colors.danger : colors.success;
+                      final badgeColor = isLend ? Colors.orange : (isCredit ? colors.danger : colors.success);
+                      final lend = isLend ? _LendDetails.parse(sale.note ?? '') : null;
                       
                       final itemsTotal = sale.items.fold<int>(0, (sum, item) => sum + item.quantity * item.unitPrice);
                       final creditCharge = (sale.total - itemsTotal).clamp(0, 9999999);
@@ -194,30 +196,71 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          // Products list
-                          ...sale.items.map((item) {
-                            return Padding(
+                          // Content / Items list
+                          if (isLend) ...[
+                            Padding(
                               padding: const EdgeInsets.only(bottom: 6.0),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Expanded(
-                                    child: Text(
-                                      '${item.productName} (x${item.quantity})',
-                                      style: AppTypography.bodyMedium.copyWith(color: colors.foreground.withValues(alpha: 0.8)),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.handshake_outlined, size: 16, color: Colors.orange),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Cash Loan / Lend',
+                                        style: AppTypography.bodyMedium.copyWith(
+                                          color: colors.foreground,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 12),
                                   Text(
-                                    rupees(item.unitPrice * item.quantity),
+                                    rupees((lend != null && lend.principal > 0) ? lend.principal : sale.total),
                                     style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                                   ),
                                 ],
                               ),
-                            );
-                          }),
+                            ),
+                            if (lend != null && lend.note.isNotEmpty) ...[
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 6.0),
+                                child: Text(
+                                  '"${lend.note}"',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: colors.mutedFg,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ] else ...[
+                            // Products list
+                            ...sale.items.map((item) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 6.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '${item.productName} (x${item.quantity})',
+                                        style: AppTypography.bodyMedium.copyWith(color: colors.foreground.withValues(alpha: 0.8)),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      rupees(item.unitPrice * item.quantity),
+                                      style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ],
                           const SizedBox(height: 12),
                           // Elevated Financial Card
                           Card(
@@ -232,40 +275,42 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                               padding: const EdgeInsets.all(AppSpacing.md),
                               child: Column(
                                 children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text('Items Total', style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg)),
-                                      Text(rupees(itemsTotal), style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
-                                    ],
-                                  ),
-                                  if (creditCharge > 0) ...[
-                                    const SizedBox(height: 6),
+                                  if (isLend) ...[
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text('Credit Charge', style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg)),
-                                        Text('+ ${rupees(creditCharge)}', style: AppTypography.bodyMedium.copyWith(color: colors.warning, fontWeight: FontWeight.w600)),
+                                        Text('Principal Amount', style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg)),
+                                        Text(rupees((lend != null && lend.principal > 0) ? lend.principal : sale.total), style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
                                       ],
                                     ),
-                                  ],
-                                  const Divider(height: 16),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text('Grand Total', style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
-                                      Text(rupees(sale.total), style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: colors.primary)),
+                                    if ((lend?.charge ?? 0) > 0) ...[
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text('Surcharge Interest', style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg)),
+                                          Text('+ ${rupees(lend!.charge)}', style: AppTypography.bodyMedium.copyWith(color: Colors.orange, fontWeight: FontWeight.w600)),
+                                        ],
+                                      ),
                                     ],
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text('Down Payment', style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg)),
-                                      Text('- ${rupees(sale.advance)}', style: AppTypography.bodyMedium.copyWith(color: colors.success, fontWeight: FontWeight.w600)),
+                                    const Divider(height: 16),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text('Total Loan Amount', style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+                                        Text(rupees(sale.total), style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: Colors.orange)),
+                                      ],
+                                    ),
+                                    if (sale.advance > 0) ...[
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text('Upfront Payment', style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg)),
+                                          Text('- ${rupees(sale.advance)}', style: AppTypography.bodyMedium.copyWith(color: colors.success, fontWeight: FontWeight.w600)),
+                                        ],
+                                      ),
                                     ],
-                                  ),
-                                  if (isCredit) ...[
                                     const SizedBox(height: 6),
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -274,6 +319,50 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                                         Text('+ ${rupees(sale.creditAdded)}', style: AppTypography.bodyMedium.copyWith(color: colors.danger, fontWeight: FontWeight.bold)),
                                       ],
                                     ),
+                                  ] else ...[
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text('Items Total', style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg)),
+                                        Text(rupees(itemsTotal), style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                                      ],
+                                    ),
+                                    if (creditCharge > 0) ...[
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text('Credit Charge', style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg)),
+                                          Text('+ ${rupees(creditCharge)}', style: AppTypography.bodyMedium.copyWith(color: colors.warning, fontWeight: FontWeight.w600)),
+                                        ],
+                                      ),
+                                    ],
+                                    const Divider(height: 16),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text('Grand Total', style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+                                        Text(rupees(sale.total), style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: colors.primary)),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text('Down Payment', style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg)),
+                                        Text('- ${rupees(sale.advance)}', style: AppTypography.bodyMedium.copyWith(color: colors.success, fontWeight: FontWeight.w600)),
+                                      ],
+                                    ),
+                                    if (isCredit) ...[
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text('Financed Outstanding', style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg)),
+                                          Text('+ ${rupees(sale.creditAdded)}', style: AppTypography.bodyMedium.copyWith(color: colors.danger, fontWeight: FontWeight.bold)),
+                                        ],
+                                      ),
+                                    ],
                                   ],
                                 ],
                               ),
@@ -876,5 +965,30 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
         ),
       ),
     );
+  }
+}
+
+class _LendDetails {
+  final int principal;
+  final int charge;
+  final String note;
+
+  _LendDetails({required this.principal, required this.charge, required this.note});
+
+  factory _LendDetails.parse(String remarks) {
+    if (!remarks.startsWith('LEND_DETAILS:')) {
+      return _LendDetails(principal: 0, charge: 0, note: remarks);
+    }
+    try {
+      final query = remarks.substring('LEND_DETAILS:'.length);
+      final params = Uri.splitQueryString(query);
+      return _LendDetails(
+        principal: int.parse(params['principal'] ?? '0'),
+        charge: int.parse(params['charge'] ?? '0'),
+        note: params['note'] ?? '',
+      );
+    } catch (_) {
+      return _LendDetails(principal: 0, charge: 0, note: remarks);
+    }
   }
 }
