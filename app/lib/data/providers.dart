@@ -101,7 +101,7 @@ final customersStreamProvider = StreamProvider<List<Customer>>((ref) {
 });
 
 /// Customer Outstanding Stream Provider
-final customerOutstandingProvider = StreamProvider.family<Outstanding, String>((ref, customerId) {
+final customerOutstandingProvider = StreamProvider.autoDispose.family<Outstanding, String>((ref, customerId) {
   final repo = ref.watch(customerRepositoryProvider);
   return repo.watchCustomerOutstanding(customerId);
 });

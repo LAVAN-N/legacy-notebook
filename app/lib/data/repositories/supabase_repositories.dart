@@ -182,7 +182,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
 
     if (!skipInitialFetch) reload();
 
-    final channel = _client.channel('outstanding_$customerId')
+    final channel = _client.channel('outstanding_${customerId}_${DateTime.now().microsecondsSinceEpoch}')
       ..onPostgresChanges(
         event: PostgresChangeEvent.all,
         schema: 'public',
@@ -207,9 +207,10 @@ class SupabaseCustomerRepository implements CustomerRepository {
       )
       ..subscribe();
 
-    controller.onCancel = () {
-      channel.unsubscribe();
-      controller.close();
+    controller.onCancel = () async {
+      await channel.unsubscribe();
+      await _client.removeChannel(channel);
+      await controller.close();
     };
 
     return controller.stream;
@@ -291,7 +292,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
 
     if (!skipInitialFetch) reload();
 
-    final channel = _client.channel('timeline_$customerId')
+    final channel = _client.channel('timeline_${customerId}_${DateTime.now().microsecondsSinceEpoch}')
       ..onPostgresChanges(
         event: PostgresChangeEvent.all,
         schema: 'public',
@@ -316,9 +317,10 @@ class SupabaseCustomerRepository implements CustomerRepository {
       )
       ..subscribe();
 
-    controller.onCancel = () {
-      channel.unsubscribe();
-      controller.close();
+    controller.onCancel = () async {
+      await channel.unsubscribe();
+      await _client.removeChannel(channel);
+      await controller.close();
     };
 
     return controller.stream;
@@ -873,6 +875,20 @@ class SupabaseCollectionRepository implements CollectionRepository {
   }
 
   @override
+  Future<List<Collection>> getAllCollections() async {
+    final maps = await _client.from('collections').select().order('visit_datetime');
+    return maps.map((c) => Collection.fromJson({
+      'id': c['id'],
+      'customerId': c['customer_id'],
+      'visitDatetime': c['visit_datetime'],
+      'status': c['status'],
+      'amount': c['amount'],
+      'reason': c['reason'],
+      'collectedBy': c['collected_by'],
+    })).toList();
+  }
+
+  @override
   Stream<List<Collection>> watchCollectionsForCustomerToday(String customerId) {
     final todayStr = DateTime.now().toIso8601String().substring(0, 10);
     return watchAllCollections().map((list) => list.where((c) {
@@ -950,6 +966,28 @@ class SupabaseSaleRepository implements SaleRepository {
         });
       }).toList()
     );
+  }
+
+  @override
+  Future<List<Sale>> getAllSales() async {
+    final maps = await _client.from('sales').select().order('sale_datetime');
+    return maps.map((s) {
+      final remarks = s['remarks'] as String?;
+      final isLend = remarks != null && remarks.startsWith('LEND_DETAILS:');
+      final saleType = isLend ? 'LEND' : s['sale_type'];
+
+      return Sale.fromJson({
+        'id': s['id'],
+        'customerId': s['customer_id'],
+        'saleDatetime': s['sale_datetime'],
+        'saleType': saleType,
+        'totalAmount': s['total_amount'],
+        'advanceAmount': s['advance_amount'],
+        'financedAmount': s['financed_amount'],
+        'soldBy': s['sold_by'],
+        'remarks': remarks,
+      });
+    }).toList();
   }
 
   @override
@@ -1065,7 +1103,7 @@ class SupabaseProductRepository implements ProductRepository {
 
     reload();
 
-    final channel = _client.channel('products_stock')
+    final channel = _client.channel('products_stock_${DateTime.now().microsecondsSinceEpoch}')
       ..onPostgresChanges(
         event: PostgresChangeEvent.all,
         schema: 'public',
@@ -1080,9 +1118,10 @@ class SupabaseProductRepository implements ProductRepository {
       )
       ..subscribe();
 
-    controller.onCancel = () {
-      channel.unsubscribe();
-      controller.close();
+    controller.onCancel = () async {
+      await channel.unsubscribe();
+      await _client.removeChannel(channel);
+      await controller.close();
     };
 
     return controller.stream;

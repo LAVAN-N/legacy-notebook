@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:camera/camera.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -245,6 +244,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
       final currentBrands = await configRepo.getBrands();
       currentBrands.remove(brand);
       await configRepo.saveBrands(currentBrands);
+      if (!context.mounted) return;
       setState(() {
         if (_selectedBrand == brand) {
           _selectedBrand = null;
@@ -330,6 +330,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
       final currentCategories = await configRepo.getCategories();
       currentCategories.removeWhere((c) => c.id == categoryId);
       await configRepo.saveCategories(currentCategories);
+      if (!context.mounted) return;
       setState(() {
         if (_selectedCategoryId == categoryId) {
           _selectedCategoryId = null;
@@ -483,40 +484,27 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                 onTap: () async {
                   navigator.pop();
                   try {
-                    final String? croppedPath = await navigator.push<String>(
-                      MaterialPageRoute(
-                        builder: (context) => const CameraCaptureScreen(),
-                      ),
+                    final picker = ImagePicker();
+                    final XFile? image = await picker.pickImage(
+                      source: ImageSource.camera,
+                      imageQuality: 85,
                     );
-                    if (croppedPath != null && mounted) {
-                      setState(() {
-                        _imagePath = croppedPath;
-                      });
+                    if (image != null && mounted) {
+                      final croppedPath = await navigator.push<String>(
+                        MaterialPageRoute(
+                          builder: (context) => PhotoCropDialog(imagePath: image.path),
+                        ),
+                      );
+                      if (croppedPath != null && mounted) {
+                        setState(() {
+                          _imagePath = croppedPath;
+                        });
+                      }
                     }
                   } catch (e) {
-                    try {
-                      final picker = ImagePicker();
-                      final XFile? image = await picker.pickImage(
-                        source: ImageSource.camera,
-                        imageQuality: 85,
-                      );
-                      if (image != null && mounted) {
-                        final croppedPath = await navigator.push<String>(
-                          MaterialPageRoute(
-                            builder: (context) => PhotoCropDialog(imagePath: image.path),
-                          ),
-                        );
-                        if (croppedPath != null && mounted) {
-                          setState(() {
-                            _imagePath = croppedPath;
-                          });
-                        }
-                      }
-                    } catch (e2) {
-                      messenger.showSnackBar(
-                        SnackBar(content: Text('Error taking photo: $e2')),
-                      );
-                    }
+                    messenger.showSnackBar(
+                      SnackBar(content: Text('Error taking photo: $e')),
+                    );
                   }
                 },
               ),
@@ -1563,6 +1551,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
       final currentBrands = await configRepo.getBrands();
       currentBrands.remove(brand);
       await configRepo.saveBrands(currentBrands);
+      if (!context.mounted) return;
       setState(() {
         if (_selectedBrand == brand) {
           _selectedBrand = null;
@@ -1648,6 +1637,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
       final currentCategories = await configRepo.getCategories();
       currentCategories.removeWhere((c) => c.id == categoryId);
       await configRepo.saveCategories(currentCategories);
+      if (!context.mounted) return;
       setState(() {
         if (_selectedCategoryId == categoryId) {
           _selectedCategoryId = null;
@@ -1801,40 +1791,27 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                 onTap: () async {
                   navigator.pop();
                   try {
-                    final String? croppedPath = await navigator.push<String>(
-                      MaterialPageRoute(
-                        builder: (context) => const CameraCaptureScreen(),
-                      ),
+                    final picker = ImagePicker();
+                    final XFile? image = await picker.pickImage(
+                      source: ImageSource.camera,
+                      imageQuality: 85,
                     );
-                    if (croppedPath != null && mounted) {
-                      setState(() {
-                        _imagePath = croppedPath;
-                      });
+                    if (image != null && mounted) {
+                      final croppedPath = await navigator.push<String>(
+                        MaterialPageRoute(
+                          builder: (context) => PhotoCropDialog(imagePath: image.path),
+                        ),
+                      );
+                      if (croppedPath != null && mounted) {
+                        setState(() {
+                          _imagePath = croppedPath;
+                        });
+                      }
                     }
                   } catch (e) {
-                    try {
-                      final picker = ImagePicker();
-                      final XFile? image = await picker.pickImage(
-                        source: ImageSource.camera,
-                        imageQuality: 85,
-                      );
-                      if (image != null && mounted) {
-                        final croppedPath = await navigator.push<String>(
-                          MaterialPageRoute(
-                            builder: (context) => PhotoCropDialog(imagePath: image.path),
-                          ),
-                        );
-                        if (croppedPath != null && mounted) {
-                          setState(() {
-                            _imagePath = croppedPath;
-                          });
-                        }
-                      }
-                    } catch (e2) {
-                      messenger.showSnackBar(
-                        SnackBar(content: Text('Error taking photo: $e2')),
-                      );
-                    }
+                    messenger.showSnackBar(
+                      SnackBar(content: Text('Error taking photo: $e')),
+                    );
                   }
                 },
               ),
@@ -2952,188 +2929,7 @@ class _EditCategoryDialogContentState extends State<_EditCategoryDialogContent> 
   }
 }
 
-class CameraCaptureScreen extends StatefulWidget {
-  const CameraCaptureScreen({super.key});
 
-  @override
-  State<CameraCaptureScreen> createState() => _CameraCaptureScreenState();
-}
-
-class _CameraCaptureScreenState extends State<CameraCaptureScreen> {
-  CameraController? _controller;
-  bool _initialized = false;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _initCamera();
-  }
-
-  Future<void> _initCamera() async {
-    try {
-      final cameras = await availableCameras();
-      if (cameras.isEmpty) {
-        setState(() {
-          _error = 'No cameras found';
-        });
-        return;
-      }
-      final controller = CameraController(
-        cameras.first,
-        ResolutionPreset.high,
-        enableAudio: false,
-      );
-      await controller.initialize();
-      if (!mounted) return;
-      setState(() {
-        _controller = controller;
-        _initialized = true;
-      });
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = 'Failed to initialize camera: $e';
-        });
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    const viewportSize = Size(280, 280);
-
-    return Scaffold(
-      backgroundColor: Colors.black,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: Text('Capture Product Photo', style: AppTypography.titleMedium.copyWith(color: Colors.white)),
-      ),
-      body: _error != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _error!,
-                      style: AppTypography.bodyLarge.copyWith(color: Colors.red),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Go Back'),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          : !_initialized
-              ? const Center(child: CircularProgressIndicator())
-              : LayoutBuilder(
-                  builder: (context, constraints) {
-                    final viewportWidth = constraints.maxWidth;
-                    final viewportHeight = constraints.maxHeight;
-                    final viewportOffset = Offset(
-                      (viewportWidth - viewportSize.width) / 2,
-                      (viewportHeight - viewportSize.height) / 2,
-                    );
-
-                    return Stack(
-                      children: [
-                        Positioned.fill(
-                          child: CameraPreview(_controller!),
-                        ),
-                        Positioned.fill(
-                          child: IgnorePointer(
-                            child: CustomPaint(
-                              painter: CutoutPainter(
-                                cutoutRect: Rect.fromLTWH(
-                                  viewportOffset.dx,
-                                  viewportOffset.dy,
-                                  viewportSize.width,
-                                  viewportSize.height,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 40,
-                          left: 16,
-                          right: 16,
-                          child: Center(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.6),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                'Align product photo within the box',
-                                style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 40,
-                          left: 0,
-                          right: 0,
-                          child: Center(
-                            child: GestureDetector(
-                              onTap: () async {
-                                final navigator = Navigator.of(context);
-                                final messenger = ScaffoldMessenger.of(context);
-                                try {
-                                  final XFile photo = await _controller!.takePicture();
-                                  final croppedPath = await navigator.push<String>(
-                                    MaterialPageRoute(
-                                      builder: (context) => PhotoCropDialog(imagePath: photo.path),
-                                    ),
-                                  );
-                                  if (croppedPath != null && mounted) {
-                                    navigator.pop(croppedPath);
-                                  }
-                                } catch (e) {
-                                  messenger.showSnackBar(
-                                    SnackBar(content: Text('Error taking photo: $e')),
-                                  );
-                                }
-                              },
-                              child: Container(
-                                width: 72,
-                                height: 72,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 4),
-                                ),
-                                child: const Center(
-                                  child: Icon(Icons.camera_alt, color: Colors.white, size: 36),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  }
-                ),
-    );
-  }
-}
 
 class PhotoCropDialog extends StatefulWidget {
   final String imagePath;

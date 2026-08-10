@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_radius.dart';
@@ -334,30 +333,55 @@ class CustomerContextCard extends StatelessWidget {
                       children: [
                         Container(
                           width: double.infinity,
-                          height: 180,
-                          decoration: const BoxDecoration(
-                            borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.md)),
-                          ),
-                          child: ClipRRect(
+                          height: 140,
+                          decoration: BoxDecoration(
+                            color: colors.primary.withValues(alpha: 0.05),
                             borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.md)),
-                            child: GoogleMap(
-                              initialCameraPosition: CameraPosition(
-                                target: LatLng(customer.location!.lat, customer.location!.lng),
-                                zoom: 15,
-                              ),
-                              markers: {
-                                Marker(
-                                  markerId: const MarkerId('customer_loc'),
-                                  position: LatLng(customer.location!.lat, customer.location!.lng),
+                          ),
+                          child: InkWell(
+                            onTap: () => _openMap(customer.location!.lat, customer.location!.lng),
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.md)),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Icon(
+                                  Icons.map_rounded,
+                                  size: 90,
+                                  color: colors.primary.withValues(alpha: 0.08),
                                 ),
-                              },
-                              mapType: MapType.hybrid,
-                              zoomControlsEnabled: false,
-                              myLocationButtonEnabled: false,
-                              scrollGesturesEnabled: false,
-                              zoomGesturesEnabled: false,
-                              tiltGesturesEnabled: false,
-                              rotateGesturesEnabled: false,
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: colors.primary,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: colors.primary.withValues(alpha: 0.3),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.location_on_rounded,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Tap to Open Location in Maps',
+                                      style: AppTypography.labelMedium.copyWith(
+                                        color: colors.primary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
                         ),

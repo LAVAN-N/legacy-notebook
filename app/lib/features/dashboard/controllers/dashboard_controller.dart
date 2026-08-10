@@ -2,6 +2,10 @@ import 'dart:developer' as developer;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/activity.dart';
 import '../../../data/models/place.dart';
+import '../../../data/models/area.dart';
+import '../../../data/models/customer.dart';
+import '../../../data/models/sale.dart';
+import '../../../data/models/collection.dart';
 import '../../../data/providers.dart';
 
 class DashboardData {
@@ -54,63 +58,140 @@ class DashboardController extends StateNotifier<AsyncValue<DashboardData>> {
     try {
       final routeRepo = _ref.read(routeRepositoryProvider);
       final customerRepo = _ref.read(customerRepositoryProvider);
+      final saleRepo = _ref.read(saleRepositoryProvider);
+      final collectionRepo = _ref.read(collectionRepositoryProvider);
+      final configRepo = _ref.read(configRepositoryProvider);
 
-      // We'll seed Melur and Thursday as "today" for demonstration consistency
       const weekdayId = 'w-4'; // Thursday
       const weekdayName = 'Thursday';
 
-      final places = await routeRepo.getPlacesByWeekday(weekdayId);
-      int areaCount = 0;
-      for (final p in places) {
-        final areas = await routeRepo.getAreasByPlace(p.id);
-        areaCount += areas.length;
-      }
+      // 1. Fetch all required data points concurrently in 8 parallel HTTP requests
+      final batchResults = await Future.wait([
+        routeRepo.getPlacesByWeekday(weekdayId),
+        customerRepo.getAllCustomers(),
+        saleRepo.getAllSales(),
+        collectionRepo.getAllCollections(),
+        configRepo.getAreas(),
+        routeRepo.getCustomerCountForWeekday(weekdayId),
+        routeRepo.getExpectedCollectionForWeekday(weekdayId),
+        routeRepo.getActualCollectionForWeekday(weekdayId),
+      ]);
 
-      final customerCount = await routeRepo.getCustomerCountForWeekday(weekdayId);
-      final expected = await routeRepo.getExpectedCollectionForWeekday(weekdayId);
-      final collected = await routeRepo.getActualCollectionForWeekday(weekdayId);
+      final places = batchResults[0] as List<Place>;
+      final allCustomers = batchResults[1] as List<Customer>;
+      final allSales = batchResults[2] as List<Sale>;
+      final allCollections = batchResults[3] as List<Collection>;
+      final allAreas = batchResults[4] as List<Area>;
+      final customerCount = batchResults[5] as int;
+      final expected = batchResults[6] as int;
+      final collected = batchResults[7] as int;
 
-      // Compute pending visits: visits with CARRY_FORWARD, PAYMENT or PARTIAL_PAYMENT today.
-      // We will fetch all customers on this route first.
-      int pending = customerCount;
-      final placesInWeekday = await routeRepo.getPlacesByWeekday(weekdayId);
-      final List<String> customerIdsOnRoute = [];
-      for (final p in placesInWeekday) {
-        final areas = await routeRepo.getAreasByPlace(p.id);
-        for (final a in areas) {
-          final customers = await customerRepo.getCustomersByArea(a.id);
-          for (final c in customers) {
-            customerIdsOnRoute.add(c.id);
-          }
+      // 2. Count areas for places in-memory
+      final placeIds = places.map((p) => p.id).toSet();
+      final todayAreas = allAreas.where((a) => placeIds.contains(a.placeId)).toList();
+      final areaCount = todayAreas.length;
+
+      // 3. Compute pending visits in-memory
+      final todayStr = DateTime.now().toIso8601String().split('T').first;
+      final visitedTodayCustomerIds = <String>{};
+      for (final col in allCollections) {
+        final colDate = col.visitDatetime.toIso8601String().split('T').first;
+        if (colDate == todayStr) {
+          visitedTodayCustomerIds.add(col.customerId);
         }
       }
 
-      final collectionRepo = _ref.read(collectionRepositoryProvider);
-      final collectionFutures = customerIdsOnRoute.map((cid) => collectionRepo.getCollectionsForCustomerToday(cid));
-      final collectionResults = await Future.wait(collectionFutures);
-      for (final todayCol in collectionResults) {
-        if (todayCol.isNotEmpty) {
+      final todayAreaIds = todayAreas.map((a) => a.id).toSet();
+      final routeCustomerIds = <String>{};
+      for (final c in allCustomers) {
+        if (todayAreaIds.contains(c.areaId)) {
+          routeCustomerIds.add(c.id);
+        }
+      }
+
+      int pending = routeCustomerIds.length;
+      for (final cid in routeCustomerIds) {
+        if (visitedTodayCustomerIds.contains(cid)) {
           pending--;
         }
       }
 
-      // Compute total business outstanding
-      int totalOutstanding = 0;
-      
-      final allCustomers = await customerRepo.getAllCustomers();
-      final outstandingFutures = allCustomers.map((c) => customerRepo.getCustomerOutstanding(c.id));
-      final outstandingResults = await Future.wait(outstandingFutures);
-      for (final out in outstandingResults) {
-        totalOutstanding += out.outstandingAmount;
+      // 4. Compute total business outstanding in-memory
+      int totalFinanced = 0;
+      for (final s in allSales) {
+        totalFinanced += s.financedAmount;
       }
 
-      // Recent activities: we can get the timeline of all customers and sort
-      final timelineFutures = allCustomers.map((c) => customerRepo.getCustomerTimeline(c.id));
-      final timelineResults = await Future.wait(timelineFutures);
-      final List<Activity> recent = [];
-      for (final timeline in timelineResults) {
-        recent.addAll(timeline);
+      int totalCollected = 0;
+      for (final col in allCollections) {
+        if (col.status == 'PAYMENT' || col.status == 'PARTIAL_PAYMENT') {
+          totalCollected += col.amount.round();
+        }
       }
+      final totalOutstanding = totalFinanced - totalCollected;
+
+      // 5. Build recent activities timeline in-memory
+      final List<Activity> recent = [];
+      for (final col in allCollections) {
+        final id = col.id;
+        final at = col.visitDatetime;
+        final amount = col.amount.round();
+        final reason = col.reason;
+        final collectedBy = col.collectedBy;
+
+        if (col.status == 'PAYMENT') {
+          recent.add(Activity.payment(
+            id: id,
+            at: at,
+            amount: amount,
+            note: reason,
+            collectorName: collectedBy,
+          ));
+        } else if (col.status == 'PARTIAL_PAYMENT') {
+          recent.add(Activity.partialPayment(
+            id: id,
+            at: at,
+            amount: amount,
+            note: reason ?? '',
+            collectorName: collectedBy,
+          ));
+        } else if (col.status == 'CARRY_FORWARD') {
+          recent.add(Activity.carryForward(
+            id: id,
+            at: at,
+            note: reason ?? '',
+            collectorName: collectedBy,
+          ));
+        }
+      }
+
+      for (final sale in allSales) {
+        final id = sale.id;
+        final at = sale.saleDatetime;
+        final total = sale.totalAmount;
+        final advance = sale.advanceAmount;
+        final creditAdded = sale.financedAmount;
+        final dbSaleType = sale.saleType;
+        final soldBy = sale.soldBy;
+        final remarks = sale.remarks;
+        final isLend = remarks != null && remarks.startsWith('LEND_DETAILS:');
+        final saleTypeStr = isLend ? 'LEND' : dbSaleType;
+
+        final items = <SaleItemDetail>[];
+
+        recent.add(Activity.sale(
+          id: id,
+          at: at,
+          items: items,
+          total: total,
+          advance: advance,
+          creditAdded: creditAdded,
+          saleType: saleTypeStr,
+          collectorName: soldBy,
+          note: remarks,
+        ));
+      }
+
       recent.sort((a, b) => b.at.compareTo(a.at));
       final trimmedRecent = recent.take(5).toList();
 

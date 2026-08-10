@@ -414,7 +414,11 @@ class _NavigationShellState extends State<NavigationShell> {
             canPop: false,
             onPopInvokedWithResult: (didPop, result) {
               if (didPop) return;
-              context.go(backTarget);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (context.mounted) {
+                  context.go(backTarget);
+                }
+              });
             },
             child: scaffold,
           )

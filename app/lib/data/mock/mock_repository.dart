@@ -551,6 +551,9 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   }
 
   @override
+  Future<List<Collection>> getAllCollections() async => _collections;
+
+  @override
   Stream<List<Collection>> watchCollectionsForCustomerToday(String customerId) async* {
     yield _collections.where((col) =>
         col.customerId == customerId &&
@@ -613,6 +616,9 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     yield _sales;
     yield* _updateController.stream.map((_) => _sales);
   }
+
+  @override
+  Future<List<Sale>> getAllSales() async => _sales;
 
   @override
   Future<void> saveSale({

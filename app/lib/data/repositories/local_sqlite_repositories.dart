@@ -746,6 +746,9 @@ class LocalSqliteCollectionRepository implements CollectionRepository {
     return watchQuery(tables: ['collections'], query: _getAllCollections);
   }
 
+  @override
+  Future<List<Collection>> getAllCollections() => _getAllCollections();
+
   Future<List<Collection>> _getAllCollections() async {
     final db = await DatabaseHelper.instance.database;
     final maps = await db.query('collections', orderBy: 'visit_datetime DESC');
@@ -832,6 +835,9 @@ class LocalSqliteSaleRepository implements SaleRepository {
   Stream<List<Sale>> watchAllSales() {
     return watchQuery(tables: ['sales'], query: _getAllSales);
   }
+
+  @override
+  Future<List<Sale>> getAllSales() => _getAllSales();
 
   Future<List<Sale>> _getAllSales() async {
     final db = await DatabaseHelper.instance.database;

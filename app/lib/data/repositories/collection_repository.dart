@@ -2,6 +2,7 @@ import '../models/collection.dart';
 
 abstract class CollectionRepository {
   Stream<List<Collection>> watchAllCollections();
+  Future<List<Collection>> getAllCollections();
   Stream<List<Collection>> watchCollectionsForCustomerToday(String customerId);
   Future<List<Collection>> getCollectionsForCustomerToday(String customerId);
   

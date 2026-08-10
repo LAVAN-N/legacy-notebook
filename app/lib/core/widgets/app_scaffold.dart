@@ -98,7 +98,13 @@ class _AppScaffoldState extends State<AppScaffold> {
                   (backTarget != null
                       ? IconButton(
                           icon: const Icon(Icons.arrow_back),
-                          onPressed: () => context.go(backTarget),
+                          onPressed: () {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (context.mounted) {
+                                context.go(backTarget);
+                              }
+                            });
+                          },
                         )
                       : null),
               title: widget.title,

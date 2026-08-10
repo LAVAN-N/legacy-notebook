@@ -185,6 +185,7 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
     
     if (result != null && result.isNotEmpty && mounted) {
       await ref.read(newClientControllerProvider.notifier).editPlace(placeId, result);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Place updated successfully'), behavior: SnackBarBehavior.floating),
       );
@@ -218,6 +219,7 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
     
     if (confirm == true && mounted) {
       await ref.read(newClientControllerProvider.notifier).deletePlace(placeId);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Place deleted successfully'), behavior: SnackBarBehavior.floating),
       );
@@ -258,6 +260,7 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
     
     if (result != null && result.isNotEmpty && mounted) {
       await ref.read(newClientControllerProvider.notifier).editArea(areaId, result);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Area updated successfully'), behavior: SnackBarBehavior.floating),
       );
@@ -291,6 +294,7 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
     
     if (confirm == true && mounted) {
       await ref.read(newClientControllerProvider.notifier).deleteArea(areaId);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Area deleted successfully'), behavior: SnackBarBehavior.floating),
       );

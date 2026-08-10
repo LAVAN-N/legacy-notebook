@@ -147,26 +147,14 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
     final detailState = ref.watch(customerDetailControllerProvider(widget.customerId));
 
     return detailState.when(
-      loading: () => Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
-              } else {
-                context.go(Routes.dashboard);
-              }
-            },
-          ),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-        ),
-        body: const SafeArea(
-          child: SkeletonList(),
-        ),
+      loading: () => const AppScaffold(
+        blendHeader: true,
+        title: Text('Loading...'),
+        body: SkeletonList(),
       ),
-      error: (err, stack) => Scaffold(
+      error: (err, stack) => AppScaffold(
+        blendHeader: true,
+        title: const Text('Error'),
         body: ErrorState(
           message: err.toString(),
           onRetry: () =>

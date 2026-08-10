@@ -1190,3 +1190,74 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Replaced the embedded native `GoogleMap` widget in `CustomerContextCard` with a pure Flutter location card containing a map pin and an interactive "Tap to Open in Maps" action that launches external maps via `launchUrl`.
 - **Rule for next agent:** NEVER embed live native `GoogleMap` platform views inside scrollable list items or cards unless explicitly necessary; use pure Flutter static card previews with external map launcher actions instead.
 - **Guardrail:** Grep for `GoogleMap(` inside card or list item widgets.
+
+---
+
+### 2026-08-07 · Cumulative Realtime stream/channel leak in AutoDispose notifier causing ANR on Nth navigation
+
+- **Context:** Resolving ANR crash on the Nth visit (first 1st, then 3rd, then 5th) to Customer Detail screen from Transactions.
+- **Mistake:** `CustomerDetailNotifier` created 3 stream subscriptions (watchCustomerById, watchCustomerOutstanding, watchCustomerTimeline) and registered `ref.onDispose(() { sub.cancel(); })` to clean them up.
+- **Root cause:** `ref.onDispose` is a **synchronous** callback. `StreamSubscription.cancel()` returns a `Future<void>` that is never awaited inside a sync callback. The `controller.onCancel` in the Supabase repo does `await channel.unsubscribe()` + `await _client.removeChannel(channel)` — all of which run as untracked fire-and-forget microtasks. Each navigation leaves ~3 dangling async teardowns in-flight. By the 5th visit, ~15 competing WebSocket teardown tasks on the platform channel starve Android's main thread → ANR.
+- **Fix applied:** Removed ALL stream subscriptions from `CustomerDetailNotifier`. Converted to a pure `Future.wait([getCustomerById, getCustomerOutstanding, getCustomerTimeline])` parallel fetch with no channels, no subscriptions, and no cleanup. Riverpod `AutoDispose` guarantees `build()` re-runs with fresh data on every re-navigation.
+- **Rule for next agent:** NEVER use stream subscriptions inside `AutoDispose` notifiers with async cleanup unless you can guarantee the cleanup is awaited. If a screen shows data that is refreshed on every navigation, use a one-shot `Future.wait` parallel fetch instead of streams — zero channels, zero accumulation.
+- **Guardrail:** Any `ref.onDispose` that calls `.cancel()` without `await` is a leak. Grep for `onDispose` blocks containing `.cancel()` and verify the stream's `onCancel` does no async work, or switch to Future-based fetching.
+
+---
+
+### 2026-08-07 · CameraX native background listener & non-autoDispose StreamProvider.family leaks
+
+- **Context:** Resolving ANR crashes on 5th/6th attempt back gesture from Customer Detail to Transactions.
+- **Mistake:** (1) `camera` package dependency was included, registering Android's native `CameraXLibraryPigeonInstanceManager` at app startup, which ran background Pigeon native message handler callbacks on Android's UI thread Handler even when no camera view was open. (2) `customerOutstandingProvider` in `providers.dart` was declared as `StreamProvider.family` without `autoDispose`, creating permanent Supabase Realtime WebSocket channels that never unmounted across customer visits.
+- **Root cause:** Native `CameraX` plugin background callbacks ran continuously on Android's main Handler thread. When combined with non-autoDisposed Realtime channels and navigation transitions, the main thread Handler message queue hit 20s timeouts (`CameraXLibraryPigeonInstanceManager$$ExternalSyntheticLambda0`).
+- **Fix applied:** (1) Removed `camera` package and `camera_android_camerax` plugin dependency entirely, replacing photo capture fallback with standard `image_picker` (`ImageSource.camera`). (2) Added `.autoDispose` to `customerOutstandingProvider` in `providers.dart`.
+- **Rule for next agent:** NEVER include the `camera` package if `image_picker` is sufficient for photo capturing; `camera_android_camerax` registers background main thread Pigeon callbacks. ALWAYS add `.autoDispose` to `StreamProvider.family` declarations.
+- **Guardrail:** Check `pubspec.yaml` for `camera` dependency and verify all `StreamProvider.family` definitions use `autoDispose`.
+
+---
+
+### 2026-08-07 · Android 13+ Predictive Back Choreographer$FrameHandler deadlock in PopScope
+
+- **Context:** Resolving ANR crash (`target=android.view.Choreographer$FrameHandler`) on hardware back press when popping screens.
+- **Mistake:** (1) `android:enableOnBackInvokedCallback="true"` was missing from `<application>` in `AndroidManifest.xml`, causing Android 13+ (MIUI) `ViewRootImpl` to warn and lock waiting for back invocation callbacks. (2) `PopScope` in `navigation_shell.dart` called `context.go(backTarget)` synchronously inside `onPopInvokedWithResult`, dismantling and swapping the route tree during active frame gesture evaluation.
+- **Root cause:** Swapping the entire GoRouter location tree synchronously inside the back invocation callback while Android's `Choreographer` engine was rendering the back animation created a native thread deadlock waiting for frame completion.
+- **Fix applied:** (1) Added `android:enableOnBackInvokedCallback="true"` to `AndroidManifest.xml`. (2) Deferred `context.go(backTarget)` inside `PopScope` using `WidgetsBinding.instance.addPostFrameCallback((_) { ... })`.
+- **Rule for next agent:** ALWAYS wrap `context.go()` calls inside `PopScope.onPopInvokedWithResult` in `WidgetsBinding.instance.addPostFrameCallback` so route tree mutations happen on the next frame after back gesture evaluation completes. ALWAYS declare `android:enableOnBackInvokedCallback="false"` in `AndroidManifest.xml` to avoid system predictive back gesture dispatcher freezes.
+- **Guardrail:** Grep `onPopInvokedWithResult` for synchronous `context.go()` calls and verify `enableOnBackInvokedCallback="false"` exists in `AndroidManifest.xml`.
+
+---
+
+### 2026-08-10 · Android 13+ Predictive Back Callback deadlock on MIUI/Xiaomi
+
+- **Context:** Resolving ANR crash (`android.window.WindowOnBackInvokedDispatcher$OnBackInvokedCallbackWrapper`) on back gesture swiping.
+- **Mistake:** Declared `android:enableOnBackInvokedCallback="true"` in the application manifest.
+- **Root cause:** On MIUI (Xiaomi) devices with system gesture navigation active, enabling predictive back causes the system's custom gesture dispatcher to deadlock when interacting with Flutter's dynamic asynchronous `PopScope` handlers. The system thread hangs waiting for synchronous callback resolution.
+- **Fix applied:** Set `android:enableOnBackInvokedCallback="false"` in `AndroidManifest.xml` to fallback to legacy back key dispatching (`onBackPressed`), which works flawlessly with asynchronous pops/PopScopes.
+- **Rule for next agent:** NEVER enable `android:enableOnBackInvokedCallback="true"` on Android builds targeting custom operating systems like MIUI/Xiaomi unless you are not using any async PopScope interceptors. Keep it `false`.
+- **Guardrail:** Verify `android:enableOnBackInvokedCallback="false"` in `AndroidManifest.xml`.
+
+
+---
+
+### 2026-08-10 · Dashboard N+1 per-customer query loops causing ANRs on load
+
+- **Context:** Resolving ANR crashes when loading or refreshing `DashboardScreen`.
+- **Mistake:** `DashboardController.refresh()` iterated through every single customer in the database and launched `getCustomerOutstanding`, `getCustomerTimeline`, and `getCollectionsForCustomerToday` individually in `Future.wait` (issuing 250+ parallel HTTP requests on startup).
+- **Root cause:** Bombarding Supabase REST with 200+ concurrent network queries saturated Dart's event loop and main thread socket pool, triggering Android 20-second ANR timeouts.
+- **Fix applied:** Refactored `DashboardController.refresh()` in `dashboard_controller.dart` to fetch bulk datasets in 4 concurrent batch requests (`getPlacesByWeekday`, `getAllCustomers`, `getAllSales`, `getAllCollections`), and compute all totals, pending visits, and recent activities in-memory.
+- **Rule for next agent:** NEVER map over a list of entities to issue individual network queries in controllers or repositories; ALWAYS fetch bulk table datasets in 1 query and compute metrics/aggregations in-memory.
+- **Guardrail:** Audit `.map((c) => repo.get...` loops inside `Future.wait`.
+
+---
+
+### 2026-08-10 · Synchronous context.go pop exception deadlock during skeleton loading
+
+- **Context:** Resolving ANR/crashes when pressing the AppBar back button during the skeleton loading state of `CustomerDetailScreen`.
+- **Mistake:** The skeleton loading view used a custom `Scaffold` with an AppBar back button that called `context.pop()`.
+- **Root cause:** Because `CustomerDetailScreen` is a child route within a `ShellRoute`, `context.pop()` throws a GoRouter exception if the nested navigator stack has no previous page. Running `context.go()` synchronously inside the `catch` block on the same frame corrupted GoRouter's internal state machine, causing a platform channel deadlock.
+- **Fix applied:** Replaced raw `Scaffold` loading/error states in `customer_detail_screen.dart` with `AppScaffold`, which automatically delegates to safe, frame-deferred `getBackTarget()` navigation transitions.
+- **Rule for next agent:** ALWAYS use the unified `AppScaffold` widget for skeleton loading and error states instead of custom raw `Scaffold`s to ensure consistent navigation and back-behavior.
+- **Guardrail:** Check `loading` and `error` parameters in `AsyncValue.when` handlers to ensure they return `AppScaffold`.
+
+
+
+
