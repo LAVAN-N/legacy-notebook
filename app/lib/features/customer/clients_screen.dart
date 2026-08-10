@@ -12,6 +12,8 @@ import '../../core/router/routes.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/avatar.dart';
 import '../../data/models/weekday.dart';
+import '../../data/models/place.dart';
+import '../../data/models/area.dart';
 import '../../data/providers.dart';
 
 class ClientsScreen extends ConsumerStatefulWidget {
@@ -27,6 +29,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
   String _selectedStatus = 'All';
   String? _selectedWeekday;
   String? _selectedPlace;
+  String? _selectedArea;
   bool _isFabVisible = true;
 
   @override
@@ -44,6 +47,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
     final collectionsAsync = ref.watch(collectionsStreamProvider);
     final weekdaysAsync = ref.watch(weekdaysStreamProvider);
     final placesAsync = ref.watch(placesStreamProvider);
+    final areasAsync = ref.watch(areasStreamProvider);
 
     if (customersAsync.isLoading ||
         salesAsync.isLoading ||
@@ -78,15 +82,12 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
     final allCustomers = customersAsync.value ?? [];
     final allSales = salesAsync.value ?? [];
     final allCollections = collectionsAsync.value ?? [];
-    final allWeekdays = weekdaysAsync.value ?? [];
-    final allPlaces = placesAsync.value ?? [];
-
-    final weekdayNameMap = {for (final w in allWeekdays) w.id: w.name};
-    final placeNameMap = {for (final p in allPlaces) p.id: p.name};
-
-    String getPlaceName(String placeId) {
-      return placeNameMap[placeId] ?? placeId;
-    }
+    final allWeekdays = (weekdaysAsync.value ?? []).toList()
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final allPlaces = (placesAsync.value ?? []).toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    final allAreas = (areasAsync.value ?? []).toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
     // Helper to calculate total, lend, and sale outstanding
     int getOutstanding(String customerId) {
@@ -183,6 +184,11 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
         return false;
       }
 
+      // Area filter
+      if (_selectedArea != null && c.areaId != _selectedArea) {
+        return false;
+      }
+
       return true;
     }).toList();
 
@@ -201,24 +207,6 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
         totalOutstanding += out;
       }
     }
-
-    // Get unique weekdays represented by clients to show relevant filters
-    final weekdaysWithClients =
-        allCustomers.map((c) => c.weekdayId).toSet().toList();
-    weekdaysWithClients.sort((a, b) {
-      final orderA = allWeekdays.firstWhere((w) => w.id == a || w.name == a, orElse: () => Weekday(id: a, name: a, sortOrder: 99)).sortOrder;
-      final orderB = allWeekdays.firstWhere((w) => w.id == b || w.name == b, orElse: () => Weekday(id: b, name: b, sortOrder: 99)).sortOrder;
-      return orderA.compareTo(orderB);
-    });
-
-    // Get unique places represented by clients
-    final placesWithClients =
-        allCustomers.map((c) => c.placeId).toSet().toList();
-    placesWithClients.sort((a, b) {
-      final nameA = getPlaceName(a).toLowerCase();
-      final nameB = getPlaceName(b).toLowerCase();
-      return nameA.compareTo(nameB);
-    });
 
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     final rawSafeAreaBottom = MediaQueryData.fromView(View.of(context)).padding.bottom;
@@ -355,16 +343,16 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                         Icons.filter_list_rounded,
                         color: _selectedWeekday != null ||
                                 _selectedPlace != null ||
+                                _selectedArea != null ||
                                 _selectedStatus != 'All'
                             ? colors.primary
                             : colors.mutedFg,
                       ),
                       onPressed: () => _showFiltersSheet(
                           context,
-                          weekdaysWithClients,
-                          placesWithClients,
-                          weekdayNameMap,
-                          placeNameMap),
+                          allWeekdays,
+                          allPlaces,
+                          allAreas),
                     ),
                   ],
                 ),
@@ -479,6 +467,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                                   _selectedStatus = 'All';
                                   _selectedWeekday = null;
                                   _selectedPlace = null;
+                                  _selectedArea = null;
                                 });
                               },
                               child: const Text('Clear filters'),
@@ -683,258 +672,294 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
 
   void _showFiltersSheet(
     BuildContext context,
-    List<String> weekdays,
-    List<String> places,
-    Map<String, String> weekdayNameMap,
-    Map<String, String> placeNameMap,
+    List<Weekday> allWeekdays,
+    List<Place> allPlaces,
+    List<Area> allAreas,
   ) {
     final colors = context.colors;
     final statusOptions = ['All', 'Outstanding', 'Lend', 'Settled'];
+
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,
       backgroundColor: colors.surface,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Container(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Filter Clients',
-                        style: AppTypography.titleMedium.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colors.foreground,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _selectedStatus = 'All';
-                            _selectedWeekday = null;
-                            _selectedPlace = null;
-                          });
-                          setModalState(() {});
-                          context.pop();
-                        },
-                        child: const Text('Reset'),
-                      ),
-                    ],
-                  ),
-                  const Divider(),
-                  const SizedBox(height: AppSpacing.sm),
+            // Dynamically calculate available places and areas based on current selections
+            final visiblePlaces = _selectedWeekday == null
+                ? allPlaces
+                : allPlaces.where((p) => p.weekdayId == _selectedWeekday).toList();
 
-                  // Status Filter
-                  Text(
-                    'Status',
-                    style: AppTypography.labelLarge.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colors.foreground,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: statusOptions.map((status) {
-                        final isSelected = _selectedStatus == status;
-                        Color chipColor;
-                        if (status == 'Lend') {
-                          chipColor = Colors.orange;
-                        } else if (status == 'Outstanding') {
-                          chipColor = colors.danger;
-                        } else if (status == 'Settled') {
-                          chipColor = colors.success;
-                        } else {
-                          chipColor = colors.primary;
-                        }
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: ChoiceChip(
-                            label: Text(status),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              if (selected) {
-                                setState(() => _selectedStatus = status);
-                                setModalState(() {});
-                              }
-                            },
-                            backgroundColor: colors.surface,
-                            selectedColor:
-                                chipColor.withValues(alpha: 0.15),
-                            checkmarkColor: chipColor,
-                            side: BorderSide(
-                              color: isSelected ? chipColor : colors.border,
-                            ),
-                            labelStyle: TextStyle(
-                              color: isSelected ? chipColor : colors.mutedFg,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
+            final visibleAreas = _selectedPlace != null
+                ? allAreas.where((a) => a.placeId == _selectedPlace).toList()
+                : (_selectedWeekday != null
+                    ? () {
+                        final pIds = visiblePlaces.map((p) => p.id).toSet();
+                        return allAreas.where((a) => pIds.contains(a.placeId)).toList();
+                      }()
+                    : allAreas);
 
-                  // Weekday Filter
-                  Text(
-                    'Weekday',
-                    style: AppTypography.labelLarge.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colors.foreground,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
+            return SafeArea(
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.md),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: ChoiceChip(
-                            label: const Text('Any'),
-                            selected: _selectedWeekday == null,
-                            onSelected: (selected) {
-                              if (selected) {
-                                setState(() => _selectedWeekday = null);
-                                setModalState(() {});
-                              }
-                            },
-                            backgroundColor: colors.surface,
-                            selectedColor:
-                                colors.primary.withValues(alpha: 0.15),
-                            checkmarkColor: colors.primary,
-                            side: BorderSide(
-                              color: _selectedWeekday == null
-                                  ? colors.primary
-                                  : colors.border,
-                            ),
-                            labelStyle: TextStyle(
-                              color: _selectedWeekday == null
-                                  ? colors.primary
-                                  : colors.mutedFg,
-                            ),
+                        Text(
+                          'Filter Clients',
+                          style: AppTypography.titleMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colors.foreground,
                           ),
                         ),
-                        ...weekdays.map((day) {
-                          final isSelected = _selectedWeekday == day;
-                          final displayName = weekdayNameMap[day] ?? day;
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedStatus = 'All';
+                              _selectedWeekday = null;
+                              _selectedPlace = null;
+                              _selectedArea = null;
+                            });
+                            setModalState(() {});
+                            context.pop();
+                          },
+                          child: const Text('Reset'),
+                        ),
+                      ],
+                    ),
+                    const Divider(),
+                    const SizedBox(height: AppSpacing.xs),
+
+                    // Status Filter
+                    Text(
+                      'Status',
+                      style: AppTypography.labelLarge.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colors.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: statusOptions.map((status) {
+                          final isSelected = _selectedStatus == status;
+                          Color chipColor;
+                          if (status == 'Lend') {
+                            chipColor = Colors.orange;
+                          } else if (status == 'Outstanding') {
+                            chipColor = colors.danger;
+                          } else if (status == 'Settled') {
+                            chipColor = colors.success;
+                          } else {
+                            chipColor = colors.primary;
+                          }
                           return Padding(
                             padding: const EdgeInsets.only(right: 8.0),
                             child: ChoiceChip(
-                              label: Text(displayName),
+                              label: Text(status),
                               selected: isSelected,
                               onSelected: (selected) {
-                                setState(() {
-                                  _selectedWeekday = selected ? day : null;
-                                });
-                                setModalState(() {});
+                                if (selected) {
+                                  setState(() => _selectedStatus = status);
+                                  setModalState(() {});
+                                }
                               },
                               backgroundColor: colors.surface,
                               selectedColor:
-                                  colors.primary.withValues(alpha: 0.15),
-                              checkmarkColor: colors.primary,
+                                  chipColor.withValues(alpha: 0.15),
+                              checkmarkColor: chipColor,
                               side: BorderSide(
-                                color:
-                                    isSelected ? colors.primary : colors.border,
+                                color: isSelected ? chipColor : colors.border,
                               ),
                               labelStyle: TextStyle(
-                                color: isSelected
-                                    ? colors.primary
-                                    : colors.mutedFg,
+                                color: isSelected ? chipColor : colors.mutedFg,
                               ),
                             ),
                           );
-                        }),
-                      ],
+                        }).toList(),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
 
-                  // Place Filter
-                  Text(
-                    'Place',
-                    style: AppTypography.labelLarge.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colors.foreground,
+                    // Side-by-Side 3 Column Vertical Scroll Filter: Weekday | Place | Area
+                    Text(
+                      'Route Filter',
+                      style: AppTypography.labelLarge.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colors.foreground,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: ChoiceChip(
-                            label: const Text('Any'),
-                            selected: _selectedPlace == null,
-                            onSelected: (selected) {
-                              if (selected) {
-                                setState(() => _selectedPlace = null);
-                                setModalState(() {});
-                              }
-                            },
-                            backgroundColor: colors.surface,
-                            selectedColor:
-                                colors.primary.withValues(alpha: 0.15),
-                            checkmarkColor: colors.primary,
-                            side: BorderSide(
-                              color: _selectedPlace == null
-                                  ? colors.primary
-                                  : colors.border,
-                            ),
-                            labelStyle: TextStyle(
-                              color: _selectedPlace == null
-                                  ? colors.primary
-                                  : colors.mutedFg,
+                    const SizedBox(height: AppSpacing.xs),
+                    Container(
+                      height: 220,
+                      decoration: BoxDecoration(
+                        color: colors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: colors.border.withValues(alpha: 0.8)),
+                      ),
+                      child: Row(
+                        children: [
+                          // Column 1: Weekday
+                          Expanded(
+                            child: _buildFilterColumn(
+                              title: 'Weekday',
+                              items: [
+                                _FilterItem(
+                                  id: null,
+                                  name: 'Any',
+                                  isSelected: _selectedWeekday == null,
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedWeekday = null;
+                                    });
+                                    setModalState(() {});
+                                  },
+                                ),
+                                ...allWeekdays.map((w) => _FilterItem(
+                                      id: w.id,
+                                      name: w.name,
+                                      isSelected: _selectedWeekday == w.id,
+                                      onTap: () {
+                                        setState(() {
+                                          if (_selectedWeekday == w.id) {
+                                            _selectedWeekday = null;
+                                          } else {
+                                            _selectedWeekday = w.id;
+                                            if (_selectedPlace != null) {
+                                              final currentPlace = allPlaces.firstWhere(
+                                                (p) => p.id == _selectedPlace,
+                                                orElse: () => const Place(id: '', weekdayId: '', name: ''),
+                                              );
+                                              if (currentPlace.weekdayId != w.id) {
+                                                _selectedPlace = null;
+                                                _selectedArea = null;
+                                              }
+                                            }
+                                          }
+                                        });
+                                        setModalState(() {});
+                                      },
+                                    )),
+                              ],
+                              colors: colors,
                             ),
                           ),
-                        ),
-                        ...places.map((place) {
-                          final isSelected = _selectedPlace == place;
-                          final displayName = placeNameMap[place] ?? place;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: ChoiceChip(
-                              label: Text(displayName),
-                              selected: isSelected,
-                              onSelected: (selected) {
-                                setState(() {
-                                  _selectedPlace = selected ? place : null;
-                                });
-                                setModalState(() {});
-                              },
-                              backgroundColor: colors.surface,
-                              selectedColor:
-                                  colors.primary.withValues(alpha: 0.15),
-                              checkmarkColor: colors.primary,
-                              side: BorderSide(
-                                color:
-                                    isSelected ? colors.primary : colors.border,
-                              ),
-                              labelStyle: TextStyle(
-                                color: isSelected
-                                    ? colors.primary
-                                    : colors.mutedFg,
-                              ),
+                          VerticalDivider(
+                            width: 1,
+                            thickness: 1,
+                            color: colors.border.withValues(alpha: 0.5),
+                          ),
+
+                          // Column 2: Place (dynamically loaded/filtered by Weekday)
+                          Expanded(
+                            child: _buildFilterColumn(
+                              title: 'Place',
+                              items: [
+                                _FilterItem(
+                                  id: null,
+                                  name: 'Any',
+                                  isSelected: _selectedPlace == null,
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedPlace = null;
+                                    });
+                                    setModalState(() {});
+                                  },
+                                ),
+                                ...visiblePlaces.map((p) => _FilterItem(
+                                      id: p.id,
+                                      name: p.name,
+                                      isSelected: _selectedPlace == p.id,
+                                      onTap: () {
+                                        setState(() {
+                                          if (_selectedPlace == p.id) {
+                                            _selectedPlace = null;
+                                          } else {
+                                            _selectedPlace = p.id;
+                                            _selectedWeekday = p.weekdayId;
+                                            if (_selectedArea != null) {
+                                              final currentArea = allAreas.firstWhere(
+                                                (a) => a.id == _selectedArea,
+                                                orElse: () => const Area(id: '', placeId: '', name: ''),
+                                              );
+                                              if (currentArea.placeId != p.id) {
+                                                _selectedArea = null;
+                                              }
+                                            }
+                                          }
+                                        });
+                                        setModalState(() {});
+                                      },
+                                    )),
+                              ],
+                              colors: colors,
                             ),
-                          );
-                        }),
-                      ],
+                          ),
+                          VerticalDivider(
+                            width: 1,
+                            thickness: 1,
+                            color: colors.border.withValues(alpha: 0.5),
+                          ),
+
+                          // Column 3: Area (dynamically loaded/filtered by Place/Weekday)
+                          Expanded(
+                            child: _buildFilterColumn(
+                              title: 'Area',
+                              items: [
+                                _FilterItem(
+                                  id: null,
+                                  name: 'Any',
+                                  isSelected: _selectedArea == null,
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedArea = null;
+                                    });
+                                    setModalState(() {});
+                                  },
+                                ),
+                                ...visibleAreas.map((a) => _FilterItem(
+                                      id: a.id,
+                                      name: a.name,
+                                      isSelected: _selectedArea == a.id,
+                                      onTap: () {
+                                        setState(() {
+                                          if (_selectedArea == a.id) {
+                                            _selectedArea = null;
+                                          } else {
+                                            _selectedArea = a.id;
+                                            _selectedPlace = a.placeId;
+                                            final parentPlace = allPlaces.firstWhere(
+                                              (p) => p.id == a.placeId,
+                                              orElse: () => const Place(id: '', weekdayId: '', name: ''),
+                                            );
+                                            if (parentPlace.weekdayId.isNotEmpty) {
+                                              _selectedWeekday = parentPlace.weekdayId;
+                                            }
+                                          }
+                                        });
+                                        setModalState(() {});
+                                      },
+                                    )),
+                              ],
+                              colors: colors,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                ],
+                    const SizedBox(height: AppSpacing.sm),
+                  ],
+                ),
               ),
             );
           },
@@ -942,4 +967,103 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
       },
     );
   }
+
+  Widget _buildFilterColumn({
+    required String title,
+    required List<_FilterItem> items,
+    required AppColors colors,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          decoration: BoxDecoration(
+            color: colors.muted.withValues(alpha: 0.5),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+          ),
+          child: Text(
+            title,
+            style: AppTypography.labelSmall.copyWith(
+              fontWeight: FontWeight.bold,
+              color: colors.mutedFg,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const Divider(height: 1, thickness: 0.5),
+        Expanded(
+          child: items.isEmpty
+              ? Center(
+                  child: Text(
+                    'None',
+                    style: TextStyle(fontSize: 10, color: colors.mutedFg),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  itemCount: items.length,
+                  itemBuilder: (context, idx) {
+                    final item = items[idx];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 3.0),
+                      child: Material(
+                        color: item.isSelected
+                            ? colors.primary.withValues(alpha: 0.15)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(6),
+                        child: InkWell(
+                          onTap: item.onTap,
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4, vertical: 6),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: item.isSelected
+                                    ? colors.primary
+                                    : Colors.transparent,
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              item.name,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: item.isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
+                                color: item.isSelected
+                                    ? colors.primary
+                                    : colors.foreground,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FilterItem {
+  final String? id;
+  final String name;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _FilterItem({
+    required this.id,
+    required this.name,
+    required this.isSelected,
+    required this.onTap,
+  });
 }
