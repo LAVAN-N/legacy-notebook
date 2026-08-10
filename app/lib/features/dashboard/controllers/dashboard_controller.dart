@@ -1,12 +1,12 @@
 import 'dart:developer' as developer;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../data/models/activity.dart';
 import '../../../data/models/place.dart';
 import '../../../data/models/area.dart';
 import '../../../data/models/customer.dart';
 import '../../../data/models/sale.dart';
 import '../../../data/models/collection.dart';
 import '../../../data/providers.dart';
+import '../../transactions/models/transaction_item.dart';
 
 class DashboardData {
   const DashboardData({
@@ -18,7 +18,7 @@ class DashboardData {
     required this.collectedAmount,
     required this.pendingVisitsCount,
     required this.totalOutstanding,
-    required this.recentActivities,
+    required this.recentTransactions,
     required this.todayPlaces,
   });
 
@@ -30,7 +30,7 @@ class DashboardData {
   final int collectedAmount;
   final int pendingVisitsCount;
   final int totalOutstanding;
-  final List<Activity> recentActivities;
+  final List<TransactionItem> recentTransactions;
   final List<Place> todayPlaces;
 }
 
@@ -130,69 +130,87 @@ class DashboardController extends StateNotifier<AsyncValue<DashboardData>> {
       }
       final totalOutstanding = totalFinanced - totalCollected;
 
-      // 5. Build recent activities timeline in-memory
-      final List<Activity> recent = [];
-      for (final col in allCollections) {
-        final id = col.id;
-        final at = col.visitDatetime;
-        final amount = col.amount.round();
-        final reason = col.reason;
-        final collectedBy = col.collectedBy;
+      // 5. Build recent transactions timeline in-memory
+      final List<TransactionItem> recent = [];
 
-        if (col.status == 'PAYMENT') {
-          recent.add(Activity.payment(
+      String getCustomerName(String id) {
+        final c = allCustomers.firstWhere(
+          (c) => c.id == id,
+          orElse: () => Customer(
             id: id,
-            at: at,
-            amount: amount,
-            note: reason,
-            collectorName: collectedBy,
-          ));
-        } else if (col.status == 'PARTIAL_PAYMENT') {
-          recent.add(Activity.partialPayment(
-            id: id,
-            at: at,
-            amount: amount,
-            note: reason ?? '',
-            collectorName: collectedBy,
-          ));
-        } else if (col.status == 'CARRY_FORWARD') {
-          recent.add(Activity.carryForward(
-            id: id,
-            at: at,
-            note: reason ?? '',
-            collectorName: collectedBy,
-          ));
+            customerCode: 'Unknown',
+            name: 'Unknown Client',
+            phone: '',
+            address: '',
+            weekdayId: '',
+            placeId: '',
+            areaId: '',
+            status: 'ACTIVE',
+          ),
+        );
+        return c.name;
+      }
+
+      Customer? getCustomer(String id) {
+        try {
+          return allCustomers.firstWhere((c) => c.id == id);
+        } catch (_) {
+          return null;
         }
       }
 
-      for (final sale in allSales) {
-        final id = sale.id;
-        final at = sale.saleDatetime;
-        final total = sale.totalAmount;
-        final advance = sale.advanceAmount;
-        final creditAdded = sale.financedAmount;
-        final dbSaleType = sale.saleType;
-        final soldBy = sale.soldBy;
-        final remarks = sale.remarks;
-        final isLend = remarks != null && remarks.startsWith('LEND_DETAILS:');
-        final saleTypeStr = isLend ? 'LEND' : dbSaleType;
+      for (final s in allSales) {
+        final isLend = s.saleType == 'LEND' || (s.remarks != null && s.remarks!.startsWith('LEND_DETAILS:'));
+        final formattedRemarks = isLend
+            ? LendDetails.parse(s.remarks ?? '').toSimpleInfo()
+            : (s.remarks ?? '');
 
-        final items = <SaleItemDetail>[];
-
-        recent.add(Activity.sale(
-          id: id,
-          at: at,
-          items: items,
-          total: total,
-          advance: advance,
-          creditAdded: creditAdded,
-          saleType: saleTypeStr,
-          collectorName: soldBy,
-          note: remarks,
+        recent.add(TransactionItem(
+          id: s.id,
+          customerId: s.customerId,
+          customerName: getCustomerName(s.customerId),
+          customer: getCustomer(s.customerId),
+          date: s.saleDatetime,
+          type: 'SALE',
+          status: isLend ? 'LEND' : s.saleType,
+          amount: s.totalAmount,
+          subtitle: isLend
+              ? 'Cash Loan / Lend'
+              : (s.saleType == 'CREDIT'
+                  ? 'Credit Sale · Financed ₹${s.financedAmount}'
+                  : 'Ready Sale'),
+          remarks: formattedRemarks,
         ));
       }
 
-      recent.sort((a, b) => b.at.compareTo(a.at));
+      for (final c in allCollections) {
+        final col = CollectionDetails.parse(c.reason);
+        final isLend = col.target == 'LEND';
+        recent.add(TransactionItem(
+          id: c.id,
+          customerId: c.customerId,
+          customerName: getCustomerName(c.customerId),
+          customer: getCustomer(c.customerId),
+          date: c.visitDatetime,
+          type: 'COLLECTION',
+          status: isLend ? 'LEND_COLLECTION' : c.status,
+          amount: c.amount.round(),
+          subtitle: isLend
+              ? (c.status == 'PAYMENT'
+                  ? 'Loan Repayment'
+                  : (c.status == 'PARTIAL_PAYMENT'
+                      ? 'Loan Partial Repayment'
+                      : 'Loan Carry Forward'))
+              : (c.status == 'PAYMENT'
+                  ? 'Full Payment'
+                  : (c.status == 'PARTIAL_PAYMENT'
+                      ? 'Partial Payment'
+                      : 'Carry Forward')),
+          remarks: col.note,
+        ));
+      }
+
+      recent.sort((a, b) => b.date.compareTo(a.date));
       final trimmedRecent = recent.take(5).toList();
 
       state = AsyncValue.data(DashboardData(
@@ -204,7 +222,7 @@ class DashboardController extends StateNotifier<AsyncValue<DashboardData>> {
         collectedAmount: collected,
         pendingVisitsCount: pending < 0 ? 0 : pending,
         totalOutstanding: totalOutstanding,
-        recentActivities: trimmedRecent,
+        recentTransactions: trimmedRecent,
         todayPlaces: places,
       ));
       developer.log('refresh() completed with data', name: 'DashboardController');

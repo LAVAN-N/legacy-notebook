@@ -7,37 +7,11 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/loading_skeleton.dart';
 import '../../core/widgets/error_state.dart';
-import '../../core/router/routes.dart';
 import '../../core/utils/formatters.dart';
 import '../../data/models/customer.dart';
 import '../../data/providers.dart';
-
-class TransactionItem {
-  final String id;
-  final String customerId;
-  final String customerName;
-  final Customer? customer;
-  final DateTime date;
-  final String type; // 'SALE' or 'COLLECTION'
-  final String
-      status; // 'READY', 'CREDIT', 'PAYMENT', 'PARTIAL_PAYMENT', 'CARRY_FORWARD'
-  final int amount;
-  final String subtitle;
-  final String remarks;
-
-  TransactionItem({
-    required this.id,
-    required this.customerId,
-    required this.customerName,
-    this.customer,
-    required this.date,
-    required this.type,
-    required this.status,
-    required this.amount,
-    required this.subtitle,
-    required this.remarks,
-  });
-}
+import 'models/transaction_item.dart';
+import 'widgets/transaction_card.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
@@ -350,9 +324,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final List<TransactionItem> allItems = [];
 
     for (final s in sales) {
-      final isLend = s.saleType == 'LEND';
+      final isLend = s.saleType == 'LEND' || (s.remarks != null && s.remarks!.startsWith('LEND_DETAILS:'));
       final formattedRemarks = isLend
-          ? _LendDetails.parse(s.remarks ?? '').toSimpleInfo()
+          ? LendDetails.parse(s.remarks ?? '').toSimpleInfo()
           : (s.remarks ?? '');
 
       allItems.add(TransactionItem(
@@ -362,9 +336,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         customer: getCustomer(s.customerId),
         date: s.saleDatetime,
         type: 'SALE',
-        status: s.saleType,
+        status: isLend ? 'LEND' : s.saleType,
         amount: s.totalAmount,
-        subtitle: s.saleType == 'LEND'
+        subtitle: isLend
             ? 'Cash Loan / Lend'
             : (s.saleType == 'CREDIT'
                 ? 'Credit Sale · Financed ₹${s.financedAmount}'
@@ -374,7 +348,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     }
 
     for (final c in collections) {
-      final col = _CollectionDetails.parse(c.reason);
+      final col = CollectionDetails.parse(c.reason);
       final isLend = col.target == 'LEND';
       allItems.add(TransactionItem(
         id: c.id,
@@ -702,7 +676,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: AppSpacing.sm),
                     itemBuilder: (context, index) {
-                      return _TransactionCard(
+                      return TransactionCard(
                         item: filtered[index],
                         colors: colors,
                       );
@@ -714,285 +688,5 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         ],
       ),
     );
-  }
-}
-
-class _TransactionCard extends StatefulWidget {
-  final TransactionItem item;
-  final AppColors colors;
-
-  const _TransactionCard({
-    required this.item,
-    required this.colors,
-  });
-
-  @override
-  State<_TransactionCard> createState() => _TransactionCardState();
-}
-
-class _TransactionCardState extends State<_TransactionCard> {
-  bool _isExpanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final item = widget.item;
-    final colors = widget.colors;
-    final isSale = item.type == 'SALE';
-    final isPartial = item.status == 'PARTIAL_PAYMENT';
-    final isCarry = item.status == 'CARRY_FORWARD';
-
-    final isLendSale = item.status == 'LEND';
-    final isLendRepayment = item.status == 'LEND_COLLECTION';
-
-    Color statusBg;
-    Color statusFg;
-    IconData icon;
-
-    if (isLendRepayment) {
-      statusBg = colors.success.withValues(alpha: 0.08);
-      statusFg = colors.success;
-      icon = Icons.check_circle_outline;
-    } else if (isLendSale) {
-      statusBg = Colors.orange.withValues(alpha: 0.08);
-      statusFg = Colors.orange;
-      icon = Icons.handshake_outlined;
-    } else if (isSale) {
-      statusBg = colors.primary.withValues(alpha: 0.08);
-      statusFg = colors.primary;
-      icon = Icons.shopping_cart_rounded;
-    } else if (isCarry) {
-      statusBg = colors.danger.withValues(alpha: 0.08);
-      statusFg = colors.danger;
-      icon = Icons.error_outline_rounded;
-    } else if (isPartial) {
-      statusBg = colors.warning.withValues(alpha: 0.08);
-      statusFg = colors.warning;
-      icon = Icons.hourglass_bottom_rounded;
-    } else {
-      statusBg = colors.success.withValues(alpha: 0.08);
-      statusFg = colors.success;
-      icon = Icons.payments_rounded;
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border),
-      ),
-      child: InkWell(
-        onTap: () {
-          if (item.customer != null) {
-            context.push(
-              '${Routes.customer(
-                item.customer!.weekdayId,
-                item.customer!.placeId,
-                item.customer!.areaId,
-                item.customer!.id,
-              )}?source=transactions',
-            );
-          }
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: statusBg,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: statusFg, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.customerName,
-                      style: AppTypography.labelLarge.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: colors.foreground,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      item.subtitle,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: colors.mutedFg,
-                      ),
-                    ),
-                    if (item.remarks.isNotEmpty && _isExpanded) ...[
-                      const SizedBox(height: 8),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: colors.muted.withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                              color: colors.border.withValues(alpha: 0.4)),
-                        ),
-                        child: Text(
-                          item.remarks,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: colors.foreground,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(Icons.access_time_rounded,
-                            size: 14, color: colors.mutedFg),
-                        const SizedBox(width: 4),
-                        Text(
-                          relativeTime(item.date),
-                          style: AppTypography.labelSmall.copyWith(
-                            color: colors.mutedFg,
-                          ),
-                        ),
-                        if (item.remarks.isNotEmpty) ...[
-                          const Spacer(),
-                          GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () {
-                              setState(() {
-                                _isExpanded = !_isExpanded;
-                              });
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    _isExpanded ? 'Hide Note' : 'Show Note',
-                                    style: AppTypography.labelSmall.copyWith(
-                                      color: colors.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Icon(
-                                    _isExpanded
-                                        ? Icons.keyboard_arrow_up_rounded
-                                        : Icons.keyboard_arrow_down_rounded,
-                                    size: 16,
-                                    color: colors.primary,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    isCarry ? 'CF' : rupees(item.amount),
-                    style: AppTypography.currencySmall.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: isCarry
-                          ? colors.danger
-                          : (isLendRepayment
-                              ? colors.success
-                              : (isLendSale
-                                  ? Colors.orange
-                                  : (isSale ? colors.primary : colors.success))),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: statusBg,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      isLendRepayment
-                          ? 'Repayment'
-                          : (isLendSale ? 'Lend' : (isCarry ? 'Carry-Fwd' : (isSale ? 'Sale' : 'Payment'))),
-                      style: AppTypography.labelSmall.copyWith(
-                        color: statusFg,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CollectionDetails {
-  final String target;
-  final String note;
-
-  _CollectionDetails({required this.target, required this.note});
-
-  factory _CollectionDetails.parse(String? reason) {
-    if (reason == null || !reason.startsWith('COLLECTION_TARGET:')) {
-      return _CollectionDetails(target: 'SALE', note: reason ?? '');
-    }
-    try {
-      final query = reason.substring('COLLECTION_TARGET:'.length);
-      final params = Uri.splitQueryString(query);
-      return _CollectionDetails(
-        target: params['target'] ?? 'SALE',
-        note: params['note'] ?? '',
-      );
-    } catch (_) {
-      return _CollectionDetails(target: 'SALE', note: reason);
-    }
-  }
-}
-
-class _LendDetails {
-  final int principal;
-  final int charge;
-  final String note;
-
-  _LendDetails({required this.principal, required this.charge, required this.note});
-
-  factory _LendDetails.parse(String remarks) {
-    if (!remarks.startsWith('LEND_DETAILS:')) {
-      return _LendDetails(principal: 0, charge: 0, note: remarks);
-    }
-    try {
-      final query = remarks.substring('LEND_DETAILS:'.length);
-      final params = Uri.splitQueryString(query);
-      return _LendDetails(
-        principal: int.parse(params['principal'] ?? '0'),
-        charge: int.parse(params['charge'] ?? '0'),
-        note: params['note'] ?? '',
-      );
-    } catch (_) {
-      return _LendDetails(principal: 0, charge: 0, note: remarks);
-    }
-  }
-
-  String toSimpleInfo() {
-    if (principal == 0 && charge == 0) return note;
-    final notePart = note.isNotEmpty ? ' ($note)' : '';
-    return 'Principal: ${rupees(principal)} + Charge: ${rupees(charge)}$notePart';
   }
 }
