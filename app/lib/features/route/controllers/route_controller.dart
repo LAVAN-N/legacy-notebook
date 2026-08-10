@@ -3,6 +3,8 @@ import '../../../data/models/place.dart';
 import '../../../data/models/area.dart';
 import '../../../data/models/customer.dart';
 import '../../../data/models/outstanding.dart';
+import '../../../data/models/sale.dart';
+import '../../../data/models/collection.dart';
 import '../../../data/providers.dart';
 
 // Place with computed route status
@@ -28,20 +30,82 @@ class WeekdayPlacesNotifier extends AutoDisposeFamilyAsyncNotifier<List<PlacePro
   @override
   Future<List<PlaceProgress>> build(String arg) async {
     final routeRepo = ref.read(routeRepositoryProvider);
+    final customerRepo = ref.read(customerRepositoryProvider);
+    final saleRepo = ref.read(saleRepositoryProvider);
+    final collectionRepo = ref.read(collectionRepositoryProvider);
+
     final weekday = await _findWeekdayByName(arg);
     if (weekday == null) return [];
 
-    final places = await routeRepo.getPlacesByWeekday(weekday);
+    final results = await Future.wait([
+      routeRepo.getPlacesByWeekday(weekday),
+      customerRepo.getAllCustomers(),
+      saleRepo.getAllSales(),
+      collectionRepo.getAllCollections(),
+    ]);
+
+    final places = results[0] as List<Place>;
+    final allCustomers = results[1] as List<Customer>;
+    final allSales = results[2] as List<Sale>;
+    final allCollections = results[3] as List<Collection>;
+
+    final today = DateTime.now();
+
+    // Map customers by place
+    final Map<String, List<Customer>> customersByPlace = {};
+    for (final c in allCustomers) {
+      customersByPlace.putIfAbsent(c.placeId, () => []).add(c);
+    }
+
+    // Map sales by customer
+    final Map<String, List<Sale>> salesByCustomer = {};
+    for (final s in allSales) {
+      salesByCustomer.putIfAbsent(s.customerId, () => []).add(s);
+    }
+
+    // Map collections by customer
+    final Map<String, List<Collection>> collectionsByCustomer = {};
+    for (final col in allCollections) {
+      collectionsByCustomer.putIfAbsent(col.customerId, () => []).add(col);
+    }
+
     final List<PlaceProgress> list = [];
 
     for (final p in places) {
-      final customersCount = await routeRepo.getCustomerCountForPlace(p.id);
-      final expected = await routeRepo.getExpectedCollectionForPlace(p.id);
-      final collected = await routeRepo.getActualCollectionForPlace(p.id);
+      final placeCusts = customersByPlace[p.id] ?? [];
+      int expected = 0;
+      int collected = 0;
+
+      for (final c in placeCusts) {
+        final custSales = salesByCustomer[c.id] ?? [];
+        final custCollections = collectionsByCustomer[c.id] ?? [];
+
+        int financed = 0;
+        for (final s in custSales) {
+          financed += s.financedAmount;
+        }
+
+        int custTotalCollected = 0;
+        for (final col in custCollections) {
+          if (col.status == 'PAYMENT' || col.status == 'PARTIAL_PAYMENT') {
+            custTotalCollected += col.amount.round();
+          }
+          if (col.visitDatetime.year == today.year &&
+              col.visitDatetime.month == today.month &&
+              col.visitDatetime.day == today.day &&
+              (col.status == 'PAYMENT' || col.status == 'PARTIAL_PAYMENT')) {
+            collected += col.amount.round();
+          }
+        }
+        final outstanding = financed - custTotalCollected;
+        if (outstanding > 0) {
+          expected += outstanding;
+        }
+      }
 
       list.add(PlaceProgress(
         place: p,
-        customerCount: customersCount,
+        customerCount: placeCusts.length,
         expectedAmount: expected,
         collectedAmount: collected,
       ));
@@ -83,17 +147,81 @@ class PlaceAreasNotifier extends AutoDisposeFamilyAsyncNotifier<List<AreaProgres
   @override
   Future<List<AreaProgress>> build(String arg) async {
     final routeRepo = ref.read(routeRepositoryProvider);
-    final areas = await routeRepo.getAreasByPlace(arg);
+    final customerRepo = ref.read(customerRepositoryProvider);
+    final saleRepo = ref.read(saleRepositoryProvider);
+    final collectionRepo = ref.read(collectionRepositoryProvider);
+
+    final results = await Future.wait([
+      routeRepo.getAreasByPlace(arg),
+      customerRepo.getAllCustomers(),
+      saleRepo.getAllSales(),
+      collectionRepo.getAllCollections(),
+    ]);
+
+    final areas = results[0] as List<Area>;
+    final allCustomers = results[1] as List<Customer>;
+    final allSales = results[2] as List<Sale>;
+    final allCollections = results[3] as List<Collection>;
+
+    final today = DateTime.now();
+
+    // Map customers by area
+    final Map<String, List<Customer>> customersByArea = {};
+    for (final c in allCustomers) {
+      if (c.placeId == arg) {
+        customersByArea.putIfAbsent(c.areaId, () => []).add(c);
+      }
+    }
+
+    // Map sales by customer
+    final Map<String, List<Sale>> salesByCustomer = {};
+    for (final s in allSales) {
+      salesByCustomer.putIfAbsent(s.customerId, () => []).add(s);
+    }
+
+    // Map collections by customer
+    final Map<String, List<Collection>> collectionsByCustomer = {};
+    for (final col in allCollections) {
+      collectionsByCustomer.putIfAbsent(col.customerId, () => []).add(col);
+    }
+
     final List<AreaProgress> list = [];
 
     for (final a in areas) {
-      final customersCount = await routeRepo.getCustomerCountForArea(a.id);
-      final expected = await routeRepo.getExpectedCollectionForArea(a.id);
-      final collected = await routeRepo.getActualCollectionForArea(a.id);
+      final areaCusts = customersByArea[a.id] ?? [];
+      int expected = 0;
+      int collected = 0;
+
+      for (final c in areaCusts) {
+        final custSales = salesByCustomer[c.id] ?? [];
+        final custCollections = collectionsByCustomer[c.id] ?? [];
+
+        int financed = 0;
+        for (final s in custSales) {
+          financed += s.financedAmount;
+        }
+
+        int custTotalCollected = 0;
+        for (final col in custCollections) {
+          if (col.status == 'PAYMENT' || col.status == 'PARTIAL_PAYMENT') {
+            custTotalCollected += col.amount.round();
+          }
+          if (col.visitDatetime.year == today.year &&
+              col.visitDatetime.month == today.month &&
+              col.visitDatetime.day == today.day &&
+              (col.status == 'PAYMENT' || col.status == 'PARTIAL_PAYMENT')) {
+            collected += col.amount.round();
+          }
+        }
+        final outstanding = financed - custTotalCollected;
+        if (outstanding > 0) {
+          expected += outstanding;
+        }
+      }
 
       list.add(AreaProgress(
         area: a,
-        customerCount: customersCount,
+        customerCount: areaCusts.length,
         expectedAmount: expected,
         collectedAmount: collected,
       ));
@@ -125,21 +253,96 @@ class AreaCustomersNotifier extends AutoDisposeFamilyAsyncNotifier<List<Customer
   @override
   Future<List<CustomerProgress>> build(String arg) async {
     final customerRepo = ref.read(customerRepositoryProvider);
+    final saleRepo = ref.read(saleRepositoryProvider);
     final collectionRepo = ref.read(collectionRepositoryProvider);
 
-    final customers = await customerRepo.getCustomersByArea(arg);
+    final results = await Future.wait([
+      customerRepo.getCustomersByArea(arg),
+      saleRepo.getAllSales(),
+      collectionRepo.getAllCollections(),
+    ]);
+
+    final customers = results[0] as List<Customer>;
+    final allSales = results[1] as List<Sale>;
+    final allCollections = results[2] as List<Collection>;
+
+    final today = DateTime.now();
+
+    // Map sales by customer
+    final Map<String, List<Sale>> salesByCustomer = {};
+    for (final s in allSales) {
+      salesByCustomer.putIfAbsent(s.customerId, () => []).add(s);
+    }
+
+    // Map collections by customer
+    final Map<String, List<Collection>> collectionsByCustomer = {};
+    for (final col in allCollections) {
+      collectionsByCustomer.putIfAbsent(col.customerId, () => []).add(col);
+    }
+
     final List<CustomerProgress> list = [];
 
     for (final c in customers) {
-      final outstanding = await customerRepo.getCustomerOutstanding(c.id);
-      final collections = await collectionRepo.getCollectionsForCustomerToday(c.id);
-      final isVisited = collections.isNotEmpty;
-      final lastStatus = isVisited ? collections.last.status : null;
+      final custSales = salesByCustomer[c.id] ?? [];
+      final custCollections = collectionsByCustomer[c.id] ?? [];
+
+      int totalFinanced = 0;
+      int totalLendFinanced = 0;
+      int totalSaleFinanced = 0;
+
+      for (final s in custSales) {
+        final amount = s.financedAmount;
+        final isLend = s.saleType.toUpperCase() == 'LEND' || (s.remarks != null && s.remarks!.startsWith('LEND_DETAILS:'));
+        totalFinanced += amount;
+        if (isLend) {
+          totalLendFinanced += amount;
+        } else {
+          totalSaleFinanced += amount;
+        }
+      }
+
+      int totalCollected = 0;
+      int totalLendCollected = 0;
+      int totalSaleCollected = 0;
+      bool isVisitedToday = false;
+      String? lastStatus;
+
+      for (final col in custCollections) {
+        final isPayment = col.status == 'PAYMENT' || col.status == 'PARTIAL_PAYMENT';
+        if (isPayment) {
+          final amount = col.amount.round();
+          final isLend = col.reason != null && col.reason!.startsWith('COLLECTION_TARGET:target=LEND');
+          totalCollected += amount;
+          if (isLend) {
+            totalLendCollected += amount;
+          } else {
+            totalSaleCollected += amount;
+          }
+        }
+
+        if (col.visitDatetime.year == today.year &&
+            col.visitDatetime.month == today.month &&
+            col.visitDatetime.day == today.day) {
+          isVisitedToday = true;
+          lastStatus = col.status;
+        }
+      }
+
+      final outstanding = Outstanding(
+        customerId: c.id,
+        totalFinanced: totalFinanced,
+        totalCollected: totalCollected,
+        outstandingAmount: totalFinanced - totalCollected,
+        totalLendFinanced: totalLendFinanced,
+        totalLendCollected: totalLendCollected,
+        totalSaleFinanced: totalSaleFinanced,
+        totalSaleCollected: totalSaleCollected,
+      );
 
       list.add(CustomerProgress(
         customer: c,
         outstanding: outstanding,
-        isVisitedToday: isVisited,
+        isVisitedToday: isVisitedToday,
         lastCollectionStatus: lastStatus,
       ));
     }
