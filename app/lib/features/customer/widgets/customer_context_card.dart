@@ -14,7 +14,11 @@ import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-class CustomerContextCard extends StatelessWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../controllers/customer_controller.dart';
+import '../../dashboard/controllers/dashboard_controller.dart';
+
+class CustomerContextCard extends ConsumerWidget {
   const CustomerContextCard({
     super.key,
     required this.customer,
@@ -89,7 +93,7 @@ class CustomerContextCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final statusColor = _getStatusColor(customer.status, colors);
 
@@ -193,8 +197,12 @@ class CustomerContextCard extends StatelessWidget {
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   icon: Icon(Icons.edit, size: 20, color: colors.primary),
-                  onPressed: () {
-                    context.push('${Routes.newClient}?source=client_card', extra: customer);
+                  onPressed: () async {
+                    await context.push('${Routes.newClient}?source=client_card', extra: customer);
+                    if (context.mounted) {
+                      ref.invalidate(customerDetailControllerProvider(customer.id));
+                      ref.invalidate(dashboardControllerProvider);
+                    }
                   },
                 ),
               ],

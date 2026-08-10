@@ -1258,6 +1258,18 @@ Read before starting. Never edit past entries.
 - **Rule for next agent:** ALWAYS use the unified `AppScaffold` widget for skeleton loading and error states instead of custom raw `Scaffold`s to ensure consistent navigation and back-behavior.
 - **Guardrail:** Check `loading` and `error` parameters in `AsyncValue.when` handlers to ensure they return `AppScaffold`.
 
+---
+
+### 2026-08-10 · Stale provider data when returning from pushed child screens
+
+- **Context:** Customer details screen outstanding, timeline, and profile were not auto-refreshing after completing a new sale, collection, or editing customer details.
+- **Mistake:** Navigated to child modal routes using `context.push` without invalidating `customerDetailControllerProvider` and `dashboardControllerProvider` in controller save methods or on push completion.
+- **Root cause:** Because `CustomerDetailScreen` remains mounted underneath the pushed route, `AutoDispose` does not trigger a teardown or re-run `build()`.
+- **Fix applied:** (1) Added `_ref.invalidate(customerDetailControllerProvider(id))` and `_ref.invalidate(dashboardControllerProvider)` to `saveSale()`, `saveCollection()`, and `updateCustomer()`. (2) Awaited `context.push(...)` in `customer_detail_screen.dart` and `customer_context_card.dart`, calling `ref.invalidate(...)` on return.
+- **Rule for next agent:** ALWAYS invalidate parent controller providers upon completing write operations and upon returning from `await context.push(...)`.
+- **Guardrail:** Verify `ref.invalidate` calls after `context.push` in detail screens.
+
+
 
 
 

@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '/data/models/customer.dart';
-import '/data/models/outstanding.dart';
-import '/data/providers.dart';
+import '../../../data/models/customer.dart';
+import '../../../data/models/outstanding.dart';
+import '../../../data/providers.dart';
+import '../../customer/controllers/customer_controller.dart';
+import '../../dashboard/controllers/dashboard_controller.dart';
 
 class CollectScreenState {
   const CollectScreenState({
@@ -211,6 +213,10 @@ class CollectController extends StateNotifier<CollectScreenState> {
         collectedBy: 'Owner',
         customDate: state.selectedDate,
       );
+
+      _ref.invalidate(customerDetailControllerProvider(_customerId));
+      _ref.invalidate(dashboardControllerProvider);
+
       state = state.copyWith(isSaving: false);
       return true;
     } catch (e) {
