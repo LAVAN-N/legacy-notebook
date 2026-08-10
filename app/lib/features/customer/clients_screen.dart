@@ -553,7 +553,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        'Place ${c.placeId} · Area ${c.areaId}',
+                                        c.customerCode,
                                         style: AppTypography.bodySmall.copyWith(
                                           color: colors.mutedFg,
                                         ),
