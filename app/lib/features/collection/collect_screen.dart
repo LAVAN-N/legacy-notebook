@@ -128,9 +128,13 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
 
     // Update text fields if notifier defaults them
     ref.listen(collectControllerProvider(widget.customerId), (prev, next) {
-      if (prev?.status != next.status || prev?.collectionTarget != next.collectionTarget) {
+      if (prev?.status != next.status || 
+          prev?.collectionTarget != next.collectionTarget ||
+          (prev?.amount != next.amount && (_amountController.text == '0' || _amountController.text.isEmpty || prev?.amount == 0))) {
         _amountController.text = next.amount.toString();
-        _notesController.clear();
+        if (prev?.status != next.status || prev?.collectionTarget != next.collectionTarget) {
+          _notesController.clear();
+        }
       }
     });
 

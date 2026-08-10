@@ -472,6 +472,7 @@ class NewClientController extends StateNotifier<NewClientFormState> {
         if (existing == null) {
           throw Exception('Customer not found');
         }
+        final locUrl = state.location != null ? 'https://maps.google.com/?q=${state.location!.lat},${state.location!.lng}' : null;
         customer = existing.copyWith(
           name: state.name,
           phone: state.phone.replaceAll(RegExp(r'\D'), ''),
@@ -485,6 +486,7 @@ class NewClientController extends StateNotifier<NewClientFormState> {
           nominees: state.nominees,
           idProofs: state.idProofs,
           location: state.location,
+          locationUrl: locUrl,
           dob: state.dob.isNotEmpty ? state.dob : null,
           occupation: state.occupation.isNotEmpty ? state.occupation : null,
           notes: state.notes.isNotEmpty ? state.notes : null,
@@ -542,6 +544,7 @@ class NewClientController extends StateNotifier<NewClientFormState> {
         if (existing == null) {
           throw Exception('Customer not found');
         }
+        final locUrl = state.location != null ? 'https://maps.google.com/?q=${state.location!.lat},${state.location!.lng}' : null;
         customer = existing.copyWith(
           name: state.name,
           phone: state.phone.replaceAll(RegExp(r'\D'), ''),
@@ -555,6 +558,7 @@ class NewClientController extends StateNotifier<NewClientFormState> {
           nominees: state.nominees,
           idProofs: state.idProofs,
           location: state.location,
+          locationUrl: locUrl,
           dob: state.dob.isNotEmpty ? state.dob : null,
           occupation: state.occupation.isNotEmpty ? state.occupation : null,
           notes: state.notes.isNotEmpty ? state.notes : null,

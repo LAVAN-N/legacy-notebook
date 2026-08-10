@@ -125,10 +125,10 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     final totalCollected = customerCollections.fold<int>(0, (sum, c) => sum + c.amount.round());
 
     final totalLendFinanced = customerSales
-        .where((s) => s.saleType.toUpperCase() == 'LEND')
+        .where((s) => s.saleType.toUpperCase() == 'LEND' || (s.remarks != null && s.remarks!.startsWith('LEND_DETAILS:')))
         .fold<int>(0, (sum, s) => sum + s.financedAmount);
     final totalSaleFinanced = customerSales
-        .where((s) => s.saleType.toUpperCase() != 'LEND')
+        .where((s) => s.saleType.toUpperCase() != 'LEND' && (s.remarks == null || !s.remarks!.startsWith('LEND_DETAILS:')))
         .fold<int>(0, (sum, s) => sum + s.financedAmount);
 
     final totalLendCollected = customerCollections

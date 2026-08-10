@@ -78,6 +78,33 @@ Stream<T> watchQuery<T>({
 // ─── CustomerRepository ──────────────────────────────────────
 
 class LocalSqliteCustomerRepository implements CustomerRepository {
+  static Location? _parseLocation(dynamic lat, dynamic lng, dynamic locationUrl) {
+    if (lat != null && lng != null) {
+      final parsedLat = (lat is num) ? lat.toDouble() : double.tryParse(lat.toString());
+      final parsedLng = (lng is num) ? lng.toDouble() : double.tryParse(lng.toString());
+      if (parsedLat != null && parsedLng != null) {
+        return Location(lat: parsedLat, lng: parsedLng);
+      }
+    }
+    if (locationUrl is String && locationUrl.isNotEmpty) {
+      try {
+        final uri = Uri.parse(locationUrl);
+        final q = uri.queryParameters['q'];
+        if (q != null) {
+          final parts = q.split(',');
+          if (parts.length >= 2) {
+            final parsedLat = double.tryParse(parts[0].trim());
+            final parsedLng = double.tryParse(parts[1].trim());
+            if (parsedLat != null && parsedLng != null) {
+              return Location(lat: parsedLat, lng: parsedLng);
+            }
+          }
+        }
+      } catch (_) {}
+    }
+    return null;
+  }
+
   @override
   Stream<List<Customer>> watchAllCustomers() {
     return watchQuery(
@@ -117,9 +144,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
         landmark: map['landmark'] as String?,
         profileUrl: map['profile_url'] as String?,
         locationUrl: map['location_url'] as String?,
-        location: map['latitude'] != null && map['longitude'] != null
-            ? Location(lat: map['latitude'] as double, lng: map['longitude'] as double)
-            : null,
+        location: _parseLocation(map['latitude'], map['longitude'], map['location_url']),
         nominees: nominees,
         idProofs: idProofs,
         weekdayId: map['weekday_id'] as String,
@@ -224,11 +249,11 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
     );
 
     final lendSaleResult = await db.rawQuery(
-      'SELECT SUM(financed_amount) AS total FROM sales WHERE customer_id = ? AND sale_type = \'LEND\'',
+      'SELECT SUM(financed_amount) AS total FROM sales WHERE customer_id = ? AND (sale_type = \'LEND\' OR remarks LIKE \'LEND_DETAILS:%\')',
       [customerId],
     );
     final saleSaleResult = await db.rawQuery(
-      'SELECT SUM(financed_amount) AS total FROM sales WHERE customer_id = ? AND sale_type != \'LEND\'',
+      'SELECT SUM(financed_amount) AS total FROM sales WHERE customer_id = ? AND sale_type != \'LEND\' AND (remarks IS NULL OR remarks NOT LIKE \'LEND_DETAILS:%\')',
       [customerId],
     );
 
@@ -520,7 +545,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
       'address': customer.address,
       'landmark': customer.landmark,
       'profile_url': customer.profileUrl,
-      'location_url': customer.locationUrl,
+      'location_url': customer.locationUrl ?? (customer.location != null ? 'https://maps.google.com/?q=${customer.location!.lat},${customer.location!.lng}' : null),
       'latitude': customer.location?.lat,
       'longitude': customer.location?.lng,
       'weekday_id': customer.weekdayId,

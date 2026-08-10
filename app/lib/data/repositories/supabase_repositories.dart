@@ -79,6 +79,33 @@ Future<void> _deleteFile(String bucket, String publicUrl) async {
 class SupabaseCustomerRepository implements CustomerRepository {
   final _client = Supabase.instance.client;
 
+  static Location? _parseLocation(dynamic lat, dynamic lng, dynamic locationUrl) {
+    if (lat != null && lng != null) {
+      final parsedLat = (lat is num) ? lat.toDouble() : double.tryParse(lat.toString());
+      final parsedLng = (lng is num) ? lng.toDouble() : double.tryParse(lng.toString());
+      if (parsedLat != null && parsedLng != null) {
+        return Location(lat: parsedLat, lng: parsedLng);
+      }
+    }
+    if (locationUrl is String && locationUrl.isNotEmpty) {
+      try {
+        final uri = Uri.parse(locationUrl);
+        final q = uri.queryParameters['q'];
+        if (q != null) {
+          final parts = q.split(',');
+          if (parts.length >= 2) {
+            final parsedLat = double.tryParse(parts[0].trim());
+            final parsedLng = double.tryParse(parts[1].trim());
+            if (parsedLat != null && parsedLng != null) {
+              return Location(lat: parsedLat, lng: parsedLng);
+            }
+          }
+        }
+      } catch (_) {}
+    }
+    return null;
+  }
+
   Customer _mapToCustomer(Map<String, dynamic> map) {
     final List<dynamic> nomineeList = map['nominees'] != null
         ? (map['nominees'] is String 
@@ -108,9 +135,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
       landmark: map['landmark'] as String?,
       profileUrl: map['profile_url'] as String?,
       locationUrl: map['location_url'] as String?,
-      location: (map['latitude'] != null && map['longitude'] != null)
-          ? Location(lat: (map['latitude'] as num).toDouble(), lng: (map['longitude'] as num).toDouble())
-          : null,
+      location: _parseLocation(map['latitude'], map['longitude'], map['location_url']),
       nominees: nominees,
       idProofs: idProofs,
       weekdayId: (map['weekday_id'] as String?) ?? '',
@@ -221,7 +246,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
     // Query sales total and lend total
     final salesRes = await _client
         .from('sales')
-        .select('financed_amount, sale_type')
+        .select('financed_amount, sale_type, remarks')
         .eq('customer_id', customerId);
 
     // Query collections total and target totals
@@ -237,9 +262,12 @@ class SupabaseCustomerRepository implements CustomerRepository {
 
     for (final s in salesRes) {
       final amount = (s['financed_amount'] as num?)?.toInt() ?? 0;
-      final type = s['sale_type'] as String;
+      final type = (s['sale_type'] as String?)?.toUpperCase() ?? '';
+      final remarks = s['remarks'] as String?;
+      final isLend = type == 'LEND' || (remarks != null && remarks.startsWith('LEND_DETAILS:'));
+
       totalFinanced += amount;
-      if (type == 'LEND') {
+      if (isLend) {
         totalLendFinanced += amount;
       } else {
         totalSaleFinanced += amount;
@@ -652,6 +680,8 @@ class SupabaseCustomerRepository implements CustomerRepository {
       ));
     }
 
+    final locUrl = customer.locationUrl ?? (customer.location != null ? 'https://maps.google.com/?q=${customer.location!.lat},${customer.location!.lng}' : null);
+
     await _client.from('customers').update({
       'name': customer.name,
       'phone': customer.phone,
@@ -659,7 +689,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
       'address': customer.address,
       'landmark': customer.landmark,
       'profile_url': remoteProfileUrl,
-      'location_url': customer.locationUrl,
+      'location_url': locUrl,
       'latitude': customer.location?.lat,
       'longitude': customer.location?.lng,
       'weekday_id': customer.weekdayId,
