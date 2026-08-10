@@ -506,10 +506,11 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                                       padding: const EdgeInsets.symmetric(vertical: 8),
                                       alignment: Alignment.center,
                                       decoration: BoxDecoration(
-                                        color: isSelected ? colors.primary.withValues(alpha: 0.12) : colors.surface,
+                                        color: isSelected ? colors.primary.withValues(alpha: 0.15) : colors.surface,
                                         borderRadius: BorderRadius.circular(6),
                                         border: Border.all(
-                                          color: isSelected ? colors.primary : colors.border.withValues(alpha: 0.3),
+                                          color: isSelected ? colors.primary : colors.border.withValues(alpha: 0.8),
+                                          width: isSelected ? 1.5 : 1.0,
                                         ),
                                       ),
                                       child: Text(
@@ -583,7 +584,7 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                                   decoration: BoxDecoration(
                                     color: colors.surface,
                                     borderRadius: BorderRadius.circular(AppRadius.md),
-                                    border: Border.all(color: colors.border.withValues(alpha: 0.5)),
+                                    border: Border.all(color: colors.border.withValues(alpha: 0.9), width: 1.2),
                                   ),
                                   child: Row(
                                     children: [
@@ -742,130 +743,108 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                           ),
                         )
                       else
-                        // Event chips horizontal/vertical list: 1 single row per day showing all active type badges
+                        // Event chips horizontal/vertical list: 1 single row per day showing date, active type badges and amount
                         ...monthEvents.map((grouped) {
                           final hasReady = grouped.sales.any((s) => s.saleType.toUpperCase() == 'READY');
                           final hasCredit = grouped.sales.any((s) => s.saleType.toUpperCase() == 'CREDIT');
                           final hasLend = grouped.sales.any((s) => s.saleType.toUpperCase() == 'LEND');
 
-                          final List<String> descriptions = [];
-                          final nonLendSales = grouped.sales.where((s) => s.saleType.toUpperCase() != 'LEND');
-                          final productItems = nonLendSales.expand((s) => s.items).map((i) => '${i.productName} (x${i.quantity})').toList();
-                          if (productItems.isNotEmpty) descriptions.add(productItems.join(', '));
-                          final lendSales = grouped.sales.where((s) => s.saleType.toUpperCase() == 'LEND');
-                          if (lendSales.isNotEmpty) {
-                            descriptions.add('Cash Loan');
-                          }
-                          final summaryText = descriptions.isNotEmpty ? descriptions.join(' • ') : 'Activity';
-
                           return GestureDetector(
                             onTap: () => _showFinancialsSheet(context, grouped, colors),
                             child: Container(
                               margin: const EdgeInsets.only(bottom: 6),
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                               decoration: BoxDecoration(
                                 color: colors.surface,
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: colors.border.withValues(alpha: 0.3)),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: colors.border.withValues(alpha: 0.6), width: 1.0),
                               ),
                               child: Row(
                                 children: [
                                   // Date Chip
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
                                     decoration: BoxDecoration(
-                                      color: colors.border.withValues(alpha: 0.3),
+                                      color: colors.muted.withValues(alpha: 0.5),
                                       borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: colors.border.withValues(alpha: 0.6), width: 0.75),
                                     ),
                                     child: Text(
                                       DateFormat('dd MMM').format(grouped.date),
                                       style: AppTypography.labelSmall.copyWith(
                                         color: colors.foreground,
-                                        fontSize: 7.5,
+                                        fontSize: 8,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 10),
 
                                   // Type badges with color
                                   if (hasReady)
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: colors.success.withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(4),
-                                        border: Border.all(color: colors.success.withValues(alpha: 0.4), width: 0.5),
+                                        border: Border.all(color: colors.success.withValues(alpha: 0.5), width: 0.75),
                                       ),
                                       child: Text(
                                         'Ready',
                                         style: AppTypography.labelSmall.copyWith(
                                           color: colors.success,
-                                          fontSize: 7.5,
+                                          fontSize: 8,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
                                   if (hasCredit) ...[
-                                    if (hasReady) const SizedBox(width: 4),
+                                    if (hasReady) const SizedBox(width: 6),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: colors.danger.withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(4),
-                                        border: Border.all(color: colors.danger.withValues(alpha: 0.4), width: 0.5),
+                                        border: Border.all(color: colors.danger.withValues(alpha: 0.5), width: 0.75),
                                       ),
                                       child: Text(
                                         'Credit',
                                         style: AppTypography.labelSmall.copyWith(
                                           color: colors.danger,
-                                          fontSize: 7.5,
+                                          fontSize: 8,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
                                   ],
                                   if (hasLend) ...[
-                                    if (hasReady || hasCredit) const SizedBox(width: 4),
+                                    if (hasReady || hasCredit) const SizedBox(width: 6),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: Colors.orange.withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(4),
-                                        border: Border.all(color: Colors.orange.withValues(alpha: 0.4), width: 0.5),
+                                        border: Border.all(color: Colors.orange.withValues(alpha: 0.5), width: 0.75),
                                       ),
                                       child: Text(
                                         'Lend',
                                         style: AppTypography.labelSmall.copyWith(
                                           color: Colors.orange,
-                                          fontSize: 7.5,
+                                          fontSize: 8,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
                                   ],
-                                  const SizedBox(width: 8),
-
-                                  // Items text
-                                  Expanded(
-                                    child: Text(
-                                      summaryText,
-                                      style: AppTypography.labelSmall.copyWith(
-                                        color: colors.foreground.withValues(alpha: 0.8),
-                                        fontSize: 8,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
+                                  
+                                  const Spacer(),
 
                                   // Total amount
                                   Text(
                                     rupees(grouped.sales.fold<int>(0, (sum, s) => sum + s.total)),
                                     style: AppTypography.labelSmall.copyWith(
                                       color: colors.foreground,
-                                      fontSize: 8,
+                                      fontSize: 9,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
