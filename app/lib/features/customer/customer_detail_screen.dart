@@ -13,6 +13,7 @@ import '../../core/widgets/section_header.dart';
 import '../../core/router/routes.dart';
 import '../../data/models/activity.dart';
 import 'controllers/customer_controller.dart';
+import '../dashboard/controllers/dashboard_controller.dart';
 import 'widgets/customer_context_card.dart';
 import 'widgets/financial_summary_block.dart';
 import 'widgets/timeline_entry_tile.dart';
@@ -360,13 +361,17 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                         child: Opacity(
                           opacity: 0.85,
                           child: ElevatedButton.icon(
-                            onPressed: () {
+                            onPressed: () async {
                               final source = GoRouterState.of(context)
                                   .uri
                                   .queryParameters['source'];
                               final suffix = source != null ? '?source=$source' : '';
-                              context.push(
+                              await context.push(
                                   '${Routes.sale(widget.weekday, widget.placeId, widget.areaId, widget.customerId)}$suffix');
+                              if (mounted) {
+                                ref.invalidate(customerDetailControllerProvider(widget.customerId));
+                                ref.invalidate(dashboardControllerProvider);
+                              }
                             },
                             icon: const Icon(Icons.shopping_bag),
                             label: const Text('NEW SALE'),
@@ -383,13 +388,17 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                         child: ElevatedButton.icon(
                           onPressed: outstanding.outstandingAmount <= 0
                               ? null
-                              : () {
+                              : () async {
                                   final source = GoRouterState.of(context)
                                       .uri
                                       .queryParameters['source'];
                                   final suffix = source != null ? '?source=$source' : '';
-                                  context.push(
+                                  await context.push(
                                       '${Routes.collect(widget.weekday, widget.placeId, widget.areaId, widget.customerId)}$suffix');
+                                  if (mounted) {
+                                    ref.invalidate(customerDetailControllerProvider(widget.customerId));
+                                    ref.invalidate(dashboardControllerProvider);
+                                  }
                                 },
                           icon: const Icon(Icons.wallet_giftcard),
                           label: const Text('COLLECT'),

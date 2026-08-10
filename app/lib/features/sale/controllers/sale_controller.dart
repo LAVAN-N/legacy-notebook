@@ -3,6 +3,8 @@ import '../../../data/models/customer.dart';
 import '../../../data/models/outstanding.dart';
 import '../../../data/models/product.dart';
 import '../../../data/providers.dart';
+import '../../customer/controllers/customer_controller.dart';
+import '../../dashboard/controllers/dashboard_controller.dart';
 
 class SaleItemInput {
   SaleItemInput({
@@ -337,6 +339,9 @@ class SaleController extends StateNotifier<SaleScreenState> {
         customDate: state.selectedDate,
         lendAmount: state.isLend ? state.lendAmount : null,
       );
+
+      _ref.invalidate(customerDetailControllerProvider(_customerId));
+      _ref.invalidate(dashboardControllerProvider);
 
       state = state.copyWith(isSaving: false);
       return true;
