@@ -624,15 +624,49 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                                                     final daySales = salesMap[cellDate];
                                                     final hasSales = daySales != null;
 
-                                                    Color cellColor = colors.border.withValues(alpha: 0.12);
-                                                    if (hasSales) {
+                                                    Widget cellContent;
+                                                    if (!hasSales) {
+                                                      cellContent = Container(
+                                                        width: 12,
+                                                        height: 12,
+                                                        margin: const EdgeInsets.all(2),
+                                                        decoration: BoxDecoration(
+                                                          color: colors.border.withValues(alpha: 0.12),
+                                                          borderRadius: BorderRadius.circular(2),
+                                                          border: Border.all(
+                                                            color: colors.border.withValues(alpha: 0.1),
+                                                            width: 0.5,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    } else {
+                                                      final hasReady = daySales.sales.any((s) => s.saleType.toUpperCase() == 'READY');
+                                                      final hasCredit = daySales.sales.any((s) => s.saleType.toUpperCase() == 'CREDIT');
                                                       final hasLend = daySales.sales.any((s) => s.saleType.toUpperCase() == 'LEND');
-                                                      if (hasLend) {
-                                                        cellColor = Colors.orange;
-                                                      } else {
-                                                        final hasCredit = daySales.sales.any((s) => s.saleType.toUpperCase() == 'CREDIT');
-                                                        cellColor = hasCredit ? colors.danger : colors.success;
+
+                                                      final List<Color> activeColors = [];
+                                                      if (hasReady) activeColors.add(colors.success);
+                                                      if (hasCredit) activeColors.add(colors.danger);
+                                                      if (hasLend) activeColors.add(Colors.orange);
+
+                                                      if (activeColors.isEmpty) {
+                                                        activeColors.add(colors.success);
                                                       }
+
+                                                      cellContent = Container(
+                                                        width: 12,
+                                                        height: 12,
+                                                        margin: const EdgeInsets.all(2),
+                                                        decoration: BoxDecoration(
+                                                          borderRadius: BorderRadius.circular(2),
+                                                        ),
+                                                        clipBehavior: Clip.antiAlias,
+                                                        child: Row(
+                                                          children: activeColors
+                                                              .map((c) => Expanded(child: Container(color: c)))
+                                                              .toList(),
+                                                        ),
+                                                      );
                                                     }
 
                                                     return GestureDetector(
@@ -641,19 +675,7 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                                                           _showFinancialsSheet(context, daySales, colors);
                                                         }
                                                       },
-                                                      child: Container(
-                                                        width: 12,
-                                                        height: 12,
-                                                        margin: const EdgeInsets.all(2),
-                                                        decoration: BoxDecoration(
-                                                          color: cellColor,
-                                                          borderRadius: BorderRadius.circular(2),
-                                                          border: Border.all(
-                                                            color: hasSales ? Colors.transparent : colors.border.withValues(alpha: 0.1),
-                                                            width: 0.5,
-                                                          ),
-                                                        ),
-                                                      ),
+                                                      child: cellContent,
                                                     );
                                                   }),
                                                 ),
@@ -687,107 +709,153 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                       ),
                       const SizedBox(height: 12),
 
-                      // Section Title: Events chips list
-                      Text(
-                        'Monthly Events (${monthEvents.length})',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: colors.foreground,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 8.5,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
+                      // Flatten all sales for the selected month so each distinct activity is shown
+                      () {
+                        final List<MapEntry<GroupedSales, SaleActivity>> monthSalesList = [];
+                        for (final g in monthEvents) {
+                          for (final s in g.sales) {
+                            monthSalesList.add(MapEntry(g, s));
+                          }
+                        }
+                        monthSalesList.sort((a, b) => b.value.at.compareTo(a.value.at));
 
-                      if (monthEvents.isEmpty)
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: colors.surface.withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(AppRadius.md),
-                            border: Border.all(color: colors.border.withValues(alpha: 0.2)),
-                          ),
-                          child: Text(
-                            'No sales recorded in this month.',
-                            style: AppTypography.bodySmall.copyWith(color: colors.mutedFg),
-                          ),
-                        )
-                      else
-                        // Event chips horizontal/vertical list
-                        ...monthEvents.map((grouped) {
-                          return GestureDetector(
-                            onTap: () => _showFinancialsSheet(context, grouped, colors),
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 6),
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: colors.surface,
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: colors.border.withValues(alpha: 0.3)),
-                              ),
-                              child: Row(
-                                children: [
-                                  // Date Chip
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: colors.border.withValues(alpha: 0.3),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      DateFormat('dd MMM').format(grouped.date),
-                                      style: AppTypography.labelSmall.copyWith(
-                                        color: colors.foreground,
-                                        fontSize: 7.5,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  // Indicator dot
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: BoxDecoration(
-                                      color: grouped.saleType.toUpperCase() == 'LEND'
-                                          ? Colors.orange
-                                          : (grouped.saleType.toUpperCase() == 'CREDIT'
-                                              ? colors.danger
-                                              : colors.success),
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  // Items text
-                                  Expanded(
-                                    child: Text(
-                                      grouped.saleType.toUpperCase() == 'LEND'
-                                          ? 'Cash Loan / Lend'
-                                          : grouped.sales.expand((s) => s.items).map((i) => i.productName).join(', '),
-                                      style: AppTypography.labelSmall.copyWith(
-                                        color: colors.foreground.withValues(alpha: 0.8),
-                                        fontSize: 8,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  // Total amount
-                                  Text(
-                                    rupees(grouped.sales.fold<int>(0, (sum, s) => sum + s.total)),
-                                    style: AppTypography.labelSmall.copyWith(
-                                      color: colors.foreground,
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Monthly Activities (${monthSalesList.length})',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: colors.foreground,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 8.5,
                               ),
                             ),
-                          );
-                        }),
+                            const SizedBox(height: 8),
+
+                            if (monthSalesList.isEmpty)
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: colors.surface.withValues(alpha: 0.3),
+                                  borderRadius: BorderRadius.circular(AppRadius.md),
+                                  border: Border.all(color: colors.border.withValues(alpha: 0.2)),
+                                ),
+                                child: Text(
+                                  'No sales recorded in this month.',
+                                  style: AppTypography.bodySmall.copyWith(color: colors.mutedFg),
+                                ),
+                              )
+                            else
+                              ...monthSalesList.map((entry) {
+                                final grouped = entry.key;
+                                final sale = entry.value;
+                                final isLend = sale.saleType.toUpperCase() == 'LEND';
+                                final isCredit = sale.saleType.toUpperCase() == 'CREDIT';
+                                final typeColor = isLend
+                                    ? Colors.orange
+                                    : (isCredit ? colors.danger : colors.success);
+                                final typeLabel = isLend
+                                    ? 'Lend'
+                                    : (isCredit ? 'Credit' : 'Ready');
+
+                                final itemsTitle = isLend
+                                    ? (sale.note != null && sale.note!.isNotEmpty
+                                        ? 'Cash Loan / Lend (${sale.note})'
+                                        : 'Cash Loan / Lend')
+                                    : (sale.items.isNotEmpty
+                                        ? sale.items
+                                            .map((i) => '${i.productName} (x${i.quantity})')
+                                            .join(', ')
+                                        : 'Product Sale');
+
+                                return GestureDetector(
+                                  onTap: () => _showFinancialsSheet(context, grouped, colors),
+                                  child: Container(
+                                    margin: const EdgeInsets.only(bottom: 6),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: colors.surface,
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(color: colors.border.withValues(alpha: 0.3)),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        // Date Chip
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: colors.border.withValues(alpha: 0.3),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            DateFormat('dd MMM').format(sale.at),
+                                            style: AppTypography.labelSmall.copyWith(
+                                              color: colors.foreground,
+                                              fontSize: 7.5,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        // Indicator dot
+                                        Container(
+                                          width: 6,
+                                          height: 6,
+                                          decoration: BoxDecoration(
+                                            color: typeColor,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        // Type badge
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                          decoration: BoxDecoration(
+                                            color: typeColor.withValues(alpha: 0.12),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            typeLabel,
+                                            style: AppTypography.labelSmall.copyWith(
+                                              color: typeColor,
+                                              fontSize: 7.5,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        // Items text
+                                        Expanded(
+                                          child: Text(
+                                            itemsTitle,
+                                            style: AppTypography.labelSmall.copyWith(
+                                              color: colors.foreground.withValues(alpha: 0.8),
+                                              fontSize: 8,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        // Total amount
+                                        Text(
+                                          rupees(sale.total),
+                                          style: AppTypography.labelSmall.copyWith(
+                                            color: colors.foreground,
+                                            fontSize: 8,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }),
+                          ],
+                        );
+                      }(),
                     ],
                   );
                 },
