@@ -16,6 +16,7 @@ import 'repositories/config_repository.dart';
 import 'models/category.dart';
 import 'models/place.dart';
 import 'models/area.dart';
+import 'models/weekday.dart';
 
 /// Local SQLite Repository Providers
 final localSqliteCustomerRepositoryProvider = Provider<CustomerRepository>((ref) {
@@ -151,5 +152,11 @@ final placesStreamProvider = StreamProvider<List<Place>>((ref) {
 final areasStreamProvider = StreamProvider<List<Area>>((ref) {
   final repo = ref.watch(configRepositoryProvider);
   return repo.watchAreas();
+});
+
+/// Weekdays Stream Provider
+final weekdaysStreamProvider = StreamProvider<List<Weekday>>((ref) {
+  final repo = ref.watch(routeRepositoryProvider);
+  return repo.watchWeekdays();
 });
 

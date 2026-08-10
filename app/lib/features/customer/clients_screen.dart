@@ -11,6 +11,7 @@ import '../../core/widgets/error_state.dart';
 import '../../core/router/routes.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/avatar.dart';
+import '../../data/models/weekday.dart';
 import '../../data/providers.dart';
 
 class ClientsScreen extends ConsumerStatefulWidget {
@@ -41,6 +42,8 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
     final customersAsync = ref.watch(customersStreamProvider);
     final salesAsync = ref.watch(salesStreamProvider);
     final collectionsAsync = ref.watch(collectionsStreamProvider);
+    final weekdaysAsync = ref.watch(weekdaysStreamProvider);
+    final placesAsync = ref.watch(placesStreamProvider);
 
     if (customersAsync.isLoading ||
         salesAsync.isLoading ||
@@ -75,6 +78,15 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
     final allCustomers = customersAsync.value ?? [];
     final allSales = salesAsync.value ?? [];
     final allCollections = collectionsAsync.value ?? [];
+    final allWeekdays = weekdaysAsync.value ?? [];
+    final allPlaces = placesAsync.value ?? [];
+
+    final weekdayNameMap = {for (final w in allWeekdays) w.id: w.name};
+    final placeNameMap = {for (final p in allPlaces) p.id: p.name};
+
+    String getPlaceName(String placeId) {
+      return placeNameMap[placeId] ?? placeId;
+    }
 
     // Helper to calculate total, lend, and sale outstanding
     int getOutstanding(String customerId) {
@@ -194,22 +206,19 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
     final weekdaysWithClients =
         allCustomers.map((c) => c.weekdayId).toSet().toList();
     weekdaysWithClients.sort((a, b) {
-      final daysOrder = [
-        'Monday',
-        'Tuesday',
-        'Wednesday',
-        'Thursday',
-        'Friday',
-        'Saturday',
-        'Sunday'
-      ];
-      return daysOrder.indexOf(a).compareTo(daysOrder.indexOf(b));
+      final orderA = allWeekdays.firstWhere((w) => w.id == a || w.name == a, orElse: () => Weekday(id: a, name: a, sortOrder: 99)).sortOrder;
+      final orderB = allWeekdays.firstWhere((w) => w.id == b || w.name == b, orElse: () => Weekday(id: b, name: b, sortOrder: 99)).sortOrder;
+      return orderA.compareTo(orderB);
     });
 
     // Get unique places represented by clients
     final placesWithClients =
         allCustomers.map((c) => c.placeId).toSet().toList();
-    placesWithClients.sort();
+    placesWithClients.sort((a, b) {
+      final nameA = getPlaceName(a).toLowerCase();
+      final nameB = getPlaceName(b).toLowerCase();
+      return nameA.compareTo(nameB);
+    });
 
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     final rawSafeAreaBottom = MediaQueryData.fromView(View.of(context)).padding.bottom;
@@ -351,7 +360,11 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                             : colors.mutedFg,
                       ),
                       onPressed: () => _showFiltersSheet(
-                          context, weekdaysWithClients, placesWithClients),
+                          context,
+                          weekdaysWithClients,
+                          placesWithClients,
+                          weekdayNameMap,
+                          placeNameMap),
                     ),
                   ],
                 ),
@@ -672,6 +685,8 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
     BuildContext context,
     List<String> weekdays,
     List<String> places,
+    Map<String, String> weekdayNameMap,
+    Map<String, String> placeNameMap,
   ) {
     final colors = context.colors;
     final statusOptions = ['All', 'Outstanding', 'Lend', 'Settled'];
@@ -812,10 +827,11 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                         ),
                         ...weekdays.map((day) {
                           final isSelected = _selectedWeekday == day;
+                          final displayName = weekdayNameMap[day] ?? day;
                           return Padding(
                             padding: const EdgeInsets.only(right: 8.0),
                             child: ChoiceChip(
-                              label: Text(day),
+                              label: Text(displayName),
                               selected: isSelected,
                               onSelected: (selected) {
                                 setState(() {
@@ -886,10 +902,11 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                         ),
                         ...places.map((place) {
                           final isSelected = _selectedPlace == place;
+                          final displayName = placeNameMap[place] ?? place;
                           return Padding(
                             padding: const EdgeInsets.only(right: 8.0),
                             child: ChoiceChip(
-                              label: Text('Place $place'),
+                              label: Text(displayName),
                               selected: isSelected,
                               onSelected: (selected) {
                                 setState(() {
