@@ -59,7 +59,7 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
     super.dispose();
   }
 
-  Widget _buildLegendItem(Color color, String label, AppColors colors) {
+  Widget _buildLegendItem(Color color, String label, AppColors colors, {Color? borderColor}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -69,6 +69,7 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(2),
+            border: borderColor != null ? Border.all(color: borderColor, width: 0.75) : null,
           ),
         ),
         const SizedBox(width: 4),
@@ -631,11 +632,11 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                                                         height: 12,
                                                         margin: const EdgeInsets.all(2),
                                                         decoration: BoxDecoration(
-                                                          color: colors.border.withValues(alpha: 0.12),
+                                                          color: colors.muted.withValues(alpha: 0.6),
                                                           borderRadius: BorderRadius.circular(2),
                                                           border: Border.all(
-                                                            color: colors.border.withValues(alpha: 0.1),
-                                                            width: 0.5,
+                                                            color: colors.border.withValues(alpha: 0.8),
+                                                            width: 0.75,
                                                           ),
                                                         ),
                                                       );
@@ -704,158 +705,175 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                           const SizedBox(width: 12),
                           _buildLegendItem(Colors.orange, 'Lend', colors),
                           const SizedBox(width: 12),
-                          _buildLegendItem(colors.border.withValues(alpha: 0.25), 'No Sale', colors),
+                          _buildLegendItem(
+                            colors.muted.withValues(alpha: 0.6),
+                            'No Sale',
+                            colors,
+                            borderColor: colors.border.withValues(alpha: 0.8),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 12),
 
-                      // Flatten all sales for the selected month so each distinct activity is shown
-                      () {
-                        final List<MapEntry<GroupedSales, SaleActivity>> monthSalesList = [];
-                        for (final g in monthEvents) {
-                          for (final s in g.sales) {
-                            monthSalesList.add(MapEntry(g, s));
+                      // Section Title: Events chips list
+                      Text(
+                        'Monthly Events (${monthEvents.length})',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: colors.foreground,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 8.5,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      if (monthEvents.isEmpty)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: colors.surface.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            border: Border.all(color: colors.border.withValues(alpha: 0.2)),
+                          ),
+                          child: Text(
+                            'No sales recorded in this month.',
+                            style: AppTypography.bodySmall.copyWith(color: colors.mutedFg),
+                          ),
+                        )
+                      else
+                        // Event chips horizontal/vertical list: 1 single row per day showing all active type badges
+                        ...monthEvents.map((grouped) {
+                          final hasReady = grouped.sales.any((s) => s.saleType.toUpperCase() == 'READY');
+                          final hasCredit = grouped.sales.any((s) => s.saleType.toUpperCase() == 'CREDIT');
+                          final hasLend = grouped.sales.any((s) => s.saleType.toUpperCase() == 'LEND');
+
+                          final List<String> descriptions = [];
+                          final nonLendSales = grouped.sales.where((s) => s.saleType.toUpperCase() != 'LEND');
+                          final productItems = nonLendSales.expand((s) => s.items).map((i) => '${i.productName} (x${i.quantity})').toList();
+                          if (productItems.isNotEmpty) descriptions.add(productItems.join(', '));
+                          final lendSales = grouped.sales.where((s) => s.saleType.toUpperCase() == 'LEND');
+                          if (lendSales.isNotEmpty) {
+                            descriptions.add('Cash Loan');
                           }
-                        }
-                        monthSalesList.sort((a, b) => b.value.at.compareTo(a.value.at));
+                          final summaryText = descriptions.isNotEmpty ? descriptions.join(' • ') : 'Activity';
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Monthly Activities (${monthSalesList.length})',
-                              style: AppTypography.labelSmall.copyWith(
-                                color: colors.foreground,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 8.5,
+                          return GestureDetector(
+                            onTap: () => _showFinancialsSheet(context, grouped, colors),
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: colors.surface,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: colors.border.withValues(alpha: 0.3)),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-
-                            if (monthSalesList.isEmpty)
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: colors.surface.withValues(alpha: 0.3),
-                                  borderRadius: BorderRadius.circular(AppRadius.md),
-                                  border: Border.all(color: colors.border.withValues(alpha: 0.2)),
-                                ),
-                                child: Text(
-                                  'No sales recorded in this month.',
-                                  style: AppTypography.bodySmall.copyWith(color: colors.mutedFg),
-                                ),
-                              )
-                            else
-                              ...monthSalesList.map((entry) {
-                                final grouped = entry.key;
-                                final sale = entry.value;
-                                final isLend = sale.saleType.toUpperCase() == 'LEND';
-                                final isCredit = sale.saleType.toUpperCase() == 'CREDIT';
-                                final typeColor = isLend
-                                    ? Colors.orange
-                                    : (isCredit ? colors.danger : colors.success);
-                                final typeLabel = isLend
-                                    ? 'Lend'
-                                    : (isCredit ? 'Credit' : 'Ready');
-
-                                final itemsTitle = isLend
-                                    ? (sale.note != null && sale.note!.isNotEmpty
-                                        ? 'Cash Loan / Lend (${sale.note})'
-                                        : 'Cash Loan / Lend')
-                                    : (sale.items.isNotEmpty
-                                        ? sale.items
-                                            .map((i) => '${i.productName} (x${i.quantity})')
-                                            .join(', ')
-                                        : 'Product Sale');
-
-                                return GestureDetector(
-                                  onTap: () => _showFinancialsSheet(context, grouped, colors),
-                                  child: Container(
-                                    margin: const EdgeInsets.only(bottom: 6),
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                              child: Row(
+                                children: [
+                                  // Date Chip
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: colors.surface,
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(color: colors.border.withValues(alpha: 0.3)),
+                                      color: colors.border.withValues(alpha: 0.3),
+                                      borderRadius: BorderRadius.circular(4),
                                     ),
-                                    child: Row(
-                                      children: [
-                                        // Date Chip
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: colors.border.withValues(alpha: 0.3),
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          child: Text(
-                                            DateFormat('dd MMM').format(sale.at),
-                                            style: AppTypography.labelSmall.copyWith(
-                                              color: colors.foreground,
-                                              fontSize: 7.5,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        // Indicator dot
-                                        Container(
-                                          width: 6,
-                                          height: 6,
-                                          decoration: BoxDecoration(
-                                            color: typeColor,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        // Type badge
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                                          decoration: BoxDecoration(
-                                            color: typeColor.withValues(alpha: 0.12),
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          child: Text(
-                                            typeLabel,
-                                            style: AppTypography.labelSmall.copyWith(
-                                              color: typeColor,
-                                              fontSize: 7.5,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        // Items text
-                                        Expanded(
-                                          child: Text(
-                                            itemsTitle,
-                                            style: AppTypography.labelSmall.copyWith(
-                                              color: colors.foreground.withValues(alpha: 0.8),
-                                              fontSize: 8,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        // Total amount
-                                        Text(
-                                          rupees(sale.total),
-                                          style: AppTypography.labelSmall.copyWith(
-                                            color: colors.foreground,
-                                            fontSize: 8,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
+                                    child: Text(
+                                      DateFormat('dd MMM').format(grouped.date),
+                                      style: AppTypography.labelSmall.copyWith(
+                                        color: colors.foreground,
+                                        fontSize: 7.5,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
-                                );
-                              }),
-                          ],
-                        );
-                      }(),
+                                  const SizedBox(width: 8),
+
+                                  // Type badges with color
+                                  if (hasReady)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                      decoration: BoxDecoration(
+                                        color: colors.success.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: colors.success.withValues(alpha: 0.4), width: 0.5),
+                                      ),
+                                      child: Text(
+                                        'Ready',
+                                        style: AppTypography.labelSmall.copyWith(
+                                          color: colors.success,
+                                          fontSize: 7.5,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  if (hasCredit) ...[
+                                    if (hasReady) const SizedBox(width: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                      decoration: BoxDecoration(
+                                        color: colors.danger.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: colors.danger.withValues(alpha: 0.4), width: 0.5),
+                                      ),
+                                      child: Text(
+                                        'Credit',
+                                        style: AppTypography.labelSmall.copyWith(
+                                          color: colors.danger,
+                                          fontSize: 7.5,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  if (hasLend) ...[
+                                    if (hasReady || hasCredit) const SizedBox(width: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: Colors.orange.withValues(alpha: 0.4), width: 0.5),
+                                      ),
+                                      child: Text(
+                                        'Lend',
+                                        style: AppTypography.labelSmall.copyWith(
+                                          color: Colors.orange,
+                                          fontSize: 7.5,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(width: 8),
+
+                                  // Items text
+                                  Expanded(
+                                    child: Text(
+                                      summaryText,
+                                      style: AppTypography.labelSmall.copyWith(
+                                        color: colors.foreground.withValues(alpha: 0.8),
+                                        fontSize: 8,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+
+                                  // Total amount
+                                  Text(
+                                    rupees(grouped.sales.fold<int>(0, (sum, s) => sum + s.total)),
+                                    style: AppTypography.labelSmall.copyWith(
+                                      color: colors.foreground,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
                     ],
                   );
                 },
