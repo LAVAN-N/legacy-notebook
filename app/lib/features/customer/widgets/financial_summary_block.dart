@@ -47,9 +47,12 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
     _selectedYear = now.year;
     _selectedMonth = now.month;
 
-    // Standard Jan-Dec list index for current month is now.month - 1.
-    // Item height is ~36.0. Set initial offset to scroll current month to top.
-    final initialOffset = (now.month - 1) * 36.0;
+    // Months list is ordered ascending: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] (Jan to Dec)
+    // Current month index is (now.month - 1).
+    // Each month item slot height is exactly 35.0 (30 height + 5 bottom margin).
+    // Total container height is 170.0 (5 * 35.0 - 5.0 = 170.0).
+    final initialIndex = now.month - 1;
+    final initialOffset = initialIndex * 35.0;
     _monthScrollController = ScrollController(initialScrollOffset: initialOffset);
   }
 
@@ -485,25 +488,27 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Left column: Months Vertical Scroll Filter
-                          // Left column: Months Vertical Scroll Filter
+                          // Left column: Scrollable 12 Months with 5 displayed at a time
                           SizedBox(
                             width: 52,
-                            height: 172,
+                            height: 170,
                             child: ListView.builder(
                               controller: _monthScrollController,
                               physics: const BouncingScrollPhysics(),
+                              padding: EdgeInsets.zero,
                               itemCount: 12,
                               itemBuilder: (context, index) {
-                                final month = index + 1;
+                                final month = index + 1; // 1 to 12 (Jan to Dec)
                                 final monthName = DateFormat('MMM').format(DateTime(_selectedYear, month, 1));
                                 final isSelected = month == _selectedMonth;
+                                final isLast = index == 11;
+
                                 return Padding(
-                                  padding: const EdgeInsets.only(bottom: 6.0),
+                                  padding: EdgeInsets.only(bottom: isLast ? 0 : 5.0),
                                   child: GestureDetector(
                                     onTap: () => setState(() => _selectedMonth = month),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                      height: 30,
                                       alignment: Alignment.center,
                                       decoration: BoxDecoration(
                                         color: isSelected ? colors.primary.withValues(alpha: 0.15) : colors.surface,
@@ -563,7 +568,17 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                                           ),
                                           dropdownColor: colors.surface,
                                           onChanged: (year) {
-                                            if (year != null) setState(() => _selectedYear = year);
+                                            if (year != null) {
+                                              setState(() {
+                                                _selectedYear = year;
+                                                final targetMonth = year == DateTime.now().year ? DateTime.now().month : 1;
+                                                _selectedMonth = targetMonth;
+                                                final targetIndex = targetMonth - 1;
+                                                if (_monthScrollController.hasClients) {
+                                                  _monthScrollController.jumpTo(targetIndex * 35.0);
+                                                }
+                                              });
+                                            }
                                           },
                                           items: years.map((year) {
                                             return DropdownMenuItem<int>(
@@ -743,7 +758,7 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                           ),
                         )
                       else
-                        // Event chips horizontal/vertical list: 1 single row per day showing date, active type badges and amount
+                        // Event record cards: outlined, bold date, and single hr line between date and badges
                         ...monthEvents.map((grouped) {
                           final hasReady = grouped.sales.any((s) => s.saleType.toUpperCase() == 'READY');
                           final hasCredit = grouped.sales.any((s) => s.saleType.toUpperCase() == 'CREDIT');
@@ -757,30 +772,30 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                               decoration: BoxDecoration(
                                 color: colors.surface,
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: colors.border.withValues(alpha: 0.6), width: 1.0),
+                                border: Border.all(color: colors.border.withValues(alpha: 0.7), width: 1.0),
                               ),
                               child: Row(
                                 children: [
-                                  // Date Chip
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-                                    decoration: BoxDecoration(
-                                      color: colors.muted.withValues(alpha: 0.5),
-                                      borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(color: colors.border.withValues(alpha: 0.6), width: 0.75),
-                                    ),
-                                    child: Text(
-                                      DateFormat('dd MMM').format(grouped.date),
-                                      style: AppTypography.labelSmall.copyWith(
-                                        color: colors.foreground,
-                                        fontSize: 8,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                  // Bold Date Text
+                                  Text(
+                                    DateFormat('dd MMM').format(grouped.date),
+                                    style: AppTypography.labelSmall.copyWith(
+                                      color: colors.foreground,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 9.5,
                                     ),
                                   ),
-                                  const SizedBox(width: 10),
+                                  const SizedBox(width: 8),
 
-                                  // Type badges with color
+                                  // Single HR line between date and badges only
+                                  Container(
+                                    height: 12,
+                                    width: 1,
+                                    color: colors.border.withValues(alpha: 0.7),
+                                  ),
+                                  const SizedBox(width: 8),
+
+                                  // Type badges with color (side-by-side, no dividers between badges)
                                   if (hasReady)
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -799,7 +814,7 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                                       ),
                                     ),
                                   if (hasCredit) ...[
-                                    if (hasReady) const SizedBox(width: 6),
+                                    if (hasReady) const SizedBox(width: 4),
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
@@ -818,7 +833,7 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                                     ),
                                   ],
                                   if (hasLend) ...[
-                                    if (hasReady || hasCredit) const SizedBox(width: 6),
+                                    if (hasReady || hasCredit) const SizedBox(width: 4),
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
@@ -836,16 +851,16 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                                       ),
                                     ),
                                   ],
-                                  
+
                                   const Spacer(),
 
-                                  // Total amount
+                                  // Total sum amount
                                   Text(
                                     rupees(grouped.sales.fold<int>(0, (sum, s) => sum + s.total)),
-                                    style: AppTypography.labelSmall.copyWith(
+                                    style: AppTypography.labelMedium.copyWith(
                                       color: colors.foreground,
-                                      fontSize: 9,
                                       fontWeight: FontWeight.bold,
+                                      fontSize: 10.5,
                                     ),
                                   ),
                                 ],
