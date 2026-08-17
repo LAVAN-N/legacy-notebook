@@ -41,6 +41,7 @@ mixin _$Customer {
   String? get dob => throw _privateConstructorUsedError;
   String? get occupation => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
+  int get credit => throw _privateConstructorUsedError;
 
   /// Serializes this Customer to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -76,7 +77,8 @@ abstract class $CustomerCopyWith<$Res> {
       String status,
       String? dob,
       String? occupation,
-      String? notes});
+      String? notes,
+      int credit});
 
   $LocationCopyWith<$Res>? get location;
 }
@@ -115,6 +117,7 @@ class _$CustomerCopyWithImpl<$Res, $Val extends Customer>
     Object? dob = freezed,
     Object? occupation = freezed,
     Object? notes = freezed,
+    Object? credit = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -193,6 +196,10 @@ class _$CustomerCopyWithImpl<$Res, $Val extends Customer>
           ? _value.notes
           : notes // ignore: cast_nullable_to_non_nullable
               as String?,
+      credit: null == credit
+          ? _value.credit
+          : credit // ignore: cast_nullable_to_non_nullable
+              as int,
     ) as $Val);
   }
 
@@ -238,7 +245,8 @@ abstract class _$$CustomerImplCopyWith<$Res>
       String status,
       String? dob,
       String? occupation,
-      String? notes});
+      String? notes,
+      int credit});
 
   @override
   $LocationCopyWith<$Res>? get location;
@@ -276,6 +284,7 @@ class __$$CustomerImplCopyWithImpl<$Res>
     Object? dob = freezed,
     Object? occupation = freezed,
     Object? notes = freezed,
+    Object? credit = null,
   }) {
     return _then(_$CustomerImpl(
       id: null == id
@@ -354,6 +363,10 @@ class __$$CustomerImplCopyWithImpl<$Res>
           ? _value.notes
           : notes // ignore: cast_nullable_to_non_nullable
               as String?,
+      credit: null == credit
+          ? _value.credit
+          : credit // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }
@@ -380,7 +393,8 @@ class _$CustomerImpl implements _Customer {
       required this.status,
       this.dob,
       this.occupation,
-      this.notes})
+      this.notes,
+      this.credit = 0})
       : _nominees = nominees,
         _idProofs = idProofs;
 
@@ -441,10 +455,13 @@ class _$CustomerImpl implements _Customer {
   final String? occupation;
   @override
   final String? notes;
+  @override
+  @JsonKey()
+  final int credit;
 
   @override
   String toString() {
-    return 'Customer(id: $id, customerCode: $customerCode, name: $name, phone: $phone, alternatePhone: $alternatePhone, address: $address, landmark: $landmark, profileUrl: $profileUrl, locationUrl: $locationUrl, location: $location, nominees: $nominees, idProofs: $idProofs, weekdayId: $weekdayId, placeId: $placeId, areaId: $areaId, status: $status, dob: $dob, occupation: $occupation, notes: $notes)';
+    return 'Customer(id: $id, customerCode: $customerCode, name: $name, phone: $phone, alternatePhone: $alternatePhone, address: $address, landmark: $landmark, profileUrl: $profileUrl, locationUrl: $locationUrl, location: $location, nominees: $nominees, idProofs: $idProofs, weekdayId: $weekdayId, placeId: $placeId, areaId: $areaId, status: $status, dob: $dob, occupation: $occupation, notes: $notes, credit: $credit)';
   }
 
   @override
@@ -478,7 +495,8 @@ class _$CustomerImpl implements _Customer {
             (identical(other.dob, dob) || other.dob == dob) &&
             (identical(other.occupation, occupation) ||
                 other.occupation == occupation) &&
-            (identical(other.notes, notes) || other.notes == notes));
+            (identical(other.notes, notes) || other.notes == notes) &&
+            (identical(other.credit, credit) || other.credit == credit));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -503,7 +521,8 @@ class _$CustomerImpl implements _Customer {
         status,
         dob,
         occupation,
-        notes
+        notes,
+        credit
       ]);
 
   /// Create a copy of Customer
@@ -542,7 +561,8 @@ abstract class _Customer implements Customer {
       required final String status,
       final String? dob,
       final String? occupation,
-      final String? notes}) = _$CustomerImpl;
+      final String? notes,
+      final int credit}) = _$CustomerImpl;
 
   factory _Customer.fromJson(Map<String, dynamic> json) =
       _$CustomerImpl.fromJson;
@@ -586,6 +606,8 @@ abstract class _Customer implements Customer {
   String? get occupation;
   @override
   String? get notes;
+  @override
+  int get credit;
 
   /// Create a copy of Customer
   /// with the given fields replaced by the non-null parameter values.

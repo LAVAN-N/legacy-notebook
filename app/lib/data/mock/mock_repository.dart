@@ -12,6 +12,7 @@ import '../models/area.dart';
 import '../models/collection.dart';
 import '../models/product.dart';
 import '../models/sale.dart';
+import '../models/sale_item.dart';
 import '../models/location.dart';
 import '../models/nominee.dart';
 import '../models/id_proof.dart';
@@ -30,6 +31,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     _products = List.from(mockProductsList);
     _places = List.from(mockPlacesList);
     _areas = List.from(mockAreasList);
+    _saleItems = [];
     _syncController();
   }
 
@@ -41,6 +43,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   late List<Product> _products;
   late List<Place> _places;
   late List<Area> _areas;
+  late List<SaleItem> _saleItems;
 
   final _updateController = StreamController<void>.broadcast();
 
@@ -651,21 +654,54 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     }
  
     final totalSaleAmount = total - discount + creditCharge;
-    final creditAdded = totalSaleAmount - advanceAmount;
+
+    // Apply customer credit if available
+    final customerIndex = _customers.indexWhere((c) => c.id == customerId);
+    int creditUsed = 0;
+    if (customerIndex != -1) {
+      final cust = _customers[customerIndex];
+      final currentCredit = cust.credit;
+      creditUsed = currentCredit < totalSaleAmount ? currentCredit : totalSaleAmount;
+      if (creditUsed > 0) {
+        _customers[customerIndex] = cust.copyWith(credit: currentCredit - creditUsed);
+      }
+    }
+
+    final finalAdvanceAmount = advanceAmount + creditUsed;
+    final finalFinancedAmount = totalSaleAmount - finalAdvanceAmount < 0 ? 0 : totalSaleAmount - finalAdvanceAmount;
+    final finalSaleType = lendAmount != null ? 'LEND' : (finalFinancedAmount == 0 ? 'READY' : 'CREDIT');
  
     final sale = Sale(
       id: UuidUtils.generate(),
       customerId: customerId,
       saleDatetime: customDate ?? DateTime.now(),
-      saleType: lendAmount != null ? 'LEND' : (creditAdded == 0 ? 'READY' : 'CREDIT'),
+      saleType: finalSaleType,
       totalAmount: totalSaleAmount,
-      advanceAmount: advanceAmount,
-      financedAmount: creditAdded,
+      advanceAmount: finalAdvanceAmount,
+      financedAmount: finalFinancedAmount,
       soldBy: soldBy,
-      remarks: remarks,
+      remarks: creditUsed > 0 
+          ? '${remarks ?? ""}\n(Credit used: ₹$creditUsed)'.trim() 
+          : remarks,
     );
 
     _sales.add(sale);
+
+    // Save mock sale items
+    if (lendAmount == null) {
+      for (final item in items) {
+        _saleItems.add(SaleItem(
+          id: UuidUtils.generate(),
+          saleId: sale.id,
+          productId: item['productId'] as String,
+          quantity: item['quantity'] as int,
+          unitPrice: item['unitPrice'] as int,
+          totalPrice: (item['quantity'] as int) * (item['unitPrice'] as int),
+          status: 'purchased',
+        ));
+      }
+    }
+
     _ref.read(syncProvider.notifier).incrementPending();
     AppHaptics.mediumImpact();
     _syncController();
@@ -674,6 +710,62 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   @override
   Future<void> undoSale(String saleId) async {
     _sales.removeWhere((s) => s.id == saleId);
+    _saleItems.removeWhere((si) => si.saleId == saleId);
+    _syncController();
+  }
+
+  @override
+  Future<List<SaleItem>> getSaleItemsForCustomer(String customerId) async {
+    final customerSales = _sales.where((s) => s.customerId == customerId).map((s) => s.id).toSet();
+    return _saleItems.where((si) => customerSales.contains(si.saleId)).toList();
+  }
+
+  @override
+  Future<void> returnProduct({
+    required String saleItemId,
+    required int collectedAmount,
+    required String processedBy,
+  }) async {
+    final itemIndex = _saleItems.indexWhere((si) => si.id == saleItemId);
+    if (itemIndex == -1) return;
+    final item = _saleItems[itemIndex];
+    _saleItems[itemIndex] = item.copyWith(status: 'returned');
+
+    final saleIndex = _sales.indexWhere((s) => s.id == item.saleId);
+    if (saleIndex != -1) {
+      final sale = _sales[saleIndex];
+      final customerIndex = _customers.indexWhere((c) => c.id == sale.customerId);
+      if (customerIndex != -1) {
+        final cust = _customers[customerIndex];
+        _customers[customerIndex] = cust.copyWith(credit: cust.credit + collectedAmount);
+      }
+
+      final advanceReduction = collectedAmount < sale.advanceAmount ? collectedAmount : sale.advanceAmount;
+      final financedReduction = item.totalPrice - advanceReduction;
+
+      _sales[saleIndex] = sale.copyWith(
+        totalAmount: (sale.totalAmount - item.totalPrice).clamp(0, 9999999),
+        advanceAmount: (sale.advanceAmount - advanceReduction).clamp(0, 9999999),
+        financedAmount: (sale.financedAmount - financedReduction).clamp(0, 9999999),
+      );
+    }
+
+    // Restock product in catalog
+    final pIndex = _products.indexWhere((p) => p.id == item.productId);
+    if (pIndex != -1) {
+      final p = _products[pIndex];
+      _products[pIndex] = p.copyWith(stock: p.stock + item.quantity);
+    }
+
+    _syncController();
+  }
+
+  @override
+  Future<void> settleProduct(String saleItemId) async {
+    final itemIndex = _saleItems.indexWhere((si) => si.id == saleItemId);
+    if (itemIndex != -1) {
+      _saleItems[itemIndex] = _saleItems[itemIndex].copyWith(status: 'settled');
+    }
     _syncController();
   }
 

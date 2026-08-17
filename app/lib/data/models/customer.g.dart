@@ -35,6 +35,7 @@ _$CustomerImpl _$$CustomerImplFromJson(Map<String, dynamic> json) =>
       dob: json['dob'] as String?,
       occupation: json['occupation'] as String?,
       notes: json['notes'] as String?,
+      credit: (json['credit'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$$CustomerImplToJson(_$CustomerImpl instance) =>
@@ -58,4 +59,5 @@ Map<String, dynamic> _$$CustomerImplToJson(_$CustomerImpl instance) =>
       'dob': instance.dob,
       'occupation': instance.occupation,
       'notes': instance.notes,
+      'credit': instance.credit,
     };

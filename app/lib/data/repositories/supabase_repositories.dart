@@ -11,6 +11,7 @@ import '../models/area.dart';
 import '../models/collection.dart';
 import '../models/product.dart';
 import '../models/sale.dart';
+import '../models/sale_item.dart';
 import '../models/location.dart';
 import '../models/nominee.dart';
 import '../models/id_proof.dart';
@@ -1073,20 +1074,33 @@ class SupabaseSaleRepository implements SaleRepository {
       }
     }
     totalAmount = totalAmount - discount + creditCharge;
-    final financedAmount = totalAmount - advanceAmount;
-    final saleType = lendAmount != null ? 'LEND' : (financedAmount == 0 ? 'READY' : 'CREDIT');
+
+    // Fetch customer's credit from Supabase
+    final custRes = await _client.from('customers').select('credit').eq('id', customerId).single();
+    final currentCredit = custRes['credit'] as int? ?? 0;
+    final creditUsed = currentCredit < totalAmount ? currentCredit : totalAmount;
+
+    if (creditUsed > 0) {
+      await _client.from('customers').update({'credit': currentCredit - creditUsed}).eq('id', customerId);
+    }
+
+    final finalAdvanceAmount = advanceAmount + creditUsed;
+    final finalFinancedAmount = totalAmount - finalAdvanceAmount < 0 ? 0 : totalAmount - finalAdvanceAmount;
+    final finalSaleType = lendAmount != null ? 'LEND' : (finalFinancedAmount == 0 ? 'READY' : 'CREDIT');
 
     // 1. Save Sale
     await _client.from('sales').insert({
       'id': saleId,
       'customer_id': customerId,
       'sale_datetime': date.toIso8601String(),
-      'sale_type': saleType,
+      'sale_type': finalSaleType,
       'total_amount': totalAmount,
-      'advance_amount': advanceAmount,
-      'financed_amount': financedAmount,
+      'advance_amount': finalAdvanceAmount,
+      'financed_amount': finalFinancedAmount,
       'sold_by': soldBy,
-      'remarks': remarks,
+      'remarks': creditUsed > 0 
+          ? '${remarks ?? ""}\n(Credit used: ₹$creditUsed)'.trim() 
+          : remarks,
     });
 
     // 2. Save Sale Items and Inventory Transactions
@@ -1102,6 +1116,7 @@ class SupabaseSaleRepository implements SaleRepository {
         'quantity': qty,
         'unit_price': unitPrice,
         'total_price': qty * unitPrice,
+        'status': 'purchased',
       });
 
       await _client.from('inventory_transactions').insert({
@@ -1119,6 +1134,79 @@ class SupabaseSaleRepository implements SaleRepository {
   @override
   Future<void> undoSale(String saleId) async {
     await _client.from('sales').delete().eq('id', saleId);
+  }
+
+  @override
+  Future<List<SaleItem>> getSaleItemsForCustomer(String customerId) async {
+    final salesRes = await _client.from('sales').select('id').eq('customer_id', customerId);
+    final saleIds = (salesRes as List).map((s) => s['id'] as String).toList();
+    if (saleIds.isEmpty) return [];
+
+    final itemsRes = await _client.from('sale_items').select().inFilter('sale_id', saleIds);
+    return (itemsRes as List).map((map) {
+      return SaleItem.fromJson({
+        'id': map['id'],
+        'saleId': map['sale_id'],
+        'productId': map['product_id'],
+        'quantity': map['quantity'],
+        'unitPrice': map['unit_price'],
+        'totalPrice': map['total_price'],
+        'status': map['status'] ?? 'purchased',
+      });
+    }).toList();
+  }
+
+  @override
+  Future<void> returnProduct({
+    required String saleItemId,
+    required int collectedAmount,
+    required String processedBy,
+  }) async {
+    await _client.from('sale_items').update({'status': 'returned'}).eq('id', saleItemId);
+
+    final itemRes = await _client.from('sale_items').select().eq('id', saleItemId).single();
+    final saleId = itemRes['sale_id'] as String;
+    final productId = itemRes['product_id'] as String;
+    final quantity = itemRes['quantity'] as int;
+    final totalPrice = itemRes['total_price'] as int;
+
+    final saleRes = await _client.from('sales').select().eq('id', saleId).single();
+    final customerId = saleRes['customer_id'] as String;
+    final totalAmount = saleRes['total_amount'] as int;
+    final advanceAmount = saleRes['advance_amount'] as int;
+    final financedAmount = saleRes['financed_amount'] as int;
+
+    final custRes = await _client.from('customers').select('credit').eq('id', customerId).single();
+    final currentCredit = custRes['credit'] as int? ?? 0;
+    await _client.from('customers').update({'credit': currentCredit + collectedAmount}).eq('id', customerId);
+
+    final advanceReduction = collectedAmount < advanceAmount ? collectedAmount : advanceAmount;
+    final financedReduction = totalPrice - advanceReduction;
+
+    final nextTotal = (totalAmount - totalPrice).clamp(0, 9999999);
+    final nextAdvance = (advanceAmount - advanceReduction).clamp(0, 9999999);
+    final nextFinanced = (financedAmount - financedReduction).clamp(0, 9999999);
+
+    await _client.from('sales').update({
+      'total_amount': nextTotal,
+      'advance_amount': nextAdvance,
+      'financed_amount': nextFinanced,
+    }).eq('id', saleId);
+
+    await _client.from('inventory_transactions').insert({
+      'id': UuidUtils.generate(),
+      'product_id': productId,
+      'transaction_type': 'ADJUSTMENT',
+      'quantity': quantity,
+      'reference_id': saleItemId,
+      'remarks': 'Customer return adjustment',
+      'created_by': processedBy,
+    });
+  }
+
+  @override
+  Future<void> settleProduct(String saleItemId) async {
+    await _client.from('sale_items').update({'status': 'settled'}).eq('id', saleItemId);
   }
 }
 

@@ -170,9 +170,24 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                   state.customer.name,
                   style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.w700),
                 ),
-                subtitle: Text(
-                  'Current Outstanding: ${rupees(currentOutstanding)}',
-                  style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Current Outstanding: ${rupees(currentOutstanding)}',
+                      style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
+                    ),
+                    if (state.customer.credit > 0) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'Available Credit: ${rupees(state.customer.credit)}',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: colors.success,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 trailing: const Icon(Icons.edit, size: 20),
                 onTap: () {
@@ -182,6 +197,34 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
+
+            if (state.customer.credit > 0) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: colors.success.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(color: colors.success.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: colors.success, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'This customer has ${rupees(state.customer.credit)} available credit. It will be automatically applied to draw down this purchase.',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: colors.success,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
             _buildDatePickerRow(context, ref, state.selectedDate),
             const SizedBox(height: AppSpacing.md),
             _buildToggleBar(context, ref, state),

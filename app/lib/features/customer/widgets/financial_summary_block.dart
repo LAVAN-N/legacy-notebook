@@ -6,6 +6,7 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../data/models/customer.dart';
 import '../../../data/models/outstanding.dart';
 import '../../../data/models/activity.dart';
 
@@ -26,10 +27,12 @@ class FinancialSummaryBlock extends StatefulWidget {
     super.key,
     required this.outstanding,
     required this.groupedSales,
+    required this.customer,
   });
 
   final Outstanding outstanding;
   final List<GroupedSales> groupedSales;
+  final Customer customer;
 
   @override
   State<FinancialSummaryBlock> createState() => _FinancialSummaryBlockState();
@@ -469,6 +472,28 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                 ),
               ],
             ),
+            if (widget.customer.credit > 0) ...[
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'AVAILABLE CREDIT',
+                    style: AppTypography.labelMedium.copyWith(
+                      color: colors.success,
+                      letterSpacing: 0.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  AmountText(
+                    amount: widget.customer.credit,
+                    style: AppTypography.currencyLarge.copyWith(
+                      color: colors.success,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: AppSpacing.sm),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

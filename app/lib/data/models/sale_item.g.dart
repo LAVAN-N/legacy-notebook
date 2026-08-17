@@ -14,6 +14,7 @@ _$SaleItemImpl _$$SaleItemImplFromJson(Map<String, dynamic> json) =>
       quantity: (json['quantity'] as num).toInt(),
       unitPrice: (json['unitPrice'] as num).toInt(),
       totalPrice: (json['totalPrice'] as num).toInt(),
+      status: json['status'] as String? ?? 'purchased',
     );
 
 Map<String, dynamic> _$$SaleItemImplToJson(_$SaleItemImpl instance) =>
@@ -24,4 +25,5 @@ Map<String, dynamic> _$$SaleItemImplToJson(_$SaleItemImpl instance) =>
       'quantity': instance.quantity,
       'unitPrice': instance.unitPrice,
       'totalPrice': instance.totalPrice,
+      'status': instance.status,
     };

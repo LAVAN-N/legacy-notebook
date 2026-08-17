@@ -30,6 +30,7 @@ class Customer with _$Customer {
     String? dob,
     String? occupation,
     String? notes,
+    @Default(0) int credit,
   }) = _Customer;
 
   factory Customer.fromJson(Map<String, dynamic> json) => _$CustomerFromJson(json);

@@ -12,6 +12,7 @@ import '../models/place.dart';
 import '../models/area.dart';
 import '../models/collection.dart';
 import '../models/sale.dart';
+import '../models/sale_item.dart';
 import '../models/product.dart';
 import '../models/category.dart';
 import '../local/database_helper.dart';
@@ -154,6 +155,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
         dob: map['dob'] as String?,
         occupation: map['occupation'] as String?,
         notes: map['notes'] as String?,
+        credit: map['credit'] as int? ?? 0,
       ));
     }
     return results;
@@ -216,6 +218,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
       dob: map['dob'] as String?,
       occupation: map['occupation'] as String?,
       notes: map['notes'] as String?,
+      credit: map['credit'] as int? ?? 0,
     );
   }
 
@@ -555,6 +558,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
       'dob': customer.dob,
       'occupation': customer.occupation,
       'notes': customer.notes,
+      'credit': customer.credit,
       'nominees': jsonEncode(customer.nominees.map((n) => n.toJson()).toList()),
       'id_proofs': jsonEncode(customer.idProofs.map((p) => p.toJson()).toList()),
     }, where: 'id = ?', whereArgs: [customer.id]);
@@ -919,23 +923,36 @@ class LocalSqliteSaleRepository implements SaleRepository {
       throw ArgumentError('Advance amount (₹${advanceAmount / 100}) cannot exceed sale total (₹${totalAmount / 100})');
     }
 
-    final financedAmount = totalAmount - advanceAmount;
-
-    // Business Rule 3: Derived Sale Type
-    final saleType = lendAmount != null ? 'LEND' : ((financedAmount == 0) ? 'READY' : 'CREDIT');
-
     await db.transaction((txn) async {
+      final customerMaps = await txn.query('customers', where: 'id = ?', whereArgs: [customerId]);
+      if (customerMaps.isEmpty) throw Exception('Customer not found');
+      final int currentCredit = customerMaps.first['credit'] as int? ?? 0;
+
+      final creditUsed = currentCredit < totalAmount ? currentCredit : totalAmount;
+
+      if (creditUsed > 0) {
+        await txn.update('customers', {
+          'credit': currentCredit - creditUsed,
+        }, where: 'id = ?', whereArgs: [customerId]);
+      }
+
+      final finalAdvanceAmount = advanceAmount + creditUsed;
+      final finalFinancedAmount = totalAmount - finalAdvanceAmount < 0 ? 0 : totalAmount - finalAdvanceAmount;
+      final finalSaleType = lendAmount != null ? 'LEND' : ((finalFinancedAmount == 0) ? 'READY' : 'CREDIT');
+
       // Save sale
       await txn.insert('sales', {
         'id': saleId,
         'customer_id': customerId,
         'sale_datetime': (customDate ?? DateTime.now()).toIso8601String(),
-        'sale_type': saleType,
+        'sale_type': finalSaleType,
         'total_amount': totalAmount,
-        'advance_amount': advanceAmount,
-        'financed_amount': financedAmount,
+        'advance_amount': finalAdvanceAmount,
+        'financed_amount': finalFinancedAmount,
         'sold_by': soldBy,
-        'remarks': remarks,
+        'remarks': creditUsed > 0 
+            ? '${remarks ?? ""}\n(Credit used: ₹$creditUsed)'.trim() 
+            : remarks,
       });
 
       // Save sale items and log inventory transactions
@@ -980,6 +997,91 @@ class LocalSqliteSaleRepository implements SaleRepository {
     });
     TableBroadcaster.instance.notify('sales');
     TableBroadcaster.instance.notify('inventory_transactions');
+  }
+
+  @override
+  Future<List<SaleItem>> getSaleItemsForCustomer(String customerId) async {
+    final db = await DatabaseHelper.instance.database;
+    final results = await db.rawQuery('''
+      SELECT si.* 
+      FROM sale_items si
+      INNER JOIN sales s ON si.sale_id = s.id
+      WHERE s.customer_id = ?
+    ''', [customerId]);
+    return results.map((r) => SaleItem.fromJson(r)).toList();
+  }
+
+  @override
+  Future<void> returnProduct({
+    required String saleItemId,
+    required int collectedAmount,
+    required String processedBy,
+  }) async {
+    final db = await DatabaseHelper.instance.database;
+    
+    await db.transaction((txn) async {
+      final itemMaps = await txn.query('sale_items', where: 'id = ?', whereArgs: [saleItemId]);
+      if (itemMaps.isEmpty) throw Exception('Sale item not found');
+      final item = SaleItem.fromJson(itemMaps.first);
+      
+      final saleMaps = await txn.query('sales', where: 'id = ?', whereArgs: [item.saleId]);
+      if (saleMaps.isEmpty) throw Exception('Parent sale not found');
+      final saleMap = saleMaps.first;
+      final customerId = saleMap['customer_id'] as String;
+      final int totalAmount = saleMap['total_amount'] as int;
+      final int advanceAmount = saleMap['advance_amount'] as int;
+      final int financedAmount = saleMap['financed_amount'] as int;
+
+      await txn.update('sale_items', {
+        'status': 'returned',
+      }, where: 'id = ?', whereArgs: [saleItemId]);
+
+      final customerMaps = await txn.query('customers', where: 'id = ?', whereArgs: [customerId]);
+      if (customerMaps.isEmpty) throw Exception('Customer not found');
+      final int currentCredit = customerMaps.first['credit'] as int? ?? 0;
+      await txn.update('customers', {
+        'credit': currentCredit + collectedAmount,
+      }, where: 'id = ?', whereArgs: [customerId]);
+
+      await txn.insert('inventory_transactions', {
+        'id': UuidUtils.generate(),
+        'product_id': item.productId,
+        'transaction_type': 'ADJUSTMENT',
+        'quantity': item.quantity,
+        'reference_id': saleItemId,
+        'remarks': 'Customer product return',
+        'created_by': processedBy,
+      });
+
+      final advanceReduction = collectedAmount < advanceAmount ? collectedAmount : advanceAmount;
+      final financedReduction = item.totalPrice - advanceReduction;
+
+      final newTotalAmount = totalAmount - item.totalPrice < 0 ? 0 : totalAmount - item.totalPrice;
+      final newAdvanceAmount = advanceAmount - advanceReduction < 0 ? 0 : advanceAmount - advanceReduction;
+      final newFinancedAmount = financedAmount - financedReduction < 0 ? 0 : financedAmount - financedReduction;
+
+      await txn.update('sales', {
+        'total_amount': newTotalAmount,
+        'advance_amount': newAdvanceAmount,
+        'financed_amount': newFinancedAmount,
+      }, where: 'id = ?', whereArgs: [item.saleId]);
+    });
+
+    TableBroadcaster.instance.notify('sales');
+    TableBroadcaster.instance.notify('sale_items');
+    TableBroadcaster.instance.notify('customers');
+    TableBroadcaster.instance.notify('inventory_transactions');
+  }
+
+  @override
+  Future<void> settleProduct(String saleItemId) async {
+    final db = await DatabaseHelper.instance.database;
+    await db.update('sale_items', {
+      'status': 'settled',
+    }, where: 'id = ?', whereArgs: [saleItemId]);
+    
+    TableBroadcaster.instance.notify('sale_items');
+    TableBroadcaster.instance.notify('sales');
   }
 }
 

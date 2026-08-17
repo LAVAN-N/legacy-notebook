@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 11,
+      version: 12,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
@@ -98,6 +98,7 @@ class DatabaseHelper {
         created_by TEXT NOT NULL,
         nominees TEXT NOT NULL DEFAULT '[]',
         id_proofs TEXT NOT NULL DEFAULT '[]',
+        credit INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (weekday_id) REFERENCES weekdays (id)
       )
     ''');
@@ -141,6 +142,7 @@ class DatabaseHelper {
         quantity INTEGER NOT NULL DEFAULT 1,
         unit_price INTEGER NOT NULL DEFAULT 0,
         total_price INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'purchased',
         FOREIGN KEY (sale_id) REFERENCES sales (id) ON DELETE CASCADE,
         FOREIGN KEY (product_id) REFERENCES products (id)
       )

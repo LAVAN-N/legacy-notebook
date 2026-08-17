@@ -12,6 +12,7 @@ class SaleItem with _$SaleItem {
     required int quantity,
     required int unitPrice,
     required int totalPrice,
+    @Default('purchased') String status,
   }) = _SaleItem;
 
   factory SaleItem.fromJson(Map<String, dynamic> json) => _$SaleItemFromJson(json);

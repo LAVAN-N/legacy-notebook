@@ -26,6 +26,7 @@ mixin _$SaleItem {
   int get quantity => throw _privateConstructorUsedError;
   int get unitPrice => throw _privateConstructorUsedError;
   int get totalPrice => throw _privateConstructorUsedError;
+  String get status => throw _privateConstructorUsedError;
 
   /// Serializes this SaleItem to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -48,7 +49,8 @@ abstract class $SaleItemCopyWith<$Res> {
       String productId,
       int quantity,
       int unitPrice,
-      int totalPrice});
+      int totalPrice,
+      String status});
 }
 
 /// @nodoc
@@ -72,6 +74,7 @@ class _$SaleItemCopyWithImpl<$Res, $Val extends SaleItem>
     Object? quantity = null,
     Object? unitPrice = null,
     Object? totalPrice = null,
+    Object? status = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -98,6 +101,10 @@ class _$SaleItemCopyWithImpl<$Res, $Val extends SaleItem>
           ? _value.totalPrice
           : totalPrice // ignore: cast_nullable_to_non_nullable
               as int,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 }
@@ -116,7 +123,8 @@ abstract class _$$SaleItemImplCopyWith<$Res>
       String productId,
       int quantity,
       int unitPrice,
-      int totalPrice});
+      int totalPrice,
+      String status});
 }
 
 /// @nodoc
@@ -138,6 +146,7 @@ class __$$SaleItemImplCopyWithImpl<$Res>
     Object? quantity = null,
     Object? unitPrice = null,
     Object? totalPrice = null,
+    Object? status = null,
   }) {
     return _then(_$SaleItemImpl(
       id: null == id
@@ -164,6 +173,10 @@ class __$$SaleItemImplCopyWithImpl<$Res>
           ? _value.totalPrice
           : totalPrice // ignore: cast_nullable_to_non_nullable
               as int,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
@@ -177,7 +190,8 @@ class _$SaleItemImpl implements _SaleItem {
       required this.productId,
       required this.quantity,
       required this.unitPrice,
-      required this.totalPrice});
+      required this.totalPrice,
+      this.status = 'purchased'});
 
   factory _$SaleItemImpl.fromJson(Map<String, dynamic> json) =>
       _$$SaleItemImplFromJson(json);
@@ -194,10 +208,13 @@ class _$SaleItemImpl implements _SaleItem {
   final int unitPrice;
   @override
   final int totalPrice;
+  @override
+  @JsonKey()
+  final String status;
 
   @override
   String toString() {
-    return 'SaleItem(id: $id, saleId: $saleId, productId: $productId, quantity: $quantity, unitPrice: $unitPrice, totalPrice: $totalPrice)';
+    return 'SaleItem(id: $id, saleId: $saleId, productId: $productId, quantity: $quantity, unitPrice: $unitPrice, totalPrice: $totalPrice, status: $status)';
   }
 
   @override
@@ -214,13 +231,14 @@ class _$SaleItemImpl implements _SaleItem {
             (identical(other.unitPrice, unitPrice) ||
                 other.unitPrice == unitPrice) &&
             (identical(other.totalPrice, totalPrice) ||
-                other.totalPrice == totalPrice));
+                other.totalPrice == totalPrice) &&
+            (identical(other.status, status) || other.status == status));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, id, saleId, productId, quantity, unitPrice, totalPrice);
+  int get hashCode => Object.hash(runtimeType, id, saleId, productId, quantity,
+      unitPrice, totalPrice, status);
 
   /// Create a copy of SaleItem
   /// with the given fields replaced by the non-null parameter values.
@@ -245,7 +263,8 @@ abstract class _SaleItem implements SaleItem {
       required final String productId,
       required final int quantity,
       required final int unitPrice,
-      required final int totalPrice}) = _$SaleItemImpl;
+      required final int totalPrice,
+      final String status}) = _$SaleItemImpl;
 
   factory _SaleItem.fromJson(Map<String, dynamic> json) =
       _$SaleItemImpl.fromJson;
@@ -262,6 +281,8 @@ abstract class _SaleItem implements SaleItem {
   int get unitPrice;
   @override
   int get totalPrice;
+  @override
+  String get status;
 
   /// Create a copy of SaleItem
   /// with the given fields replaced by the non-null parameter values.

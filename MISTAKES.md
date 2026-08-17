@@ -1313,6 +1313,17 @@ Read before starting. Never edit past entries.
 - **Rule for next agent:** ALWAYS back Supabase stream queries with local SQLite streams and `onError` handlers so offline devices never throw unhandled `SocketException`s or lose cached data.
 - **Guardrail:** Verify that all Supabase repositories provide offline-first local SQLite fallback and stream error suppression.
 
+---
+
+### 2026-08-17 · Missing repository subclass implementations after contract updates
+
+- **Context:** Added `getSaleItemsForCustomer`, `returnProduct`, and `settleProduct` to the abstract `SaleRepository` contract.
+- **Mistake:** Left `SupabaseSaleRepository` and `MockSaleRepository` missing concrete implementations for these new methods.
+- **Root cause:** Forgot that adding methods to an abstract repository interface requires updating all concrete classes that implement it.
+- **Fix applied:** Implemented all three methods in both `MockRepository` and `SupabaseSaleRepository`.
+- **Rule for next agent:** ALWAYS implement abstract repository contract updates across all subclass implementations (local SQLite, mock repository, and Supabase repository) before executing `flutter analyze`.
+- **Guardrail:** Run `flutter analyze` immediately after updating any repository interface definitions.
+
 
 
 

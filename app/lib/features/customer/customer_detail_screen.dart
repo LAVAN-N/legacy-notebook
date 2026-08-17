@@ -11,6 +11,7 @@ import '../../core/widgets/loading_skeleton.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/app_pull_to_refresh.dart';
+import '../../core/utils/formatters.dart';
 import '../../core/router/routes.dart';
 import '../../data/models/activity.dart';
 import 'controllers/customer_controller.dart';
@@ -221,12 +222,230 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Financial Block (Merged summary + purchased products)
-                      FinancialSummaryBlock(
-                        outstanding: outstanding,
-                        groupedSales: groupedSales,
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
+                       // Financial Block (Merged summary + purchased products)
+                       FinancialSummaryBlock(
+                         outstanding: outstanding,
+                         groupedSales: groupedSales,
+                         customer: customer,
+                       ),
+                       const SizedBox(height: AppSpacing.lg),
+
+                       // Purchased Products Section
+                       Card(
+                         child: Padding(
+                           padding: const EdgeInsets.all(AppSpacing.lg),
+                           child: Column(
+                             crossAxisAlignment: CrossAxisAlignment.start,
+                             children: [
+                               Text(
+                                 'Purchased Products',
+                                 style: AppTypography.titleSmall.copyWith(
+                                   color: colors.foreground,
+                                   fontWeight: FontWeight.w700,
+                                 ),
+                               ),
+                               const SizedBox(height: AppSpacing.md),
+                               if (data.purchasedProducts.isEmpty)
+                                 Center(
+                                   child: Padding(
+                                     padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                                     child: Text(
+                                       'No purchased products found.',
+                                       style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg),
+                                     ),
+                                   ),
+                                 )
+                               else
+                                 ListView.separated(
+                                   shrinkWrap: true,
+                                   physics: const NeverScrollableScrollPhysics(),
+                                   itemCount: data.purchasedProducts.length,
+                                   separatorBuilder: (_, __) => const Divider(height: 24),
+                                   itemBuilder: (context, index) {
+                                     final item = data.purchasedProducts[index];
+                                     final isReturned = item.status == 'returned';
+                                     final isSettled = item.status == 'settled';
+                                     final isPurchased = item.status == 'purchased';
+
+                                     // Outstanding check
+                                     final double oAmount = outstanding.outstandingAmount / 100;
+                                     final canSettle = oAmount == 0.0 && isPurchased;
+
+                                     return Column(
+                                       crossAxisAlignment: CrossAxisAlignment.start,
+                                       children: [
+                                         Row(
+                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                           children: [
+                                             Expanded(
+                                               child: Column(
+                                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                                 children: [
+                                                   Text(
+                                                     item.productName,
+                                                     style: AppTypography.bodyMedium.copyWith(
+                                                       color: colors.foreground,
+                                                       fontWeight: FontWeight.bold,
+                                                       decoration: isReturned ? TextDecoration.lineThrough : null,
+                                                     ),
+                                                   ),
+                                                   const SizedBox(height: 2),
+                                                   Text(
+                                                     'SKU: ${item.productSku} • Qty: ${item.quantity}',
+                                                     style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
+                                                   ),
+                                                 ],
+                                               ),
+                                             ),
+                                             const SizedBox(width: 8),
+                                             // Status Badge
+                                             Container(
+                                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                               decoration: BoxDecoration(
+                                                 color: isReturned
+                                                     ? colors.danger.withValues(alpha: 0.1)
+                                                     : isSettled
+                                                         ? colors.success.withValues(alpha: 0.1)
+                                                         : colors.primary.withValues(alpha: 0.1),
+                                                 borderRadius: BorderRadius.circular(6),
+                                               ),
+                                               child: Text(
+                                                 item.status.toUpperCase(),
+                                                 style: AppTypography.labelSmall.copyWith(
+                                                   color: isReturned
+                                                       ? colors.danger
+                                                       : isSettled
+                                                           ? colors.success
+                                                           : colors.primary,
+                                                   fontWeight: FontWeight.bold,
+                                                   fontSize: 9,
+                                                 ),
+                                               ),
+                                             ),
+                                           ],
+                                         ),
+                                         const SizedBox(height: AppSpacing.sm),
+                                         Row(
+                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                           children: [
+                                             Column(
+                                               crossAxisAlignment: CrossAxisAlignment.start,
+                                               children: [
+                                                 Text(
+                                                   'Price: ${rupees(item.totalPrice)}',
+                                                   style: AppTypography.bodySmall.copyWith(color: colors.mutedFg),
+                                                 ),
+                                                 if (isReturned)
+                                                   Text(
+                                                     'Credit Credited: ${rupees(item.collectedAmount)}',
+                                                     style: AppTypography.bodySmall.copyWith(
+                                                       color: colors.success,
+                                                       fontWeight: FontWeight.bold,
+                                                     ),
+                                                   )
+                                                 else
+                                                   Text(
+                                                     'Collected: ${rupees(item.collectedAmount)} / ${rupees(item.totalPrice)}',
+                                                     style: AppTypography.bodySmall.copyWith(
+                                                       color: isSettled ? colors.success : colors.mutedFg,
+                                                       fontWeight: isSettled ? FontWeight.bold : null,
+                                                     ),
+                                                   ),
+                                               ],
+                                             ),
+                                             // Actions
+                                             if (isPurchased)
+                                               Row(
+                                                 children: [
+                                                   if (canSettle) ...[
+                                                     ElevatedButton(
+                                                       onPressed: () async {
+                                                         final notifier = ref.read(customerDetailControllerProvider(widget.customerId).notifier);
+                                                         await notifier.settleProduct(item.saleItemId);
+                                                         if (context.mounted) {
+                                                           ScaffoldMessenger.of(context).showSnackBar(
+                                                             SnackBar(
+                                                              content: Text('${item.productName} marked as settled.'),
+                                                              behavior: SnackBarBehavior.floating,
+                                                            ),
+                                                          );
+                                                        }
+                                                      },
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor: colors.success,
+                                                        foregroundColor: Colors.white,
+                                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                        minimumSize: Size.zero,
+                                                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                      ),
+                                                      child: const Text('Settle', style: TextStyle(fontSize: 10)),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                   ],
+                                                   OutlinedButton(
+                                                     onPressed: () {
+                                                       showDialog(
+                                                         context: context,
+                                                         builder: (ctx) => AlertDialog(
+                                                           title: const Text('Return Product'),
+                                                           content: Text(
+                                                             'Confirm returning ${item.productName}?\n\nThis will add the collected amount so far (${rupees(item.collectedAmount)}) to the customer\'s credit balance, and restock the product.',
+                                                           ),
+                                                           actions: [
+                                                             TextButton(
+                                                               onPressed: () => Navigator.pop(ctx),
+                                                               child: const Text('Cancel'),
+                                                             ),
+                                                             ElevatedButton(
+                                                               onPressed: () async {
+                                                                 Navigator.pop(ctx);
+                                                                 final notifier = ref.read(customerDetailControllerProvider(widget.customerId).notifier);
+                                                                 await notifier.returnProduct(
+                                                                   item.saleItemId,
+                                                                   item.collectedAmount,
+                                                                   'Owner',
+                                                                 );
+                                                                 if (context.mounted) {
+                                                                   ScaffoldMessenger.of(context).showSnackBar(
+                                                                     SnackBar(
+                                                                       content: Text('${item.productName} returned successfully. Credit added.'),
+                                                                       behavior: SnackBarBehavior.floating,
+                                                                     ),
+                                                                   );
+                                                                 }
+                                                               },
+                                                               style: ElevatedButton.styleFrom(
+                                                                 backgroundColor: colors.danger,
+                                                                 foregroundColor: Colors.white,
+                                                               ),
+                                                               child: const Text('Confirm Return'),
+                                                             ),
+                                                           ],
+                                                         ),
+                                                       );
+                                                     },
+                                                     style: OutlinedButton.styleFrom(
+                                                       foregroundColor: colors.danger,
+                                                       side: BorderSide(color: colors.danger),
+                                                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                       minimumSize: Size.zero,
+                                                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                     ),
+                                                     child: const Text('Return', style: TextStyle(fontSize: 10)),
+                                                   ),
+                                                 ],
+                                               ),
+                                           ],
+                                         ),
+                                       ],
+                                     );
+                                   },
+                                 ),
+                             ],
+                           ),
+                         ),
+                       ),
+                       const SizedBox(height: AppSpacing.lg),
 
                       // Identity Block
                       CustomerContextCard(
