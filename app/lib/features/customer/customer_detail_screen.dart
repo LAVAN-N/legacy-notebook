@@ -210,8 +210,13 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
           ),
           body: Stack(
             children: [
-              SingleChildScrollView(
-                child: Padding(
+              RefreshIndicator(
+                onRefresh: () => ref.refresh(customerDetailControllerProvider(widget.customerId).future),
+                color: colors.primary,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(
+                      parent: ClampingScrollPhysics()),
+                  child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,6 +353,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                     ],
                   ),
                 ),
+              ),
               ),
               Positioned(
                 left: 0,

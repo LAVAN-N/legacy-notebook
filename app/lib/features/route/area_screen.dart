@@ -334,93 +334,103 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
 
               // Clients List / Empty State
               Expanded(
-                child: filtered.isEmpty
-                    ? SingleChildScrollView(
-                        child: Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.xxl,
-                              vertical: AppSpacing.md,
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.people_outline_rounded,
-                                    size: 56, color: colors.mutedFg),
-                                const SizedBox(height: AppSpacing.md),
-                                Text(
-                                  'No clients found',
-                                  style: AppTypography.bodyLarge.copyWith(
-                                    color: colors.foreground,
-                                    fontWeight: FontWeight.w600,
+                child: RefreshIndicator(
+                  onRefresh: () => ref.refresh(areaCustomersProvider(widget.areaId).future),
+                  color: colors.primary,
+                  child: filtered.isEmpty
+                      ? SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(
+                              parent: ClampingScrollPhysics()),
+                          child: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.xxl,
+                                vertical: AppSpacing.md,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.people_outline_rounded,
+                                      size: 56, color: colors.mutedFg),
+                                  const SizedBox(height: AppSpacing.md),
+                                  Text(
+                                    'No clients found',
+                                    style: AppTypography.bodyLarge.copyWith(
+                                      color: colors.foreground,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: AppSpacing.xs),
-                                Text(
-                                  'Try adjusting your search or filters.',
-                                  style: AppTypography.bodySmall
-                                      .copyWith(color: colors.mutedFg),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                OutlinedButton(
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    setState(() {
-                                      _searchQuery = '';
-                                      _selectedStatus = 'All';
-                                    });
-                                  },
-                                  child: const Text('Clear filters'),
-                                ),
-                              ],
+                                  const SizedBox(height: AppSpacing.xs),
+                                  Text(
+                                    'Try adjusting your search or filters.',
+                                    style: AppTypography.bodySmall
+                                        .copyWith(color: colors.mutedFg),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: AppSpacing.md),
+                                  OutlinedButton(
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() {
+                                        _searchQuery = '';
+                                        _selectedStatus = 'All';
+                                      });
+                                    },
+                                    child: const Text('Clear filters'),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      )
-                    : (!isFilteringActive
-                        // Reorderable list when in default view
-                        ? ReorderableListView.builder(
-                            buildDefaultDragHandles: false,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.md),
-                            itemCount: filtered.length,
-                            onReorderItem: (oldIdx, newIdx) {
-                              final list = List<CustomerProgress>.from(filtered);
-                              final item = list.removeAt(oldIdx);
-                              list.insert(newIdx, item);
-                              ref
-                                  .read(areaCustomersProvider(widget.areaId).notifier)
-                                  .reorderSequence(list);
-                            },
-                            itemBuilder: (context, index) {
-                              final item = filtered[index];
-                              return _buildClientCard(
-                                context,
-                                item,
-                                getDisplayOutstanding(item),
-                                colors,
-                              );
-                            },
-                          )
-                        // Standard list view when search/filters are active
-                        : ListView.separated(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.md),
-                            itemCount: filtered.length,
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(height: AppSpacing.sm),
-                            itemBuilder: (context, index) {
-                              final item = filtered[index];
-                              return _buildClientCard(
-                                context,
-                                item,
-                                getDisplayOutstanding(item),
-                                colors,
-                              );
-                            },
-                          )),
+                        )
+                      : (!isFilteringActive
+                          // Reorderable list when in default view
+                          ? ReorderableListView.builder(
+                              buildDefaultDragHandles: false,
+                              physics: const AlwaysScrollableScrollPhysics(
+                                  parent: ClampingScrollPhysics()),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.md),
+                              itemCount: filtered.length,
+                              onReorderItem: (oldIdx, newIdx) {
+                                final list = List<CustomerProgress>.from(filtered);
+                                final item = list.removeAt(oldIdx);
+                                list.insert(newIdx, item);
+                                ref
+                                    .read(areaCustomersProvider(widget.areaId).notifier)
+                                    .reorderSequence(list);
+                              },
+                              itemBuilder: (context, index) {
+                                final item = filtered[index];
+                                return _buildClientCard(
+                                  context,
+                                  item,
+                                  getDisplayOutstanding(item),
+                                  colors,
+                                );
+                              },
+                            )
+                          // Standard list view when search/filters are active
+                          : ListView.separated(
+                              physics: const AlwaysScrollableScrollPhysics(
+                                  parent: ClampingScrollPhysics()),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.md),
+                              itemCount: filtered.length,
+                              separatorBuilder: (context, index) =>
+                                  const SizedBox(height: AppSpacing.sm),
+                              itemBuilder: (context, index) {
+                                final item = filtered[index];
+                                return _buildClientCard(
+                                  context,
+                                  item,
+                                  getDisplayOutstanding(item),
+                                  colors,
+                                );
+                              },
+                            )),
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
             ],

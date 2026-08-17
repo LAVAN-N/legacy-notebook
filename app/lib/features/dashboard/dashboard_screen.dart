@@ -107,7 +107,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             data: (data) {
               developer.log('showing data state with ${data.todayPlaces.length} places', name: 'DashboardScreen');
               return SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
+                physics: const AlwaysScrollableScrollPhysics(
+                    parent: ClampingScrollPhysics()),
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(

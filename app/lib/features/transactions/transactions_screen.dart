@@ -643,8 +643,20 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
           // List or Empty State
           Expanded(
-            child: filtered.isEmpty
-                ? SingleChildScrollView(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(salesStreamProvider);
+                ref.invalidate(collectionsStreamProvider);
+                ref.invalidate(customersStreamProvider);
+                try {
+                  await ref.read(salesStreamProvider.future);
+                } catch (_) {}
+              },
+              color: colors.primary,
+              child: filtered.isEmpty
+                  ? SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(
+                          parent: ClampingScrollPhysics()),
                     child: Center(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -687,6 +699,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     ),
                   )
                 : ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(
+                        parent: ClampingScrollPhysics()),
                     padding: EdgeInsets.fromLTRB(
                       AppSpacing.md,
                       0,
@@ -703,6 +717,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       );
                     },
                   ),
+            ),
           ),
 
           const SizedBox(height: AppSpacing.md),

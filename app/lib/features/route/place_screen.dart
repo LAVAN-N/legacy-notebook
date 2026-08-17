@@ -45,41 +45,54 @@ class PlaceScreen extends ConsumerWidget {
         title,
         style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
       ),
-      body: areasState.when(
-            loading: () => const _LoadingState(),
-            error: (err, stack) => ErrorState(
-              message: err.toString(),
-              onRetry: () => ref.refresh(placeAreasProvider(placeId)),
-            ),
-            data: (areas) {
-              if (areas.isEmpty) {
-                return EmptyState(
-                  title: 'No Areas',
-                  message: 'No collection areas configured for this location.',
-                  action: OutlinedButton(
-                    onPressed: () {
-                      final target =
-                          context.getBackTarget() ?? Routes.dashboard;
-                      context.go(target);
-                    },
-                    child: const Text('Back to Weekday'),
-                  ),
-                );
-              }
+      body: RefreshIndicator(
+        onRefresh: () => ref.refresh(placeAreasProvider(placeId).future),
+        color: colors.primary,
+        child: areasState.when(
+              loading: () => const _LoadingState(),
+              error: (err, stack) => ErrorState(
+                message: err.toString(),
+                onRetry: () => ref.refresh(placeAreasProvider(placeId)),
+              ),
+              data: (areas) {
+                if (areas.isEmpty) {
+                  return SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(
+                        parent: ClampingScrollPhysics()),
+                    child: Container(
+                      alignment: Alignment.center,
+                      height: MediaQuery.of(context).size.height * 0.7,
+                      child: EmptyState(
+                        title: 'No Areas',
+                        message: 'No collection areas configured for this location.',
+                        action: OutlinedButton(
+                          onPressed: () {
+                            final target =
+                                context.getBackTarget() ?? Routes.dashboard;
+                            context.go(target);
+                          },
+                          child: const Text('Back to Weekday'),
+                        ),
+                      ),
+                    ),
+                  );
+                }
 
-              final totalExpected =
-                  areas.fold<int>(0, (sum, a) => sum + a.expectedAmount);
-              final totalCollected =
-                  areas.fold<int>(0, (sum, a) => sum + a.collectedAmount);
-              final totalCustomers =
-                  areas.fold<int>(0, (sum, a) => sum + a.customerCount);
+                final totalExpected =
+                    areas.fold<int>(0, (sum, a) => sum + a.expectedAmount);
+                final totalCollected =
+                    areas.fold<int>(0, (sum, a) => sum + a.collectedAmount);
+                final totalCustomers =
+                    areas.fold<int>(0, (sum, a) => sum + a.customerCount);
 
-              return SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                return SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(
+                      parent: ClampingScrollPhysics()),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                       // Place summary strip
                       Row(
                         children: [
@@ -202,7 +215,7 @@ class PlaceScreen extends ConsumerWidget {
               );
             },
           ),
-        );
+        ));
   }
 }
 

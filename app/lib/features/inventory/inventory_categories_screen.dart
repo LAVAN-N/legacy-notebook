@@ -246,91 +246,113 @@ class _InventoryCategoriesScreenState
 
           // Grid of Categories or Products
           Expanded(
-            child: NotificationListener<UserScrollNotification>(
-              onNotification: (notification) {
-                if (notification.direction == ScrollDirection.reverse) {
-                  if (_isFabVisible) setState(() => _isFabVisible = false);
-                } else if (notification.direction == ScrollDirection.forward) {
-                  if (!_isFabVisible) setState(() => _isFabVisible = true);
-                }
-                return false;
+            child: RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(productsStreamProvider);
+                ref.invalidate(categoriesStreamProvider);
+                try {
+                  await ref.read(productsStreamProvider.future);
+                } catch (_) {}
               },
-              child: _searchQuery.isNotEmpty
-                ? (displayProducts.isEmpty
-                    ? Center(
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: 88.0 + rawSafeAreaBottom),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.search_off,
-                                  size: 48, color: colors.mutedFg),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No products found matching "$_searchQuery"',
-                                style: AppTypography.bodyLarge.copyWith(color: colors.foreground),
+              color: colors.primary,
+              child: NotificationListener<UserScrollNotification>(
+                onNotification: (notification) {
+                  if (notification.direction == ScrollDirection.reverse) {
+                    if (_isFabVisible) setState(() => _isFabVisible = false);
+                  } else if (notification.direction == ScrollDirection.forward) {
+                    if (!_isFabVisible) setState(() => _isFabVisible = true);
+                  }
+                  return false;
+                },
+                child: _searchQuery.isNotEmpty
+                    ? (displayProducts.isEmpty
+                        ? SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(
+                                parent: ClampingScrollPhysics()),
+                            child: Container(
+                              alignment: Alignment.center,
+                              height: MediaQuery.of(context).size.height * 0.5,
+                              padding: EdgeInsets.only(bottom: 88.0 + rawSafeAreaBottom),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.search_off,
+                                      size: 48, color: colors.mutedFg),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No products found matching "$_searchQuery"',
+                                    style: AppTypography.bodyLarge.copyWith(color: colors.foreground),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                      )
-                    : GridView.builder(
-                        padding: EdgeInsets.fromLTRB(
-                          16,
-                          16,
-                          16,
-                          16.0 + 88.0 + rawSafeAreaBottom,
-                        ),
-                        gridDelegate:
-                            const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 200,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          mainAxisExtent: 280,
-                        ),
-                        itemCount: displayProducts.length,
-                        itemBuilder: (context, index) {
-                          final product = displayProducts[index];
-                          return _buildProductCard(context, product, colors, categories);
-                        },
-                      ))
-                : (displayCategories.isEmpty
-                    ? Center(
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: 88.0 + rawSafeAreaBottom),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.inbox, size: 48, color: colors.mutedFg),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No categories found',
-                                style: AppTypography.bodyLarge.copyWith(color: colors.foreground),
+                            ),
+                          )
+                        : GridView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(
+                                parent: ClampingScrollPhysics()),
+                            padding: EdgeInsets.fromLTRB(
+                              16,
+                              16,
+                              16,
+                              16.0 + 88.0 + rawSafeAreaBottom,
+                            ),
+                            gridDelegate:
+                                const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 200,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              mainAxisExtent: 280,
+                            ),
+                            itemCount: displayProducts.length,
+                            itemBuilder: (context, index) {
+                              final product = displayProducts[index];
+                              return _buildProductCard(context, product, colors, categories);
+                            },
+                          ))
+                    : (displayCategories.isEmpty
+                        ? SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(
+                                parent: ClampingScrollPhysics()),
+                            child: Container(
+                              alignment: Alignment.center,
+                              height: MediaQuery.of(context).size.height * 0.5,
+                              padding: EdgeInsets.only(bottom: 88.0 + rawSafeAreaBottom),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.inbox, size: 48, color: colors.mutedFg),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No categories found',
+                                    style: AppTypography.bodyLarge.copyWith(color: colors.foreground),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                      )
-                    : GridView.builder(
-                        padding: EdgeInsets.fromLTRB(
-                          16,
-                          16,
-                          16,
-                          16.0 + 88.0 + rawSafeAreaBottom,
-                        ),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 1,
-                        ),
-                        itemCount: displayCategories.length,
-                        itemBuilder: (context, index) {
-                          final category = displayCategories[index];
-                          return _buildCategoryCard(context, category, colors);
-                        },
-                      )),
+                            ),
+                          )
+                        : GridView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(
+                                parent: ClampingScrollPhysics()),
+                            padding: EdgeInsets.fromLTRB(
+                              16,
+                              16,
+                              16,
+                              16.0 + 88.0 + rawSafeAreaBottom,
+                            ),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              childAspectRatio: 1,
+                            ),
+                            itemCount: displayCategories.length,
+                            itemBuilder: (context, index) {
+                              final category = displayCategories[index];
+                              return _buildCategoryCard(context, category, colors);
+                            },
+                          )),
+              ),
             ),
           ),
         ],

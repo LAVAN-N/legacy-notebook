@@ -31,41 +31,54 @@ class WeekdayScreen extends ConsumerWidget {
         'Route',
         style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
       ),
-      body: placesState.when(
-        loading: () => const _LoadingState(),
-        error: (err, stack) => ErrorState(
-          message: err.toString(),
-          onRetry: () => ref.refresh(weekdayPlacesProvider(dayName)),
-        ),
-        data: (places) {
-          if (places.isEmpty) {
-            return EmptyState(
-              title: 'Rest Day',
-              message: 'No collections scheduled for $dayName.',
-              icon: Icons.weekend_outlined,
-              action: OutlinedButton(
-                onPressed: () {
-                  final target = context.getBackTarget() ?? Routes.dashboard;
-                  context.go(target);
-                },
-                child: const Text('Back to Home'),
-              ),
-            );
-          }
+      body: RefreshIndicator(
+        onRefresh: () => ref.refresh(weekdayPlacesProvider(dayName).future),
+        color: colors.primary,
+        child: placesState.when(
+          loading: () => const _LoadingState(),
+          error: (err, stack) => ErrorState(
+            message: err.toString(),
+            onRetry: () => ref.refresh(weekdayPlacesProvider(dayName)),
+          ),
+          data: (places) {
+            if (places.isEmpty) {
+              return SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                    parent: ClampingScrollPhysics()),
+                child: Container(
+                  alignment: Alignment.center,
+                  height: MediaQuery.of(context).size.height * 0.7,
+                  child: EmptyState(
+                    title: 'Rest Day',
+                    message: 'No collections scheduled for $dayName.',
+                    icon: Icons.weekend_outlined,
+                    action: OutlinedButton(
+                      onPressed: () {
+                        final target = context.getBackTarget() ?? Routes.dashboard;
+                        context.go(target);
+                      },
+                      child: const Text('Back to Home'),
+                    ),
+                  ),
+                ),
+              );
+            }
 
-          // Calculate weekday summary
-          final totalExpected =
-              places.fold<int>(0, (sum, p) => sum + p.expectedAmount);
-          final totalCollected =
-              places.fold<int>(0, (sum, p) => sum + p.collectedAmount);
-          final totalCustomers =
-              places.fold<int>(0, (sum, p) => sum + p.customerCount);
+            // Calculate weekday summary
+            final totalExpected =
+                places.fold<int>(0, (sum, p) => sum + p.expectedAmount);
+            final totalCollected =
+                places.fold<int>(0, (sum, p) => sum + p.collectedAmount);
+            final totalCustomers =
+                places.fold<int>(0, (sum, p) => sum + p.customerCount);
 
-          return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            return SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                  parent: ClampingScrollPhysics()),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Weekday summary cards
                   Row(
@@ -185,7 +198,7 @@ class WeekdayScreen extends ConsumerWidget {
           );
         },
       ),
-    );
+    ));
   }
 }
 

@@ -421,17 +421,32 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
 
           // List or Empty State
           Expanded(
-            child: NotificationListener<UserScrollNotification>(
-              onNotification: (notification) {
-                if (notification.direction == ScrollDirection.reverse) {
-                  if (_isFabVisible) setState(() => _isFabVisible = false);
-                } else if (notification.direction == ScrollDirection.forward) {
-                  if (!_isFabVisible) setState(() => _isFabVisible = true);
-                }
-                return false;
+            child: RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(customersStreamProvider);
+                ref.invalidate(salesStreamProvider);
+                ref.invalidate(collectionsStreamProvider);
+                ref.invalidate(placesStreamProvider);
+                ref.invalidate(areasStreamProvider);
+                ref.invalidate(weekdaysStreamProvider);
+                try {
+                  await ref.read(customersStreamProvider.future);
+                } catch (_) {}
               },
-              child: filtered.isEmpty
-                ? SingleChildScrollView(
+              color: colors.primary,
+              child: NotificationListener<UserScrollNotification>(
+                onNotification: (notification) {
+                  if (notification.direction == ScrollDirection.reverse) {
+                    if (_isFabVisible) setState(() => _isFabVisible = false);
+                  } else if (notification.direction == ScrollDirection.forward) {
+                    if (!_isFabVisible) setState(() => _isFabVisible = true);
+                  }
+                  return false;
+                },
+                child: filtered.isEmpty
+                  ? SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(
+                          parent: ClampingScrollPhysics()),
                     child: Center(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -479,6 +494,8 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                     ),
                   )
                 : ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(
+                        parent: ClampingScrollPhysics()),
                     padding: EdgeInsets.fromLTRB(
                       AppSpacing.md,
                       0,
@@ -662,7 +679,8 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                       );
                     },
                   ),
-            ),
+                ),
+              ),
           ),
 
           const SizedBox(height: AppSpacing.md),
