@@ -182,12 +182,12 @@ class CustomerDetailNotifier extends AutoDisposeFamilyAsyncNotifier<CustomerDeta
       collectedAmount: collectedAmount,
       processedBy: processedBy,
     );
-    ref.invalidate(customerDetailControllerProvider(arg));
+    ref.invalidateSelf();
   }
 
   Future<void> settleProduct(String saleItemId) async {
     final saleRepo = ref.read(saleRepositoryProvider);
     await saleRepo.settleProduct(saleItemId);
-    ref.invalidate(customerDetailControllerProvider(arg));
+    ref.invalidateSelf();
   }
 }

@@ -1324,6 +1324,17 @@ Read before starting. Never edit past entries.
 - **Rule for next agent:** ALWAYS implement abstract repository contract updates across all subclass implementations (local SQLite, mock repository, and Supabase repository) before executing `flutter analyze`.
 - **Guardrail:** Run `flutter analyze` immediately after updating any repository interface definitions.
 
+---
+
+### 2026-08-17 · Provider self-dependency cycle using ref.invalidate inside Notifier
+
+- **Context:** Invaliding customerDetailControllerProvider from within the CustomerDetailNotifier implementation.
+- **Mistake:** Called `ref.invalidate(customerDetailControllerProvider(arg))` which created a self-dependency loop.
+- **Root cause:** Riverpod detects invalidating/referencing a provider by name inside its own notifier as a self-dependency cycle.
+- **Fix applied:** Replaced `ref.invalidate(customerDetailControllerProvider(arg))` with `ref.invalidateSelf()`.
+- **Rule for next agent:** ALWAYS use `ref.invalidateSelf()` to invalidate or rebuild a Notifier/AsyncNotifier from within its own methods instead of passing its provider family symbol by name.
+- **Guardrail:** Never pass the notifier's own provider type/family to `ref.invalidate` within the notifier's class.
+
 
 
 

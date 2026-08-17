@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS customers (
     dob TEXT,
     occupation TEXT,
     notes TEXT,
+    credit INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -82,7 +83,8 @@ CREATE TABLE IF NOT EXISTS sale_items (
     product_id UUID NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
     quantity INT NOT NULL CHECK (quantity > 0),
     unit_price INT NOT NULL CHECK (unit_price >= 0),
-    total_price INT NOT NULL CHECK (total_price >= 0)
+    total_price INT NOT NULL CHECK (total_price >= 0),
+    status TEXT NOT NULL DEFAULT 'purchased'
 );
 
 -- 8. Collections table (PAYMENT, PARTIAL_PAYMENT, CARRY_FORWARD)
