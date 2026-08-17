@@ -1096,14 +1096,14 @@ class LocalSqliteProductRepository implements ProductRepository {
 class LocalSqliteConfigRepository implements ConfigRepository {
   Future<Database> _getDb() => DatabaseHelper.instance.database;
 
-  Future<String> _readData(String id) async {
+  Future<String> readData(String id) async {
     final db = await _getDb();
     final res = await db.query('config', where: 'id = ?', whereArgs: [id]);
     if (res.isEmpty) return '[]';
     return res.first['data'] as String;
   }
 
-  Future<void> _writeData(String id, String data) async {
+  Future<void> writeData(String id, String data) async {
     final db = await _getDb();
     await db.insert(
       'config',
@@ -1115,7 +1115,7 @@ class LocalSqliteConfigRepository implements ConfigRepository {
 
   @override
   Future<List<Place>> getPlaces() async {
-    final raw = await _readData('places');
+    final raw = await readData('places');
     final List decoded = jsonDecode(raw);
     return decoded.map((item) {
       final map = Map<String, dynamic>.from(item as Map);
@@ -1141,12 +1141,12 @@ class LocalSqliteConfigRepository implements ConfigRepository {
       map['weekday_id'] = p.weekdayId;
       return map;
     }).toList());
-    await _writeData('places', raw);
+    await writeData('places', raw);
   }
 
   @override
   Future<List<Area>> getAreas() async {
-    final raw = await _readData('areas');
+    final raw = await readData('areas');
     final List decoded = jsonDecode(raw);
     return decoded.map((item) {
       final map = Map<String, dynamic>.from(item as Map);
@@ -1172,12 +1172,12 @@ class LocalSqliteConfigRepository implements ConfigRepository {
       map['place_id'] = a.placeId;
       return map;
     }).toList());
-    await _writeData('areas', raw);
+    await writeData('areas', raw);
   }
 
   @override
   Future<List<Category>> getCategories() async {
-    final raw = await _readData('categories');
+    final raw = await readData('categories');
     final List decoded = jsonDecode(raw);
     return decoded.map((item) => Category.fromJson(item as Map<String, dynamic>)).toList();
   }
@@ -1193,12 +1193,12 @@ class LocalSqliteConfigRepository implements ConfigRepository {
   @override
   Future<void> saveCategories(List<Category> categories) async {
     final raw = jsonEncode(categories.map((c) => c.toJson()).toList());
-    await _writeData('categories', raw);
+    await writeData('categories', raw);
   }
 
   @override
   Future<List<String>> getBrands() async {
-    final raw = await _readData('brands');
+    final raw = await readData('brands');
     final List decoded = jsonDecode(raw);
     return decoded.map((item) => item as String).toList();
   }
@@ -1214,12 +1214,12 @@ class LocalSqliteConfigRepository implements ConfigRepository {
   @override
   Future<void> saveBrands(List<String> brands) async {
     final raw = jsonEncode(brands);
-    await _writeData('brands', raw);
+    await writeData('brands', raw);
   }
 
   @override
   Future<List<String>> getProofTypes() async {
-    final raw = await _readData('proof_types');
+    final raw = await readData('proof_types');
     final List decoded = jsonDecode(raw);
     return decoded.map((item) => item as String).toList();
   }
@@ -1235,6 +1235,6 @@ class LocalSqliteConfigRepository implements ConfigRepository {
   @override
   Future<void> saveProofTypes(List<String> proofTypes) async {
     final raw = jsonEncode(proofTypes);
-    await _writeData('proof_types', raw);
+    await writeData('proof_types', raw);
   }
 }

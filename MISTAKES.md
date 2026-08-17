@@ -1302,6 +1302,17 @@ Read before starting. Never edit past entries.
 - **Rule for next agent:** ALWAYS wrap all button siblings in `Expanded` when placing buttons side-by-side in a `Row` inside stretched bottom sheets or dialogs.
 - **Guardrail:** Ensure buttons in bottom action rows have bounded width or are wrapped in `Expanded`.
 
+---
+
+### 2026-08-11 · SocketException on Supabase config stream without offline fallback
+
+- **Context:** Fetching places, areas, categories, brands, or proof types when offline or when host lookup fails (`SocketException: Failed host lookup: 'sssrdqyhhqorltejqqeo.supabase.co'`).
+- **Mistake:** `SupabaseConfigRepository` streamed directly from `_client.from('config').stream(...)` with no `handleError` / `onError` callback and without local SQLite fallback.
+- **Root cause:** When device is offline or network is disconnected, Supabase Realtime streams immediately emit a `SocketException` into the StreamProvider. Furthermore, `_readData` returned `'[]'` on error rather than reading from the persistent local SQLite cache.
+- **Fix applied:** Integrated `LocalSqliteConfigRepository` and `LocalSqliteRouteRepository` directly into `SupabaseConfigRepository` and `SupabaseRouteRepository`. The repositories immediately emit local SQLite cached streams, background-sync from Supabase Realtime with `onError` guarded, and fallback seamlessly when offline per offline-first principles.
+- **Rule for next agent:** ALWAYS back Supabase stream queries with local SQLite streams and `onError` handlers so offline devices never throw unhandled `SocketException`s or lose cached data.
+- **Guardrail:** Verify that all Supabase repositories provide offline-first local SQLite fallback and stream error suppression.
+
 
 
 

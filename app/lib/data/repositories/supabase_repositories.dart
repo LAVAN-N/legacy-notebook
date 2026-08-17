@@ -20,6 +20,7 @@ import 'collection_repository.dart';
 import 'sale_repository.dart';
 import 'product_repository.dart';
 import 'config_repository.dart';
+import 'local_sqlite_repositories.dart';
 import '../models/category.dart';
 import '../../core/utils/uuid.dart';
 
@@ -712,26 +713,54 @@ class SupabaseCustomerRepository implements CustomerRepository {
 
 class SupabaseRouteRepository implements RouteRepository {
   final _client = Supabase.instance.client;
+  final _local = LocalSqliteRouteRepository();
 
   @override
   Future<List<Weekday>> getWeekdays() async {
-    final maps = await _client.from('weekdays').select().order('sort_order');
-    return maps.map((w) => Weekday.fromJson({
-      'id': w['id'],
-      'name': w['name'],
-      'sortOrder': w['sort_order'],
-    })).toList();
+    try {
+      final maps = await _client.from('weekdays').select().order('sort_order');
+      return maps.map((w) => Weekday.fromJson({
+        'id': w['id'],
+        'name': w['name'],
+        'sortOrder': w['sort_order'],
+      })).toList();
+    } catch (_) {
+      return await _local.getWeekdays();
+    }
   }
 
   @override
   Stream<List<Weekday>> watchWeekdays() {
-    return _client.from('weekdays').stream(primaryKey: ['id']).order('sort_order').map(
-      (list) => list.map((w) => Weekday.fromJson({
-        'id': w['id'],
-        'name': w['name'],
-        'sortOrder': w['sort_order'],
-      })).toList()
-    );
+    final controller = StreamController<List<Weekday>>();
+    StreamSubscription? localSub;
+    StreamSubscription? remoteSub;
+
+    localSub = _local.watchWeekdays().listen((data) {
+      if (!controller.isClosed) controller.add(data);
+    });
+
+    try {
+      remoteSub = _client.from('weekdays').stream(primaryKey: ['id']).order('sort_order').listen(
+        (list) {
+          if (!controller.isClosed && list.isNotEmpty) {
+            controller.add(list.map((w) => Weekday.fromJson({
+              'id': w['id'],
+              'name': w['name'],
+              'sortOrder': w['sort_order'],
+            })).toList());
+          }
+        },
+        onError: (_) {},
+        cancelOnError: false,
+      );
+    } catch (_) {}
+
+    controller.onCancel = () {
+      localSub?.cancel();
+      remoteSub?.cancel();
+    };
+
+    return controller.stream;
   }
 
   @override
@@ -1258,20 +1287,30 @@ class SupabaseProductRepository implements ProductRepository {
 
 class SupabaseConfigRepository implements ConfigRepository {
   final _client = Supabase.instance.client;
+  final _local = LocalSqliteConfigRepository();
 
   Future<String> _readData(String id) async {
     try {
       final res = await _client.from('config').select('data').eq('id', id).maybeSingle();
-      if (res == null || res['data'] == null) return '[]';
-      return jsonEncode(res['data']);
-    } catch (e) {
-      return '[]';
+      if (res != null && res['data'] != null) {
+        final encoded = jsonEncode(res['data']);
+        await _local.writeData(id, encoded);
+        return encoded;
+      }
+    } catch (_) {
+      // Offline / network failure -> safe fallback to local SQLite cache
     }
+    return await _local.readData(id);
   }
 
   Future<void> _writeData(String id, String dataJson) async {
-    final decoded = jsonDecode(dataJson);
-    await _client.from('config').upsert({'id': id, 'data': decoded});
+    await _local.writeData(id, dataJson);
+    try {
+      final decoded = jsonDecode(dataJson);
+      await _client.from('config').upsert({'id': id, 'data': decoded});
+    } catch (_) {
+      // Offline -> safe local-first write
+    }
   }
 
   @override
@@ -1289,20 +1328,42 @@ class SupabaseConfigRepository implements ConfigRepository {
 
   @override
   Stream<List<Place>> watchPlaces() {
-    return _client.from('config').stream(primaryKey: ['id']).eq('id', 'places').map((list) {
-      if (list.isEmpty) return [];
-      final data = list.first['data'];
-      if (data is List) {
-        return data.map((item) {
-          final map = Map<String, dynamic>.from(item as Map);
-          if (map.containsKey('weekday_id')) {
-            map['weekdayId'] = map['weekday_id'];
-          }
-          return Place.fromJson(map);
-        }).toList();
-      }
-      return [];
+    final controller = StreamController<List<Place>>();
+    StreamSubscription? localSub;
+    StreamSubscription? remoteSub;
+
+    localSub = _local.watchPlaces().listen((data) {
+      if (!controller.isClosed) controller.add(data);
     });
+
+    try {
+      remoteSub = _client.from('config').stream(primaryKey: ['id']).eq('id', 'places').listen(
+        (list) async {
+          if (list.isNotEmpty && list.first['data'] is List) {
+            final data = list.first['data'] as List;
+            final places = data.map((item) {
+              final map = Map<String, dynamic>.from(item as Map);
+              if (map.containsKey('weekday_id')) {
+                map['weekdayId'] = map['weekday_id'];
+              }
+              return Place.fromJson(map);
+            }).toList();
+            await _local.savePlaces(places);
+          }
+        },
+        onError: (_) {
+          // Supabase offline / SocketException -> continue serving local SQLite data
+        },
+        cancelOnError: false,
+      );
+    } catch (_) {}
+
+    controller.onCancel = () {
+      localSub?.cancel();
+      remoteSub?.cancel();
+    };
+
+    return controller.stream;
   }
 
   @override
@@ -1330,20 +1391,42 @@ class SupabaseConfigRepository implements ConfigRepository {
 
   @override
   Stream<List<Area>> watchAreas() {
-    return _client.from('config').stream(primaryKey: ['id']).eq('id', 'areas').map((list) {
-      if (list.isEmpty) return [];
-      final data = list.first['data'];
-      if (data is List) {
-        return data.map((item) {
-          final map = Map<String, dynamic>.from(item as Map);
-          if (map.containsKey('place_id')) {
-            map['placeId'] = map['place_id'];
-          }
-          return Area.fromJson(map);
-        }).toList();
-      }
-      return [];
+    final controller = StreamController<List<Area>>();
+    StreamSubscription? localSub;
+    StreamSubscription? remoteSub;
+
+    localSub = _local.watchAreas().listen((data) {
+      if (!controller.isClosed) controller.add(data);
     });
+
+    try {
+      remoteSub = _client.from('config').stream(primaryKey: ['id']).eq('id', 'areas').listen(
+        (list) async {
+          if (list.isNotEmpty && list.first['data'] is List) {
+            final data = list.first['data'] as List;
+            final areas = data.map((item) {
+              final map = Map<String, dynamic>.from(item as Map);
+              if (map.containsKey('place_id')) {
+                map['placeId'] = map['place_id'];
+              }
+              return Area.fromJson(map);
+            }).toList();
+            await _local.saveAreas(areas);
+          }
+        },
+        onError: (_) {
+          // Supabase offline / SocketException -> continue serving local SQLite data
+        },
+        cancelOnError: false,
+      );
+    } catch (_) {}
+
+    controller.onCancel = () {
+      localSub?.cancel();
+      remoteSub?.cancel();
+    };
+
+    return controller.stream;
   }
 
   @override
@@ -1365,14 +1448,36 @@ class SupabaseConfigRepository implements ConfigRepository {
 
   @override
   Stream<List<Category>> watchCategories() {
-    return _client.from('config').stream(primaryKey: ['id']).eq('id', 'categories').map((list) {
-      if (list.isEmpty) return [];
-      final data = list.first['data'];
-      if (data is List) {
-        return data.map((item) => Category.fromJson(item as Map<String, dynamic>)).toList();
-      }
-      return [];
+    final controller = StreamController<List<Category>>();
+    StreamSubscription? localSub;
+    StreamSubscription? remoteSub;
+
+    localSub = _local.watchCategories().listen((data) {
+      if (!controller.isClosed) controller.add(data);
     });
+
+    try {
+      remoteSub = _client.from('config').stream(primaryKey: ['id']).eq('id', 'categories').listen(
+        (list) async {
+          if (list.isNotEmpty && list.first['data'] is List) {
+            final data = list.first['data'] as List;
+            final categories = data.map((item) => Category.fromJson(item as Map<String, dynamic>)).toList();
+            await _local.saveCategories(categories);
+          }
+        },
+        onError: (_) {
+          // Supabase offline / SocketException -> continue serving local SQLite data
+        },
+        cancelOnError: false,
+      );
+    } catch (_) {}
+
+    controller.onCancel = () {
+      localSub?.cancel();
+      remoteSub?.cancel();
+    };
+
+    return controller.stream;
   }
 
   @override
@@ -1390,14 +1495,36 @@ class SupabaseConfigRepository implements ConfigRepository {
 
   @override
   Stream<List<String>> watchBrands() {
-    return _client.from('config').stream(primaryKey: ['id']).eq('id', 'brands').map((list) {
-      if (list.isEmpty) return [];
-      final data = list.first['data'];
-      if (data is List) {
-        return data.map((item) => item as String).toList();
-      }
-      return [];
+    final controller = StreamController<List<String>>();
+    StreamSubscription? localSub;
+    StreamSubscription? remoteSub;
+
+    localSub = _local.watchBrands().listen((data) {
+      if (!controller.isClosed) controller.add(data);
     });
+
+    try {
+      remoteSub = _client.from('config').stream(primaryKey: ['id']).eq('id', 'brands').listen(
+        (list) async {
+          if (list.isNotEmpty && list.first['data'] is List) {
+            final data = list.first['data'] as List;
+            final brands = data.map((item) => item as String).toList();
+            await _local.saveBrands(brands);
+          }
+        },
+        onError: (_) {
+          // Supabase offline / SocketException -> continue serving local SQLite data
+        },
+        cancelOnError: false,
+      );
+    } catch (_) {}
+
+    controller.onCancel = () {
+      localSub?.cancel();
+      remoteSub?.cancel();
+    };
+
+    return controller.stream;
   }
 
   @override
@@ -1415,14 +1542,36 @@ class SupabaseConfigRepository implements ConfigRepository {
 
   @override
   Stream<List<String>> watchProofTypes() {
-    return _client.from('config').stream(primaryKey: ['id']).eq('id', 'proof_types').map((list) {
-      if (list.isEmpty) return [];
-      final data = list.first['data'];
-      if (data is List) {
-        return data.map((item) => item as String).toList();
-      }
-      return [];
+    final controller = StreamController<List<String>>();
+    StreamSubscription? localSub;
+    StreamSubscription? remoteSub;
+
+    localSub = _local.watchProofTypes().listen((data) {
+      if (!controller.isClosed) controller.add(data);
     });
+
+    try {
+      remoteSub = _client.from('config').stream(primaryKey: ['id']).eq('id', 'proof_types').listen(
+        (list) async {
+          if (list.isNotEmpty && list.first['data'] is List) {
+            final data = list.first['data'] as List;
+            final proofTypes = data.map((item) => item as String).toList();
+            await _local.saveProofTypes(proofTypes);
+          }
+        },
+        onError: (_) {
+          // Supabase offline / SocketException -> continue serving local SQLite data
+        },
+        cancelOnError: false,
+      );
+    } catch (_) {}
+
+    controller.onCancel = () {
+      localSub?.cancel();
+      remoteSub?.cancel();
+    };
+
+    return controller.stream;
   }
 
   @override
