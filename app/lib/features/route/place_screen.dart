@@ -10,6 +10,7 @@ import '../../core/widgets/loading_skeleton.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/stat_card.dart';
+import '../../core/widgets/app_pull_to_refresh.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/router/routes.dart';
 import '../../core/router/navigation_shell.dart';
@@ -45,7 +46,7 @@ class PlaceScreen extends ConsumerWidget {
         title,
         style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
       ),
-      body: RefreshIndicator(
+      body: AppPullToRefresh(
         onRefresh: () => ref.refresh(placeAreasProvider(placeId).future),
         color: colors.primary,
         child: areasState.when(
@@ -57,8 +58,7 @@ class PlaceScreen extends ConsumerWidget {
               data: (areas) {
                 if (areas.isEmpty) {
                   return SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(
-                        parent: ClampingScrollPhysics()),
+                    physics: const ClampingScrollPhysics(),
                     child: Container(
                       alignment: Alignment.center,
                       height: MediaQuery.of(context).size.height * 0.7,
@@ -86,8 +86,7 @@ class PlaceScreen extends ConsumerWidget {
                     areas.fold<int>(0, (sum, a) => sum + a.customerCount);
 
                 return SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(
-                      parent: ClampingScrollPhysics()),
+                  physics: const ClampingScrollPhysics(),
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(

@@ -7,6 +7,7 @@ import '../../core/utils/currency_formatter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_scaffold.dart';
+import '../../core/widgets/app_pull_to_refresh.dart';
 import '../../data/mock/mock_data.dart';
 import '../../data/models/product.dart';
 import '../../data/models/category.dart';
@@ -242,7 +243,7 @@ class _InventoryProductsScreenState
 
           // Grid
           Expanded(
-            child: RefreshIndicator(
+            child: AppPullToRefresh(
               onRefresh: () async {
                 ref.invalidate(productsStreamProvider);
                 ref.invalidate(categoriesStreamProvider);
@@ -262,8 +263,7 @@ class _InventoryProductsScreenState
                 },
                 child: products.isEmpty
                     ? SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(
-                            parent: ClampingScrollPhysics()),
+                        physics: const ClampingScrollPhysics(),
                         child: Container(
                           alignment: Alignment.center,
                           height: MediaQuery.of(context).size.height * 0.5,
@@ -282,8 +282,7 @@ class _InventoryProductsScreenState
                         ),
                       )
                     : GridView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(
-                            parent: ClampingScrollPhysics()),
+                        physics: const ClampingScrollPhysics(),
                         padding: EdgeInsets.fromLTRB(
                           16,
                           16,

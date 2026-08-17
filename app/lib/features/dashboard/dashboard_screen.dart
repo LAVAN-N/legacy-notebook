@@ -12,6 +12,7 @@ import '../../core/widgets/stat_card.dart';
 import '../../core/widgets/loading_skeleton.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/theme_toggle_button.dart';
+import '../../core/widgets/app_pull_to_refresh.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/router/routes.dart';
 import 'controllers/dashboard_controller.dart';
@@ -89,7 +90,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
         ),
         appBarActions: const [ThemeToggleButton()],
-        body: RefreshIndicator(
+        body: AppPullToRefresh(
           onRefresh: () => ref.read(dashboardControllerProvider.notifier).refresh(),
           color: colors.primary,
           child: dashboardState.when(
@@ -107,8 +108,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             data: (data) {
               developer.log('showing data state with ${data.todayPlaces.length} places', name: 'DashboardScreen');
               return SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(
-                    parent: ClampingScrollPhysics()),
+                physics: const ClampingScrollPhysics(),
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(

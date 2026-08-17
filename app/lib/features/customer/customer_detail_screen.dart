@@ -10,6 +10,7 @@ import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/loading_skeleton.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/section_header.dart';
+import '../../core/widgets/app_pull_to_refresh.dart';
 import '../../core/router/routes.dart';
 import '../../data/models/activity.dart';
 import 'controllers/customer_controller.dart';
@@ -210,12 +211,11 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
           ),
           body: Stack(
             children: [
-              RefreshIndicator(
+              AppPullToRefresh(
                 onRefresh: () => ref.refresh(customerDetailControllerProvider(widget.customerId).future),
                 color: colors.primary,
                 child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(
-                      parent: ClampingScrollPhysics()),
+                  physics: const ClampingScrollPhysics(),
                   child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(

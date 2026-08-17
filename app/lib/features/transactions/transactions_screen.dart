@@ -7,6 +7,7 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/loading_skeleton.dart';
 import '../../core/widgets/error_state.dart';
+import '../../core/widgets/app_pull_to_refresh.dart';
 import '../../core/utils/formatters.dart';
 import '../../data/models/customer.dart';
 import '../../data/providers.dart';
@@ -643,7 +644,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
           // List or Empty State
           Expanded(
-            child: RefreshIndicator(
+            child: AppPullToRefresh(
               onRefresh: () async {
                 ref.invalidate(salesStreamProvider);
                 ref.invalidate(collectionsStreamProvider);
@@ -655,8 +656,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               color: colors.primary,
               child: filtered.isEmpty
                   ? SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(
-                          parent: ClampingScrollPhysics()),
+                      physics: const ClampingScrollPhysics(),
                     child: Center(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -699,8 +699,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     ),
                   )
                 : ListView.separated(
-                    physics: const AlwaysScrollableScrollPhysics(
-                        parent: ClampingScrollPhysics()),
+                    physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.fromLTRB(
                       AppSpacing.md,
                       0,

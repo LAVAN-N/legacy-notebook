@@ -9,6 +9,7 @@ import '../../core/widgets/loading_skeleton.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/avatar.dart';
 import '../../core/widgets/tag_chip.dart';
+import '../../core/widgets/app_pull_to_refresh.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/router/routes.dart';
 import '../../data/providers.dart';
@@ -334,13 +335,12 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
 
               // Clients List / Empty State
               Expanded(
-                child: RefreshIndicator(
+                child: AppPullToRefresh(
                   onRefresh: () => ref.refresh(areaCustomersProvider(widget.areaId).future),
                   color: colors.primary,
                   child: filtered.isEmpty
                       ? SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(
-                              parent: ClampingScrollPhysics()),
+                          physics: const ClampingScrollPhysics(),
                           child: Center(
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
@@ -388,8 +388,7 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
                           // Reorderable list when in default view
                           ? ReorderableListView.builder(
                               buildDefaultDragHandles: false,
-                              physics: const AlwaysScrollableScrollPhysics(
-                                  parent: ClampingScrollPhysics()),
+                              physics: const ClampingScrollPhysics(),
                               padding: const EdgeInsets.symmetric(
                                   horizontal: AppSpacing.md),
                               itemCount: filtered.length,
@@ -413,8 +412,7 @@ class _AreaScreenState extends ConsumerState<AreaScreen> {
                             )
                           // Standard list view when search/filters are active
                           : ListView.separated(
-                              physics: const AlwaysScrollableScrollPhysics(
-                                  parent: ClampingScrollPhysics()),
+                              physics: const ClampingScrollPhysics(),
                               padding: const EdgeInsets.symmetric(
                                   horizontal: AppSpacing.md),
                               itemCount: filtered.length,

@@ -11,6 +11,7 @@ import '../../core/widgets/error_state.dart';
 import '../../core/router/routes.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/avatar.dart';
+import '../../core/widgets/app_pull_to_refresh.dart';
 import '../../data/models/weekday.dart';
 import '../../data/models/place.dart';
 import '../../data/models/area.dart';
@@ -421,7 +422,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
 
           // List or Empty State
           Expanded(
-            child: RefreshIndicator(
+            child: AppPullToRefresh(
               onRefresh: () async {
                 ref.invalidate(customersStreamProvider);
                 ref.invalidate(salesStreamProvider);
@@ -445,8 +446,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                 },
                 child: filtered.isEmpty
                   ? SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(
-                          parent: ClampingScrollPhysics()),
+                      physics: const ClampingScrollPhysics(),
                     child: Center(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -494,8 +494,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                     ),
                   )
                 : ListView.separated(
-                    physics: const AlwaysScrollableScrollPhysics(
-                        parent: ClampingScrollPhysics()),
+                    physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.fromLTRB(
                       AppSpacing.md,
                       0,

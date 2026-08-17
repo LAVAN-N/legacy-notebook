@@ -10,6 +10,7 @@ import '../../core/widgets/loading_skeleton.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/stat_card.dart';
+import '../../core/widgets/app_pull_to_refresh.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/router/routes.dart';
 import '../../core/router/navigation_shell.dart';
@@ -31,7 +32,7 @@ class WeekdayScreen extends ConsumerWidget {
         'Route',
         style: AppTypography.headlineMedium.copyWith(color: colors.foreground),
       ),
-      body: RefreshIndicator(
+      body: AppPullToRefresh(
         onRefresh: () => ref.refresh(weekdayPlacesProvider(dayName).future),
         color: colors.primary,
         child: placesState.when(
@@ -43,8 +44,7 @@ class WeekdayScreen extends ConsumerWidget {
           data: (places) {
             if (places.isEmpty) {
               return SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(
-                    parent: ClampingScrollPhysics()),
+                physics: const ClampingScrollPhysics(),
                 child: Container(
                   alignment: Alignment.center,
                   height: MediaQuery.of(context).size.height * 0.7,
@@ -73,8 +73,7 @@ class WeekdayScreen extends ConsumerWidget {
                 places.fold<int>(0, (sum, p) => sum + p.customerCount);
 
             return SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(
-                  parent: ClampingScrollPhysics()),
+              physics: const ClampingScrollPhysics(),
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
