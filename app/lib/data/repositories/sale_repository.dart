@@ -14,6 +14,7 @@ abstract class SaleRepository {
     String? remarks,
     DateTime? customDate,
     int? lendAmount,
+    int appliedCredit = 0,
   });
 
   Future<void> undoSale(String saleId);
@@ -23,6 +24,10 @@ abstract class SaleRepository {
     required String saleItemId,
     required int collectedAmount,
     required String processedBy,
+    required bool tallyOut,
+    String? tallySaleItemId,
+    String? tallyProductName,
+    int? tallyAmount,
   });
   Future<void> settleProduct(String saleItemId);
 }

@@ -634,6 +634,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     String? remarks,
     DateTime? customDate,
     int? lendAmount,
+    int appliedCredit = 0,
   }) async {
     int total = 0;
     if (lendAmount != null) {
@@ -661,7 +662,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     if (customerIndex != -1) {
       final cust = _customers[customerIndex];
       final currentCredit = cust.credit;
-      creditUsed = currentCredit < totalSaleAmount ? currentCredit : totalSaleAmount;
+      creditUsed = appliedCredit.clamp(0, currentCredit < totalSaleAmount ? currentCredit : totalSaleAmount);
       if (creditUsed > 0) {
         _customers[customerIndex] = cust.copyWith(credit: currentCredit - creditUsed);
       }
@@ -725,6 +726,10 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     required String saleItemId,
     required int collectedAmount,
     required String processedBy,
+    required bool tallyOut,
+    String? tallySaleItemId,
+    String? tallyProductName,
+    int? tallyAmount,
   }) async {
     final itemIndex = _saleItems.indexWhere((si) => si.id == saleItemId);
     if (itemIndex == -1) return;
@@ -734,10 +739,53 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     final saleIndex = _sales.indexWhere((s) => s.id == item.saleId);
     if (saleIndex != -1) {
       final sale = _sales[saleIndex];
-      final customerIndex = _customers.indexWhere((c) => c.id == sale.customerId);
-      if (customerIndex != -1) {
-        final cust = _customers[customerIndex];
-        _customers[customerIndex] = cust.copyWith(credit: cust.credit + collectedAmount);
+      final customerId = sale.customerId;
+
+      int actualTallyAmount = 0;
+      int creditRemainder = collectedAmount;
+
+      if (tallyOut) {
+        if (tallyAmount != null) {
+          actualTallyAmount = tallyAmount;
+        } else {
+          // Calculate customer outstanding before returned item's financed amount is reduced
+          final customerSales = _sales.where((s) => s.customerId == customerId);
+          final totalFinanced = customerSales.fold<int>(0, (sum, s) => sum + s.financedAmount);
+          final totalCollected = _collections.where((c) => c.customerId == customerId && (c.status == 'PAYMENT' || c.status == 'PARTIAL_PAYMENT')).fold<int>(0, (sum, c) => sum + c.amount.toInt());
+          final outstanding = totalFinanced - totalCollected;
+
+          final unpaidPortion = item.totalPrice - collectedAmount;
+          final otherOutstanding = outstanding - unpaidPortion;
+          final actualOtherOutstanding = otherOutstanding < 0 ? 0 : otherOutstanding;
+          actualTallyAmount = collectedAmount < actualOtherOutstanding ? collectedAmount : actualOtherOutstanding;
+        }
+        creditRemainder = collectedAmount - actualTallyAmount;
+      }
+
+      final pIndex = _products.indexWhere((p) => p.id == item.productId);
+      final productName = pIndex != -1 ? _products[pIndex].name : 'Product';
+
+      if (actualTallyAmount > 0) {
+        final reasonText = tallyProductName != null
+            ? 'Return Tally Out: $productName applied to $tallyProductName'
+            : 'Return Tally Out: $productName';
+        _collections.add(Collection(
+          id: UuidUtils.generate(),
+          customerId: customerId,
+          visitDatetime: DateTime.now(),
+          status: 'PAYMENT',
+          amount: actualTallyAmount.toDouble(),
+          reason: reasonText,
+          collectedBy: processedBy,
+        ));
+      }
+
+      if (creditRemainder > 0) {
+        final customerIndex = _customers.indexWhere((c) => c.id == customerId);
+        if (customerIndex != -1) {
+          final cust = _customers[customerIndex];
+          _customers[customerIndex] = cust.copyWith(credit: cust.credit + creditRemainder);
+        }
       }
 
       final advanceReduction = collectedAmount < sale.advanceAmount ? collectedAmount : sale.advanceAmount;

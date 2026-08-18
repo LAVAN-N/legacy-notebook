@@ -383,47 +383,140 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                                                     const SizedBox(width: 8),
                                                    ],
                                                    OutlinedButton(
-                                                     onPressed: () {
-                                                       showDialog(
-                                                         context: context,
-                                                         builder: (ctx) => AlertDialog(
-                                                           title: const Text('Return Product'),
-                                                           content: Text(
-                                                             'Confirm returning ${item.productName}?\n\nThis will add the collected amount so far (${rupees(item.collectedAmount)}) to the customer\'s credit balance, and restock the product.',
-                                                           ),
-                                                           actions: [
-                                                             TextButton(
-                                                               onPressed: () => Navigator.pop(ctx),
-                                                               child: const Text('Cancel'),
-                                                             ),
-                                                             ElevatedButton(
-                                                               onPressed: () async {
-                                                                 Navigator.pop(ctx);
-                                                                 final notifier = ref.read(customerDetailControllerProvider(widget.customerId).notifier);
-                                                                 await notifier.returnProduct(
-                                                                   item.saleItemId,
-                                                                   item.collectedAmount,
-                                                                   'Owner',
-                                                                 );
-                                                                 if (context.mounted) {
-                                                                   ScaffoldMessenger.of(context).showSnackBar(
-                                                                     SnackBar(
-                                                                       content: Text('${item.productName} returned successfully. Credit added.'),
-                                                                       behavior: SnackBarBehavior.floating,
-                                                                     ),
-                                                                   );
-                                                                 }
-                                                               },
-                                                               style: ElevatedButton.styleFrom(
-                                                                 backgroundColor: colors.danger,
-                                                                 foregroundColor: Colors.white,
-                                                               ),
-                                                               child: const Text('Confirm Return'),
-                                                             ),
-                                                           ],
-                                                         ),
-                                                       );
-                                                     },
+                                                      onPressed: () {
+                                                        showDialog(
+                                                          context: context,
+                                                          builder: (ctx) {
+                                                            final otherOutstandingProducts = data.purchasedProducts.where((p) =>
+                                                              p.saleItemId != item.saleItemId &&
+                                                              p.status == 'purchased' &&
+                                                              (p.totalPrice - p.collectedAmount) > 0
+                                                            ).toList();
+
+                                                            bool tallyOut = otherOutstandingProducts.isNotEmpty;
+                                                            dynamic selectedTallyProduct = otherOutstandingProducts.isNotEmpty ? otherOutstandingProducts.first : null;
+
+                                                            return StatefulBuilder(
+                                                              builder: (context, setState) {
+                                                                final hasOtherOutstandings = otherOutstandingProducts.isNotEmpty;
+                                                                int tallyAmount = 0;
+                                                                int remainder = item.collectedAmount;
+
+                                                                if (tallyOut && selectedTallyProduct != null) {
+                                                                  final outstandingAmount = selectedTallyProduct.totalPrice - selectedTallyProduct.collectedAmount;
+                                                                  tallyAmount = item.collectedAmount < outstandingAmount ? item.collectedAmount : outstandingAmount;
+                                                                  remainder = item.collectedAmount - tallyAmount;
+                                                                }
+
+                                                                return AlertDialog(
+                                                                  title: const Text('Return Product'),
+                                                                  content: Column(
+                                                                    mainAxisSize: MainAxisSize.min,
+                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                                    children: [
+                                                                      Text(
+                                                                        'Confirm returning ${item.productName}?\n\nThis will restock the product. Return Credit: ${rupees(item.collectedAmount)}.',
+                                                                        style: AppTypography.bodyMedium.copyWith(color: colors.foreground),
+                                                                      ),
+                                                                      const SizedBox(height: 12),
+                                                                      if (hasOtherOutstandings) ...[
+                                                                        SwitchListTile(
+                                                                          value: tallyOut,
+                                                                          title: const Text('Tally out with outstanding', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                                                          subtitle: const Text('Deduct credit from other active product outstandings instead of keeping as pure credit', style: TextStyle(fontSize: 11)),
+                                                                          contentPadding: EdgeInsets.zero,
+                                                                          dense: true,
+                                                                          onChanged: (val) {
+                                                                            setState(() => tallyOut = val);
+                                                                          },
+                                                                        ),
+                                                                        if (tallyOut && selectedTallyProduct != null) ...[
+                                                                          const SizedBox(height: 12),
+                                                                          Text('Select product to apply credit to:', style: AppTypography.labelSmall.copyWith(color: colors.mutedFg)),
+                                                                          const SizedBox(height: 6),
+                                                                          Container(
+                                                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                                                            decoration: BoxDecoration(
+                                                                              border: Border.all(color: colors.border),
+                                                                              borderRadius: BorderRadius.circular(8),
+                                                                            ),
+                                                                            child: DropdownButtonHideUnderline(
+                                                                              child: DropdownButton<dynamic>(
+                                                                                value: selectedTallyProduct,
+                                                                                isExpanded: true,
+                                                                                dropdownColor: colors.background,
+                                                                                style: AppTypography.bodyMedium.copyWith(color: colors.foreground),
+                                                                                items: otherOutstandingProducts.map((p) {
+                                                                                  final outstandingAmount = p.totalPrice - p.collectedAmount;
+                                                                                  return DropdownMenuItem<dynamic>(
+                                                                                    value: p,
+                                                                                    child: Text('${p.productName} (Outstanding: ${rupees(outstandingAmount)})'),
+                                                                                  );
+                                                                                }).toList(),
+                                                                                onChanged: (val) {
+                                                                                  setState(() => selectedTallyProduct = val);
+                                                                                },
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                          const SizedBox(height: 12),
+                                                                          Text(
+                                                                            '${rupees(tallyAmount)} will be applied to ${selectedTallyProduct.productName}.\n${remainder > 0 ? "${rupees(remainder)} will be kept as pure credit." : "No credit remainder."}',
+                                                                            style: AppTypography.labelSmall.copyWith(color: colors.success, fontWeight: FontWeight.w600),
+                                                                          ),
+                                                                        ],
+                                                                      ] else ...[
+                                                                        Text(
+                                                                          'No other outstanding products found. Return credit of ${rupees(item.collectedAmount)} will be saved as pure credit for future purchases.',
+                                                                          style: AppTypography.bodySmall.copyWith(color: colors.mutedFg),
+                                                                        ),
+                                                                      ],
+                                                                    ],
+                                                                  ),
+                                                                  actions: [
+                                                                    TextButton(
+                                                                      onPressed: () => Navigator.pop(ctx),
+                                                                      child: const Text('Cancel'),
+                                                                    ),
+                                                                    ElevatedButton(
+                                                                      onPressed: () async {
+                                                                        Navigator.pop(ctx);
+                                                                        final notifier = ref.read(customerDetailControllerProvider(widget.customerId).notifier);
+                                                                        await notifier.returnProduct(
+                                                                          item.saleItemId,
+                                                                          item.collectedAmount,
+                                                                          'Owner',
+                                                                          tallyOut: tallyOut,
+                                                                          tallySaleItemId: tallyOut && selectedTallyProduct != null ? selectedTallyProduct.saleItemId : null,
+                                                                          tallyProductName: tallyOut && selectedTallyProduct != null ? selectedTallyProduct.productName : null,
+                                                                          tallyAmount: tallyOut ? tallyAmount : null,
+                                                                        );
+                                                                        if (context.mounted) {
+                                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                                            SnackBar(
+                                                                              content: Text(
+                                                                                tallyOut
+                                                                                    ? '${item.productName} returned. Credit applied to outstanding.'
+                                                                                    : '${item.productName} returned. Saved to returned credit.',
+                                                                              ),
+                                                                              behavior: SnackBarBehavior.floating,
+                                                                            ),
+                                                                          );
+                                                                        }
+                                                                      },
+                                                                      style: ElevatedButton.styleFrom(
+                                                                        backgroundColor: colors.danger,
+                                                                        foregroundColor: Colors.white,
+                                                                      ),
+                                                                      child: const Text('Confirm Return'),
+                                                                    ),
+                                                                  ],
+                                                                );
+                                                              },
+                                                            );
+                                                          },
+                                                        );
+                                                      },
                                                      style: OutlinedButton.styleFrom(
                                                        foregroundColor: colors.danger,
                                                        side: BorderSide(color: colors.danger),

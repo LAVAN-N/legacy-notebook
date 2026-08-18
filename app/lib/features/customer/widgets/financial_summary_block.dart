@@ -472,28 +472,26 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                 ),
               ],
             ),
-            if (widget.customer.credit > 0) ...[
-              const SizedBox(height: AppSpacing.md),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'AVAILABLE CREDIT',
-                    style: AppTypography.labelMedium.copyWith(
-                      color: colors.success,
-                      letterSpacing: 0.5,
-                      fontWeight: FontWeight.bold,
-                    ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'RETURNED CREDIT',
+                  style: AppTypography.labelMedium.copyWith(
+                    color: colors.success,
+                    letterSpacing: 0.5,
+                    fontWeight: FontWeight.bold,
                   ),
-                  AmountText(
-                    amount: widget.customer.credit,
-                    style: AppTypography.currencyLarge.copyWith(
-                      color: colors.success,
-                    ),
+                ),
+                AmountText(
+                  amount: widget.customer.credit,
+                  style: AppTypography.currencyLarge.copyWith(
+                    color: colors.success,
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
             const SizedBox(height: AppSpacing.sm),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

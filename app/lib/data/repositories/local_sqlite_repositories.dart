@@ -900,6 +900,7 @@ class LocalSqliteSaleRepository implements SaleRepository {
     String? remarks,
     DateTime? customDate,
     int? lendAmount,
+    int appliedCredit = 0,
   }) async {
     final db = await DatabaseHelper.instance.database;
     final saleId = UuidUtils.generate();
@@ -928,7 +929,7 @@ class LocalSqliteSaleRepository implements SaleRepository {
       if (customerMaps.isEmpty) throw Exception('Customer not found');
       final int currentCredit = customerMaps.first['credit'] as int? ?? 0;
 
-      final creditUsed = currentCredit < totalAmount ? currentCredit : totalAmount;
+      final int creditUsed = appliedCredit.clamp(0, currentCredit < totalAmount ? currentCredit : totalAmount);
 
       if (creditUsed > 0) {
         await txn.update('customers', {
@@ -1016,6 +1017,10 @@ class LocalSqliteSaleRepository implements SaleRepository {
     required String saleItemId,
     required int collectedAmount,
     required String processedBy,
+    required bool tallyOut,
+    String? tallySaleItemId,
+    String? tallyProductName,
+    int? tallyAmount,
   }) async {
     final db = await DatabaseHelper.instance.database;
     
@@ -1036,12 +1041,59 @@ class LocalSqliteSaleRepository implements SaleRepository {
         'status': 'returned',
       }, where: 'id = ?', whereArgs: [saleItemId]);
 
-      final customerMaps = await txn.query('customers', where: 'id = ?', whereArgs: [customerId]);
-      if (customerMaps.isEmpty) throw Exception('Customer not found');
-      final int currentCredit = customerMaps.first['credit'] as int? ?? 0;
-      await txn.update('customers', {
-        'credit': currentCredit + collectedAmount,
-      }, where: 'id = ?', whereArgs: [customerId]);
+      int actualTallyAmount = 0;
+      int creditRemainder = collectedAmount;
+
+      if (tallyOut) {
+        if (tallyAmount != null) {
+          actualTallyAmount = tallyAmount;
+        } else {
+          final financedResult = await txn.rawQuery(
+            'SELECT SUM(financed_amount) AS total FROM sales WHERE customer_id = ?',
+            [customerId],
+          );
+          final collectionResult = await txn.rawQuery(
+            'SELECT SUM(amount) AS total FROM collections WHERE customer_id = ? AND status IN (\'PAYMENT\', \'PARTIAL_PAYMENT\')',
+            [customerId],
+          );
+          final totalFinanced = Sqflite.firstIntValue(financedResult) ?? 0;
+          final totalCollected = Sqflite.firstIntValue(collectionResult) ?? 0;
+          final outstanding = totalFinanced - totalCollected;
+
+          final unpaidPortion = item.totalPrice - collectedAmount;
+          final otherOutstanding = outstanding - unpaidPortion;
+          final actualOtherOutstanding = otherOutstanding < 0 ? 0 : otherOutstanding;
+          actualTallyAmount = collectedAmount < actualOtherOutstanding ? collectedAmount : actualOtherOutstanding;
+        }
+        creditRemainder = collectedAmount - actualTallyAmount;
+      }
+
+      final productMaps = await txn.query('products', where: 'id = ?', whereArgs: [item.productId]);
+      final productName = productMaps.isNotEmpty ? productMaps.first['name'] as String : 'Product';
+
+      if (actualTallyAmount > 0) {
+        final reasonText = tallyProductName != null
+            ? 'Return Tally Out: $productName applied to $tallyProductName'
+            : 'Return Tally Out: $productName';
+        await txn.insert('collections', {
+          'id': UuidUtils.generate(),
+          'customer_id': customerId,
+          'visit_datetime': DateTime.now().toIso8601String(),
+          'status': 'PAYMENT',
+          'amount': actualTallyAmount.toDouble(),
+          'reason': reasonText,
+          'collected_by': processedBy,
+        });
+      }
+
+      if (creditRemainder > 0) {
+        final customerMaps = await txn.query('customers', where: 'id = ?', whereArgs: [customerId]);
+        if (customerMaps.isEmpty) throw Exception('Customer not found');
+        final int currentCredit = customerMaps.first['credit'] as int? ?? 0;
+        await txn.update('customers', {
+          'credit': currentCredit + creditRemainder,
+        }, where: 'id = ?', whereArgs: [customerId]);
+      }
 
       await txn.insert('inventory_transactions', {
         'id': UuidUtils.generate(),
@@ -1070,6 +1122,7 @@ class LocalSqliteSaleRepository implements SaleRepository {
     TableBroadcaster.instance.notify('sales');
     TableBroadcaster.instance.notify('sale_items');
     TableBroadcaster.instance.notify('customers');
+    TableBroadcaster.instance.notify('collections');
     TableBroadcaster.instance.notify('inventory_transactions');
   }
 

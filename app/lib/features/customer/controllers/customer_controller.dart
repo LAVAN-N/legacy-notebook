@@ -175,12 +175,24 @@ class CustomerDetailNotifier extends AutoDisposeFamilyAsyncNotifier<CustomerDeta
     await customerRepo.addProofImage(arg, proofType, imageUrl);
   }
 
-  Future<void> returnProduct(String saleItemId, int collectedAmount, String processedBy) async {
+  Future<void> returnProduct(
+    String saleItemId,
+    int collectedAmount,
+    String processedBy, {
+    required bool tallyOut,
+    String? tallySaleItemId,
+    String? tallyProductName,
+    int? tallyAmount,
+  }) async {
     final saleRepo = ref.read(saleRepositoryProvider);
     await saleRepo.returnProduct(
       saleItemId: saleItemId,
       collectedAmount: collectedAmount,
       processedBy: processedBy,
+      tallyOut: tallyOut,
+      tallySaleItemId: tallySaleItemId,
+      tallyProductName: tallyProductName,
+      tallyAmount: tallyAmount,
     );
     ref.invalidateSelf();
   }

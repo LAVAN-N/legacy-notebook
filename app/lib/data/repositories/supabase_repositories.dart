@@ -1061,6 +1061,7 @@ class SupabaseSaleRepository implements SaleRepository {
     String? remarks,
     DateTime? customDate,
     int? lendAmount,
+    int appliedCredit = 0,
   }) async {
     final saleId = UuidUtils.generate();
     final date = customDate ?? DateTime.now();
@@ -1078,7 +1079,7 @@ class SupabaseSaleRepository implements SaleRepository {
     // Fetch customer's credit from Supabase
     final custRes = await _client.from('customers').select('credit').eq('id', customerId).single();
     final currentCredit = custRes['credit'] as int? ?? 0;
-    final creditUsed = currentCredit < totalAmount ? currentCredit : totalAmount;
+    final int creditUsed = appliedCredit.clamp(0, currentCredit < totalAmount ? currentCredit : totalAmount);
 
     if (creditUsed > 0) {
       await _client.from('customers').update({'credit': currentCredit - creditUsed}).eq('id', customerId);
@@ -1161,6 +1162,10 @@ class SupabaseSaleRepository implements SaleRepository {
     required String saleItemId,
     required int collectedAmount,
     required String processedBy,
+    required bool tallyOut,
+    String? tallySaleItemId,
+    String? tallyProductName,
+    int? tallyAmount,
   }) async {
     await _client.from('sale_items').update({'status': 'returned'}).eq('id', saleItemId);
 
@@ -1176,9 +1181,51 @@ class SupabaseSaleRepository implements SaleRepository {
     final advanceAmount = saleRes['advance_amount'] as int;
     final financedAmount = saleRes['financed_amount'] as int;
 
-    final custRes = await _client.from('customers').select('credit').eq('id', customerId).single();
-    final currentCredit = custRes['credit'] as int? ?? 0;
-    await _client.from('customers').update({'credit': currentCredit + collectedAmount}).eq('id', customerId);
+    int actualTallyAmount = 0;
+    int creditRemainder = collectedAmount;
+
+    if (tallyOut) {
+      if (tallyAmount != null) {
+        actualTallyAmount = tallyAmount;
+      } else {
+        final salesRes = await _client.from('sales').select('financed_amount').eq('customer_id', customerId);
+        final totalFinanced = (salesRes as List).fold<int>(0, (sum, s) => sum + (s['financed_amount'] as int));
+
+        final colRes = await _client.from('collections').select('amount').eq('customer_id', customerId).inFilter('status', ['PAYMENT', 'PARTIAL_PAYMENT']);
+        final totalCollected = (colRes as List).fold<int>(0, (sum, c) => sum + ((c['amount'] as num).toInt()));
+        final outstanding = totalFinanced - totalCollected;
+
+        final unpaidPortion = totalPrice - collectedAmount;
+        final otherOutstanding = outstanding - unpaidPortion;
+        final actualOtherOutstanding = otherOutstanding < 0 ? 0 : otherOutstanding;
+        actualTallyAmount = collectedAmount < actualOtherOutstanding ? collectedAmount : actualOtherOutstanding;
+      }
+      creditRemainder = collectedAmount - actualTallyAmount;
+    }
+
+    final productRes = await _client.from('products').select('name').eq('id', productId).single();
+    final productName = productRes['name'] as String? ?? 'Product';
+
+    if (actualTallyAmount > 0) {
+      final reasonText = tallyProductName != null
+          ? 'Return Tally Out: $productName applied to $tallyProductName'
+          : 'Return Tally Out: $productName';
+      await _client.from('collections').insert({
+        'id': UuidUtils.generate(),
+        'customer_id': customerId,
+        'visit_datetime': DateTime.now().toIso8601String(),
+        'status': 'PAYMENT',
+        'amount': actualTallyAmount.toDouble(),
+        'reason': reasonText,
+        'collected_by': processedBy,
+      });
+    }
+
+    if (creditRemainder > 0) {
+      final custRes = await _client.from('customers').select('credit').eq('id', customerId).single();
+      final currentCredit = custRes['credit'] as int? ?? 0;
+      await _client.from('customers').update({'credit': currentCredit + creditRemainder}).eq('id', customerId);
+    }
 
     final advanceReduction = collectedAmount < advanceAmount ? collectedAmount : advanceAmount;
     final financedReduction = totalPrice - advanceReduction;

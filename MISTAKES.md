@@ -1335,6 +1335,17 @@ Read before starting. Never edit past entries.
 - **Rule for next agent:** ALWAYS use `ref.invalidateSelf()` to invalidate or rebuild a Notifier/AsyncNotifier from within its own methods instead of passing its provider family symbol by name.
 - **Guardrail:** Never pass the notifier's own provider type/family to `ref.invalidate` within the notifier's class.
 
+---
+
+### 2026-08-18 · Accessing non-existent theme colors on AppColors
+
+- **Context:** Implementing the credit application container on the new sale screen.
+- **Mistake:** Attempted to use `colors.mutedBg` which is not defined in the custom `AppColors` style system.
+- **Root cause:** Assumed a theme color key existed without verifying the class declaration.
+- **Fix applied:** Changed `colors.mutedBg` to `colors.muted` which is the proper defined property in `AppColors`.
+- **Rule for next agent:** ALWAYS check the definitions in `AppColors` or query `context.colors` properties before using theme styling accessors.
+- **Guardrail:** Run `flutter analyze` immediately to catch non-existent style parameters or class getters.
+
 
 
 

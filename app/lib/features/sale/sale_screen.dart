@@ -203,22 +203,61 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: colors.success.withValues(alpha: 0.1),
+                  color: state.isCreditApplied
+                      ? colors.success.withValues(alpha: 0.1)
+                      : colors.muted.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  border: Border.all(color: colors.success.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: state.isCreditApplied
+                        ? colors.success.withValues(alpha: 0.3)
+                        : colors.border,
+                  ),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: colors.success, size: 20),
+                    Icon(
+                      state.isCreditApplied ? Icons.check_circle_outline : Icons.info_outline,
+                      color: state.isCreditApplied ? colors.success : colors.mutedFg,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        'This customer has ${rupees(state.customer.credit)} available credit. It will be automatically applied to draw down this purchase.',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: colors.success,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Returned Credit: ${rupees(state.customer.credit)}',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: colors.foreground,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            state.isCreditApplied
+                                ? 'Applying ${rupees(state.appliedCreditAmount)} credit towards this purchase.'
+                                : 'Apply this credit to reduce outstanding balance.',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: colors.mutedFg,
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        ref.read(saleControllerProvider(widget.customerId).notifier)
+                            .toggleApplyCredit(!state.isCreditApplied);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: state.isCreditApplied ? colors.danger : colors.success,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(state.isCreditApplied ? 'Remove' : 'Apply'),
                     ),
                   ],
                 ),
@@ -633,6 +672,16 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                         children: [
                           Text('Down Payment (Cash)', style: AppTypography.bodyMedium.copyWith(color: colors.success)),
                           Text('- ${rupees(state.advanceAmount)}', style: AppTypography.currencySmall.copyWith(color: colors.success)),
+                        ],
+                      ),
+                    ],
+                    if (state.appliedCreditAmount > 0) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Applied Returned Credit', style: AppTypography.bodyMedium.copyWith(color: colors.success)),
+                          Text('- ${rupees(state.appliedCreditAmount)}', style: AppTypography.currencySmall.copyWith(color: colors.success)),
                         ],
                       ),
                     ],

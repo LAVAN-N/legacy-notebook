@@ -36,6 +36,7 @@ class SaleScreenState {
     required this.selectedDate,
     this.isLend = false,
     this.lendAmount = 0,
+    this.isCreditApplied = false,
   });
 
   final Customer customer;
@@ -52,6 +53,7 @@ class SaleScreenState {
   final DateTime selectedDate;
   final bool isLend;
   final int lendAmount;
+  final bool isCreditApplied;
 
   int get totalAmount => isLend ? lendAmount : (lineItems.fold<int>(0, (sum, item) => sum + item.subtotal) ~/ 100);
 
@@ -67,7 +69,8 @@ class SaleScreenState {
   int get grandTotal => totalAmount + creditChargeAmount;
   int get finalAmount => isDiscounted ? advanceAmount : grandTotal;
   int get discountAmount => isDiscounted ? (totalAmount - advanceAmount).clamp(0, totalAmount) : 0;
-  int get creditAdded => isDiscounted ? 0 : (grandTotal - advanceAmount).clamp(0, 9999999);
+  int get appliedCreditAmount => isCreditApplied ? (customer.credit < grandTotal ? customer.credit : grandTotal) : 0;
+  int get creditAdded => isDiscounted ? 0 : (grandTotal - advanceAmount - appliedCreditAmount).clamp(0, 9999999);
   String get saleType => creditAdded == 0 ? 'READY' : 'CREDIT';
 
   SaleScreenState copyWith({
@@ -85,6 +88,7 @@ class SaleScreenState {
     DateTime? selectedDate,
     bool? isLend,
     int? lendAmount,
+    bool? isCreditApplied,
   }) {
     return SaleScreenState(
       customer: customer ?? this.customer,
@@ -101,6 +105,7 @@ class SaleScreenState {
       selectedDate: selectedDate ?? this.selectedDate,
       isLend: isLend ?? this.isLend,
       lendAmount: lendAmount ?? this.lendAmount,
+      isCreditApplied: isCreditApplied ?? this.isCreditApplied,
     );
   }
 }
@@ -288,6 +293,10 @@ class SaleController extends StateNotifier<SaleScreenState> {
     state = state.copyWith(selectedDate: date);
   }
 
+  void toggleApplyCredit(bool apply) {
+    state = state.copyWith(isCreditApplied: apply, errorMessage: null);
+  }
+
   Future<bool> saveSale() async {
     if (state.isSaving) return false;
 
@@ -338,6 +347,7 @@ class SaleController extends StateNotifier<SaleScreenState> {
         remarks: finalRemarks,
         customDate: state.selectedDate,
         lendAmount: state.isLend ? state.lendAmount : null,
+        appliedCredit: state.appliedCreditAmount,
       );
 
       _ref.invalidate(customerDetailControllerProvider(_customerId));
