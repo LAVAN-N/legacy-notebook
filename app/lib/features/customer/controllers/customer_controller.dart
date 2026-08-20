@@ -136,7 +136,9 @@ class CustomerDetailNotifier extends AsyncNotifier<CustomerDetailData> {
         ),
       );
 
-      final collected = allocatedCollectedAmount[item.id] ?? 0;
+      final collected = item.collectedAmount > 0
+          ? item.collectedAmount
+          : (allocatedCollectedAmount[item.id] ?? 0);
 
       purchasedProducts.add(PurchasedProductItem(
         saleItemId: item.id,

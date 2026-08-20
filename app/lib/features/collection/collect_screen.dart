@@ -693,6 +693,7 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
                   alloc.productName,
                   style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   'Outstanding: ${rupees(alloc.outstanding)} (Paid: ${rupees(alloc.collectedAmount)})',
                   style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
@@ -700,6 +701,7 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
               ],
             ),
           ),
+          const SizedBox(width: AppSpacing.md),
           if (isManual) ...[
             IndividualAllocationInput(
               initialValue: alloc.allocatedAmount,

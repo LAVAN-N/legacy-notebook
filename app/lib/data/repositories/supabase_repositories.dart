@@ -1151,12 +1151,25 @@ class SupabaseSaleRepository implements SaleRepository {
     });
 
     // 2. Save Sale Items and Inventory Transactions
+    final int totalBaseAmount = items.fold<int>(0, (sum, i) => sum + ((i['quantity'] as int) * (i['unitPrice'] as int)));
+    final int netAdjustment = creditCharge - discount;
+
     int remainingAdvance = finalAdvanceAmount;
-    for (var item in items) {
+    int adjustmentRemaining = netAdjustment;
+    for (int i = 0; i < items.length; i++) {
+      final item = items[i];
       final productId = item['productId'] as String;
       final qty = item['quantity'] as int;
-      final unitPrice = item['unitPrice'] as int;
-      final itemTotal = qty * unitPrice;
+      final baseUnitPrice = item['unitPrice'] as int;
+      final baseItemTotal = qty * baseUnitPrice;
+
+      final int itemAdjustment = (i == items.length - 1)
+          ? adjustmentRemaining
+          : (totalBaseAmount > 0 ? ((baseItemTotal * netAdjustment) / totalBaseAmount).round() : 0);
+      adjustmentRemaining -= itemAdjustment;
+
+      final itemTotal = baseItemTotal + itemAdjustment;
+      final unitPrice = qty > 0 ? (itemTotal / qty).round() : itemTotal;
 
       final itemCollected = remainingAdvance >= itemTotal ? itemTotal : remainingAdvance;
       remainingAdvance -= itemCollected;
@@ -1191,23 +1204,65 @@ class SupabaseSaleRepository implements SaleRepository {
 
   @override
   Future<List<SaleItem>> getSaleItemsForCustomer(String customerId) async {
-    final salesRes = await _client.from('sales').select('id').eq('customer_id', customerId);
-    final saleIds = (salesRes as List).map((s) => s['id'] as String).toList();
-    if (saleIds.isEmpty) return [];
+    final salesRes = await _client.from('sales').select('id, total_amount').eq('customer_id', customerId);
+    final salesList = salesRes as List;
+    if (salesList.isEmpty) return [];
+
+    final Map<String, int> saleTotals = {
+      for (var s in salesList) s['id'] as String: (s['total_amount'] as num?)?.toInt() ?? 0
+    };
+    final saleIds = saleTotals.keys.toList();
 
     final itemsRes = await _client.from('sale_items').select().inFilter('sale_id', saleIds);
-    return (itemsRes as List).map((map) {
-      return SaleItem.fromJson({
-        'id': map['id'],
-        'saleId': map['sale_id'],
-        'productId': map['product_id'],
-        'quantity': map['quantity'],
-        'unitPrice': map['unit_price'],
-        'totalPrice': map['total_price'],
-        'status': map['status'] ?? 'purchased',
-        'collectedAmount': map['collected_amount'] ?? 0,
-      });
-    }).toList();
+    final itemsList = itemsRes as List;
+
+    final Map<String, List<dynamic>> itemsBySale = {};
+    for (var item in itemsList) {
+      final sId = item['sale_id'] as String;
+      itemsBySale.putIfAbsent(sId, () => []).add(item);
+    }
+
+    final List<SaleItem> result = [];
+    for (var entry in itemsBySale.entries) {
+      final saleTotal = saleTotals[entry.key] ?? 0;
+      final saleItems = entry.value;
+      final baseSum = saleItems.fold<int>(0, (sum, map) => sum + ((map['total_price'] as num?)?.toInt() ?? 0));
+
+      int remainingTotal = saleTotal > 0 ? saleTotal : baseSum;
+
+      for (int i = 0; i < saleItems.length; i++) {
+        final map = saleItems[i];
+        final rawTotal = (map['total_price'] as num?)?.toInt() ?? 0;
+        final qty = (map['quantity'] as num?)?.toInt() ?? 1;
+
+        int effectiveTotal;
+        if (saleTotal > 0 && baseSum > 0 && saleTotal != baseSum) {
+          effectiveTotal = (i == saleItems.length - 1)
+              ? remainingTotal
+              : ((rawTotal * saleTotal) / baseSum).round();
+          remainingTotal -= effectiveTotal;
+        } else if (saleTotal > 0 && saleItems.length == 1) {
+          effectiveTotal = saleTotal;
+        } else {
+          effectiveTotal = rawTotal;
+        }
+
+        final effectiveUnitPrice = qty > 0 ? (effectiveTotal / qty).round() : effectiveTotal;
+
+        result.add(SaleItem.fromJson({
+          'id': map['id'],
+          'saleId': map['sale_id'],
+          'productId': map['product_id'],
+          'quantity': qty,
+          'unitPrice': effectiveUnitPrice,
+          'totalPrice': effectiveTotal,
+          'status': map['status'] ?? 'purchased',
+          'collectedAmount': map['collected_amount'] ?? 0,
+        }));
+      }
+    }
+
+    return result;
   }
 
   @override

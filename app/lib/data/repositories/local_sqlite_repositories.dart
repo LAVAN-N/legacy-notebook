@@ -1002,13 +1002,26 @@ class LocalSqliteSaleRepository implements SaleRepository {
       });
 
       // Save sale items and log inventory transactions
+      final int totalBaseAmount = items.fold<int>(0, (sum, i) => sum + ((i['quantity'] as int) * (i['unitPrice'] as int)));
+      final int netAdjustment = creditCharge - discount;
+
       int remainingAdvance = finalAdvanceAmount;
-      for (var item in items) {
+      int adjustmentRemaining = netAdjustment;
+      for (int i = 0; i < items.length; i++) {
+        final item = items[i];
         final productId = item['productId'] as String;
         final qty = item['quantity'] as int;
-        final unitPrice = item['unitPrice'] as int;
-        final itemTotal = qty * unitPrice;
+        final baseUnitPrice = item['unitPrice'] as int;
+        final baseItemTotal = qty * baseUnitPrice;
         final itemId = UuidUtils.generate();
+
+        final int itemAdjustment = (i == items.length - 1)
+            ? adjustmentRemaining
+            : (totalBaseAmount > 0 ? ((baseItemTotal * netAdjustment) / totalBaseAmount).round() : 0);
+        adjustmentRemaining -= itemAdjustment;
+
+        final itemTotal = baseItemTotal + itemAdjustment;
+        final unitPrice = qty > 0 ? (itemTotal / qty).round() : itemTotal;
 
         final itemCollected = remainingAdvance >= itemTotal ? itemTotal : remainingAdvance;
         remainingAdvance -= itemCollected;
@@ -1055,21 +1068,60 @@ class LocalSqliteSaleRepository implements SaleRepository {
   Future<List<SaleItem>> getSaleItemsForCustomer(String customerId) async {
     final db = await DatabaseHelper.instance.database;
     final results = await db.rawQuery('''
-      SELECT si.* 
+      SELECT si.*, s.total_amount AS sale_total
       FROM sale_items si
       INNER JOIN sales s ON si.sale_id = s.id
       WHERE s.customer_id = ?
     ''', [customerId]);
-    return results.map((r) => SaleItem.fromJson({
-      'id': r['id'],
-      'saleId': r['sale_id'],
-      'productId': r['product_id'],
-      'quantity': r['quantity'],
-      'unitPrice': r['unit_price'],
-      'totalPrice': r['total_price'],
-      'status': r['status'] ?? 'purchased',
-      'collectedAmount': r['collected_amount'] ?? 0,
-    })).toList();
+
+    final Map<String, List<Map<String, dynamic>>> itemsBySale = {};
+    for (var r in results) {
+      final saleId = r['sale_id'] as String;
+      itemsBySale.putIfAbsent(saleId, () => []).add(r);
+    }
+
+    final List<SaleItem> finalItems = [];
+
+    for (var entry in itemsBySale.entries) {
+      final saleRows = entry.value;
+      final saleTotal = (saleRows.first['sale_total'] as num?)?.toInt() ?? 0;
+      final baseSum = saleRows.fold<int>(0, (sum, r) => sum + ((r['total_price'] as num?)?.toInt() ?? 0));
+
+      int remainingTotal = saleTotal > 0 ? saleTotal : baseSum;
+
+      for (int i = 0; i < saleRows.length; i++) {
+        final r = saleRows[i];
+        final rawTotal = (r['total_price'] as num?)?.toInt() ?? 0;
+        final qty = (r['quantity'] as num?)?.toInt() ?? 1;
+
+        int effectiveTotal;
+        if (saleTotal > 0 && baseSum > 0 && saleTotal != baseSum) {
+          effectiveTotal = (i == saleRows.length - 1)
+              ? remainingTotal
+              : ((rawTotal * saleTotal) / baseSum).round();
+          remainingTotal -= effectiveTotal;
+        } else if (saleTotal > 0 && saleRows.length == 1) {
+          effectiveTotal = saleTotal;
+        } else {
+          effectiveTotal = rawTotal;
+        }
+
+        final effectiveUnitPrice = qty > 0 ? (effectiveTotal / qty).round() : effectiveTotal;
+
+        finalItems.add(SaleItem.fromJson({
+          'id': r['id'],
+          'saleId': r['sale_id'],
+          'productId': r['product_id'],
+          'quantity': qty,
+          'unitPrice': effectiveUnitPrice,
+          'totalPrice': effectiveTotal,
+          'status': r['status'] ?? 'purchased',
+          'collectedAmount': r['collected_amount'] ?? 0,
+        }));
+      }
+    }
+
+    return finalItems;
   }
 
   @override

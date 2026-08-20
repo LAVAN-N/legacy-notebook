@@ -731,11 +731,24 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
 
     // Save mock sale items
     if (lendAmount == null) {
+      final int totalBaseAmount = items.fold<int>(0, (sum, i) => sum + ((i['quantity'] as int) * (i['unitPrice'] as int)));
+      final int netAdjustment = creditCharge - discount;
+
       int remainingAdvance = finalAdvanceAmount;
-      for (final item in items) {
+      int adjustmentRemaining = netAdjustment;
+      for (int i = 0; i < items.length; i++) {
+        final item = items[i];
         final qty = item['quantity'] as int;
-        final unitPrice = item['unitPrice'] as int;
-        final itemTotal = qty * unitPrice;
+        final baseUnitPrice = item['unitPrice'] as int;
+        final baseItemTotal = qty * baseUnitPrice;
+
+        final int itemAdjustment = (i == items.length - 1)
+            ? adjustmentRemaining
+            : (totalBaseAmount > 0 ? ((baseItemTotal * netAdjustment) / totalBaseAmount).round() : 0);
+        adjustmentRemaining -= itemAdjustment;
+
+        final itemTotal = baseItemTotal + itemAdjustment;
+        final unitPrice = qty > 0 ? (itemTotal / qty).round() : itemTotal;
 
         final itemCollected = remainingAdvance >= itemTotal ? itemTotal : remainingAdvance;
         remainingAdvance -= itemCollected;
@@ -767,8 +780,47 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
 
   @override
   Future<List<SaleItem>> getSaleItemsForCustomer(String customerId) async {
-    final customerSales = _sales.where((s) => s.customerId == customerId).map((s) => s.id).toSet();
-    return _saleItems.where((si) => customerSales.contains(si.saleId)).toList();
+    final customerSalesList = _sales.where((s) => s.customerId == customerId).toList();
+    final Map<String, Sale> salesMap = {for (var s in customerSalesList) s.id: s};
+    final items = _saleItems.where((si) => salesMap.containsKey(si.saleId)).toList();
+
+    final Map<String, List<SaleItem>> itemsBySale = {};
+    for (var item in items) {
+      itemsBySale.putIfAbsent(item.saleId, () => []).add(item);
+    }
+
+    final List<SaleItem> result = [];
+    for (var entry in itemsBySale.entries) {
+      final sale = salesMap[entry.key];
+      final saleItems = entry.value;
+      final saleTotal = sale?.totalAmount ?? 0;
+      final baseSum = saleItems.fold<int>(0, (sum, si) => sum + si.totalPrice);
+
+      int remainingTotal = saleTotal > 0 ? saleTotal : baseSum;
+
+      for (int i = 0; i < saleItems.length; i++) {
+        final si = saleItems[i];
+        int effectiveTotal;
+        if (saleTotal > 0 && baseSum > 0 && saleTotal != baseSum) {
+          effectiveTotal = (i == saleItems.length - 1)
+              ? remainingTotal
+              : ((si.totalPrice * saleTotal) / baseSum).round();
+          remainingTotal -= effectiveTotal;
+        } else if (saleTotal > 0 && saleItems.length == 1) {
+          effectiveTotal = saleTotal;
+        } else {
+          effectiveTotal = si.totalPrice;
+        }
+
+        final effectiveUnitPrice = si.quantity > 0 ? (effectiveTotal / si.quantity).round() : effectiveTotal;
+        result.add(si.copyWith(
+          totalPrice: effectiveTotal,
+          unitPrice: effectiveUnitPrice,
+        ));
+      }
+    }
+
+    return result;
   }
 
   @override
