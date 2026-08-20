@@ -147,6 +147,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
       dob: map['dob'] as String?,
       occupation: map['occupation'] as String?,
       notes: map['notes'] as String?,
+      credit: (map['credit'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -703,6 +704,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
       'notes': customer.notes,
       'nominees': customer.nominees.map((n) => n.toJson()).toList(),
       'id_proofs': uploadedProofs.map((p) => p.toJson()).toList(),
+      'credit': customer.credit,
     }).eq('id', customer.id);
   }
 

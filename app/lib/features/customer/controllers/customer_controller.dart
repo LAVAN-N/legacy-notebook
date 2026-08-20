@@ -199,12 +199,14 @@ class CustomerDetailNotifier extends AsyncNotifier<CustomerDetailData> {
       tallyProductName: tallyProductName,
       tallyAmount: tallyAmount,
     );
-    ref.invalidateSelf();
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => build());
   }
 
   Future<void> settleProduct(String saleItemId) async {
     final saleRepo = ref.read(saleRepositoryProvider);
     await saleRepo.settleProduct(saleItemId);
-    ref.invalidateSelf();
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => build());
   }
 }
