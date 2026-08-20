@@ -1023,8 +1023,13 @@ class LocalSqliteSaleRepository implements SaleRepository {
         final itemTotal = baseItemTotal + itemAdjustment;
         final unitPrice = qty > 0 ? (itemTotal / qty).round() : itemTotal;
 
-        final itemCollected = remainingAdvance >= itemTotal ? itemTotal : remainingAdvance;
-        remainingAdvance -= itemCollected;
+        final customAlloc = item['allocatedAmount'] as int?;
+        final itemCollected = customAlloc != null
+            ? customAlloc.clamp(0, itemTotal)
+            : (remainingAdvance >= itemTotal ? itemTotal : remainingAdvance);
+        if (customAlloc == null) {
+          remainingAdvance -= itemCollected;
+        }
 
         await txn.insert('sale_items', {
           'id': itemId,

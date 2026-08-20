@@ -750,8 +750,13 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
         final itemTotal = baseItemTotal + itemAdjustment;
         final unitPrice = qty > 0 ? (itemTotal / qty).round() : itemTotal;
 
-        final itemCollected = remainingAdvance >= itemTotal ? itemTotal : remainingAdvance;
-        remainingAdvance -= itemCollected;
+        final customAlloc = item['allocatedAmount'] as int?;
+        final itemCollected = customAlloc != null
+            ? customAlloc.clamp(0, itemTotal)
+            : (remainingAdvance >= itemTotal ? itemTotal : remainingAdvance);
+        if (customAlloc == null) {
+          remainingAdvance -= itemCollected;
+        }
 
         _saleItems.add(SaleItem(
           id: UuidUtils.generate(),

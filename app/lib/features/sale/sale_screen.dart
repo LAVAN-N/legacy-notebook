@@ -136,6 +136,13 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
     final colors = context.colors;
     final state = ref.watch(saleControllerProvider(widget.customerId));
 
+    ref.listen<SaleScreenState>(saleControllerProvider(widget.customerId), (prev, next) {
+      if (prev?.advanceAmount != next.advanceAmount &&
+          _advanceController.text != next.advanceAmount.toString()) {
+        _advanceController.text = next.advanceAmount.toString();
+      }
+    });
+
     final totalSale = state.totalAmount;
     final creditAdded = state.creditAdded;
     final currentOutstanding = state.outstanding.outstandingAmount;
@@ -590,6 +597,11 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
               const SizedBox(height: AppSpacing.lg),
             ],
 
+            if (!state.isLend && state.lineItems.isNotEmpty) ...[
+              _buildSaleAllocationSection(context, ref, state),
+              const SizedBox(height: AppSpacing.lg),
+            ],
+
             // Remarks field
             Text(
               'Remarks / Notes (Optional)',
@@ -925,6 +937,151 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSaleAllocationSection(BuildContext context, WidgetRef ref, SaleScreenState state) {
+    final colors = context.colors;
+    final isIndividual = state.allocationType == 'INDIVIDUALLY';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          decoration: BoxDecoration(
+            color: isIndividual ? colors.primary.withValues(alpha: 0.08) : colors.muted.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(
+              color: isIndividual ? colors.primary.withValues(alpha: 0.3) : colors.border.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.tune_rounded,
+                color: isIndividual ? colors.primary : colors.mutedFg,
+                size: 22,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Allocate Advance Individually',
+                      style: AppTypography.titleSmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colors.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isIndividual
+                          ? 'Specify custom advance collected for each product'
+                          : 'Evenly distributed across purchased products',
+                      style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: isIndividual,
+                onChanged: (val) {
+                  ref
+                      .read(saleControllerProvider(widget.customerId).notifier)
+                      .toggleAllocationType(val ? 'INDIVIDUALLY' : 'EQUALLY');
+                },
+                activeThumbColor: colors.primary,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Product Advance Allocations',
+              style: AppTypography.labelMedium.copyWith(
+                color: colors.mutedFg,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (!isIndividual && state.allocations.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: colors.success.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: Text(
+                  'Auto-split equally',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: colors.success,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        ...state.allocations.map((alloc) => _buildSaleAllocationItemRow(context, ref, state, alloc)),
+      ],
+    );
+  }
+
+  Widget _buildSaleAllocationItemRow(BuildContext context, WidgetRef ref, SaleScreenState state, SaleItemAllocation alloc) {
+    final colors = context.colors;
+    final isManual = state.allocationType == 'INDIVIDUALLY';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: colors.muted.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  alloc.productName,
+                  style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Cost: ${rupees(alloc.itemSaleCost)}  •  Remaining Due: ${rupees(alloc.remainingDue)}',
+                  style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          if (isManual) ...[
+            SaleIndividualAllocationInput(
+              initialValue: alloc.allocatedAmount,
+              maxValue: alloc.itemSaleCost,
+              onChanged: (val) {
+                ref
+                    .read(saleControllerProvider(widget.customerId).notifier)
+                    .updateIndividualAllocation(alloc.productId, val);
+              },
+            ),
+          ] else ...[
+            Text(
+              rupees(alloc.allocatedAmount),
+              style: AppTypography.bodyLarge.copyWith(
+                fontWeight: FontWeight.bold,
+                color: alloc.allocatedAmount > 0 ? colors.success : colors.mutedFg,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1499,3 +1656,75 @@ class _LineItemEditorSheetState extends State<_LineItemEditorSheet> {
     );
   }
 }
+
+class SaleIndividualAllocationInput extends StatefulWidget {
+  const SaleIndividualAllocationInput({
+    super.key,
+    required this.initialValue,
+    required this.maxValue,
+    required this.onChanged,
+  });
+
+  final int initialValue;
+  final int maxValue;
+  final ValueChanged<int> onChanged;
+
+  @override
+  State<SaleIndividualAllocationInput> createState() => _SaleIndividualAllocationInputState();
+}
+
+class _SaleIndividualAllocationInputState extends State<SaleIndividualAllocationInput> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue.toString());
+  }
+
+  @override
+  void didUpdateWidget(SaleIndividualAllocationInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialValue != oldWidget.initialValue &&
+        widget.initialValue != int.tryParse(_controller.text)) {
+      _controller.text = widget.initialValue.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 100,
+      child: TextFormField(
+        controller: _controller,
+        keyboardType: TextInputType.number,
+        textAlign: TextAlign.end,
+        style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+        decoration: const InputDecoration(
+          prefixText: '₹ ',
+          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          isDense: true,
+        ),
+        onChanged: (val) {
+          String sanitized = val.replaceAll(RegExp(r'[^0-9]'), '');
+          int parsed = int.tryParse(sanitized) ?? 0;
+          if (parsed > widget.maxValue) {
+            parsed = widget.maxValue;
+            _controller.text = parsed.toString();
+            _controller.selection = TextSelection.fromPosition(
+              TextPosition(offset: _controller.text.length),
+            );
+          }
+          widget.onChanged(parsed);
+        },
+      ),
+    );
+  }
+}
+

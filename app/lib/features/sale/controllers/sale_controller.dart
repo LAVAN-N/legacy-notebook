@@ -21,6 +21,31 @@ class SaleItemInput {
   int get subtotal => price * quantity;
 }
 
+class SaleItemAllocation {
+  final String productId;
+  final String productName;
+  final int itemSaleCost;
+  final int allocatedAmount;
+
+  int get remainingDue => itemSaleCost - allocatedAmount;
+
+  SaleItemAllocation({
+    required this.productId,
+    required this.productName,
+    required this.itemSaleCost,
+    required this.allocatedAmount,
+  });
+
+  SaleItemAllocation copyWith({int? allocatedAmount}) {
+    return SaleItemAllocation(
+      productId: productId,
+      productName: productName,
+      itemSaleCost: itemSaleCost,
+      allocatedAmount: allocatedAmount ?? this.allocatedAmount,
+    );
+  }
+}
+
 class SaleScreenState {
   const SaleScreenState({
     required this.customer,
@@ -38,6 +63,8 @@ class SaleScreenState {
     this.isLend = false,
     this.lendAmount = 0,
     this.isCreditApplied = false,
+    this.allocationType = 'EQUALLY',
+    this.customAllocations = const {},
   });
 
   final Customer customer;
@@ -55,6 +82,8 @@ class SaleScreenState {
   final bool isLend;
   final int lendAmount;
   final bool isCreditApplied;
+  final String allocationType; // 'EQUALLY' or 'INDIVIDUALLY'
+  final Map<String, int> customAllocations;
 
   int get totalAmount => isLend ? lendAmount : (lineItems.fold<int>(0, (sum, item) => sum + item.subtotal) ~/ 100);
 
@@ -74,6 +103,47 @@ class SaleScreenState {
   int get creditAdded => isDiscounted ? 0 : (grandTotal - advanceAmount - appliedCreditAmount).clamp(0, 9999999);
   String get saleType => creditAdded == 0 ? 'READY' : 'CREDIT';
 
+  List<SaleItemAllocation> get allocations {
+    if (lineItems.isEmpty || isLend) return [];
+
+    final int totalBase = totalAmount;
+    final int netAdjustment = creditChargeAmount - discountAmount;
+    final int totalInitialPaid = advanceAmount + appliedCreditAmount;
+
+    final List<SaleItemAllocation> list = [];
+    int remainingPaid = totalInitialPaid;
+
+    for (int i = 0; i < lineItems.length; i++) {
+      final item = lineItems[i];
+      final baseItemTotal = item.subtotal ~/ 100;
+      final int itemAdjustment = (totalBase > 0)
+          ? ((baseItemTotal * netAdjustment) / totalBase).round()
+          : 0;
+      final itemCost = baseItemTotal + itemAdjustment;
+
+      int allocated;
+      if (allocationType == 'INDIVIDUALLY') {
+        allocated = (customAllocations[item.product.id] ?? 0).clamp(0, itemCost);
+      } else {
+        if (i == lineItems.length - 1) {
+          allocated = remainingPaid.clamp(0, itemCost);
+        } else {
+          final share = (totalInitialPaid / lineItems.length).floor();
+          allocated = share.clamp(0, itemCost);
+          remainingPaid -= allocated;
+        }
+      }
+
+      list.add(SaleItemAllocation(
+        productId: item.product.id,
+        productName: item.product.name,
+        itemSaleCost: itemCost,
+        allocatedAmount: allocated,
+      ));
+    }
+    return list;
+  }
+
   SaleScreenState copyWith({
     Customer? customer,
     Outstanding? outstanding,
@@ -90,6 +160,8 @@ class SaleScreenState {
     bool? isLend,
     int? lendAmount,
     bool? isCreditApplied,
+    String? allocationType,
+    Map<String, int>? customAllocations,
   }) {
     return SaleScreenState(
       customer: customer ?? this.customer,
@@ -107,6 +179,8 @@ class SaleScreenState {
       isLend: isLend ?? this.isLend,
       lendAmount: lendAmount ?? this.lendAmount,
       isCreditApplied: isCreditApplied ?? this.isCreditApplied,
+      allocationType: allocationType ?? this.allocationType,
+      customAllocations: customAllocations ?? this.customAllocations,
     );
   }
 }
@@ -142,6 +216,8 @@ class SaleController extends StateNotifier<SaleScreenState> {
           selectedDate: DateTime.now(),
           isLend: false,
           lendAmount: 0,
+          allocationType: 'EQUALLY',
+          customAllocations: const {},
         )) {
     _init();
 
@@ -265,6 +341,34 @@ class SaleController extends StateNotifier<SaleScreenState> {
     state = state.copyWith(creditChargeType: type, errorMessage: null);
   }
 
+  void toggleAllocationType(String type) {
+    if (type == state.allocationType) return;
+
+    if (type == 'INDIVIDUALLY') {
+      final currentAllocs = state.allocations;
+      final Map<String, int> map = {
+        for (var a in currentAllocs) a.productId: a.allocatedAmount
+      };
+      state = state.copyWith(allocationType: 'INDIVIDUALLY', customAllocations: map, errorMessage: null);
+    } else {
+      state = state.copyWith(allocationType: 'EQUALLY', customAllocations: const {}, errorMessage: null);
+    }
+  }
+
+  void updateIndividualAllocation(String productId, int amount) {
+    final newMap = Map<String, int>.from(state.customAllocations);
+    newMap[productId] = amount;
+
+    final totalAllocated = newMap.values.fold<int>(0, (sum, v) => sum + v);
+    final newAdvance = (totalAllocated - state.appliedCreditAmount).clamp(0, state.grandTotal);
+
+    state = state.copyWith(
+      customAllocations: newMap,
+      advanceAmount: newAdvance,
+      errorMessage: null,
+    );
+  }
+
   void updateAdvance(int advance) {
     String? error;
     if (advance < 0) {
@@ -276,6 +380,8 @@ class SaleController extends StateNotifier<SaleScreenState> {
     state = state.copyWith(
       advanceAmount: advance,
       errorMessage: error,
+      customAllocations: const {},
+      allocationType: 'EQUALLY',
     );
   }
 
@@ -328,10 +434,22 @@ class SaleController extends StateNotifier<SaleScreenState> {
       
       final mappedItems = state.isLend
           ? <Map<String, dynamic>>[]
-          : state.lineItems.map((item) => {
-              'productId': item.product.id,
-              'quantity': item.quantity,
-              'unitPrice': item.price ~/ 100,
+          : state.lineItems.map((item) {
+              final alloc = state.allocations.firstWhere(
+                (a) => a.productId == item.product.id,
+                orElse: () => SaleItemAllocation(
+                  productId: item.product.id,
+                  productName: item.product.name,
+                  itemSaleCost: item.subtotal ~/ 100,
+                  allocatedAmount: 0,
+                ),
+              );
+              return {
+                'productId': item.product.id,
+                'quantity': item.quantity,
+                'unitPrice': item.price ~/ 100,
+                'allocatedAmount': alloc.allocatedAmount,
+              };
             }).toList();
 
       final finalRemarks = state.isLend
