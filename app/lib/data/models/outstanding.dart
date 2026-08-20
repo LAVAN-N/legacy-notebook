@@ -4,7 +4,7 @@ part 'outstanding.freezed.dart';
 part 'outstanding.g.dart';
 
 @freezed
-class Outstanding with _$Outstanding {
+abstract class Outstanding with _$Outstanding {
   const factory Outstanding({
     required String customerId,
     required int totalFinanced,

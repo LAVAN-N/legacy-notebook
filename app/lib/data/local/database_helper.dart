@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 12,
+      version: 13,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
@@ -143,6 +143,7 @@ class DatabaseHelper {
         unit_price INTEGER NOT NULL DEFAULT 0,
         total_price INTEGER NOT NULL DEFAULT 0,
         status TEXT NOT NULL DEFAULT 'purchased',
+        collected_amount INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (sale_id) REFERENCES sales (id) ON DELETE CASCADE,
         FOREIGN KEY (product_id) REFERENCES products (id)
       )

@@ -5,6 +5,15 @@ Read before starting. Never edit past entries.
 
 ---
 
+### 2026-08-20 · Dart 3.13 / Riverpod 3.x Migration & Freezed Abstract Class Requirements
+- **Context:** Resolving build runner generator exceptions (`visitDotShorthandPropertyAccess`) on macOS with newer Dart SDK and upgrading Riverpod & Freezed.
+- **Mistake:** (1) When upgrading to Riverpod 3.x, `StateNotifier` and `StateNotifierProvider` are no longer in `package:flutter_riverpod/flutter_riverpod.dart`, which broke existing controller classes. (2) Freezed 3/4 requires model definitions to use `abstract class <Model> with _$<Model>` instead of `class <Model> with _$<Model>`.
+- **Root cause:** Breaking changes in Riverpod 3.0 (which relocated `StateNotifier` to `package:flutter_riverpod/legacy.dart`) and Freezed 3/4.
+- **Fix applied:** Added `import 'package:flutter_riverpod/legacy.dart';` across all StateNotifier controllers, updated `AsyncNotifierProvider.autoDispose.family` definitions to use constructor parameter binding, and marked all Freezed models as `abstract class`.
+- **Rule for next agent:** ALWAYS import `package:flutter_riverpod/legacy.dart` when using `StateNotifier`/`StateNotifierProvider` with Riverpod 3+, and ALWAYS declare Freezed models as `abstract class <Name> with _$<Name>`.
+- **Guardrail:** `flutter analyze` and `dart run build_runner build` must complete with 0 errors and 0 warnings.
+
+
 ### 2026-07-13 · lucide_icons dependency version incompatibility
 
 - **Context:** Adding lucide_icons to pubspec.yaml for bottom nav and theme toggle UI.
@@ -1345,6 +1354,17 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Changed `colors.mutedBg` to `colors.muted` which is the proper defined property in `AppColors`.
 - **Rule for next agent:** ALWAYS check the definitions in `AppColors` or query `context.colors` properties before using theme styling accessors.
 - **Guardrail:** Run `flutter analyze` immediately to catch non-existent style parameters or class getters.
+
+---
+
+### 2026-08-20 · Leaving critical new files untracked in Git
+
+- **Context:** Transitioning development work from a Windows machine to a macOS machine.
+- **Mistake:** Left several newly created files (`app_pull_to_refresh.dart`, `route_wheel_picker.dart`, etc.) untracked in Git, which caused build compilation errors when switching environments.
+- **Root cause:** Forgot to run `git add` and commit the new files before sharing/syncing the codebase.
+- **Fix applied:** Automatically scanned pairing logs/transcripts to parse, extract, and write the missing files directly to their designated folders on the new macOS environment.
+- **Rule for next agent:** ALWAYS run `git status` and verify that all newly added files are staged and committed to git before ending a development session.
+- **Guardrail:** Run `git status` in the terminal to verify no code files are left untracked.
 
 
 

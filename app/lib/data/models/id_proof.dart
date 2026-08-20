@@ -5,7 +5,7 @@ part 'id_proof.freezed.dart';
 part 'id_proof.g.dart';
 
 @freezed
-class IdProofDocument with _$IdProofDocument {
+abstract class IdProofDocument with _$IdProofDocument {
   const factory IdProofDocument({
     required String filename,
     required String mimeType,
@@ -17,7 +17,7 @@ class IdProofDocument with _$IdProofDocument {
 }
 
 @freezed
-class IdProof with _$IdProof {
+abstract class IdProof with _$IdProof {
   const factory IdProof({
     required String id,
     required String type, // 'Aadhaar' | 'Voter' | 'DL' | 'PAN' | 'Other'

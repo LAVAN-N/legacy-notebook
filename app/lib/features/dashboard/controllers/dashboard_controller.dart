@@ -1,5 +1,6 @@
 import 'dart:developer' as developer;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import '../../../data/models/place.dart';
 import '../../../data/models/area.dart';
 import '../../../data/models/customer.dart';

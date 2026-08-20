@@ -829,31 +829,76 @@ class LocalSqliteCollectionRepository implements CollectionRepository {
     String? reason,
     required String collectedBy,
     DateTime? customDate,
+    Map<String, int>? allocations,
   }) async {
     final db = await DatabaseHelper.instance.database;
     final collectionId = UuidUtils.generate();
 
-    // Business Rule 9: Carry forward never changes outstanding. Force amount to 0.
     final adjustedAmount = (status == 'CARRY_FORWARD') ? 0.0 : amount;
 
-    await db.insert('collections', {
-      'id': collectionId,
-      'customer_id': customerId,
-      'visit_datetime': (customDate ?? DateTime.now()).toIso8601String(),
-      'status': status,
-      'amount': adjustedAmount,
-      'reason': reason,
-      'collected_by': collectedBy,
+    // Append allocations to reason
+    String finalReason = reason ?? '';
+    if (allocations != null && allocations.isNotEmpty) {
+      finalReason += '&allocations=${jsonEncode(allocations)}';
+    }
+
+    await db.transaction((txn) async {
+      await txn.insert('collections', {
+        'id': collectionId,
+        'customer_id': customerId,
+        'visit_datetime': (customDate ?? DateTime.now()).toIso8601String(),
+        'status': status,
+        'amount': adjustedAmount,
+        'reason': finalReason,
+        'collected_by': collectedBy,
+      });
+
+      if (allocations != null && allocations.isNotEmpty) {
+        for (var entry in allocations.entries) {
+          await txn.rawUpdate(
+            'UPDATE sale_items SET collected_amount = collected_amount + ? WHERE id = ?',
+            [entry.value, entry.key],
+          );
+        }
+      }
     });
 
     TableBroadcaster.instance.notify('collections');
+    TableBroadcaster.instance.notify('sale_items');
   }
 
   @override
   Future<void> undoCollection(String collectionId) async {
     final db = await DatabaseHelper.instance.database;
-    await db.delete('collections', where: 'id = ?', whereArgs: [collectionId]);
+    
+    await db.transaction((txn) async {
+      final maps = await txn.query('collections', where: 'id = ?', whereArgs: [collectionId]);
+      if (maps.isNotEmpty) {
+        final reason = maps.first['reason'] as String?;
+        if (reason != null && reason.contains('&allocations=')) {
+          try {
+            final parts = reason.split('&allocations=');
+            if (parts.length > 1) {
+              final jsonStr = parts[1];
+              final allocations = Map<String, dynamic>.from(jsonDecode(jsonStr));
+              for (var entry in allocations.entries) {
+                final amount = (entry.value as num).toInt();
+                await txn.rawUpdate(
+                  'UPDATE sale_items SET collected_amount = MAX(0, collected_amount - ?) WHERE id = ?',
+                  [amount, entry.key],
+                );
+              }
+            }
+          } catch (e) {
+            // fail-silent
+          }
+        }
+      }
+      await txn.delete('collections', where: 'id = ?', whereArgs: [collectionId]);
+    });
+
     TableBroadcaster.instance.notify('collections');
+    TableBroadcaster.instance.notify('sale_items');
   }
 }
 
@@ -957,11 +1002,16 @@ class LocalSqliteSaleRepository implements SaleRepository {
       });
 
       // Save sale items and log inventory transactions
+      int remainingAdvance = finalAdvanceAmount;
       for (var item in items) {
         final productId = item['productId'] as String;
         final qty = item['quantity'] as int;
         final unitPrice = item['unitPrice'] as int;
+        final itemTotal = qty * unitPrice;
         final itemId = UuidUtils.generate();
+
+        final itemCollected = remainingAdvance >= itemTotal ? itemTotal : remainingAdvance;
+        remainingAdvance -= itemCollected;
 
         await txn.insert('sale_items', {
           'id': itemId,
@@ -969,7 +1019,8 @@ class LocalSqliteSaleRepository implements SaleRepository {
           'product_id': productId,
           'quantity': qty,
           'unit_price': unitPrice,
-          'total_price': qty * unitPrice,
+          'total_price': itemTotal,
+          'collected_amount': itemCollected,
         });
 
         // Rule 11: Transaction-driven inventory deduct
@@ -1009,7 +1060,16 @@ class LocalSqliteSaleRepository implements SaleRepository {
       INNER JOIN sales s ON si.sale_id = s.id
       WHERE s.customer_id = ?
     ''', [customerId]);
-    return results.map((r) => SaleItem.fromJson(r)).toList();
+    return results.map((r) => SaleItem.fromJson({
+      'id': r['id'],
+      'saleId': r['sale_id'],
+      'productId': r['product_id'],
+      'quantity': r['quantity'],
+      'unitPrice': r['unit_price'],
+      'totalPrice': r['total_price'],
+      'status': r['status'] ?? 'purchased',
+      'collectedAmount': r['collected_amount'] ?? 0,
+    })).toList();
   }
 
   @override
@@ -1027,7 +1087,17 @@ class LocalSqliteSaleRepository implements SaleRepository {
     await db.transaction((txn) async {
       final itemMaps = await txn.query('sale_items', where: 'id = ?', whereArgs: [saleItemId]);
       if (itemMaps.isEmpty) throw Exception('Sale item not found');
-      final item = SaleItem.fromJson(itemMaps.first);
+      final r = itemMaps.first;
+      final item = SaleItem.fromJson({
+        'id': r['id'],
+        'saleId': r['sale_id'],
+        'productId': r['product_id'],
+        'quantity': r['quantity'],
+        'unitPrice': r['unit_price'],
+        'totalPrice': r['total_price'],
+        'status': r['status'] ?? 'purchased',
+        'collectedAmount': r['collected_amount'] ?? 0,
+      });
       
       final saleMaps = await txn.query('sales', where: 'id = ?', whereArgs: [item.saleId]);
       if (saleMaps.isEmpty) throw Exception('Parent sale not found');
@@ -1075,15 +1145,30 @@ class LocalSqliteSaleRepository implements SaleRepository {
         final reasonText = tallyProductName != null
             ? 'Return Tally Out: $productName applied to $tallyProductName'
             : 'Return Tally Out: $productName';
+        
+        final Map<String, int> allocationMap = {};
+        if (tallySaleItemId != null) {
+          allocationMap[tallySaleItemId] = actualTallyAmount;
+        }
+
+        final finalReason = reasonText + (tallySaleItemId != null ? '&allocations=${jsonEncode(allocationMap)}' : '');
+
         await txn.insert('collections', {
           'id': UuidUtils.generate(),
           'customer_id': customerId,
           'visit_datetime': DateTime.now().toIso8601String(),
           'status': 'PAYMENT',
           'amount': actualTallyAmount.toDouble(),
-          'reason': reasonText,
+          'reason': finalReason,
           'collected_by': processedBy,
         });
+
+        if (tallySaleItemId != null) {
+          await txn.rawUpdate(
+            'UPDATE sale_items SET collected_amount = collected_amount + ? WHERE id = ?',
+            [actualTallyAmount, tallySaleItemId],
+          );
+        }
       }
 
       if (creditRemainder > 0) {

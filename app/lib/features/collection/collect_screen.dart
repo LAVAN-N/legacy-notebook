@@ -131,11 +131,10 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
       if (prev?.status != next.status || prev?.collectionTarget != next.collectionTarget) {
         _amountController.text = next.amount.toString();
         _notesController.clear();
-      } else if (prev?.amount != next.amount &&
-                 (_amountController.text == '0' ||
-                  _amountController.text.isEmpty ||
-                  _amountController.text == prev?.amount.toString())) {
-        _amountController.text = next.amount.toString();
+      } else if (prev?.amount != next.amount) {
+        if (next.allocationType == 'INDIVIDUALLY' || _amountController.text != next.amount.toString()) {
+          _amountController.text = next.amount.toString();
+        }
       }
     });
 
@@ -349,6 +348,10 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),
+              if (state.collectionTarget == 'SALE' && state.allocations.isNotEmpty) ...[
+                _buildAllocationSelector(context, ref, state),
+                const SizedBox(height: AppSpacing.lg),
+              ],
             ],
 
             // If CARRY_FORWARD, show reason chips
@@ -574,6 +577,220 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
             Icon(Icons.edit_calendar_outlined, color: colors.primary, size: 18),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAllocationSelector(BuildContext context, WidgetRef ref, CollectScreenState state) {
+    final colors = context.colors;
+    final isIndividual = state.allocationType == 'INDIVIDUALLY';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          decoration: BoxDecoration(
+            color: isIndividual ? colors.primary.withValues(alpha: 0.08) : colors.muted.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(
+              color: isIndividual ? colors.primary.withValues(alpha: 0.3) : colors.border.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.tune_rounded,
+                color: isIndividual ? colors.primary : colors.mutedFg,
+                size: 22,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Allocate Individually',
+                      style: AppTypography.titleSmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colors.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isIndividual
+                          ? 'Specify custom amount for each product'
+                          : 'Evenly distributed across purchased products',
+                      style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: isIndividual,
+                onChanged: (val) {
+                  ref
+                      .read(collectControllerProvider(widget.customerId).notifier)
+                      .toggleAllocationType(val ? 'INDIVIDUALLY' : 'EQUALLY');
+                },
+                activeThumbColor: colors.primary,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Product Allocations',
+              style: AppTypography.labelMedium.copyWith(
+                color: colors.mutedFg,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (!isIndividual && state.allocations.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: colors.success.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: Text(
+                  'Auto-split equally',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: colors.success,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        ...state.allocations.map((alloc) => _buildAllocationItemRow(context, ref, state, alloc)),
+      ],
+    );
+  }
+
+  Widget _buildAllocationItemRow(BuildContext context, WidgetRef ref, CollectScreenState state, ProductAllocation alloc) {
+    final colors = context.colors;
+    final isManual = state.allocationType == 'INDIVIDUALLY';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: colors.muted.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  alloc.productName,
+                  style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  'Outstanding: ${rupees(alloc.outstanding)} (Paid: ${rupees(alloc.collectedAmount)})',
+                  style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
+                ),
+              ],
+            ),
+          ),
+          if (isManual) ...[
+            IndividualAllocationInput(
+              initialValue: alloc.allocatedAmount,
+              maxValue: alloc.outstanding,
+              onChanged: (val) {
+                ref
+                    .read(collectControllerProvider(widget.customerId).notifier)
+                    .updateIndividualAllocation(alloc.saleItemId, val);
+              },
+            ),
+          ] else ...[
+            Text(
+              rupees(alloc.allocatedAmount),
+              style: AppTypography.bodyLarge.copyWith(
+                fontWeight: FontWeight.bold,
+                color: alloc.allocatedAmount > 0 ? colors.success : colors.mutedFg,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class IndividualAllocationInput extends StatefulWidget {
+  const IndividualAllocationInput({
+    super.key,
+    required this.initialValue,
+    required this.maxValue,
+    required this.onChanged,
+  });
+
+  final int initialValue;
+  final int maxValue;
+  final ValueChanged<int> onChanged;
+
+  @override
+  State<IndividualAllocationInput> createState() => _IndividualAllocationInputState();
+}
+
+class _IndividualAllocationInputState extends State<IndividualAllocationInput> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue.toString());
+  }
+
+  @override
+  void didUpdateWidget(IndividualAllocationInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialValue != oldWidget.initialValue &&
+        widget.initialValue != int.tryParse(_controller.text)) {
+      _controller.text = widget.initialValue.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 100,
+      child: TextFormField(
+        controller: _controller,
+        keyboardType: TextInputType.number,
+        textAlign: TextAlign.end,
+        style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+        decoration: const InputDecoration(
+          prefixText: '₹ ',
+          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          isDense: true,
+        ),
+        onChanged: (val) {
+          String sanitized = val.replaceAll(RegExp(r'[^0-9]'), '');
+          int parsed = int.tryParse(sanitized) ?? 0;
+          if (parsed > widget.maxValue) {
+            parsed = widget.maxValue;
+            _controller.text = parsed.toString();
+            _controller.selection = TextSelection.fromPosition(
+              TextPosition(offset: _controller.text.length),
+            );
+          }
+          widget.onChanged(parsed);
+        },
       ),
     );
   }

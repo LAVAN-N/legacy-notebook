@@ -47,13 +47,16 @@ class CustomerDetailData {
   final List<PurchasedProductItem> purchasedProducts;
 }
 
-final customerDetailControllerProvider = AutoDisposeAsyncNotifierProviderFamily<CustomerDetailNotifier, CustomerDetailData, String>(() {
-  return CustomerDetailNotifier();
+final customerDetailControllerProvider = AsyncNotifierProvider.autoDispose.family<CustomerDetailNotifier, CustomerDetailData, String>((arg) {
+  return CustomerDetailNotifier(arg);
 });
 
-class CustomerDetailNotifier extends AutoDisposeFamilyAsyncNotifier<CustomerDetailData, String> {
+class CustomerDetailNotifier extends AsyncNotifier<CustomerDetailData> {
+  CustomerDetailNotifier(this.arg);
+  final String arg;
+
   @override
-  Future<CustomerDetailData> build(String arg) async {
+  Future<CustomerDetailData> build() async {
     final customerRepo = ref.read(customerRepositoryProvider);
     final saleRepo = ref.read(saleRepositoryProvider);
     final productRepo = ref.read(productRepositoryProvider);

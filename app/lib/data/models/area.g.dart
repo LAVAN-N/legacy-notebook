@@ -6,15 +6,14 @@ part of 'area.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$AreaImpl _$$AreaImplFromJson(Map<String, dynamic> json) => _$AreaImpl(
-      id: json['id'] as String,
-      placeId: json['placeId'] as String,
-      name: json['name'] as String,
-    );
+_Area _$AreaFromJson(Map<String, dynamic> json) => _Area(
+  id: json['id'] as String,
+  placeId: json['placeId'] as String,
+  name: json['name'] as String,
+);
 
-Map<String, dynamic> _$$AreaImplToJson(_$AreaImpl instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'placeId': instance.placeId,
-      'name': instance.name,
-    };
+Map<String, dynamic> _$AreaToJson(_Area instance) => <String, dynamic>{
+  'id': instance.id,
+  'placeId': instance.placeId,
+  'name': instance.name,
+};

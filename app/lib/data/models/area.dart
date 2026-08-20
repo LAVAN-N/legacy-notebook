@@ -4,7 +4,7 @@ part 'area.freezed.dart';
 part 'area.g.dart';
 
 @freezed
-class Area with _$Area {
+abstract class Area with _$Area {
   const factory Area({
     required String id,
     required String placeId,

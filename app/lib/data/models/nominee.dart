@@ -4,7 +4,7 @@ part 'nominee.freezed.dart';
 part 'nominee.g.dart';
 
 @freezed
-class Nominee with _$Nominee {
+abstract class Nominee with _$Nominee {
   const factory Nominee({
     required String id,
     required String name,

@@ -984,21 +984,67 @@ class SupabaseCollectionRepository implements CollectionRepository {
     String? reason,
     required String collectedBy,
     DateTime? customDate,
+    Map<String, int>? allocations,
   }) async {
     final date = customDate ?? DateTime.now();
+    final adjustedAmount = (status == 'CARRY_FORWARD') ? 0.0 : amount;
+
+    String finalReason = reason ?? '';
+    if (allocations != null && allocations.isNotEmpty) {
+      finalReason += '&allocations=${jsonEncode(allocations)}';
+    }
+
     await _client.from('collections').insert({
       'id': UuidUtils.generate(),
       'customer_id': customerId,
       'visit_datetime': date.toIso8601String(),
       'status': status,
-      'amount': amount,
-      'reason': reason,
+      'amount': adjustedAmount,
+      'reason': finalReason,
       'collected_by': collectedBy,
     });
+
+    if (allocations != null && allocations.isNotEmpty) {
+      for (var entry in allocations.entries) {
+        final itemMaps = await _client.from('sale_items').select('collected_amount').eq('id', entry.key);
+        if (itemMaps.isNotEmpty) {
+          final current = (itemMaps.first['collected_amount'] as num?)?.toInt() ?? 0;
+          await _client.from('sale_items').update({
+            'collected_amount': current + entry.value,
+          }).eq('id', entry.key);
+        }
+      }
+    }
   }
 
   @override
   Future<void> undoCollection(String collectionId) async {
+    final maps = await _client.from('collections').select('reason').eq('id', collectionId);
+    if (maps.isNotEmpty) {
+      final reason = maps.first['reason'] as String?;
+      if (reason != null && reason.contains('&allocations=')) {
+        try {
+          final parts = reason.split('&allocations=');
+          if (parts.length > 1) {
+            final jsonStr = parts[1];
+            final allocations = Map<String, dynamic>.from(jsonDecode(jsonStr));
+            for (var entry in allocations.entries) {
+              final amount = (entry.value as num).toInt();
+              final itemMaps = await _client.from('sale_items').select('collected_amount').eq('id', entry.key);
+              if (itemMaps.isNotEmpty) {
+                final current = (itemMaps.first['collected_amount'] as num?)?.toInt() ?? 0;
+                final next = (current - amount).clamp(0, 99999999);
+                await _client.from('sale_items').update({
+                  'collected_amount': next,
+                }).eq('id', entry.key);
+              }
+            }
+          }
+        } catch (e) {
+          // fail-silent
+        }
+      }
+    }
     await _client.from('collections').delete().eq('id', collectionId);
   }
 }
@@ -1105,10 +1151,15 @@ class SupabaseSaleRepository implements SaleRepository {
     });
 
     // 2. Save Sale Items and Inventory Transactions
+    int remainingAdvance = finalAdvanceAmount;
     for (var item in items) {
       final productId = item['productId'] as String;
       final qty = item['quantity'] as int;
       final unitPrice = item['unitPrice'] as int;
+      final itemTotal = qty * unitPrice;
+
+      final itemCollected = remainingAdvance >= itemTotal ? itemTotal : remainingAdvance;
+      remainingAdvance -= itemCollected;
 
       await _client.from('sale_items').insert({
         'id': UuidUtils.generate(),
@@ -1116,8 +1167,9 @@ class SupabaseSaleRepository implements SaleRepository {
         'product_id': productId,
         'quantity': qty,
         'unit_price': unitPrice,
-        'total_price': qty * unitPrice,
+        'total_price': itemTotal,
         'status': 'purchased',
+        'collected_amount': itemCollected,
       });
 
       await _client.from('inventory_transactions').insert({
@@ -1153,6 +1205,7 @@ class SupabaseSaleRepository implements SaleRepository {
         'unitPrice': map['unit_price'],
         'totalPrice': map['total_price'],
         'status': map['status'] ?? 'purchased',
+        'collectedAmount': map['collected_amount'] ?? 0,
       });
     }).toList();
   }
@@ -1210,15 +1263,33 @@ class SupabaseSaleRepository implements SaleRepository {
       final reasonText = tallyProductName != null
           ? 'Return Tally Out: $productName applied to $tallyProductName'
           : 'Return Tally Out: $productName';
+
+      final Map<String, int> allocationMap = {};
+      if (tallySaleItemId != null) {
+        allocationMap[tallySaleItemId] = actualTallyAmount;
+      }
+
+      final finalReason = reasonText + (tallySaleItemId != null ? '&allocations=${jsonEncode(allocationMap)}' : '');
+
       await _client.from('collections').insert({
         'id': UuidUtils.generate(),
         'customer_id': customerId,
         'visit_datetime': DateTime.now().toIso8601String(),
         'status': 'PAYMENT',
         'amount': actualTallyAmount.toDouble(),
-        'reason': reasonText,
+        'reason': finalReason,
         'collected_by': processedBy,
       });
+
+      if (tallySaleItemId != null) {
+        final itemMaps = await _client.from('sale_items').select('collected_amount').eq('id', tallySaleItemId);
+        if (itemMaps.isNotEmpty) {
+          final current = (itemMaps.first['collected_amount'] as num?)?.toInt() ?? 0;
+          await _client.from('sale_items').update({
+            'collected_amount': current + actualTallyAmount,
+          }).eq('id', tallySaleItemId);
+        }
+      }
     }
 
     if (creditRemainder > 0) {

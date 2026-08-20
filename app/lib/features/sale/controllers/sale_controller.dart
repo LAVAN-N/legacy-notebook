@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import '../../../data/models/customer.dart';
 import '../../../data/models/outstanding.dart';
 import '../../../data/models/product.dart';
@@ -110,7 +111,7 @@ class SaleScreenState {
   }
 }
 
-final saleControllerProvider = AutoDisposeStateNotifierProviderFamily<SaleController, SaleScreenState, String>((ref, customerId) {
+final saleControllerProvider = StateNotifierProvider.autoDispose.family<SaleController, SaleScreenState, String>((ref, customerId) {
   return SaleController(ref, customerId);
 });
 

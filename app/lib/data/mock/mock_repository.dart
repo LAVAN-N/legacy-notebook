@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/haptics.dart';
 import '../../core/widgets/sync_status_indicator.dart';
@@ -589,18 +590,37 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     String? reason,
     required String collectedBy,
     DateTime? customDate,
+    Map<String, int>? allocations,
   }) async {
+    final adjustedAmount = (status == 'CARRY_FORWARD') ? 0.0 : amount;
+    String finalReason = reason ?? '';
+
+    finalReason = (allocations != null && allocations.isNotEmpty)
+        ? '$finalReason&allocations=${jsonEncode(allocations)}'
+        : finalReason;
+
     final collection = Collection(
       id: UuidUtils.generate(),
       customerId: customerId,
       visitDatetime: customDate ?? DateTime.now(),
       status: status,
-      amount: amount,
-      reason: reason,
+      amount: adjustedAmount,
+      reason: finalReason,
       collectedBy: collectedBy,
     );
 
     _collections.add(collection);
+
+    if (allocations != null && allocations.isNotEmpty) {
+      for (var entry in allocations.entries) {
+        final index = _saleItems.indexWhere((si) => si.id == entry.key);
+        if (index != -1) {
+          final item = _saleItems[index];
+          _saleItems[index] = item.copyWith(collectedAmount: item.collectedAmount + entry.value);
+        }
+      }
+    }
+
     _ref.read(syncProvider.notifier).incrementPending();
     AppHaptics.mediumImpact();
     _syncController();
@@ -608,7 +628,28 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
 
   @override
   Future<void> undoCollection(String collectionId) async {
-    _collections.removeWhere((c) => c.id == collectionId);
+    final index = _collections.indexWhere((c) => c.id == collectionId);
+    if (index != -1) {
+      final col = _collections[index];
+      final reason = col.reason;
+      if (reason != null && reason.contains('&allocations=')) {
+        try {
+          final jsonStr = reason.split('&allocations=')[1];
+          final allocations = Map<String, dynamic>.from(jsonDecode(jsonStr));
+          for (var entry in allocations.entries) {
+            final amount = (entry.value as num).toInt();
+            final itemIndex = _saleItems.indexWhere((si) => si.id == entry.key);
+            if (itemIndex != -1) {
+              final item = _saleItems[itemIndex];
+              _saleItems[itemIndex] = item.copyWith(
+                collectedAmount: (item.collectedAmount - amount).clamp(0, 9999999),
+              );
+            }
+          }
+        } catch (_) {}
+      }
+      _collections.removeAt(index);
+    }
     _syncController();
   }
 
@@ -690,15 +731,24 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
 
     // Save mock sale items
     if (lendAmount == null) {
+      int remainingAdvance = finalAdvanceAmount;
       for (final item in items) {
+        final qty = item['quantity'] as int;
+        final unitPrice = item['unitPrice'] as int;
+        final itemTotal = qty * unitPrice;
+
+        final itemCollected = remainingAdvance >= itemTotal ? itemTotal : remainingAdvance;
+        remainingAdvance -= itemCollected;
+
         _saleItems.add(SaleItem(
           id: UuidUtils.generate(),
           saleId: sale.id,
           productId: item['productId'] as String,
-          quantity: item['quantity'] as int,
-          unitPrice: item['unitPrice'] as int,
-          totalPrice: (item['quantity'] as int) * (item['unitPrice'] as int),
+          quantity: qty,
+          unitPrice: unitPrice,
+          totalPrice: itemTotal,
           status: 'purchased',
+          collectedAmount: itemCollected,
         ));
       }
     }
@@ -769,15 +819,31 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
         final reasonText = tallyProductName != null
             ? 'Return Tally Out: $productName applied to $tallyProductName'
             : 'Return Tally Out: $productName';
+        
+        final Map<String, int> allocationMap = {};
+        if (tallySaleItemId != null) {
+          allocationMap[tallySaleItemId] = actualTallyAmount;
+        }
+
+        final finalReason = reasonText + (tallySaleItemId != null ? '&allocations=${jsonEncode(allocationMap)}' : '');
+
         _collections.add(Collection(
           id: UuidUtils.generate(),
           customerId: customerId,
           visitDatetime: DateTime.now(),
           status: 'PAYMENT',
           amount: actualTallyAmount.toDouble(),
-          reason: reasonText,
+          reason: finalReason,
           collectedBy: processedBy,
         ));
+
+        if (tallySaleItemId != null) {
+          final tIndex = _saleItems.indexWhere((si) => si.id == tallySaleItemId);
+          if (tIndex != -1) {
+            final tItem = _saleItems[tIndex];
+            _saleItems[tIndex] = tItem.copyWith(collectedAmount: tItem.collectedAmount + actualTallyAmount);
+          }
+        }
       }
 
       if (creditRemainder > 0) {

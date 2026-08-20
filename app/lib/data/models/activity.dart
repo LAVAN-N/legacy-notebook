@@ -4,7 +4,7 @@ part 'activity.freezed.dart';
 part 'activity.g.dart';
 
 @freezed
-class Activity with _$Activity {
+abstract class Activity with _$Activity {
   const factory Activity.payment({
     required String id,
     required DateTime at,
@@ -44,7 +44,7 @@ class Activity with _$Activity {
 }
 
 @freezed
-class SaleItemDetail with _$SaleItemDetail {
+abstract class SaleItemDetail with _$SaleItemDetail {
   const factory SaleItemDetail({
     required String productName,
     required int quantity,

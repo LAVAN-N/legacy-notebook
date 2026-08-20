@@ -4,7 +4,7 @@ part 'weekday.freezed.dart';
 part 'weekday.g.dart';
 
 @freezed
-class Weekday with _$Weekday {
+abstract class Weekday with _$Weekday {
   const factory Weekday({
     required String id,
     required String name,

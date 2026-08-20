@@ -13,6 +13,7 @@ abstract class CollectionRepository {
     String? reason,
     required String collectedBy,
     DateTime? customDate,
+    Map<String, int>? allocations,
   });
 
   Future<void> undoCollection(String collectionId);

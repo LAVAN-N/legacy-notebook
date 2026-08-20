@@ -1,6 +1,6 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint
+// coverage:ignore-file
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'category.dart';
@@ -9,214 +9,279 @@ part of 'category.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
-
-Category _$CategoryFromJson(Map<String, dynamic> json) {
-  return _Category.fromJson(json);
-}
 
 /// @nodoc
 mixin _$Category {
-  String get id => throw _privateConstructorUsedError;
-  String get name => throw _privateConstructorUsedError;
-  String get icon => throw _privateConstructorUsedError; // lucide icon name
-  int get productCount => throw _privateConstructorUsedError;
+
+ String get id; String get name; String get icon; int get productCount;
+/// Create a copy of Category
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CategoryCopyWith<Category> get copyWith => _$CategoryCopyWithImpl<Category>(this as Category, _$identity);
 
   /// Serializes this Category to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  Map<String, dynamic> toJson();
 
-  /// Create a copy of Category
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $CategoryCopyWith<Category> get copyWith =>
-      throw _privateConstructorUsedError;
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Category&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.productCount, productCount) || other.productCount == productCount));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,name,icon,productCount);
+
+@override
+String toString() {
+  return 'Category(id: $id, name: $name, icon: $icon, productCount: $productCount)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $CategoryCopyWith<$Res> {
-  factory $CategoryCopyWith(Category value, $Res Function(Category) then) =
-      _$CategoryCopyWithImpl<$Res, Category>;
-  @useResult
-  $Res call({String id, String name, String icon, int productCount});
-}
+abstract mixin class $CategoryCopyWith<$Res>  {
+  factory $CategoryCopyWith(Category value, $Res Function(Category) _then) = _$CategoryCopyWithImpl;
+@useResult
+$Res call({
+ String id, String name, String icon, int productCount
+});
 
+
+
+
+}
 /// @nodoc
-class _$CategoryCopyWithImpl<$Res, $Val extends Category>
+class _$CategoryCopyWithImpl<$Res>
     implements $CategoryCopyWith<$Res> {
-  _$CategoryCopyWithImpl(this._value, this._then);
+  _$CategoryCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final Category _self;
+  final $Res Function(Category) _then;
 
-  /// Create a copy of Category
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? id = null,
-    Object? name = null,
-    Object? icon = null,
-    Object? productCount = null,
-  }) {
-    return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      icon: null == icon
-          ? _value.icon
-          : icon // ignore: cast_nullable_to_non_nullable
-              as String,
-      productCount: null == productCount
-          ? _value.productCount
-          : productCount // ignore: cast_nullable_to_non_nullable
-              as int,
-    ) as $Val);
-  }
+/// Create a copy of Category
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? icon = null,Object? productCount = null,}) {
+  return _then(Category(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
+as String,productCount: null == productCount ? _self.productCount : productCount // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
 }
 
-/// @nodoc
-abstract class _$$CategoryImplCopyWith<$Res>
-    implements $CategoryCopyWith<$Res> {
-  factory _$$CategoryImplCopyWith(
-          _$CategoryImpl value, $Res Function(_$CategoryImpl) then) =
-      __$$CategoryImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({String id, String name, String icon, int productCount});
 }
 
-/// @nodoc
-class __$$CategoryImplCopyWithImpl<$Res>
-    extends _$CategoryCopyWithImpl<$Res, _$CategoryImpl>
-    implements _$$CategoryImplCopyWith<$Res> {
-  __$$CategoryImplCopyWithImpl(
-      _$CategoryImpl _value, $Res Function(_$CategoryImpl) _then)
-      : super(_value, _then);
 
-  /// Create a copy of Category
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? id = null,
-    Object? name = null,
-    Object? icon = null,
-    Object? productCount = null,
-  }) {
-    return _then(_$CategoryImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      icon: null == icon
-          ? _value.icon
-          : icon // ignore: cast_nullable_to_non_nullable
-              as String,
-      productCount: null == productCount
-          ? _value.productCount
-          : productCount // ignore: cast_nullable_to_non_nullable
-              as int,
-    ));
-  }
+/// Adds pattern-matching-related methods to [Category].
+extension CategoryPatterns on Category {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _Category value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _Category() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _Category value)  $default,){
+final _that = this;
+switch (_that) {
+case _Category():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _Category value)?  $default,){
+final _that = this;
+switch (_that) {
+case _Category() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String icon,  int productCount)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _Category() when $default != null:
+return $default(_that.id,_that.name,_that.icon,_that.productCount);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String icon,  int productCount)  $default,) {final _that = this;
+switch (_that) {
+case _Category():
+return $default(_that.id,_that.name,_that.icon,_that.productCount);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String icon,  int productCount)?  $default,) {final _that = this;
+switch (_that) {
+case _Category() when $default != null:
+return $default(_that.id,_that.name,_that.icon,_that.productCount);case _:
+  return null;
+
+}
+}
+
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$CategoryImpl implements _Category {
-  const _$CategoryImpl(
-      {required this.id,
-      required this.name,
-      required this.icon,
-      this.productCount = 0});
 
-  factory _$CategoryImpl.fromJson(Map<String, dynamic> json) =>
-      _$$CategoryImplFromJson(json);
+class _Category implements Category {
+  const _Category({required this.id, required this.name, required this.icon, this.productCount = 0});
+  factory _Category.fromJson(Map<String, dynamic> json) => _$CategoryFromJson(json);
 
-  @override
-  final String id;
-  @override
-  final String name;
-  @override
-  final String icon;
-// lucide icon name
-  @override
-  @JsonKey()
-  final int productCount;
+@override final  String id;
+@override final  String name;
+@override final  String icon;
+@override@JsonKey() final  int productCount;
 
-  @override
-  String toString() {
-    return 'Category(id: $id, name: $name, icon: $icon, productCount: $productCount)';
-  }
+/// Create a copy of Category
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CategoryCopyWith<_Category> get copyWith => __$CategoryCopyWithImpl<_Category>(this, _$identity);
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$CategoryImpl &&
-            (identical(other.id, id) || other.id == id) &&
-            (identical(other.name, name) || other.name == name) &&
-            (identical(other.icon, icon) || other.icon == icon) &&
-            (identical(other.productCount, productCount) ||
-                other.productCount == productCount));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode => Object.hash(runtimeType, id, name, icon, productCount);
-
-  /// Create a copy of Category
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$CategoryImplCopyWith<_$CategoryImpl> get copyWith =>
-      __$$CategoryImplCopyWithImpl<_$CategoryImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$CategoryImplToJson(
-      this,
-    );
-  }
+@override
+Map<String, dynamic> toJson() {
+  return _$CategoryToJson(this, );
 }
 
-abstract class _Category implements Category {
-  const factory _Category(
-      {required final String id,
-      required final String name,
-      required final String icon,
-      final int productCount}) = _$CategoryImpl;
-
-  factory _Category.fromJson(Map<String, dynamic> json) =
-      _$CategoryImpl.fromJson;
-
-  @override
-  String get id;
-  @override
-  String get name;
-  @override
-  String get icon; // lucide icon name
-  @override
-  int get productCount;
-
-  /// Create a copy of Category
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$CategoryImplCopyWith<_$CategoryImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Category&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.productCount, productCount) || other.productCount == productCount));
 }
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,name,icon,productCount);
+
+@override
+String toString() {
+  return 'Category(id: $id, name: $name, icon: $icon, productCount: $productCount)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CategoryCopyWith<$Res> implements $CategoryCopyWith<$Res> {
+  factory _$CategoryCopyWith(_Category value, $Res Function(_Category) _then) = __$CategoryCopyWithImpl;
+@override @useResult
+$Res call({
+ String id, String name, String icon, int productCount
+});
+
+
+
+
+}
+/// @nodoc
+class __$CategoryCopyWithImpl<$Res>
+    implements _$CategoryCopyWith<$Res> {
+  __$CategoryCopyWithImpl(this._self, this._then);
+
+  final _Category _self;
+  final $Res Function(_Category) _then;
+
+/// Create a copy of Category
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? icon = null,Object? productCount = null,}) {
+  return _then(_Category(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
+as String,productCount: null == productCount ? _self.productCount : productCount // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
+
+// dart format on

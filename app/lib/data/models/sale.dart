@@ -4,7 +4,7 @@ part 'sale.freezed.dart';
 part 'sale.g.dart';
 
 @freezed
-class Sale with _$Sale {
+abstract class Sale with _$Sale {
   const factory Sale({
     required String id,
     required String customerId,

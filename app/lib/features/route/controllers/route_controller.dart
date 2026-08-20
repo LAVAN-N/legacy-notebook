@@ -22,13 +22,16 @@ class PlaceProgress {
   final int collectedAmount;
 }
 
-final weekdayPlacesProvider = AutoDisposeAsyncNotifierProviderFamily<WeekdayPlacesNotifier, List<PlaceProgress>, String>(() {
-  return WeekdayPlacesNotifier();
+final weekdayPlacesProvider = AsyncNotifierProvider.autoDispose.family<WeekdayPlacesNotifier, List<PlaceProgress>, String>((arg) {
+  return WeekdayPlacesNotifier(arg);
 });
 
-class WeekdayPlacesNotifier extends AutoDisposeFamilyAsyncNotifier<List<PlaceProgress>, String> {
+class WeekdayPlacesNotifier extends AsyncNotifier<List<PlaceProgress>> {
+  WeekdayPlacesNotifier(this.arg);
+  final String arg;
+
   @override
-  Future<List<PlaceProgress>> build(String arg) async {
+  Future<List<PlaceProgress>> build() async {
     final routeRepo = ref.read(routeRepositoryProvider);
     final customerRepo = ref.read(customerRepositoryProvider);
     final saleRepo = ref.read(saleRepositoryProvider);
@@ -139,13 +142,16 @@ class AreaProgress {
   final int collectedAmount;
 }
 
-final placeAreasProvider = AutoDisposeAsyncNotifierProviderFamily<PlaceAreasNotifier, List<AreaProgress>, String>(() {
-  return PlaceAreasNotifier();
+final placeAreasProvider = AsyncNotifierProvider.autoDispose.family<PlaceAreasNotifier, List<AreaProgress>, String>((arg) {
+  return PlaceAreasNotifier(arg);
 });
 
-class PlaceAreasNotifier extends AutoDisposeFamilyAsyncNotifier<List<AreaProgress>, String> {
+class PlaceAreasNotifier extends AsyncNotifier<List<AreaProgress>> {
+  PlaceAreasNotifier(this.arg);
+  final String arg;
+
   @override
-  Future<List<AreaProgress>> build(String arg) async {
+  Future<List<AreaProgress>> build() async {
     final routeRepo = ref.read(routeRepositoryProvider);
     final customerRepo = ref.read(customerRepositoryProvider);
     final saleRepo = ref.read(saleRepositoryProvider);
@@ -245,13 +251,16 @@ class CustomerProgress {
   final String? lastCollectionStatus;
 }
 
-final areaCustomersProvider = AutoDisposeAsyncNotifierProviderFamily<AreaCustomersNotifier, List<CustomerProgress>, String>(() {
-  return AreaCustomersNotifier();
+final areaCustomersProvider = AsyncNotifierProvider.autoDispose.family<AreaCustomersNotifier, List<CustomerProgress>, String>((arg) {
+  return AreaCustomersNotifier(arg);
 });
 
-class AreaCustomersNotifier extends AutoDisposeFamilyAsyncNotifier<List<CustomerProgress>, String> {
+class AreaCustomersNotifier extends AsyncNotifier<List<CustomerProgress>> {
+  AreaCustomersNotifier(this.arg);
+  final String arg;
+
   @override
-  Future<List<CustomerProgress>> build(String arg) async {
+  Future<List<CustomerProgress>> build() async {
     final customerRepo = ref.read(customerRepositoryProvider);
     final saleRepo = ref.read(saleRepositoryProvider);
     final collectionRepo = ref.read(collectionRepositoryProvider);
