@@ -787,45 +787,7 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   Future<List<SaleItem>> getSaleItemsForCustomer(String customerId) async {
     final customerSalesList = _sales.where((s) => s.customerId == customerId).toList();
     final Map<String, Sale> salesMap = {for (var s in customerSalesList) s.id: s};
-    final items = _saleItems.where((si) => salesMap.containsKey(si.saleId)).toList();
-
-    final Map<String, List<SaleItem>> itemsBySale = {};
-    for (var item in items) {
-      itemsBySale.putIfAbsent(item.saleId, () => []).add(item);
-    }
-
-    final List<SaleItem> result = [];
-    for (var entry in itemsBySale.entries) {
-      final sale = salesMap[entry.key];
-      final saleItems = entry.value;
-      final saleTotal = sale?.totalAmount ?? 0;
-      final baseSum = saleItems.fold<int>(0, (sum, si) => sum + si.totalPrice);
-
-      int remainingTotal = saleTotal > 0 ? saleTotal : baseSum;
-
-      for (int i = 0; i < saleItems.length; i++) {
-        final si = saleItems[i];
-        int effectiveTotal;
-        if (saleTotal > 0 && baseSum > 0 && saleTotal != baseSum) {
-          effectiveTotal = (i == saleItems.length - 1)
-              ? remainingTotal
-              : ((si.totalPrice * saleTotal) / baseSum).round();
-          remainingTotal -= effectiveTotal;
-        } else if (saleTotal > 0 && saleItems.length == 1) {
-          effectiveTotal = saleTotal;
-        } else {
-          effectiveTotal = si.totalPrice;
-        }
-
-        final effectiveUnitPrice = si.quantity > 0 ? (effectiveTotal / si.quantity).round() : effectiveTotal;
-        result.add(si.copyWith(
-          totalPrice: effectiveTotal,
-          unitPrice: effectiveUnitPrice,
-        ));
-      }
-    }
-
-    return result;
+    return _saleItems.where((si) => salesMap.containsKey(si.saleId)).toList();
   }
 
   @override
@@ -911,12 +873,11 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
         }
       }
 
-      final advanceReduction = collectedAmount < sale.advanceAmount ? collectedAmount : sale.advanceAmount;
-      final financedReduction = item.totalPrice - advanceReduction;
+      final unpaidPortion = (item.totalPrice - collectedAmount).clamp(0, item.totalPrice);
+      final financedReduction = unpaidPortion;
 
       _sales[saleIndex] = sale.copyWith(
-        totalAmount: (sale.totalAmount - item.totalPrice).clamp(0, 9999999),
-        advanceAmount: (sale.advanceAmount - advanceReduction).clamp(0, 9999999),
+        totalAmount: (sale.totalAmount - unpaidPortion).clamp(0, 9999999),
         financedAmount: (sale.financedAmount - financedReduction).clamp(0, 9999999),
       );
     }

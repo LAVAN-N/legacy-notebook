@@ -1073,60 +1073,28 @@ class LocalSqliteSaleRepository implements SaleRepository {
   Future<List<SaleItem>> getSaleItemsForCustomer(String customerId) async {
     final db = await DatabaseHelper.instance.database;
     final results = await db.rawQuery('''
-      SELECT si.*, s.total_amount AS sale_total
+      SELECT si.*
       FROM sale_items si
       INNER JOIN sales s ON si.sale_id = s.id
       WHERE s.customer_id = ?
     ''', [customerId]);
 
-    final Map<String, List<Map<String, dynamic>>> itemsBySale = {};
-    for (var r in results) {
-      final saleId = r['sale_id'] as String;
-      itemsBySale.putIfAbsent(saleId, () => []).add(r);
-    }
+    return results.map((r) {
+      final qty = (r['quantity'] as num?)?.toInt() ?? 1;
+      final rawTotal = (r['total_price'] as num?)?.toInt() ?? 0;
+      final rawUnit = (r['unit_price'] as num?)?.toInt() ?? (qty > 0 ? (rawTotal / qty).round() : rawTotal);
 
-    final List<SaleItem> finalItems = [];
-
-    for (var entry in itemsBySale.entries) {
-      final saleRows = entry.value;
-      final saleTotal = (saleRows.first['sale_total'] as num?)?.toInt() ?? 0;
-      final baseSum = saleRows.fold<int>(0, (sum, r) => sum + ((r['total_price'] as num?)?.toInt() ?? 0));
-
-      int remainingTotal = saleTotal > 0 ? saleTotal : baseSum;
-
-      for (int i = 0; i < saleRows.length; i++) {
-        final r = saleRows[i];
-        final rawTotal = (r['total_price'] as num?)?.toInt() ?? 0;
-        final qty = (r['quantity'] as num?)?.toInt() ?? 1;
-
-        int effectiveTotal;
-        if (saleTotal > 0 && baseSum > 0 && saleTotal != baseSum) {
-          effectiveTotal = (i == saleRows.length - 1)
-              ? remainingTotal
-              : ((rawTotal * saleTotal) / baseSum).round();
-          remainingTotal -= effectiveTotal;
-        } else if (saleTotal > 0 && saleRows.length == 1) {
-          effectiveTotal = saleTotal;
-        } else {
-          effectiveTotal = rawTotal;
-        }
-
-        final effectiveUnitPrice = qty > 0 ? (effectiveTotal / qty).round() : effectiveTotal;
-
-        finalItems.add(SaleItem.fromJson({
-          'id': r['id'],
-          'saleId': r['sale_id'],
-          'productId': r['product_id'],
-          'quantity': qty,
-          'unitPrice': effectiveUnitPrice,
-          'totalPrice': effectiveTotal,
-          'status': r['status'] ?? 'purchased',
-          'collectedAmount': r['collected_amount'] ?? 0,
-        }));
-      }
-    }
-
-    return finalItems;
+      return SaleItem.fromJson({
+        'id': r['id'],
+        'saleId': r['sale_id'],
+        'productId': r['product_id'],
+        'quantity': qty,
+        'unitPrice': rawUnit,
+        'totalPrice': rawTotal,
+        'status': r['status'] ?? 'purchased',
+        'collectedAmount': r['collected_amount'] ?? 0,
+      });
+    }).toList();
   }
 
   @override
@@ -1161,7 +1129,6 @@ class LocalSqliteSaleRepository implements SaleRepository {
       final saleMap = saleMaps.first;
       final customerId = saleMap['customer_id'] as String;
       final int totalAmount = saleMap['total_amount'] as int;
-      final int advanceAmount = saleMap['advance_amount'] as int;
       final int financedAmount = saleMap['financed_amount'] as int;
 
       await txn.update('sale_items', {
@@ -1247,16 +1214,14 @@ class LocalSqliteSaleRepository implements SaleRepository {
         'created_by': processedBy,
       });
 
-      final advanceReduction = collectedAmount < advanceAmount ? collectedAmount : advanceAmount;
-      final financedReduction = item.totalPrice - advanceReduction;
+      final unpaidPortion = (item.totalPrice - collectedAmount).clamp(0, item.totalPrice);
+      final financedReduction = unpaidPortion;
 
-      final newTotalAmount = totalAmount - item.totalPrice < 0 ? 0 : totalAmount - item.totalPrice;
-      final newAdvanceAmount = advanceAmount - advanceReduction < 0 ? 0 : advanceAmount - advanceReduction;
+      final newTotalAmount = totalAmount - unpaidPortion < 0 ? 0 : totalAmount - unpaidPortion;
       final newFinancedAmount = financedAmount - financedReduction < 0 ? 0 : financedAmount - financedReduction;
 
       await txn.update('sales', {
         'total_amount': newTotalAmount,
-        'advance_amount': newAdvanceAmount,
         'financed_amount': newFinancedAmount,
       }, where: 'id = ?', whereArgs: [item.saleId]);
     });

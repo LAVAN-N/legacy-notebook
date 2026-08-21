@@ -1211,65 +1211,30 @@ class SupabaseSaleRepository implements SaleRepository {
 
   @override
   Future<List<SaleItem>> getSaleItemsForCustomer(String customerId) async {
-    final salesRes = await _client.from('sales').select('id, total_amount').eq('customer_id', customerId);
+    final salesRes = await _client.from('sales').select('id').eq('customer_id', customerId);
     final salesList = salesRes as List;
     if (salesList.isEmpty) return [];
 
-    final Map<String, int> saleTotals = {
-      for (var s in salesList) s['id'] as String: (s['total_amount'] as num?)?.toInt() ?? 0
-    };
-    final saleIds = saleTotals.keys.toList();
-
+    final saleIds = salesList.map((s) => s['id'] as String).toList();
     final itemsRes = await _client.from('sale_items').select().inFilter('sale_id', saleIds);
     final itemsList = itemsRes as List;
 
-    final Map<String, List<dynamic>> itemsBySale = {};
-    for (var item in itemsList) {
-      final sId = item['sale_id'] as String;
-      itemsBySale.putIfAbsent(sId, () => []).add(item);
-    }
+    return itemsList.map((map) {
+      final qty = (map['quantity'] as num?)?.toInt() ?? 1;
+      final rawTotal = (map['total_price'] as num?)?.toInt() ?? 0;
+      final rawUnit = (map['unit_price'] as num?)?.toInt() ?? (qty > 0 ? (rawTotal / qty).round() : rawTotal);
 
-    final List<SaleItem> result = [];
-    for (var entry in itemsBySale.entries) {
-      final saleTotal = saleTotals[entry.key] ?? 0;
-      final saleItems = entry.value;
-      final baseSum = saleItems.fold<int>(0, (sum, map) => sum + ((map['total_price'] as num?)?.toInt() ?? 0));
-
-      int remainingTotal = saleTotal > 0 ? saleTotal : baseSum;
-
-      for (int i = 0; i < saleItems.length; i++) {
-        final map = saleItems[i];
-        final rawTotal = (map['total_price'] as num?)?.toInt() ?? 0;
-        final qty = (map['quantity'] as num?)?.toInt() ?? 1;
-
-        int effectiveTotal;
-        if (saleTotal > 0 && baseSum > 0 && saleTotal != baseSum) {
-          effectiveTotal = (i == saleItems.length - 1)
-              ? remainingTotal
-              : ((rawTotal * saleTotal) / baseSum).round();
-          remainingTotal -= effectiveTotal;
-        } else if (saleTotal > 0 && saleItems.length == 1) {
-          effectiveTotal = saleTotal;
-        } else {
-          effectiveTotal = rawTotal;
-        }
-
-        final effectiveUnitPrice = qty > 0 ? (effectiveTotal / qty).round() : effectiveTotal;
-
-        result.add(SaleItem.fromJson({
-          'id': map['id'],
-          'saleId': map['sale_id'],
-          'productId': map['product_id'],
-          'quantity': qty,
-          'unitPrice': effectiveUnitPrice,
-          'totalPrice': effectiveTotal,
-          'status': map['status'] ?? 'purchased',
-          'collectedAmount': map['collected_amount'] ?? 0,
-        }));
-      }
-    }
-
-    return result;
+      return SaleItem.fromJson({
+        'id': map['id'],
+        'saleId': map['sale_id'],
+        'productId': map['product_id'],
+        'quantity': qty,
+        'unitPrice': rawUnit,
+        'totalPrice': rawTotal,
+        'status': map['status'] ?? 'purchased',
+        'collectedAmount': map['collected_amount'] ?? 0,
+      });
+    }).toList();
   }
 
   @override
@@ -1293,7 +1258,6 @@ class SupabaseSaleRepository implements SaleRepository {
     final saleRes = await _client.from('sales').select().eq('id', saleId).single();
     final customerId = saleRes['customer_id'] as String;
     final totalAmount = saleRes['total_amount'] as int;
-    final advanceAmount = saleRes['advance_amount'] as int;
     final financedAmount = saleRes['financed_amount'] as int;
 
     int actualTallyAmount = 0;
@@ -1360,16 +1324,14 @@ class SupabaseSaleRepository implements SaleRepository {
       await _client.from('customers').update({'credit': currentCredit + creditRemainder}).eq('id', customerId);
     }
 
-    final advanceReduction = collectedAmount < advanceAmount ? collectedAmount : advanceAmount;
-    final financedReduction = totalPrice - advanceReduction;
+    final unpaidPortion = (totalPrice - collectedAmount).clamp(0, totalPrice);
+    final financedReduction = unpaidPortion;
 
-    final nextTotal = (totalAmount - totalPrice).clamp(0, 9999999);
-    final nextAdvance = (advanceAmount - advanceReduction).clamp(0, 9999999);
+    final nextTotal = (totalAmount - unpaidPortion).clamp(0, 9999999);
     final nextFinanced = (financedAmount - financedReduction).clamp(0, 9999999);
 
     await _client.from('sales').update({
       'total_amount': nextTotal,
-      'advance_amount': nextAdvance,
       'financed_amount': nextFinanced,
     }).eq('id', saleId);
 
