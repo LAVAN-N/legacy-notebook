@@ -598,7 +598,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
               const SizedBox(height: AppSpacing.lg),
             ],
 
-            if (!state.isLend && state.lineItems.isNotEmpty) ...[
+            if (!state.isLend && state.lineItems.length > 1) ...[
               _buildSaleAllocationSection(context, ref, state),
               const SizedBox(height: AppSpacing.lg),
             ],
@@ -944,6 +944,9 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
   }
 
   Widget _buildSaleAllocationSection(BuildContext context, WidgetRef ref, SaleScreenState state) {
+    if (state.lineItems.length <= 1 || state.allocations.length <= 1) {
+      return const SizedBox.shrink();
+    }
     final colors = context.colors;
     final isIndividual = state.allocationType == 'INDIVIDUALLY';
     final totalAllocated = state.allocations.fold<int>(0, (sum, a) => sum + a.allocatedAmount);
