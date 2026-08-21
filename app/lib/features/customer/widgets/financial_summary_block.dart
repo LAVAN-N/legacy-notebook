@@ -168,6 +168,7 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                       final lend = isLend ? _LendDetails.parse(sale.note ?? '') : null;
                       
                       final itemsTotal = sale.items.fold<int>(0, (sum, item) => sum + item.quantity * item.unitPrice);
+                      final returnedTotal = sale.items.where((it) => it.status == 'returned').fold<int>(0, (sum, it) => sum + it.quantity * it.unitPrice);
                       final creditCharge = (sale.total - itemsTotal).clamp(0, 9999999);
                       final timeStr = DateFormat('hh:mm a').format(sale.at);
 
@@ -382,9 +383,40 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text('Grand Total', style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
-                                        Text(rupees(sale.total), style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: colors.primary)),
+                                        Text(rupees(itemsTotal + creditCharge), style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: colors.primary)),
                                       ],
                                     ),
+                                    if (returnedTotal > 0) ...[
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Container(
+                                                width: 8,
+                                                height: 8,
+                                                margin: const EdgeInsets.only(right: 6),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFFFDE047),
+                                                  borderRadius: BorderRadius.circular(2),
+                                                ),
+                                              ),
+                                              Text('Returned Product Deduction', style: AppTypography.bodyMedium.copyWith(color: const Color(0xFF854D0E), fontWeight: FontWeight.w600)),
+                                            ],
+                                          ),
+                                          Text('- ${rupees(returnedTotal)}', style: AppTypography.bodyMedium.copyWith(color: const Color(0xFF854D0E), fontWeight: FontWeight.bold)),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text('Net Sale Total', style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+                                          Text(rupees((itemsTotal + creditCharge - returnedTotal).clamp(0, 9999999)), style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: colors.primary)),
+                                        ],
+                                      ),
+                                    ],
                                     const SizedBox(height: 6),
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
