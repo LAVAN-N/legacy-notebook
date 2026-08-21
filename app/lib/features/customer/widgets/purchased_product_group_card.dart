@@ -240,7 +240,8 @@ class _PurchasedProductGroupCardState extends ConsumerState<PurchasedProductGrou
                     final isSettled = item.status == 'settled';
                     final isPurchased = item.status == 'purchased';
                     final double oAmount = widget.outstanding.outstandingAmount / 100;
-                    final canSettle = oAmount == 0.0 && isPurchased;
+                    final isFullyPaid = (item.collectedAmount >= item.totalPrice) || (oAmount <= 0.0);
+                    final canSettle = isPurchased && isFullyPaid;
 
                     final label = item.unitLabel ??
                         (hasMultiple ? 'Purchase #${widget.groupItems.length - idx}' : null);
