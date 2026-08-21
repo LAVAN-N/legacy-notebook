@@ -19,6 +19,7 @@ class PurchasedProductItem {
     required this.status, // 'purchased', 'returned', 'settled'
     required this.purchaseDate,
     required this.collectedAmount,
+    this.unitLabel,
   });
 
   final String saleItemId;
@@ -31,6 +32,7 @@ class PurchasedProductItem {
   final String status;
   final DateTime purchaseDate;
   final int collectedAmount;
+  final String? unitLabel;
 }
 
 class CustomerDetailData {
@@ -142,18 +144,42 @@ class CustomerDetailNotifier extends AsyncNotifier<CustomerDetailData> {
               ? item.collectedAmount
               : (allocatedCollectedAmount[item.id] ?? 0));
 
-      purchasedProducts.add(PurchasedProductItem(
-        saleItemId: item.id,
-        productId: item.productId,
-        productName: product.name,
-        productSku: product.sku,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        totalPrice: item.totalPrice,
-        status: item.status,
-        purchaseDate: parentSale.saleDatetime,
-        collectedAmount: collected,
-      ));
+      if (item.quantity > 1) {
+        int remainingCollected = collected;
+        for (int i = 0; i < item.quantity; i++) {
+          final int unitCollected = remainingCollected >= item.unitPrice
+              ? item.unitPrice
+              : (remainingCollected > 0 ? remainingCollected : 0);
+          remainingCollected -= unitCollected;
+
+          purchasedProducts.add(PurchasedProductItem(
+            saleItemId: item.id,
+            productId: item.productId,
+            productName: product.name,
+            productSku: product.sku,
+            quantity: 1,
+            unitPrice: item.unitPrice,
+            totalPrice: item.unitPrice,
+            status: item.status,
+            purchaseDate: parentSale.saleDatetime,
+            collectedAmount: unitCollected,
+            unitLabel: 'Unit #${i + 1} of ${item.quantity}',
+          ));
+        }
+      } else {
+        purchasedProducts.add(PurchasedProductItem(
+          saleItemId: item.id,
+          productId: item.productId,
+          productName: product.name,
+          productSku: product.sku,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice,
+          status: item.status,
+          purchaseDate: parentSale.saleDatetime,
+          collectedAmount: collected,
+        ));
+      }
     }
 
     // Sort display purchased products by date descending (newest first)

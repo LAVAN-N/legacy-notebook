@@ -14,6 +14,7 @@ import '../../core/widgets/app_pull_to_refresh.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/router/routes.dart';
 import '../../data/models/activity.dart';
+import '../../data/models/outstanding.dart';
 import 'controllers/customer_controller.dart';
 import '../dashboard/controllers/dashboard_controller.dart';
 import 'widgets/customer_context_card.dart';
@@ -139,6 +140,420 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
     );
   }
 
+  Widget _buildPurchasedProducts(
+    BuildContext context,
+    CustomerDetailData data,
+    Outstanding outstanding,
+  ) {
+    final colors = context.colors;
+    if (data.purchasedProducts.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+          child: Text(
+            'No purchased products found.',
+            style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg),
+          ),
+        ),
+      );
+    }
+
+    final groupedProductsMap = <String, List<PurchasedProductItem>>{};
+    for (final item in data.purchasedProducts) {
+      groupedProductsMap.putIfAbsent(item.productId, () => []).add(item);
+    }
+    final productGroups = groupedProductsMap.values.toList();
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: productGroups.length,
+      separatorBuilder: (_, __) => const Divider(height: 28),
+      itemBuilder: (context, gIndex) {
+        final groupItems = productGroups[gIndex];
+        final firstItem = groupItems.first;
+        final hasMultiple = groupItems.length > 1;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Product Title Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        firstItem.productName,
+                        style: AppTypography.bodyLarge.copyWith(
+                          color: colors.foreground,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text(
+                            'SKU: ${firstItem.productSku}',
+                            style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
+                          ),
+                          if (hasMultiple) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                              decoration: BoxDecoration(
+                                color: colors.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                '${groupItems.length} Purchases/Units',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: colors.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 9.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            // Standalone Purchase Instances
+            ...groupItems.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final item = entry.value;
+              final isReturned = item.status == 'returned';
+              final isSettled = item.status == 'settled';
+              final isPurchased = item.status == 'purchased';
+              final double oAmount = outstanding.outstandingAmount / 100;
+              final canSettle = oAmount == 0.0 && isPurchased;
+
+              final label = item.unitLabel ??
+                  (hasMultiple ? 'Purchase #${groupItems.length - idx}' : null);
+
+              return Container(
+                margin: EdgeInsets.only(bottom: idx == groupItems.length - 1 ? 0 : 8),
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isReturned
+                        ? const Color(0xFFFDE047).withValues(alpha: 0.6)
+                        : colors.border.withValues(alpha: 0.6),
+                    width: 1.0,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Top Row: Date, Sub-label, Status Badge
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.calendar_today_outlined, size: 12, color: colors.mutedFg),
+                            const SizedBox(width: 4),
+                            Text(
+                              DateFormat('dd MMM yyyy').format(item.purchaseDate),
+                              style: AppTypography.labelSmall.copyWith(
+                                color: colors.foreground,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            if (label != null) ...[
+                              const SizedBox(width: 6),
+                              Text('•', style: TextStyle(color: colors.mutedFg, fontSize: 10)),
+                              const SizedBox(width: 6),
+                              Text(
+                                label,
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: colors.mutedFg,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        // Status Badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: isReturned
+                                ? const Color(0xFFFDE047).withValues(alpha: 0.2)
+                                : isSettled
+                                    ? colors.success.withValues(alpha: 0.1)
+                                    : colors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(5),
+                            border: Border.all(
+                              color: isReturned
+                                  ? const Color(0xFFFDE047)
+                                  : isSettled
+                                      ? colors.success.withValues(alpha: 0.4)
+                                      : colors.primary.withValues(alpha: 0.4),
+                              width: 0.75,
+                            ),
+                          ),
+                          child: Text(
+                            item.status.toUpperCase(),
+                            style: AppTypography.labelSmall.copyWith(
+                              color: isReturned
+                                  ? const Color(0xFF854D0E)
+                                  : isSettled
+                                      ? colors.success
+                                      : colors.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 8.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Bottom Row: Price, Collected & Action Buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Price: ${rupees(item.totalPrice)}',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: colors.mutedFg,
+                                decoration: isReturned ? TextDecoration.lineThrough : null,
+                              ),
+                            ),
+                            if (isReturned)
+                              Text(
+                                'Credit Credited: ${rupees(item.collectedAmount)}',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: const Color(0xFF854D0E),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            else
+                              Text(
+                                'Collected: ${rupees(item.collectedAmount)} / ${rupees(item.totalPrice)}',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: isSettled ? colors.success : colors.mutedFg,
+                                  fontWeight: isSettled ? FontWeight.bold : FontWeight.w600,
+                                ),
+                              ),
+                          ],
+                        ),
+
+                        // Actions
+                        if (isPurchased)
+                          Row(
+                            children: [
+                              if (canSettle) ...[
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    final notifier = ref.read(customerDetailControllerProvider(widget.customerId).notifier);
+                                    await notifier.settleProduct(item.saleItemId);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('${item.productName} marked as settled.'),
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: colors.success,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: const Text('Settle', style: TextStyle(fontSize: 10)),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              OutlinedButton(
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (ctx) {
+                                      final otherOutstandingProducts = data.purchasedProducts.where((p) =>
+                                        p.saleItemId != item.saleItemId &&
+                                        p.status == 'purchased' &&
+                                        (p.totalPrice - p.collectedAmount) > 0
+                                      ).toList();
+
+                                      bool tallyOut = otherOutstandingProducts.isNotEmpty;
+                                      String? selectedTallySaleItemId = otherOutstandingProducts.isNotEmpty ? otherOutstandingProducts.first.saleItemId : null;
+
+                                      return StatefulBuilder(
+                                        builder: (context, setState) {
+                                          final hasOtherOutstandings = otherOutstandingProducts.isNotEmpty;
+                                          PurchasedProductItem? selectedTallyProduct;
+                                          if (selectedTallySaleItemId != null) {
+                                            for (final p in otherOutstandingProducts) {
+                                              if (p.saleItemId == selectedTallySaleItemId) {
+                                                selectedTallyProduct = p;
+                                                break;
+                                              }
+                                            }
+                                          }
+                                          if (selectedTallyProduct == null && otherOutstandingProducts.isNotEmpty) {
+                                            selectedTallyProduct = otherOutstandingProducts.first;
+                                            selectedTallySaleItemId = selectedTallyProduct.saleItemId;
+                                          }
+
+                                          int tallyAmount = 0;
+                                          int remainder = item.collectedAmount;
+
+                                          if (tallyOut && selectedTallyProduct != null) {
+                                            final outstandingAmount = selectedTallyProduct.totalPrice - selectedTallyProduct.collectedAmount;
+                                            tallyAmount = item.collectedAmount < outstandingAmount ? item.collectedAmount : outstandingAmount;
+                                            remainder = item.collectedAmount - tallyAmount;
+                                          }
+
+                                          return AlertDialog(
+                                            title: const Text('Return Product'),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Confirm returning ${item.productName}${item.unitLabel != null ? " (${item.unitLabel})" : ""}?\n\nThis will restock the product. Return Credit: ${rupees(item.collectedAmount)}.',
+                                                  style: AppTypography.bodyMedium.copyWith(color: colors.foreground),
+                                                ),
+                                                const SizedBox(height: 12),
+                                                if (hasOtherOutstandings) ...[
+                                                  SwitchListTile(
+                                                    value: tallyOut,
+                                                    title: const Text('Tally out with outstanding', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                                    subtitle: const Text('Deduct credit from other active product outstandings instead of keeping as pure credit', style: TextStyle(fontSize: 11)),
+                                                    contentPadding: EdgeInsets.zero,
+                                                    dense: true,
+                                                    onChanged: (val) {
+                                                      setState(() => tallyOut = val);
+                                                    },
+                                                  ),
+                                                  if (tallyOut && selectedTallyProduct != null) ...[
+                                                    const SizedBox(height: 12),
+                                                    Text('Select product to apply credit to:', style: AppTypography.labelSmall.copyWith(color: colors.mutedFg)),
+                                                    const SizedBox(height: 6),
+                                                    Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                                      decoration: BoxDecoration(
+                                                        border: Border.all(color: colors.border),
+                                                        borderRadius: BorderRadius.circular(8),
+                                                      ),
+                                                      child: DropdownButtonHideUnderline(
+                                                        child: DropdownButton<String>(
+                                                          value: selectedTallySaleItemId,
+                                                          isExpanded: true,
+                                                          dropdownColor: colors.background,
+                                                          style: AppTypography.bodyMedium.copyWith(color: colors.foreground),
+                                                          items: otherOutstandingProducts.map((p) {
+                                                            final outstandingAmount = p.totalPrice - p.collectedAmount;
+                                                            return DropdownMenuItem<String>(
+                                                              value: p.saleItemId,
+                                                              child: Text('${p.productName} (${dateShort(p.purchaseDate)}) - Outstanding: ${rupees(outstandingAmount)}'),
+                                                            );
+                                                          }).toList(),
+                                                          onChanged: (val) {
+                                                            setState(() => selectedTallySaleItemId = val);
+                                                          },
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 12),
+                                                    Text(
+                                                      '${rupees(tallyAmount)} will be applied to ${selectedTallyProduct.productName}.\n${remainder > 0 ? "${rupees(remainder)} will be kept as pure credit." : "No credit remainder."}',
+                                                      style: AppTypography.labelSmall.copyWith(color: colors.success, fontWeight: FontWeight.w600),
+                                                    ),
+                                                  ],
+                                                ] else ...[
+                                                  Text(
+                                                    'No other outstanding products found. Return credit of ${rupees(item.collectedAmount)} will be saved as pure credit for future purchases.',
+                                                    style: AppTypography.bodySmall.copyWith(color: colors.mutedFg),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(ctx),
+                                                child: const Text('Cancel'),
+                                              ),
+                                              ElevatedButton(
+                                                onPressed: () async {
+                                                  Navigator.pop(ctx);
+                                                  final notifier = ref.read(customerDetailControllerProvider(widget.customerId).notifier);
+                                                  await notifier.returnProduct(
+                                                    item.saleItemId,
+                                                    item.collectedAmount,
+                                                    'Owner',
+                                                    tallyOut: tallyOut,
+                                                    tallySaleItemId: tallyOut && selectedTallyProduct != null ? selectedTallyProduct.saleItemId : null,
+                                                    tallyProductName: tallyOut && selectedTallyProduct != null ? selectedTallyProduct.productName : null,
+                                                    tallyAmount: tallyOut ? tallyAmount : null,
+                                                  );
+                                                  if (context.mounted) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                          tallyOut
+                                                              ? '${item.productName} returned. Credit applied to outstanding.'
+                                                              : '${item.productName} returned. Saved to returned credit.',
+                                                        ),
+                                                        behavior: SnackBarBehavior.floating,
+                                                      ),
+                                                    );
+                                                  }
+                                                },
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: colors.danger,
+                                                  foregroundColor: Colors.white,
+                                                ),
+                                                child: const Text('Confirm Return'),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    },
+                                  );
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: colors.danger,
+                                  side: BorderSide(color: colors.danger),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: const Text('Return', style: TextStyle(fontSize: 10)),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -230,328 +645,27 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                        ),
                        const SizedBox(height: AppSpacing.lg),
 
-                       // Purchased Products Section
-                       Card(
-                         child: Padding(
-                           padding: const EdgeInsets.all(AppSpacing.lg),
-                           child: Column(
-                             crossAxisAlignment: CrossAxisAlignment.start,
-                             children: [
-                               Text(
-                                 'Purchased Products',
-                                 style: AppTypography.titleSmall.copyWith(
-                                   color: colors.foreground,
-                                   fontWeight: FontWeight.w700,
-                                 ),
-                               ),
-                               const SizedBox(height: AppSpacing.md),
-                               if (data.purchasedProducts.isEmpty)
-                                 Center(
-                                   child: Padding(
-                                     padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                                     child: Text(
-                                       'No purchased products found.',
-                                       style: AppTypography.bodyMedium.copyWith(color: colors.mutedFg),
-                                     ),
-                                   ),
-                                 )
-                               else
-                                 ListView.separated(
-                                   shrinkWrap: true,
-                                   physics: const NeverScrollableScrollPhysics(),
-                                   itemCount: data.purchasedProducts.length,
-                                   separatorBuilder: (_, __) => const Divider(height: 24),
-                                   itemBuilder: (context, index) {
-                                     final item = data.purchasedProducts[index];
-                                     final isReturned = item.status == 'returned';
-                                     final isSettled = item.status == 'settled';
-                                     final isPurchased = item.status == 'purchased';
-
-                                     // Outstanding check
-                                     final double oAmount = outstanding.outstandingAmount / 100;
-                                     final canSettle = oAmount == 0.0 && isPurchased;
-
-                                     return Column(
-                                       crossAxisAlignment: CrossAxisAlignment.start,
-                                       children: [
-                                         Row(
-                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                           children: [
-                                             Expanded(
-                                               child: Column(
-                                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                                 children: [
-                                                   Text(
-                                                     item.productName,
-                                                     style: AppTypography.bodyMedium.copyWith(
-                                                       color: colors.foreground,
-                                                       fontWeight: FontWeight.bold,
-                                                       decoration: isReturned ? TextDecoration.lineThrough : null,
-                                                     ),
-                                                   ),
-                                                   const SizedBox(height: 2),
-                                                   Text(
-                                                     'SKU: ${item.productSku} • Qty: ${item.quantity}',
-                                                     style: AppTypography.labelSmall.copyWith(color: colors.mutedFg),
-                                                   ),
-                                                 ],
-                                               ),
-                                             ),
-                                             const SizedBox(width: 8),
-                                             // Status Badge
-                                             Container(
-                                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                               decoration: BoxDecoration(
-                                                 color: isReturned
-                                                     ? colors.danger.withValues(alpha: 0.1)
-                                                     : isSettled
-                                                         ? colors.success.withValues(alpha: 0.1)
-                                                         : colors.primary.withValues(alpha: 0.1),
-                                                 borderRadius: BorderRadius.circular(6),
-                                               ),
-                                               child: Text(
-                                                 item.status.toUpperCase(),
-                                                 style: AppTypography.labelSmall.copyWith(
-                                                   color: isReturned
-                                                       ? colors.danger
-                                                       : isSettled
-                                                           ? colors.success
-                                                           : colors.primary,
-                                                   fontWeight: FontWeight.bold,
-                                                   fontSize: 9,
-                                                 ),
-                                               ),
-                                             ),
-                                           ],
-                                         ),
-                                         const SizedBox(height: AppSpacing.sm),
-                                         Row(
-                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                           children: [
-                                             Column(
-                                               crossAxisAlignment: CrossAxisAlignment.start,
-                                               children: [
-                                                 Text(
-                                                   'Price: ${rupees(item.totalPrice)}',
-                                                   style: AppTypography.bodySmall.copyWith(color: colors.mutedFg),
-                                                 ),
-                                                 if (isReturned)
-                                                   Text(
-                                                     'Credit Credited: ${rupees(item.collectedAmount)}',
-                                                     style: AppTypography.bodySmall.copyWith(
-                                                       color: colors.success,
-                                                       fontWeight: FontWeight.bold,
-                                                     ),
-                                                   )
-                                                 else
-                                                   Text(
-                                                     'Collected: ${rupees(item.collectedAmount)} / ${rupees(item.totalPrice)}',
-                                                     style: AppTypography.bodySmall.copyWith(
-                                                       color: isSettled ? colors.success : colors.mutedFg,
-                                                       fontWeight: isSettled ? FontWeight.bold : null,
-                                                     ),
-                                                   ),
-                                               ],
-                                             ),
-                                             // Actions
-                                             if (isPurchased)
-                                               Row(
-                                                 children: [
-                                                   if (canSettle) ...[
-                                                     ElevatedButton(
-                                                       onPressed: () async {
-                                                         final notifier = ref.read(customerDetailControllerProvider(widget.customerId).notifier);
-                                                         await notifier.settleProduct(item.saleItemId);
-                                                         if (context.mounted) {
-                                                           ScaffoldMessenger.of(context).showSnackBar(
-                                                             SnackBar(
-                                                              content: Text('${item.productName} marked as settled.'),
-                                                              behavior: SnackBarBehavior.floating,
-                                                            ),
-                                                          );
-                                                        }
-                                                      },
-                                                      style: ElevatedButton.styleFrom(
-                                                        backgroundColor: colors.success,
-                                                        foregroundColor: Colors.white,
-                                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                                        minimumSize: Size.zero,
-                                                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                                      ),
-                                                      child: const Text('Settle', style: TextStyle(fontSize: 10)),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                   ],
-                                                   OutlinedButton(
-                                                      onPressed: () {
-                                                        showDialog(
-                                                          context: context,
-                                                          builder: (ctx) {
-                                                            final otherOutstandingProducts = data.purchasedProducts.where((p) =>
-                                                              p.saleItemId != item.saleItemId &&
-                                                              p.status == 'purchased' &&
-                                                              (p.totalPrice - p.collectedAmount) > 0
-                                                            ).toList();
-                                                            bool tallyOut = otherOutstandingProducts.isNotEmpty;
-                                                            String? selectedTallySaleItemId = otherOutstandingProducts.isNotEmpty ? otherOutstandingProducts.first.saleItemId : null;
-
-                                                            return StatefulBuilder(
-                                                              builder: (context, setState) {
-                                                                final hasOtherOutstandings = otherOutstandingProducts.isNotEmpty;
-                                                                PurchasedProductItem? selectedTallyProduct;
-                                                                if (selectedTallySaleItemId != null) {
-                                                                  for (final p in otherOutstandingProducts) {
-                                                                    if (p.saleItemId == selectedTallySaleItemId) {
-                                                                      selectedTallyProduct = p;
-                                                                      break;
-                                                                    }
-                                                                  }
-                                                                }
-                                                                if (selectedTallyProduct == null && otherOutstandingProducts.isNotEmpty) {
-                                                                  selectedTallyProduct = otherOutstandingProducts.first;
-                                                                  selectedTallySaleItemId = selectedTallyProduct.saleItemId;
-                                                                }
-
-                                                                int tallyAmount = 0;
-                                                                int remainder = item.collectedAmount;
-
-                                                                if (tallyOut && selectedTallyProduct != null) {
-                                                                  final outstandingAmount = selectedTallyProduct.totalPrice - selectedTallyProduct.collectedAmount;
-                                                                  tallyAmount = item.collectedAmount < outstandingAmount ? item.collectedAmount : outstandingAmount;
-                                                                  remainder = item.collectedAmount - tallyAmount;
-                                                                }
-
-                                                                return AlertDialog(
-                                                                  title: const Text('Return Product'),
-                                                                  content: Column(
-                                                                    mainAxisSize: MainAxisSize.min,
-                                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                                    children: [
-                                                                      Text(
-                                                                        'Confirm returning ${item.productName}?\n\nThis will restock the product. Return Credit: ${rupees(item.collectedAmount)}.',
-                                                                        style: AppTypography.bodyMedium.copyWith(color: colors.foreground),
-                                                                      ),
-                                                                      const SizedBox(height: 12),
-                                                                      if (hasOtherOutstandings) ...[
-                                                                        SwitchListTile(
-                                                                          value: tallyOut,
-                                                                          title: const Text('Tally out with outstanding', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                                                          subtitle: const Text('Deduct credit from other active product outstandings instead of keeping as pure credit', style: TextStyle(fontSize: 11)),
-                                                                          contentPadding: EdgeInsets.zero,
-                                                                          dense: true,
-                                                                          onChanged: (val) {
-                                                                            setState(() => tallyOut = val);
-                                                                          },
-                                                                        ),
-                                                                        if (tallyOut && selectedTallyProduct != null) ...[
-                                                                          const SizedBox(height: 12),
-                                                                          Text('Select product to apply credit to:', style: AppTypography.labelSmall.copyWith(color: colors.mutedFg)),
-                                                                          const SizedBox(height: 6),
-                                                                          Container(
-                                                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                                                            decoration: BoxDecoration(
-                                                                              border: Border.all(color: colors.border),
-                                                                              borderRadius: BorderRadius.circular(8),
-                                                                            ),
-                                                                            child: DropdownButtonHideUnderline(
-                                                                              child: DropdownButton<String>(
-                                                                                value: selectedTallySaleItemId,
-                                                                                isExpanded: true,
-                                                                                dropdownColor: colors.background,
-                                                                                style: AppTypography.bodyMedium.copyWith(color: colors.foreground),
-                                                                                items: otherOutstandingProducts.map((p) {
-                                                                                  final outstandingAmount = p.totalPrice - p.collectedAmount;
-                                                                                  return DropdownMenuItem<String>(
-                                                                                    value: p.saleItemId,
-                                                                                    child: Text('${p.productName} (Outstanding: ${rupees(outstandingAmount)})'),
-                                                                                  );
-                                                                                }).toList(),
-                                                                                onChanged: (val) {
-                                                                                  setState(() => selectedTallySaleItemId = val);
-                                                                                },
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                          const SizedBox(height: 12),
-                                                                          Text(
-                                                                            '${rupees(tallyAmount)} will be applied to ${selectedTallyProduct.productName}.\n${remainder > 0 ? "${rupees(remainder)} will be kept as pure credit." : "No credit remainder."}',
-                                                                            style: AppTypography.labelSmall.copyWith(color: colors.success, fontWeight: FontWeight.w600),
-                                                                          ),
-                                                                        ],
-                                                                      ] else ...[
-                                                                        Text(
-                                                                          'No other outstanding products found. Return credit of ${rupees(item.collectedAmount)} will be saved as pure credit for future purchases.',
-                                                                          style: AppTypography.bodySmall.copyWith(color: colors.mutedFg),
-                                                                        ),
-                                                                      ],
-                                                                    ],
-                                                                  ),
-                                                                  actions: [
-                                                                    TextButton(
-                                                                      onPressed: () => Navigator.pop(ctx),
-                                                                      child: const Text('Cancel'),
-                                                                    ),
-                                                                    ElevatedButton(
-                                                                      onPressed: () async {
-                                                                        Navigator.pop(ctx);
-                                                                        final notifier = ref.read(customerDetailControllerProvider(widget.customerId).notifier);
-                                                                        await notifier.returnProduct(
-                                                                          item.saleItemId,
-                                                                          item.collectedAmount,
-                                                                          'Owner',
-                                                                          tallyOut: tallyOut,
-                                                                          tallySaleItemId: tallyOut && selectedTallyProduct != null ? selectedTallyProduct.saleItemId : null,
-                                                                          tallyProductName: tallyOut && selectedTallyProduct != null ? selectedTallyProduct.productName : null,
-                                                                          tallyAmount: tallyOut ? tallyAmount : null,
-                                                                        );
-                                                                        if (context.mounted) {
-                                                                          ScaffoldMessenger.of(context).showSnackBar(
-                                                                            SnackBar(
-                                                                              content: Text(
-                                                                                tallyOut
-                                                                                    ? '${item.productName} returned. Credit applied to outstanding.'
-                                                                                    : '${item.productName} returned. Saved to returned credit.',
-                                                                              ),
-                                                                              behavior: SnackBarBehavior.floating,
-                                                                            ),
-                                                                          );
-                                                                        }
-                                                                      },
-                                                                      style: ElevatedButton.styleFrom(
-                                                                        backgroundColor: colors.danger,
-                                                                        foregroundColor: Colors.white,
-                                                                      ),
-                                                                      child: const Text('Confirm Return'),
-                                                                    ),
-                                                                  ],
-                                                                );
-                                                              },
-                                                            );
-                                                          },
-                                                        );
-                                                      },
-                                                     style: OutlinedButton.styleFrom(
-                                                       foregroundColor: colors.danger,
-                                                       side: BorderSide(color: colors.danger),
-                                                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                                       minimumSize: Size.zero,
-                                                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                                     ),
-                                                     child: const Text('Return', style: TextStyle(fontSize: 10)),
-                                                   ),
-                                                 ],
-                                               ),
-                                           ],
-                                         ),
-                                       ],
-                                     );
-                                   },
-                                 ),
-                             ],
-                           ),
-                         ),
-                       ),
-                       const SizedBox(height: AppSpacing.lg),
+                        // Purchased Products Section
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.lg),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Purchased Products',
+                                  style: AppTypography.titleSmall.copyWith(
+                                    color: colors.foreground,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                _buildPurchasedProducts(context, data, outstanding),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
 
                       // Identity Block
                       CustomerContextCard(
@@ -616,7 +730,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                       ),
                       const SizedBox(height: AppSpacing.sm),
 
-                      if (_isCalendarView)
+                      if (_isCalendarView) ...[
                         Card(
                           child: Padding(
                             padding: const EdgeInsets.all(AppSpacing.md),
@@ -627,8 +741,8 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                               },
                             ),
                           ),
-                        )
-                      else ...[
+                        ),
+                      ] else ...[
                         if (timeline.isEmpty)
                           Container(
                             decoration: BoxDecoration(
@@ -750,5 +864,4 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
     );
   }
 }
-
 
