@@ -241,23 +241,60 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                           ] else ...[
                             // Products list
                             ...sale.items.map((item) {
+                              final isReturned = item.status == 'returned';
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 6.0),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
-                                      child: Text(
-                                        '${item.productName} (x${item.quantity})',
-                                        style: AppTypography.bodyMedium.copyWith(color: colors.foreground.withValues(alpha: 0.8)),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              '${item.productName} (x${item.quantity})',
+                                              style: AppTypography.bodyMedium.copyWith(
+                                                color: isReturned ? colors.mutedFg : colors.foreground.withValues(alpha: 0.8),
+                                                decoration: isReturned ? TextDecoration.lineThrough : null,
+                                                decorationColor: isReturned ? colors.danger : null,
+                                                decorationThickness: 2.0,
+                                              ),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          if (isReturned) ...[
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFFDE047).withValues(alpha: 0.25),
+                                                borderRadius: BorderRadius.circular(4),
+                                                border: Border.all(color: const Color(0xFFFDE047), width: 0.8),
+                                              ),
+                                              child: Text(
+                                                'Returned',
+                                                style: AppTypography.labelSmall.copyWith(
+                                                  color: const Color(0xFF854D0E),
+                                                  fontSize: 9,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
                                       ),
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
                                       rupees(item.unitPrice * item.quantity),
-                                      style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                                      style: AppTypography.bodyMedium.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: isReturned ? colors.mutedFg : null,
+                                        decoration: isReturned ? TextDecoration.lineThrough : null,
+                                        decorationColor: isReturned ? colors.danger : null,
+                                        decorationThickness: 2.0,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -574,7 +611,14 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
               Builder(
                 builder: (context) {
                   final currentYear = DateTime.now().year;
-                  final years = List.generate(5, (index) => currentYear - index);
+                  final yearsSet = <int>{currentYear, _selectedYear};
+                  for (final g in widget.groupedSales) {
+                    yearsSet.add(g.date.year);
+                  }
+                  for (int i = 0; i < 5; i++) {
+                    yearsSet.add(currentYear - i);
+                  }
+                  final years = yearsSet.toList()..sort((a, b) => b.compareTo(a));
 
                   final salesMap = {
                     for (var g in widget.groupedSales)
@@ -769,14 +813,16 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                                                         ),
                                                       );
                                                     } else {
-                                                      final hasReady = daySales.sales.any((s) => s.saleType.toUpperCase() == 'READY');
-                                                      final hasCredit = daySales.sales.any((s) => s.saleType.toUpperCase() == 'CREDIT');
+                                                      final hasReady = daySales.sales.any((s) => s.saleType.toUpperCase() == 'READY' && s.items.any((it) => it.status != 'returned'));
+                                                      final hasCredit = daySales.sales.any((s) => s.saleType.toUpperCase() == 'CREDIT' && s.items.any((it) => it.status != 'returned'));
                                                       final hasLend = daySales.sales.any((s) => s.saleType.toUpperCase() == 'LEND');
+                                                      final hasReturned = daySales.sales.any((s) => s.items.any((it) => it.status == 'returned'));
 
                                                       final List<Color> activeColors = [];
                                                       if (hasReady) activeColors.add(colors.success);
                                                       if (hasCredit) activeColors.add(colors.danger);
                                                       if (hasLend) activeColors.add(Colors.orange);
+                                                      if (hasReturned) activeColors.add(const Color(0xFFFDE047));
 
                                                       if (activeColors.isEmpty) {
                                                         activeColors.add(colors.success);
@@ -828,11 +874,13 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           _buildLegendItem(colors.success, 'Ready Sale', colors),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 8),
                           _buildLegendItem(colors.danger, 'Credit Sale', colors),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 8),
                           _buildLegendItem(Colors.orange, 'Lend', colors),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 8),
+                          _buildLegendItem(const Color(0xFFFDE047), 'Return', colors),
+                          const SizedBox(width: 8),
                           _buildLegendItem(
                             colors.muted.withValues(alpha: 0.6),
                             'No Sale',
@@ -872,9 +920,10 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                       else
                         // Event record cards: outlined, bold date, and single hr line between date and badges
                         ...monthEvents.map((grouped) {
-                          final hasReady = grouped.sales.any((s) => s.saleType.toUpperCase() == 'READY');
-                          final hasCredit = grouped.sales.any((s) => s.saleType.toUpperCase() == 'CREDIT');
+                          final hasReady = grouped.sales.any((s) => s.saleType.toUpperCase() == 'READY' && s.items.any((it) => it.status != 'returned'));
+                          final hasCredit = grouped.sales.any((s) => s.saleType.toUpperCase() == 'CREDIT' && s.items.any((it) => it.status != 'returned'));
                           final hasLend = grouped.sales.any((s) => s.saleType.toUpperCase() == 'LEND');
+                          final hasReturned = grouped.sales.any((s) => s.items.any((it) => it.status == 'returned'));
 
                           return GestureDetector(
                             onTap: () => _showFinancialsSheet(context, grouped, colors),
@@ -957,6 +1006,25 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                                         'Lend',
                                         style: AppTypography.labelSmall.copyWith(
                                           color: Colors.orange,
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  if (hasReturned) ...[
+                                    if (hasReady || hasCredit || hasLend) const SizedBox(width: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFDE047).withValues(alpha: 0.25),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: const Color(0xFFFDE047), width: 0.8),
+                                      ),
+                                      child: Text(
+                                        'Return',
+                                        style: AppTypography.labelSmall.copyWith(
+                                          color: const Color(0xFF854D0E),
                                           fontSize: 8,
                                           fontWeight: FontWeight.bold,
                                         ),

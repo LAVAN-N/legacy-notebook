@@ -392,13 +392,26 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                                                               p.status == 'purchased' &&
                                                               (p.totalPrice - p.collectedAmount) > 0
                                                             ).toList();
-
                                                             bool tallyOut = otherOutstandingProducts.isNotEmpty;
-                                                            dynamic selectedTallyProduct = otherOutstandingProducts.isNotEmpty ? otherOutstandingProducts.first : null;
+                                                            String? selectedTallySaleItemId = otherOutstandingProducts.isNotEmpty ? otherOutstandingProducts.first.saleItemId : null;
 
                                                             return StatefulBuilder(
                                                               builder: (context, setState) {
                                                                 final hasOtherOutstandings = otherOutstandingProducts.isNotEmpty;
+                                                                PurchasedProductItem? selectedTallyProduct;
+                                                                if (selectedTallySaleItemId != null) {
+                                                                  for (final p in otherOutstandingProducts) {
+                                                                    if (p.saleItemId == selectedTallySaleItemId) {
+                                                                      selectedTallyProduct = p;
+                                                                      break;
+                                                                    }
+                                                                  }
+                                                                }
+                                                                if (selectedTallyProduct == null && otherOutstandingProducts.isNotEmpty) {
+                                                                  selectedTallyProduct = otherOutstandingProducts.first;
+                                                                  selectedTallySaleItemId = selectedTallyProduct.saleItemId;
+                                                                }
+
                                                                 int tallyAmount = 0;
                                                                 int remainder = item.collectedAmount;
 
@@ -441,20 +454,20 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                                                                               borderRadius: BorderRadius.circular(8),
                                                                             ),
                                                                             child: DropdownButtonHideUnderline(
-                                                                              child: DropdownButton<dynamic>(
-                                                                                value: selectedTallyProduct,
+                                                                              child: DropdownButton<String>(
+                                                                                value: selectedTallySaleItemId,
                                                                                 isExpanded: true,
                                                                                 dropdownColor: colors.background,
                                                                                 style: AppTypography.bodyMedium.copyWith(color: colors.foreground),
                                                                                 items: otherOutstandingProducts.map((p) {
                                                                                   final outstandingAmount = p.totalPrice - p.collectedAmount;
-                                                                                  return DropdownMenuItem<dynamic>(
-                                                                                    value: p,
+                                                                                  return DropdownMenuItem<String>(
+                                                                                    value: p.saleItemId,
                                                                                     child: Text('${p.productName} (Outstanding: ${rupees(outstandingAmount)})'),
                                                                                   );
                                                                                 }).toList(),
                                                                                 onChanged: (val) {
-                                                                                  setState(() => selectedTallyProduct = val);
+                                                                                  setState(() => selectedTallySaleItemId = val);
                                                                                 },
                                                                               ),
                                                                             ),

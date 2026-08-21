@@ -365,7 +365,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
 
       // Query sale items left join products to get the product name
       final itemMaps = await db.rawQuery('''
-        SELECT si.quantity, si.unit_price, p.name AS product_name
+        SELECT si.quantity, si.unit_price, si.status, p.name AS product_name
         FROM sale_items si
         JOIN products p ON p.id = si.product_id
         WHERE si.sale_id = ?
@@ -375,6 +375,7 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
         productName: it['product_name'] as String,
         quantity: it['quantity'] as int,
         unitPrice: it['unit_price'] as int,
+        status: it['status'] as String? ?? 'purchased',
       )).toList();
 
       activities.add(Activity.sale(

@@ -598,7 +598,7 @@ as String?,
 /// @nodoc
 mixin _$SaleItemDetail {
 
- String get productName; int get quantity; int get unitPrice;
+ String get productName; int get quantity; int get unitPrice; String get status;
 /// Create a copy of SaleItemDetail
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -611,16 +611,16 @@ $SaleItemDetailCopyWith<SaleItemDetail> get copyWith => _$SaleItemDetailCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SaleItemDetail&&(identical(other.productName, productName) || other.productName == productName)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.unitPrice, unitPrice) || other.unitPrice == unitPrice));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SaleItemDetail&&(identical(other.productName, productName) || other.productName == productName)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.unitPrice, unitPrice) || other.unitPrice == unitPrice)&&(identical(other.status, status) || other.status == status));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,productName,quantity,unitPrice);
+int get hashCode => Object.hash(runtimeType,productName,quantity,unitPrice,status);
 
 @override
 String toString() {
-  return 'SaleItemDetail(productName: $productName, quantity: $quantity, unitPrice: $unitPrice)';
+  return 'SaleItemDetail(productName: $productName, quantity: $quantity, unitPrice: $unitPrice, status: $status)';
 }
 
 
@@ -631,7 +631,7 @@ abstract mixin class $SaleItemDetailCopyWith<$Res>  {
   factory $SaleItemDetailCopyWith(SaleItemDetail value, $Res Function(SaleItemDetail) _then) = _$SaleItemDetailCopyWithImpl;
 @useResult
 $Res call({
- String productName, int quantity, int unitPrice
+ String productName, int quantity, int unitPrice, String status
 });
 
 
@@ -648,12 +648,13 @@ class _$SaleItemDetailCopyWithImpl<$Res>
 
 /// Create a copy of SaleItemDetail
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? productName = null,Object? quantity = null,Object? unitPrice = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? productName = null,Object? quantity = null,Object? unitPrice = null,Object? status = null,}) {
   return _then(SaleItemDetail(
 productName: null == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
 as String,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
 as int,unitPrice: null == unitPrice ? _self.unitPrice : unitPrice // ignore: cast_nullable_to_non_nullable
-as int,
+as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
@@ -738,10 +739,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String productName,  int quantity,  int unitPrice)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String productName,  int quantity,  int unitPrice,  String status)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SaleItemDetail() when $default != null:
-return $default(_that.productName,_that.quantity,_that.unitPrice);case _:
+return $default(_that.productName,_that.quantity,_that.unitPrice,_that.status);case _:
   return orElse();
 
 }
@@ -759,10 +760,10 @@ return $default(_that.productName,_that.quantity,_that.unitPrice);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String productName,  int quantity,  int unitPrice)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String productName,  int quantity,  int unitPrice,  String status)  $default,) {final _that = this;
 switch (_that) {
 case _SaleItemDetail():
-return $default(_that.productName,_that.quantity,_that.unitPrice);case _:
+return $default(_that.productName,_that.quantity,_that.unitPrice,_that.status);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -779,10 +780,10 @@ return $default(_that.productName,_that.quantity,_that.unitPrice);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String productName,  int quantity,  int unitPrice)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String productName,  int quantity,  int unitPrice,  String status)?  $default,) {final _that = this;
 switch (_that) {
 case _SaleItemDetail() when $default != null:
-return $default(_that.productName,_that.quantity,_that.unitPrice);case _:
+return $default(_that.productName,_that.quantity,_that.unitPrice,_that.status);case _:
   return null;
 
 }
@@ -794,12 +795,13 @@ return $default(_that.productName,_that.quantity,_that.unitPrice);case _:
 @JsonSerializable()
 
 class _SaleItemDetail implements SaleItemDetail {
-  const _SaleItemDetail({required this.productName, required this.quantity, required this.unitPrice});
+  const _SaleItemDetail({required this.productName, required this.quantity, required this.unitPrice, this.status = 'purchased'});
   factory _SaleItemDetail.fromJson(Map<String, dynamic> json) => _$SaleItemDetailFromJson(json);
 
 @override final  String productName;
 @override final  int quantity;
 @override final  int unitPrice;
+@override@JsonKey() final  String status;
 
 /// Create a copy of SaleItemDetail
 /// with the given fields replaced by the non-null parameter values.
@@ -814,16 +816,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SaleItemDetail&&(identical(other.productName, productName) || other.productName == productName)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.unitPrice, unitPrice) || other.unitPrice == unitPrice));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SaleItemDetail&&(identical(other.productName, productName) || other.productName == productName)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.unitPrice, unitPrice) || other.unitPrice == unitPrice)&&(identical(other.status, status) || other.status == status));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,productName,quantity,unitPrice);
+int get hashCode => Object.hash(runtimeType,productName,quantity,unitPrice,status);
 
 @override
 String toString() {
-  return 'SaleItemDetail(productName: $productName, quantity: $quantity, unitPrice: $unitPrice)';
+  return 'SaleItemDetail(productName: $productName, quantity: $quantity, unitPrice: $unitPrice, status: $status)';
 }
 
 
@@ -834,7 +836,7 @@ abstract mixin class _$SaleItemDetailCopyWith<$Res> implements $SaleItemDetailCo
   factory _$SaleItemDetailCopyWith(_SaleItemDetail value, $Res Function(_SaleItemDetail) _then) = __$SaleItemDetailCopyWithImpl;
 @override @useResult
 $Res call({
- String productName, int quantity, int unitPrice
+ String productName, int quantity, int unitPrice, String status
 });
 
 
@@ -851,12 +853,13 @@ class __$SaleItemDetailCopyWithImpl<$Res>
 
 /// Create a copy of SaleItemDetail
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? productName = null,Object? quantity = null,Object? unitPrice = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? productName = null,Object? quantity = null,Object? unitPrice = null,Object? status = null,}) {
   return _then(_SaleItemDetail(
 productName: null == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
 as String,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
 as int,unitPrice: null == unitPrice ? _self.unitPrice : unitPrice // ignore: cast_nullable_to_non_nullable
-as int,
+as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

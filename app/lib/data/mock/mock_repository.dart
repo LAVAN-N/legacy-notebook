@@ -198,25 +198,40 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
 
     // Port sales
     for (final s in _sales.where((s) => s.customerId == customerId)) {
+      final matchingSaleItems = _saleItems.where((si) => si.saleId == s.id).toList();
+      final List<SaleItemDetail> items = [];
+
+      if (matchingSaleItems.isNotEmpty) {
+        for (final si in matchingSaleItems) {
+          final p = _products.firstWhere((prod) => prod.id == si.productId, orElse: () => _products.first);
+          items.add(SaleItemDetail(
+            productName: p.name,
+            quantity: si.quantity,
+            unitPrice: si.unitPrice,
+            status: si.status,
+          ));
+        }
+      } else {
+        items.add(SaleItemDetail(
+          productName: s.totalAmount == 16500
+              ? 'LG 190L Single Door Refrigerator'
+              : s.totalAmount == 3200
+                  ? 'Prestige Mixer Grinder 3 Jar'
+                  : s.totalAmount == 2800
+                      ? 'Philips Induction Cooktop HD4928'
+                      : s.totalAmount == 28500
+                          ? 'IFB 7Kg Front Load Washing Machine'
+                          : 'Usha Dry Iron 1000W',
+          quantity: 1,
+          unitPrice: s.totalAmount,
+          status: 'purchased',
+        ));
+      }
+
       activities.add(Activity.sale(
         id: s.id,
         at: s.saleDatetime,
-        items: [
-          // Mocking items on the fly for UI simplicity
-          SaleItemDetail(
-            productName: s.totalAmount == 16500
-                ? 'LG 190L Single Door Refrigerator'
-                : s.totalAmount == 3200
-                    ? 'Prestige Mixer Grinder 3 Jar'
-                    : s.totalAmount == 2800
-                        ? 'Philips Induction Cooktop HD4928'
-                        : s.totalAmount == 28500
-                            ? 'IFB 7Kg Front Load Washing Machine'
-                            : 'Usha Dry Iron 1000W',
-            quantity: 1,
-            unitPrice: s.totalAmount,
-          ),
-        ],
+        items: items,
         total: s.totalAmount,
         advance: s.advanceAmount,
         creditAdded: s.financedAmount,

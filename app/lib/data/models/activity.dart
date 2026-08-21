@@ -49,6 +49,7 @@ abstract class SaleItemDetail with _$SaleItemDetail {
     required String productName,
     required int quantity,
     required int unitPrice,
+    @Default('purchased') String status,
   }) = _SaleItemDetail;
 
   factory SaleItemDetail.fromJson(Map<String, dynamic> json) => _$SaleItemDetailFromJson(json);

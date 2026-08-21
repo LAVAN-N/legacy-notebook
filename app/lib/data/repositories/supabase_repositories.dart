@@ -426,6 +426,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
           productName: prod['name'] as String,
           quantity: (item['quantity'] as num?)?.toInt() ?? 1,
           unitPrice: (item['unit_price'] as num?)?.toInt() ?? 0,
+          status: item['status'] as String? ?? 'purchased',
         ));
       }
 

@@ -102,6 +102,7 @@ _SaleItemDetail _$SaleItemDetailFromJson(Map<String, dynamic> json) =>
       productName: json['productName'] as String,
       quantity: (json['quantity'] as num).toInt(),
       unitPrice: (json['unitPrice'] as num).toInt(),
+      status: json['status'] as String? ?? 'purchased',
     );
 
 Map<String, dynamic> _$SaleItemDetailToJson(_SaleItemDetail instance) =>
@@ -109,4 +110,5 @@ Map<String, dynamic> _$SaleItemDetailToJson(_SaleItemDetail instance) =>
       'productName': instance.productName,
       'quantity': instance.quantity,
       'unitPrice': instance.unitPrice,
+      'status': instance.status,
     };
