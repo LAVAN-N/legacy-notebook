@@ -584,6 +584,7 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
   Widget _buildAllocationSelector(BuildContext context, WidgetRef ref, CollectScreenState state) {
     final colors = context.colors;
     final isIndividual = state.allocationType == 'INDIVIDUALLY';
+    final totalAllocated = state.allocations.fold<int>(0, (sum, a) => sum + a.allocatedAmount);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -638,6 +639,16 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
             ],
           ),
         ),
+        if (isIndividual && state.allocations.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.sm),
+          _buildTallyBanner(
+            context,
+            totalAllocated: totalAllocated,
+            targetAmount: state.amount,
+            onAutoBalance: () => ref.read(collectControllerProvider(widget.customerId).notifier).autoBalanceRemainingAllocation(),
+            onSyncAmount: () => ref.read(collectControllerProvider(widget.customerId).notifier).syncAmountToAllocations(),
+          ),
+        ],
         const SizedBox(height: AppSpacing.md),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -669,6 +680,102 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
         const SizedBox(height: AppSpacing.sm),
         ...state.allocations.map((alloc) => _buildAllocationItemRow(context, ref, state, alloc)),
       ],
+    );
+  }
+
+  Widget _buildTallyBanner(
+    BuildContext context, {
+    required int totalAllocated,
+    required int targetAmount,
+    required VoidCallback onAutoBalance,
+    required VoidCallback onSyncAmount,
+  }) {
+    final colors = context.colors;
+    final diff = targetAmount - totalAllocated;
+
+    Color bg;
+    Color border;
+    Color fg;
+    IconData icon;
+    String message;
+
+    if (diff == 0) {
+      bg = colors.success.withValues(alpha: 0.1);
+      border = colors.success.withValues(alpha: 0.3);
+      fg = colors.success;
+      icon = Icons.check_circle_outline_rounded;
+      message = 'Allocations match collected amount (${rupees(totalAllocated)})';
+    } else if (diff > 0) {
+      bg = Colors.amber.withValues(alpha: 0.12);
+      border = Colors.amber.withValues(alpha: 0.4);
+      fg = Colors.amber.shade800;
+      icon = Icons.info_outline_rounded;
+      message = '${rupees(diff)} remaining to allocate (Allocated: ${rupees(totalAllocated)} / ${rupees(targetAmount)})';
+    } else {
+      bg = colors.danger.withValues(alpha: 0.1);
+      border = colors.danger.withValues(alpha: 0.3);
+      fg = colors.danger;
+      icon = Icons.error_outline_rounded;
+      message = 'Allocated sum (${rupees(totalAllocated)}) exceeds collect amount (${rupees(targetAmount)}) by ${rupees(-diff)}';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: fg, size: 18),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  message,
+                  style: AppTypography.labelSmall.copyWith(
+                    color: fg,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (diff != 0) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (diff > 0)
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      visualDensity: VisualDensity.compact,
+                      foregroundColor: fg,
+                    ),
+                    onPressed: onAutoBalance,
+                    icon: const Icon(Icons.auto_fix_high_rounded, size: 14),
+                    label: const Text('Auto-fill remaining', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    visualDensity: VisualDensity.compact,
+                    foregroundColor: fg,
+                  ),
+                  onPressed: onSyncAmount,
+                  icon: const Icon(Icons.sync_rounded, size: 14),
+                  label: Text('Sync to ${rupees(totalAllocated)}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -776,6 +883,13 @@ class _IndividualAllocationInputState extends State<IndividualAllocationInput> {
         keyboardType: TextInputType.number,
         textAlign: TextAlign.end,
         style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+        onTap: () {
+          if (_controller.text == '0') {
+            _controller.selection = TextSelection.fromPosition(
+              TextPosition(offset: _controller.text.length),
+            );
+          }
+        },
         decoration: const InputDecoration(
           prefixText: '₹ ',
           contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -783,12 +897,19 @@ class _IndividualAllocationInputState extends State<IndividualAllocationInput> {
         ),
         onChanged: (val) {
           String sanitized = val.replaceAll(RegExp(r'[^0-9]'), '');
+          sanitized = sanitized.replaceAll(RegExp(r'^0+'), '');
+          if (sanitized.isEmpty) {
+            sanitized = '0';
+          }
           int parsed = int.tryParse(sanitized) ?? 0;
           if (parsed > widget.maxValue) {
             parsed = widget.maxValue;
-            _controller.text = parsed.toString();
-            _controller.selection = TextSelection.fromPosition(
-              TextPosition(offset: _controller.text.length),
+            sanitized = parsed.toString();
+          }
+          if (sanitized != val) {
+            _controller.value = TextEditingValue(
+              text: sanitized,
+              selection: TextSelection.collapsed(offset: sanitized.length),
             );
           }
           widget.onChanged(parsed);

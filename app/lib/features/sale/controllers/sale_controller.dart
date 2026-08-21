@@ -359,14 +359,37 @@ class SaleController extends StateNotifier<SaleScreenState> {
     final newMap = Map<String, int>.from(state.customAllocations);
     newMap[productId] = amount;
 
-    final totalAllocated = newMap.values.fold<int>(0, (sum, v) => sum + v);
-    final newAdvance = (totalAllocated - state.appliedCreditAmount).clamp(0, state.grandTotal);
-
     state = state.copyWith(
       customAllocations: newMap,
-      advanceAmount: newAdvance,
       errorMessage: null,
     );
+  }
+
+  void syncAdvanceToAllocations() {
+    final totalAllocated = state.allocations.fold<int>(0, (sum, a) => sum + a.allocatedAmount);
+    final newAdvance = (totalAllocated - state.appliedCreditAmount).clamp(0, state.grandTotal);
+    state = state.copyWith(advanceAmount: newAdvance, errorMessage: null);
+  }
+
+  void autoBalanceRemainingSaleAllocation() {
+    final target = state.advanceAmount + state.appliedCreditAmount;
+    final totalAllocated = state.allocations.fold<int>(0, (sum, a) => sum + a.allocatedAmount);
+    int remaining = target - totalAllocated;
+    if (remaining <= 0) return;
+
+    final map = Map<String, int>.from(state.customAllocations);
+    final allocs = state.allocations;
+    for (final a in allocs) {
+      if (remaining <= 0) break;
+      final current = a.allocatedAmount;
+      final maxCanTake = a.itemSaleCost - current;
+      if (maxCanTake > 0) {
+        final add = remaining < maxCanTake ? remaining : maxCanTake;
+        map[a.productId] = current + add;
+        remaining -= add;
+      }
+    }
+    state = state.copyWith(customAllocations: map, errorMessage: null);
   }
 
   void updateAdvance(int advance) {
@@ -425,6 +448,19 @@ class SaleController extends StateNotifier<SaleScreenState> {
     if (state.advanceAmount > state.grandTotal) {
       state = state.copyWith(errorMessage: 'Advance paid cannot exceed total purchase value.');
       return false;
+    }
+
+    if (!state.isLend &&
+        state.lineItems.isNotEmpty &&
+        state.allocationType == 'INDIVIDUALLY') {
+      final totalAllocated = state.allocations.fold<int>(0, (sum, a) => sum + a.allocatedAmount);
+      final targetPayment = state.advanceAmount + state.appliedCreditAmount;
+      if (totalAllocated != targetPayment) {
+        state = state.copyWith(
+          errorMessage: 'Total product allocations (₹$totalAllocated) must match total down payment (₹$targetPayment)',
+        );
+        return false;
+      }
     }
 
     state = state.copyWith(isSaving: true, errorMessage: null);

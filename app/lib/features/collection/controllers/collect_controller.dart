@@ -245,19 +245,33 @@ class CollectController extends StateNotifier<CollectScreenState> {
       return item;
     }).toList();
     
-    final newTotal = updated.fold(0, (sum, item) => sum + item.allocatedAmount);
-    
-    String? error;
-    final maxOutstanding = state.outstanding.saleOutstanding;
-    if (state.status == 'PAYMENT' && newTotal > maxOutstanding) {
-      error = 'Payment exceeds outstanding balance!';
-    }
-    
     state = state.copyWith(
       allocations: updated,
-      amount: newTotal,
-      errorMessage: error,
+      errorMessage: null,
     );
+  }
+
+  void syncAmountToAllocations() {
+    final total = state.allocations.fold<int>(0, (sum, item) => sum + item.allocatedAmount);
+    state = state.copyWith(amount: total, errorMessage: null);
+  }
+
+  void autoBalanceRemainingAllocation() {
+    final totalAllocated = state.allocations.fold<int>(0, (sum, item) => sum + item.allocatedAmount);
+    int remaining = state.amount - totalAllocated;
+    if (remaining <= 0) return;
+
+    final updated = List<ProductAllocation>.from(state.allocations);
+    for (int i = 0; i < updated.length && remaining > 0; i++) {
+      final item = updated[i];
+      final canTake = item.outstanding - item.allocatedAmount;
+      if (canTake > 0) {
+        final add = remaining < canTake ? remaining : canTake;
+        updated[i] = item.copyWith(allocatedAmount: item.allocatedAmount + add);
+        remaining -= add;
+      }
+    }
+    state = state.copyWith(allocations: updated, errorMessage: null);
   }
 
   void updateCollectionTarget(String target) {
@@ -371,6 +385,18 @@ class CollectController extends StateNotifier<CollectScreenState> {
     if (state.status == 'CARRY_FORWARD' && state.notes.trim().isEmpty) {
       state = state.copyWith(errorMessage: 'Please specify the reason for Carry Forward');
       return false;
+    }
+    if (state.collectionTarget == 'SALE' &&
+        state.status != 'CARRY_FORWARD' &&
+        state.allocationType == 'INDIVIDUALLY' &&
+        state.allocations.isNotEmpty) {
+      final totalAllocated = state.allocations.fold<int>(0, (sum, item) => sum + item.allocatedAmount);
+      if (totalAllocated != state.amount) {
+        state = state.copyWith(
+          errorMessage: 'Total allocated (₹$totalAllocated) must match collection amount (₹${state.amount})',
+        );
+        return false;
+      }
     }
 
     state = state.copyWith(isSaving: true, errorMessage: null);
