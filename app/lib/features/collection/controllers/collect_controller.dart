@@ -256,10 +256,25 @@ class CollectController extends StateNotifier<CollectScreenState> {
     state = state.copyWith(amount: total, errorMessage: null);
   }
 
-  void autoBalanceRemainingAllocation() {
+  void autoFillField([String? saleItemId]) {
     final totalAllocated = state.allocations.fold<int>(0, (sum, item) => sum + item.allocatedAmount);
     int remaining = state.amount - totalAllocated;
     if (remaining <= 0) return;
+
+    if (saleItemId != null) {
+      final updated = state.allocations.map((item) {
+        if (item.saleItemId == saleItemId) {
+          final canTake = item.outstanding - item.allocatedAmount;
+          if (canTake > 0) {
+            final add = remaining < canTake ? remaining : canTake;
+            return item.copyWith(allocatedAmount: item.allocatedAmount + add);
+          }
+        }
+        return item;
+      }).toList();
+      state = state.copyWith(allocations: updated, errorMessage: null);
+      return;
+    }
 
     final updated = List<ProductAllocation>.from(state.allocations);
     for (int i = 0; i < updated.length && remaining > 0; i++) {
@@ -273,6 +288,8 @@ class CollectController extends StateNotifier<CollectScreenState> {
     }
     state = state.copyWith(allocations: updated, errorMessage: null);
   }
+
+  void autoBalanceRemainingAllocation() => autoFillField();
 
   void updateCollectionTarget(String target) {
     final maxOutstanding = target == 'LEND'

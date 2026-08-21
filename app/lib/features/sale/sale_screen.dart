@@ -34,6 +34,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
   final TextEditingController _creditChargeController = TextEditingController();
   final TextEditingController _remarksController = TextEditingController();
   final TextEditingController _lendAmountController = TextEditingController();
+  String? _selectedProductId;
 
   bool get _isDirty {
     final state = ref.read(saleControllerProvider(widget.customerId));
@@ -1007,7 +1008,9 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
             context,
             totalAllocated: totalAllocated,
             targetAmount: targetPayment,
-            onAutoBalance: () => ref.read(saleControllerProvider(widget.customerId).notifier).autoBalanceRemainingSaleAllocation(),
+            selectedProductId: _selectedProductId,
+            allocations: state.allocations,
+            onAutoBalance: () => ref.read(saleControllerProvider(widget.customerId).notifier).autoFillField(_selectedProductId),
             onSyncAmount: () => ref.read(saleControllerProvider(widget.customerId).notifier).syncAdvanceToAllocations(),
           ),
         ],
@@ -1040,7 +1043,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        ...state.allocations.map((alloc) => _buildSaleAllocationItemRow(context, ref, state, alloc)),
+        ...state.allocations.map((alloc) => _buildSaleAllocationItemRow(context, ref, state, alloc, totalAllocated, targetPayment)),
       ],
     );
   }
@@ -1049,6 +1052,8 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
     BuildContext context, {
     required int totalAllocated,
     required int targetAmount,
+    required String? selectedProductId,
+    required List<SaleItemAllocation> allocations,
     required VoidCallback onAutoBalance,
     required VoidCallback onSyncAmount,
   }) {
@@ -1079,6 +1084,16 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
       fg = colors.danger;
       icon = Icons.error_outline_rounded;
       message = 'Allocated advance (${rupees(totalAllocated)}) exceeds down payment (${rupees(targetAmount)}) by ${rupees(-diff)}';
+    }
+
+    SaleItemAllocation? selectedItem;
+    if (selectedProductId != null) {
+      for (final a in allocations) {
+        if (a.productId == selectedProductId) {
+          selectedItem = a;
+          break;
+        }
+      }
     }
 
     return Container(
@@ -1120,7 +1135,10 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                     ),
                     onPressed: onAutoBalance,
                     icon: const Icon(Icons.auto_fix_high_rounded, size: 14),
-                    label: const Text('Auto-fill remaining', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                    label: Text(
+                      selectedItem != null ? 'Fill ${selectedItem.productName}' : 'Auto-fill remaining',
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 const SizedBox(width: 8),
                 TextButton.icon(
@@ -1141,16 +1159,30 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
     );
   }
 
-  Widget _buildSaleAllocationItemRow(BuildContext context, WidgetRef ref, SaleScreenState state, SaleItemAllocation alloc) {
+  Widget _buildSaleAllocationItemRow(
+    BuildContext context,
+    WidgetRef ref,
+    SaleScreenState state,
+    SaleItemAllocation alloc,
+    int totalAllocated,
+    int targetPayment,
+  ) {
     final colors = context.colors;
     final isManual = state.allocationType == 'INDIVIDUALLY';
+    final isSelected = _selectedProductId == alloc.productId;
+    final diff = targetPayment - totalAllocated;
+    final canFill = alloc.itemSaleCost - alloc.allocatedAmount;
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       decoration: BoxDecoration(
-        color: colors.muted.withValues(alpha: 0.15),
+        color: isSelected ? colors.primary.withValues(alpha: 0.06) : colors.muted.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(
+          color: isSelected ? colors.primary.withValues(alpha: 0.4) : Colors.transparent,
+          width: 1.5,
+        ),
       ),
       child: Row(
         children: [
@@ -1170,12 +1202,47 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
               ],
             ),
           ),
-          const SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.sm),
           if (isManual) ...[
+            if (diff > 0 && canFill > 0) ...[
+              InkWell(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                onTap: () {
+                  setState(() => _selectedProductId = alloc.productId);
+                  ref.read(saleControllerProvider(widget.customerId).notifier).autoFillField(alloc.productId);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: colors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                    border: Border.all(color: colors.primary.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.add_circle_outline_rounded, size: 12, color: colors.primary),
+                      const SizedBox(width: 3),
+                      Text(
+                        'Fill',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: colors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+            ],
             SaleIndividualAllocationInput(
               initialValue: alloc.allocatedAmount,
               maxValue: alloc.itemSaleCost,
+              onTap: () => setState(() => _selectedProductId = alloc.productId),
               onChanged: (val) {
+                setState(() => _selectedProductId = alloc.productId);
                 ref
                     .read(saleControllerProvider(widget.customerId).notifier)
                     .updateIndividualAllocation(alloc.productId, val);
@@ -1771,11 +1838,13 @@ class SaleIndividualAllocationInput extends StatefulWidget {
     required this.initialValue,
     required this.maxValue,
     required this.onChanged,
+    this.onTap,
   });
 
   final int initialValue;
   final int maxValue;
   final ValueChanged<int> onChanged;
+  final VoidCallback? onTap;
 
   @override
   State<SaleIndividualAllocationInput> createState() => _SaleIndividualAllocationInputState();
@@ -1815,6 +1884,7 @@ class _SaleIndividualAllocationInputState extends State<SaleIndividualAllocation
         textAlign: TextAlign.end,
         style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold),
         onTap: () {
+          widget.onTap?.call();
           if (_controller.text == '0') {
             _controller.selection = TextSelection.fromPosition(
               TextPosition(offset: _controller.text.length),

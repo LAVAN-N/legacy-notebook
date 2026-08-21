@@ -371,13 +371,26 @@ class SaleController extends StateNotifier<SaleScreenState> {
     state = state.copyWith(advanceAmount: newAdvance, errorMessage: null);
   }
 
-  void autoBalanceRemainingSaleAllocation() {
+  void autoFillField([String? productId]) {
     final target = state.advanceAmount + state.appliedCreditAmount;
     final totalAllocated = state.allocations.fold<int>(0, (sum, a) => sum + a.allocatedAmount);
     int remaining = target - totalAllocated;
     if (remaining <= 0) return;
 
     final map = Map<String, int>.from(state.customAllocations);
+    if (productId != null) {
+      final allocs = state.allocations;
+      final item = allocs.firstWhere((a) => a.productId == productId, orElse: () => allocs.first);
+      final current = item.allocatedAmount;
+      final maxCanTake = item.itemSaleCost - current;
+      if (maxCanTake > 0) {
+        final add = remaining < maxCanTake ? remaining : maxCanTake;
+        map[item.productId] = current + add;
+        state = state.copyWith(customAllocations: map, errorMessage: null);
+      }
+      return;
+    }
+
     final allocs = state.allocations;
     for (final a in allocs) {
       if (remaining <= 0) break;
@@ -391,6 +404,8 @@ class SaleController extends StateNotifier<SaleScreenState> {
     }
     state = state.copyWith(customAllocations: map, errorMessage: null);
   }
+
+  void autoBalanceRemainingSaleAllocation() => autoFillField();
 
   void updateAdvance(int advance) {
     String? error;
