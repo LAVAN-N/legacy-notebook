@@ -206,72 +206,6 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
             ),
             const SizedBox(height: AppSpacing.lg),
 
-            if (state.customer.credit > 0) ...[
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: state.isCreditApplied
-                      ? colors.success.withValues(alpha: 0.1)
-                      : colors.muted.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  border: Border.all(
-                    color: state.isCreditApplied
-                        ? colors.success.withValues(alpha: 0.3)
-                        : colors.border,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      state.isCreditApplied ? Icons.check_circle_outline : Icons.info_outline,
-                      color: state.isCreditApplied ? colors.success : colors.mutedFg,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Returned Credit: ${rupees(state.customer.credit)}',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: colors.foreground,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            state.isCreditApplied
-                                ? 'Applying ${rupees(state.appliedCreditAmount)} credit towards this purchase.'
-                                : 'Apply this credit to reduce outstanding balance.',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: colors.mutedFg,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: () {
-                        ref.read(saleControllerProvider(widget.customerId).notifier)
-                            .toggleApplyCredit(!state.isCreditApplied);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: state.isCreditApplied ? colors.danger : colors.success,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: Text(state.isCreditApplied ? 'Remove' : 'Apply'),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-            ],
             _buildDatePickerRow(context, ref, state.selectedDate),
             const SizedBox(height: AppSpacing.md),
             _buildToggleBar(context, ref, state),
@@ -688,13 +622,17 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                         ],
                       ),
                     ],
+                    if (state.customer.credit > 0) ...[
+                      const SizedBox(height: 12),
+                      _buildCreditCoupon(context, ref, state),
+                    ],
                     if (state.appliedCreditAmount > 0) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Applied Returned Credit', style: AppTypography.bodyMedium.copyWith(color: colors.success)),
-                          Text('- ${rupees(state.appliedCreditAmount)}', style: AppTypography.currencySmall.copyWith(color: colors.success)),
+                          Text('Applied Returned Credit', style: AppTypography.bodyMedium.copyWith(color: colors.success, fontWeight: FontWeight.w600)),
+                          Text('- ${rupees(state.appliedCreditAmount)}', style: AppTypography.currencySmall.copyWith(color: colors.success, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ],
@@ -814,6 +752,123 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
             price: priceInPaise,
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildCreditCoupon(BuildContext context, WidgetRef ref, SaleScreenState state) {
+    final colors = context.colors;
+    final isApplied = state.isCreditApplied;
+
+    return CustomPaint(
+      painter: DottedBorderPainter(
+        color: isApplied
+            ? colors.success
+            : colors.primary.withValues(alpha: 0.5),
+        strokeWidth: 1.2,
+        dash: 5.0,
+        gap: 3.5,
+        radius: AppRadius.md,
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
+        decoration: BoxDecoration(
+          color: isApplied
+              ? colors.success.withValues(alpha: 0.08)
+              : colors.primary.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: isApplied
+                    ? colors.success.withValues(alpha: 0.15)
+                    : colors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.confirmation_number_outlined,
+                color: isApplied ? colors.success : colors.primary,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'CREDIT COUPON',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: isApplied ? colors.success : colors.primary,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                          fontSize: 10.5,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: (isApplied ? colors.success : colors.primary).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: Text(
+                          rupees(state.customer.credit),
+                          style: AppTypography.labelSmall.copyWith(
+                            color: isApplied ? colors.success : colors.primary,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 10.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    isApplied
+                        ? 'Applied ${rupees(state.appliedCreditAmount)} towards this purchase'
+                        : 'Apply returned credit to reduce outstanding',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isApplied ? colors.foreground : colors.mutedFg,
+                      fontSize: 11,
+                      fontWeight: isApplied ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: () {
+                ref.read(saleControllerProvider(widget.customerId).notifier)
+                    .toggleApplyCredit(!isApplied);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isApplied ? colors.danger : colors.success,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                isApplied ? 'Remove' : 'Apply',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1923,3 +1978,60 @@ class _SaleIndividualAllocationInputState extends State<SaleIndividualAllocation
   }
 }
 
+class DottedBorderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double gap;
+  final double dash;
+  final double radius;
+
+  DottedBorderPainter({
+    required this.color,
+    this.strokeWidth = 1.2,
+    this.gap = 4.0,
+    this.dash = 6.0,
+    this.radius = 8.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        strokeWidth / 2,
+        strokeWidth / 2,
+        size.width - strokeWidth,
+        size.height - strokeWidth,
+      ),
+      Radius.circular(radius),
+    );
+
+    final path = Path()..addRRect(rrect);
+    final metrics = path.computeMetrics();
+
+    for (final metric in metrics) {
+      double distance = 0.0;
+      while (distance < metric.length) {
+        final double length = (distance + dash > metric.length)
+            ? metric.length - distance
+            : dash;
+        final extractPath = metric.extractPath(distance, distance + length);
+        canvas.drawPath(extractPath, paint);
+        distance += dash + gap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant DottedBorderPainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.gap != gap ||
+        oldDelegate.dash != dash ||
+        oldDelegate.radius != radius;
+  }
+}
