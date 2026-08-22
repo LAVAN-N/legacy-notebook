@@ -553,7 +553,13 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                 hintText: 'Add remarks about this sales credit purchase...',
               ),
             ),
-            const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.lg),
+
+            if (state.customer.credit > 0 &&
+                (state.isLend ? state.lendAmount > 0 : state.lineItems.isNotEmpty)) ...[
+              _buildCreditCoupon(context, ref, state),
+              const SizedBox(height: AppSpacing.lg),
+            ],
 
             // Financial Summary Block
             Card(
@@ -622,12 +628,8 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                         ],
                       ),
                     ],
-                    if (state.customer.credit > 0) ...[
-                      const SizedBox(height: 12),
-                      _buildCreditCoupon(context, ref, state),
-                    ],
                     if (state.appliedCreditAmount > 0) ...[
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
