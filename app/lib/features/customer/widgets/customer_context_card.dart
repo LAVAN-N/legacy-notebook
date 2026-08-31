@@ -346,6 +346,7 @@ class CustomerContextCard extends ConsumerWidget {
                             width: double.infinity,
                             height: 180,
                             child: GoogleMap(
+                              liteModeEnabled: true,
                               initialCameraPosition: CameraPosition(
                                 target: LatLng(customer.location!.lat, customer.location!.lng),
                                 zoom: 15.0,

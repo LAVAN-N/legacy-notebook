@@ -262,7 +262,9 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                 onRefresh: () => ref.refresh(customerDetailControllerProvider(widget.customerId).future),
                 color: colors.primary,
                 child: SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
                   child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(

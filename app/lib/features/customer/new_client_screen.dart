@@ -365,7 +365,9 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
         body: SingleChildScrollView(
           physics: _isMapInteracting
               ? const NeverScrollableScrollPhysics()
-              : const AlwaysScrollableScrollPhysics(),
+              : const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
@@ -2119,6 +2121,7 @@ class _LocationBlockState extends State<_LocationBlock> {
                     }
                   },
                   child: GoogleMap(
+                    liteModeEnabled: !_mapUnlocked,
                     initialCameraPosition: CameraPosition(
                       target: LatLng(centerLat, centerLng),
                       zoom: 16.0,
