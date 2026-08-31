@@ -1130,7 +1130,7 @@ class _CustomerDetailsSection extends StatelessWidget {
 
             // Location block
             _LocationBlock(
-              state: state,
+              location: state.location,
               controller: controller,
               colors: colors,
               onMapInteractionChanged: onMapInteractionChanged,
@@ -1188,7 +1188,7 @@ class _CustomerDetailsSection extends StatelessWidget {
 
             // Nominees block
             _NomineesBlock(
-              state: state,
+              nominees: state.nominees,
               controller: controller,
               colors: colors,
             ),
@@ -1196,7 +1196,10 @@ class _CustomerDetailsSection extends StatelessWidget {
 
             // ID Proofs block
             _IdProofsBlock(
-                state: state, controller: controller, colors: colors),
+              idProofs: state.idProofs,
+              controller: controller,
+              colors: colors,
+            ),
             const SizedBox(height: AppSpacing.md),
 
             // Remarks/Notes at the end
@@ -1461,12 +1464,12 @@ class _AddAreaSheetState extends State<_AddAreaSheet> {
 
 class _NomineesBlock extends StatefulWidget {
   const _NomineesBlock({
-    required this.state,
+    required this.nominees,
     required this.controller,
     required this.colors,
   });
 
-  final NewClientFormState state;
+  final List<Nominee> nominees;
   final NewClientController controller;
   final AppColors colors;
 
@@ -1698,7 +1701,7 @@ class _NomineesBlockState extends State<_NomineesBlock> {
   @override
   Widget build(BuildContext context) {
     final colors = widget.colors;
-    final nominees = widget.state.nominees;
+    final nominees = widget.nominees;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1781,13 +1784,13 @@ class _NomineesBlockState extends State<_NomineesBlock> {
 // ─── Location Block ─────────────────────────────────────
 class _LocationBlock extends StatefulWidget {
   const _LocationBlock({
-    required this.state,
+    required this.location,
     required this.controller,
     required this.colors,
     this.onMapInteractionChanged,
   });
 
-  final NewClientFormState state;
+  final Location? location;
   final NewClientController controller;
   final AppColors colors;
   final ValueChanged<bool>? onMapInteractionChanged;
@@ -1891,8 +1894,8 @@ class _LocationBlockState extends State<_LocationBlock> {
   @override
   void didUpdateWidget(covariant _LocationBlock oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.state.location != null &&
-        widget.state.location != oldWidget.state.location &&
+    if (widget.location != null &&
+        widget.location != oldWidget.location &&
         _mapController != null) {
       if (_isInternalMapUpdate) {
         _isInternalMapUpdate = false;
@@ -1900,7 +1903,7 @@ class _LocationBlockState extends State<_LocationBlock> {
       }
       _mapController!.animateCamera(
         CameraUpdate.newLatLng(
-          LatLng(widget.state.location!.lat, widget.state.location!.lng),
+          LatLng(widget.location!.lat, widget.location!.lng),
         ),
       );
     }
@@ -2021,7 +2024,7 @@ class _LocationBlockState extends State<_LocationBlock> {
   @override
   Widget build(BuildContext context) {
     final colors = widget.colors;
-    final location = widget.state.location;
+    final location = widget.location;
 
     // Use current location, or fallback to default Chennai center (13.0827, 80.2707)
     final double centerLat = location?.lat ?? 13.0827;
@@ -2623,7 +2626,7 @@ class _LocationBlockState extends State<_LocationBlock> {
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, animation, secondaryAnimation) {
         return _FullScreenMapDialog(
-          initialLocation: widget.state.location,
+          initialLocation: widget.location,
           colors: widget.colors,
           onLocationSelected: (Location? newLocation) {
             widget.controller.setLocation(newLocation);
@@ -2637,12 +2640,12 @@ class _LocationBlockState extends State<_LocationBlock> {
 // ─── ID Proofs Block ─────────────────────────────────────
 class _IdProofsBlock extends ConsumerStatefulWidget {
   const _IdProofsBlock({
-    required this.state,
+    required this.idProofs,
     required this.controller,
     required this.colors,
   });
 
-  final NewClientFormState state;
+  final List<IdProof> idProofs;
   final NewClientController controller;
   final AppColors colors;
 
@@ -3033,7 +3036,7 @@ class _IdProofsBlockState extends ConsumerState<_IdProofsBlock> {
   @override
   Widget build(BuildContext context) {
     final colors = widget.colors;
-    final proofs = widget.state.idProofs;
+    final proofs = widget.idProofs;
 
     final proofTypesAsync = ref.watch(proofTypesStreamProvider);
     final proofTypes = proofTypesAsync.value ?? ['Aadhaar', 'Voter', 'DL', 'PAN', 'Other'];

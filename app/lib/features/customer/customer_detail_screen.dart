@@ -164,21 +164,19 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
     }
     final productGroups = groupedProductsMap.values.toList();
 
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: productGroups.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
-      itemBuilder: (context, gIndex) {
-        final groupItems = productGroups[gIndex];
-        return PurchasedProductGroupCard(
-          groupItems: groupItems,
-          outstanding: outstanding,
-          allPurchasedProducts: data.purchasedProducts,
-          customerId: widget.customerId,
-          initiallyExpanded: false,
-        );
-      },
+    return Column(
+      children: [
+        for (int i = 0; i < productGroups.length; i++) ...[
+          if (i > 0) const SizedBox(height: AppSpacing.md),
+          PurchasedProductGroupCard(
+            groupItems: productGroups[i],
+            outstanding: outstanding,
+            allPurchasedProducts: data.purchasedProducts,
+            customerId: widget.customerId,
+            initiallyExpanded: false,
+          ),
+        ],
+      ],
     );
   }
 
@@ -235,12 +233,17 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
         
         groupedSales.sort((a, b) => b.date.compareTo(a.date));
 
-        // Group activities by date for calendar view
-        final activitiesByDate = <DateTime, List<Activity>>{};
-        for (final activity in timeline) {
-          final dateOnly = DateTime(activity.at.year, activity.at.month, activity.at.day);
-          activitiesByDate.putIfAbsent(dateOnly, () => []).add(activity);
-        }
+        // Group activities by date for calendar view conditionally
+        final activitiesByDate = _isCalendarView
+            ? () {
+                final map = <DateTime, List<Activity>>{};
+                for (final activity in timeline) {
+                  final dateOnly = DateTime(activity.at.year, activity.at.month, activity.at.day);
+                  map.putIfAbsent(dateOnly, () => []).add(activity);
+                }
+                return map;
+              }()
+            : const <DateTime, List<Activity>>{};
 
         final visibleTimeline = timeline.take(_activityLimit).toList();
         final hasMore = timeline.length > _activityLimit;
@@ -387,15 +390,16 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                           )
                         else
                           Card(
-                            child: ListView.separated(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
+                            child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8.0),
-                              itemCount: visibleTimeline.length,
-                              separatorBuilder: (_, __) => const Divider(height: 1),
-                              itemBuilder: (context, index) {
-                                return TimelineEntryTile(activity: visibleTimeline[index]);
-                              },
+                              child: Column(
+                                children: [
+                                  for (int i = 0; i < visibleTimeline.length; i++) ...[
+                                    if (i > 0) const Divider(height: 1),
+                                    TimelineEntryTile(activity: visibleTimeline[i]),
+                                  ],
+                                ],
+                              ),
                             ),
                           ),
                         if (hasMore) ...[
