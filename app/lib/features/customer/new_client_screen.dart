@@ -45,6 +45,7 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
   late TextEditingController _notesController;
   late TextEditingController _placeNameController;
   late TextEditingController _areaNameController;
+  bool _isMapInteracting = false;
 
   @override
   void initState() {
@@ -362,6 +363,9 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
         title:
             Text(widget.customer != null ? 'Edit Client' : 'New Credit Sale'),
         body: SingleChildScrollView(
+          physics: _isMapInteracting
+              ? const NeverScrollableScrollPhysics()
+              : const AlwaysScrollableScrollPhysics(),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
@@ -394,6 +398,11 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
                   notesController: _notesController,
                   controller: controller,
                   colors: colors,
+                  onMapInteractionChanged: (interacting) {
+                    setState(() {
+                      _isMapInteracting = interacting;
+                    });
+                  },
                 ),
                 const SizedBox(height: AppSpacing.xl),
 
@@ -896,6 +905,7 @@ class _CustomerDetailsSection extends StatelessWidget {
     required this.notesController,
     required this.controller,
     required this.colors,
+    this.onMapInteractionChanged,
   });
 
   final NewClientFormState state;
@@ -909,6 +919,7 @@ class _CustomerDetailsSection extends StatelessWidget {
   final TextEditingController notesController;
   final NewClientController controller;
   final AppColors colors;
+  final ValueChanged<bool>? onMapInteractionChanged;
 
   void _selectDate(BuildContext context, TextEditingController textController,
       Function(String) onDateSelected) async {
@@ -1119,7 +1130,11 @@ class _CustomerDetailsSection extends StatelessWidget {
 
             // Location block
             _LocationBlock(
-                state: state, controller: controller, colors: colors),
+              state: state,
+              controller: controller,
+              colors: colors,
+              onMapInteractionChanged: onMapInteractionChanged,
+            ),
             const SizedBox(height: AppSpacing.md),
 
             // Address (with Autofill check button in header)
@@ -1769,11 +1784,13 @@ class _LocationBlock extends StatefulWidget {
     required this.state,
     required this.controller,
     required this.colors,
+    this.onMapInteractionChanged,
   });
 
   final NewClientFormState state;
   final NewClientController controller;
   final AppColors colors;
+  final ValueChanged<bool>? onMapInteractionChanged;
 
   @override
   State<_LocationBlock> createState() => _LocationBlockState();
@@ -1787,6 +1804,21 @@ class _LocationBlockState extends State<_LocationBlock> {
   LatLng? _lastGeocodedLocation;
   bool _mapUnlocked = false;
   MapType _mapType = MapType.normal;
+  bool _isInternalMapUpdate = false;
+
+  void _unlockMap() {
+    setState(() {
+      _mapUnlocked = true;
+    });
+    widget.onMapInteractionChanged?.call(true);
+  }
+
+  void _lockMap() {
+    setState(() {
+      _mapUnlocked = false;
+    });
+    widget.onMapInteractionChanged?.call(false);
+  }
 
   void _updateInlineLocation(LatLng target) {
     if (_lastGeocodedLocation != null &&
@@ -1794,6 +1826,7 @@ class _LocationBlockState extends State<_LocationBlock> {
         (_lastGeocodedLocation!.longitude - target.longitude).abs() < 0.0001) {
       return;
     }
+    _isInternalMapUpdate = true;
     widget.controller.setLocation(Location(
       lat: double.parse(target.latitude.toStringAsFixed(6)),
       lng: double.parse(target.longitude.toStringAsFixed(6)),
@@ -1822,12 +1855,14 @@ class _LocationBlockState extends State<_LocationBlock> {
           if (p.postalCode != null && p.postalCode!.isNotEmpty) p.postalCode,
           if (p.country != null && p.country!.isNotEmpty) p.country,
         ];
+        _isInternalMapUpdate = true;
         widget.controller.setLocation(Location(
           lat: double.parse(latLng.latitude.toStringAsFixed(6)),
           lng: double.parse(latLng.longitude.toStringAsFixed(6)),
           label: addressParts.join(', '),
         ));
       } else {
+        _isInternalMapUpdate = true;
         widget.controller.setLocation(Location(
           lat: double.parse(latLng.latitude.toStringAsFixed(6)),
           lng: double.parse(latLng.longitude.toStringAsFixed(6)),
@@ -1836,6 +1871,7 @@ class _LocationBlockState extends State<_LocationBlock> {
         ));
       }
     } catch (_) {
+      _isInternalMapUpdate = true;
       widget.controller.setLocation(Location(
         lat: double.parse(latLng.latitude.toStringAsFixed(6)),
         lng: double.parse(latLng.longitude.toStringAsFixed(6)),
@@ -1847,6 +1883,7 @@ class _LocationBlockState extends State<_LocationBlock> {
 
   @override
   void dispose() {
+    widget.onMapInteractionChanged?.call(false);
     _mapController?.dispose();
     super.dispose();
   }
@@ -1857,6 +1894,10 @@ class _LocationBlockState extends State<_LocationBlock> {
     if (widget.state.location != null &&
         widget.state.location != oldWidget.state.location &&
         _mapController != null) {
+      if (_isInternalMapUpdate) {
+        _isInternalMapUpdate = false;
+        return;
+      }
       _mapController!.animateCamera(
         CameraUpdate.newLatLng(
           LatLng(widget.state.location!.lat, widget.state.location!.lng),
@@ -2085,10 +2126,20 @@ class _LocationBlockState extends State<_LocationBlock> {
                     zoomControlsEnabled: false,
                     compassEnabled: false,
                     mapToolbarEnabled: false,
+                    scrollGesturesEnabled: _mapUnlocked,
+                    zoomGesturesEnabled: _mapUnlocked,
+                    rotateGesturesEnabled: _mapUnlocked,
+                    tiltGesturesEnabled: false,
                     gestureRecognizers: _mapUnlocked
                         ? <Factory<OneSequenceGestureRecognizer>>{
                             Factory<OneSequenceGestureRecognizer>(
                               () => EagerGestureRecognizer(),
+                            ),
+                            Factory<PanGestureRecognizer>(
+                              () => PanGestureRecognizer(),
+                            ),
+                            Factory<ScaleGestureRecognizer>(
+                              () => ScaleGestureRecognizer(),
                             ),
                           }
                         : const <Factory<OneSequenceGestureRecognizer>>{},
@@ -2158,11 +2209,7 @@ class _LocationBlockState extends State<_LocationBlock> {
                 if (!_mapUnlocked)
                   Positioned.fill(
                     child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _mapUnlocked = true;
-                        });
-                      },
+                      onTap: _unlockMap,
                       child: Container(
                         color: Colors.black.withValues(alpha: 0.15),
                         child: Center(
@@ -2201,11 +2248,7 @@ class _LocationBlockState extends State<_LocationBlock> {
                       color: Colors.black.withValues(alpha: 0.8),
                       borderRadius: BorderRadius.circular(20),
                       child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            _mapUnlocked = false;
-                          });
-                        },
+                        onTap: _lockMap,
                         borderRadius: BorderRadius.circular(20),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
