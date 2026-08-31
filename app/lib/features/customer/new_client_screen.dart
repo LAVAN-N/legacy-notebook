@@ -2121,7 +2121,6 @@ class _LocationBlockState extends State<_LocationBlock> {
                     }
                   },
                   child: GoogleMap(
-                    liteModeEnabled: !_mapUnlocked,
                     initialCameraPosition: CameraPosition(
                       target: LatLng(centerLat, centerLng),
                       zoom: 16.0,
@@ -2140,12 +2139,6 @@ class _LocationBlockState extends State<_LocationBlock> {
                         ? <Factory<OneSequenceGestureRecognizer>>{
                             Factory<OneSequenceGestureRecognizer>(
                               () => EagerGestureRecognizer(),
-                            ),
-                            Factory<PanGestureRecognizer>(
-                              () => PanGestureRecognizer(),
-                            ),
-                            Factory<ScaleGestureRecognizer>(
-                              () => ScaleGestureRecognizer(),
                             ),
                           }
                         : const <Factory<OneSequenceGestureRecognizer>>{},
