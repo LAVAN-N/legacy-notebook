@@ -28,11 +28,12 @@ class _InventoryCategoriesScreenState
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _filterType = 'All'; // All, In stock, Low stock, Out of stock
-  bool _isFabVisible = true;
+  final ValueNotifier<bool> _isFabVisible = ValueNotifier<bool>(true);
 
   @override
   void dispose() {
     _searchController.dispose();
+    _isFabVisible.dispose();
     super.dispose();
   }
 
@@ -120,26 +121,32 @@ class _InventoryCategoriesScreenState
     return AppScaffold(
       blendHeader: true,
       title: const Text('Inventory'),
-      floatingActionButton: IgnorePointer(
-        ignoring: !_isFabVisible,
-        child: AnimatedScale(
-          scale: _isFabVisible ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          child: Padding(
-            padding: EdgeInsets.only(
-              bottom: isKeyboardOpen ? 16.0 : 88.0 + rawSafeAreaBottom,
+      floatingActionButton: ValueListenableBuilder<bool>(
+        valueListenable: _isFabVisible,
+        builder: (context, isVisible, child) {
+          return IgnorePointer(
+            ignoring: !isVisible,
+            child: AnimatedScale(
+              scale: isVisible ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              child: child,
             ),
-            child: Opacity(
-              opacity: 0.85,
-              child: FloatingActionButton(
-                heroTag: 'categories_fab',
-                onPressed: () => showAddProductSheet(context),
-                shape: const CircleBorder(),
-                backgroundColor: colors.primary,
-                foregroundColor: colors.primaryFg,
-                child: const Icon(Icons.add_box_rounded),
-              ),
+          );
+        },
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: isKeyboardOpen ? 16.0 : 88.0 + rawSafeAreaBottom,
+          ),
+          child: Opacity(
+            opacity: 0.85,
+            child: FloatingActionButton(
+              heroTag: 'categories_fab',
+              onPressed: () => showAddProductSheet(context),
+              shape: const CircleBorder(),
+              backgroundColor: colors.primary,
+              foregroundColor: colors.primaryFg,
+              child: const Icon(Icons.add_box_rounded),
             ),
           ),
         ),
@@ -259,9 +266,9 @@ class _InventoryCategoriesScreenState
               child: NotificationListener<UserScrollNotification>(
                 onNotification: (notification) {
                   if (notification.direction == ScrollDirection.reverse) {
-                    if (_isFabVisible) setState(() => _isFabVisible = false);
+                    if (_isFabVisible.value) _isFabVisible.value = false;
                   } else if (notification.direction == ScrollDirection.forward) {
-                    if (!_isFabVisible) setState(() => _isFabVisible = true);
+                    if (!_isFabVisible.value) _isFabVisible.value = true;
                   }
                   return false;
                 },
