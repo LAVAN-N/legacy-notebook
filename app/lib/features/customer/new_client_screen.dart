@@ -3486,12 +3486,13 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
                   child: Container(
                     height: 52,
                     decoration: BoxDecoration(
-                      color: colors.background,
+                      color: colors.surface,
                       borderRadius: BorderRadius.circular(26),
+                      border: Border.all(color: colors.border.withValues(alpha: 0.6)),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 10,
+                          color: Colors.black.withValues(alpha: 0.18),
+                          blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
                       ],
@@ -3517,6 +3518,10 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
                               hintStyle: AppTypography.bodyMedium
                                   .copyWith(color: colors.mutedFg),
                               border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              filled: false,
+                              fillColor: Colors.transparent,
                               contentPadding:
                                   const EdgeInsets.symmetric(vertical: 14),
                             ),
