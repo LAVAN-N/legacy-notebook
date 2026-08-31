@@ -2097,10 +2097,12 @@ class _LocationBlockState extends State<_LocationBlock> {
             color: colors.muted,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: hasLocation
-                  ? colors.primary.withValues(alpha: 0.5)
-                  : colors.border,
-              width: hasLocation ? 2 : 1,
+              color: _mapUnlocked
+                  ? colors.primary
+                  : (hasLocation
+                      ? colors.primary.withValues(alpha: 0.5)
+                      : colors.border),
+              width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
@@ -2131,17 +2133,15 @@ class _LocationBlockState extends State<_LocationBlock> {
                     zoomControlsEnabled: false,
                     compassEnabled: false,
                     mapToolbarEnabled: false,
-                    scrollGesturesEnabled: _mapUnlocked,
-                    zoomGesturesEnabled: _mapUnlocked,
-                    rotateGesturesEnabled: _mapUnlocked,
+                    scrollGesturesEnabled: true,
+                    zoomGesturesEnabled: true,
+                    rotateGesturesEnabled: true,
                     tiltGesturesEnabled: false,
-                    gestureRecognizers: _mapUnlocked
-                        ? <Factory<OneSequenceGestureRecognizer>>{
-                            Factory<OneSequenceGestureRecognizer>(
-                              () => EagerGestureRecognizer(),
-                            ),
-                          }
-                        : const <Factory<OneSequenceGestureRecognizer>>{},
+                    gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                      Factory<OneSequenceGestureRecognizer>(
+                        () => EagerGestureRecognizer(),
+                      ),
+                    },
                     onMapCreated: (mapController) {
                       _mapController = mapController;
                     },
