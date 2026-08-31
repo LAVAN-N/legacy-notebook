@@ -1786,6 +1786,7 @@ class _LocationBlockState extends State<_LocationBlock> {
   bool _userInteracted = false;
   LatLng? _lastGeocodedLocation;
   bool _mapUnlocked = false;
+  MapType _mapType = MapType.normal;
 
   void _updateInlineLocation(LatLng target) {
     if (_lastGeocodedLocation != null &&
@@ -1940,6 +1941,9 @@ class _LocationBlockState extends State<_LocationBlock> {
             label: 'Fetching address...',
           ));
           _reverseGeocodeInline(target);
+          _mapController?.animateCamera(
+            CameraUpdate.newLatLngZoom(target, 16.0),
+          );
 
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -2075,10 +2079,12 @@ class _LocationBlockState extends State<_LocationBlock> {
                       target: LatLng(centerLat, centerLng),
                       zoom: 16.0,
                     ),
-                    mapType: MapType.hybrid,
-                    myLocationEnabled: true,
+                    mapType: _mapType,
+                    myLocationEnabled: false,
                     myLocationButtonEnabled: false,
                     zoomControlsEnabled: false,
+                    compassEnabled: false,
+                    mapToolbarEnabled: false,
                     gestureRecognizers: _mapUnlocked
                         ? <Factory<OneSequenceGestureRecognizer>>{
                             Factory<OneSequenceGestureRecognizer>(
@@ -2103,6 +2109,50 @@ class _LocationBlockState extends State<_LocationBlock> {
                         _updateInlineLocation(_cameraCenter!);
                       }
                     },
+                  ),
+                ),
+                // Map Type Toggle Button (Top Left)
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: Material(
+                    color: Colors.black.withValues(alpha: 0.75),
+                    borderRadius: BorderRadius.circular(20),
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _mapType = _mapType == MapType.normal
+                              ? MapType.hybrid
+                              : MapType.normal;
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(20),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _mapType == MapType.normal
+                                  ? Icons.satellite_outlined
+                                  : Icons.map_outlined,
+                              color: Colors.white,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _mapType == MapType.normal ? 'Satellite' : 'Roadmap',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 if (!_mapUnlocked)
@@ -2182,10 +2232,9 @@ class _LocationBlockState extends State<_LocationBlock> {
                   ),
 
                 // Fixed pin overlay at the center of the inline map preview
-                if (hasLocation)
-                  Center(
-                    child: IgnorePointer(
-                      child: Transform.translate(
+                Center(
+                  child: IgnorePointer(
+                    child: Transform.translate(
                         offset: const Offset(0, -18),
                         child: Stack(
                           alignment: Alignment.center,
@@ -3134,6 +3183,7 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
   bool _isLocating = false;
   final TextEditingController _searchController = TextEditingController();
   LatLng? _lastGeocodedLocation;
+  MapType _mapType = MapType.normal;
 
   @override
   void initState() {
@@ -3141,10 +3191,10 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
     if (widget.initialLocation != null) {
       _tempLocation =
           LatLng(widget.initialLocation!.lat, widget.initialLocation!.lng);
-      _reverseGeocode(_tempLocation!);
     } else {
-      _tempLocation = null;
+      _tempLocation = const LatLng(13.0827, 80.2707);
     }
+    _reverseGeocode(_tempLocation!);
   }
 
   @override
@@ -3309,10 +3359,12 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
               target: _tempLocation ?? const LatLng(13.0827, 80.2707),
               zoom: 16.0,
             ),
-            mapType: MapType.hybrid,
-            myLocationEnabled: true,
+            mapType: _mapType,
+            myLocationEnabled: false,
             myLocationButtonEnabled: false,
             zoomControlsEnabled: false,
+            compassEnabled: false,
+            mapToolbarEnabled: false,
             gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
               Factory<OneSequenceGestureRecognizer>(
                 () => EagerGestureRecognizer(),
@@ -3338,10 +3390,9 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
           ),
 
           // Fixed pin overlay at the center of the screen
-          if (hasPin)
-            Center(
-              child: IgnorePointer(
-                child: Transform.translate(
+          Center(
+            child: IgnorePointer(
+              child: Transform.translate(
                   offset: const Offset(0, -22),
                   child: Stack(
                     alignment: Alignment.center,
@@ -3420,11 +3471,9 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
                               fontSize: 15,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Search street, area, or landmark...',
-                              hintStyle: TextStyle(
-                                color: colors.mutedFg,
-                                fontSize: 14,
-                              ),
+                              hintText: 'Search address or place...',
+                              hintStyle: AppTypography.bodyMedium
+                                  .copyWith(color: colors.mutedFg),
                               border: InputBorder.none,
                               contentPadding:
                                   const EdgeInsets.symmetric(vertical: 14),
@@ -3469,6 +3518,26 @@ class _FullScreenMapDialogState extends State<_FullScreenMapDialog> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Map Type Toggle Button (Satellite / Roadmap)
+                FloatingActionButton.small(
+                  heroTag: 'dialog_maptype_btn',
+                  onPressed: () {
+                    setState(() {
+                      _mapType = _mapType == MapType.normal
+                          ? MapType.hybrid
+                          : MapType.normal;
+                    });
+                  },
+                  backgroundColor: colors.background,
+                  foregroundColor: colors.primary,
+                  child: Icon(
+                    _mapType == MapType.normal
+                        ? Icons.satellite_outlined
+                        : Icons.map_outlined,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
                 // GPS Button
                 FloatingActionButton.small(
                   heroTag: 'dialog_gps_btn',

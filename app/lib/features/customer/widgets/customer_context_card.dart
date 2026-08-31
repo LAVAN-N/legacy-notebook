@@ -348,8 +348,13 @@ class CustomerContextCard extends ConsumerWidget {
                             child: GoogleMap(
                               initialCameraPosition: CameraPosition(
                                 target: LatLng(customer.location!.lat, customer.location!.lng),
-                                zoom: 15,
+                                zoom: 15.0,
                               ),
+                              mapType: MapType.normal,
+                              myLocationEnabled: false,
+                              myLocationButtonEnabled: false,
+                              zoomControlsEnabled: false,
+                              mapToolbarEnabled: false,
                               markers: {
                                 Marker(
                                   markerId: MarkerId(customer.id),
@@ -357,9 +362,6 @@ class CustomerContextCard extends ConsumerWidget {
                                   infoWindow: InfoWindow(title: customer.name),
                                 ),
                               },
-                              zoomControlsEnabled: false,
-                              mapToolbarEnabled: false,
-                              myLocationButtonEnabled: false,
                               onTap: (_) => _openMap(customer.location!.lat, customer.location!.lng),
                             ),
                           ),

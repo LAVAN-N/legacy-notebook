@@ -45,6 +45,10 @@ dependencies:
   image_picker: ^1.2.3
   open_filex: ^4.7.0
   package_info_plus: ^9.0.1
+  flutter_map: ^8.3.2
+  latlong2: ^0.10.1
+  google_maps_flutter_android: ^2.19.13
+  google_maps_flutter_platform_interface: ^2.16.1
 
 dev_dependencies:
   flutter_test:
