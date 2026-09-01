@@ -2557,9 +2557,7 @@ class _LocationBlockState extends State<_LocationBlock> {
                                 color: colors.destructive, size: 20),
                             onPressed: () {
                               widget.controller.setLocation(null);
-                              setState(() {
-                                _mapUnlocked = false;
-                              });
+                              _lockMap();
                             },
                             tooltip: 'Clear location',
                           ),
