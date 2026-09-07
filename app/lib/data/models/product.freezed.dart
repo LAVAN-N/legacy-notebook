@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Product {
 
- String get id; String get sku; String get name; String get brand; String get categoryId; int get minimumStock; int get stock; int get costPrice; int get sellingPrice; int get mrp; String? get imageUrl; String? get description;
+ String get id; String get sku; String get name; String get brand; String get categoryId; int get minimumStock; int get stock; double get costPrice; double get sellingPrice; double get mrp; String? get imageUrl; String? get description;
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -49,7 +49,7 @@ abstract mixin class $ProductCopyWith<$Res>  {
   factory $ProductCopyWith(Product value, $Res Function(Product) _then) = _$ProductCopyWithImpl;
 @useResult
 $Res call({
- String id, String sku, String name, String brand, String categoryId, int minimumStock, int stock, int costPrice, int sellingPrice, int mrp, String? imageUrl, String? description
+ String id, String sku, String name, String brand, String categoryId, int minimumStock, int stock, double costPrice, double sellingPrice, double mrp, String? imageUrl, String? description
 });
 
 
@@ -76,9 +76,9 @@ as String,categoryId: null == categoryId ? _self.categoryId : categoryId // igno
 as String,minimumStock: null == minimumStock ? _self.minimumStock : minimumStock // ignore: cast_nullable_to_non_nullable
 as int,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
 as int,costPrice: null == costPrice ? _self.costPrice : costPrice // ignore: cast_nullable_to_non_nullable
-as int,sellingPrice: null == sellingPrice ? _self.sellingPrice : sellingPrice // ignore: cast_nullable_to_non_nullable
-as int,mrp: null == mrp ? _self.mrp : mrp // ignore: cast_nullable_to_non_nullable
-as int,imageUrl: freezed == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
+as double,sellingPrice: null == sellingPrice ? _self.sellingPrice : sellingPrice // ignore: cast_nullable_to_non_nullable
+as double,mrp: null == mrp ? _self.mrp : mrp // ignore: cast_nullable_to_non_nullable
+as double,imageUrl: freezed == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
@@ -165,7 +165,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String sku,  String name,  String brand,  String categoryId,  int minimumStock,  int stock,  int costPrice,  int sellingPrice,  int mrp,  String? imageUrl,  String? description)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String sku,  String name,  String brand,  String categoryId,  int minimumStock,  int stock,  double costPrice,  double sellingPrice,  double mrp,  String? imageUrl,  String? description)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Product() when $default != null:
 return $default(_that.id,_that.sku,_that.name,_that.brand,_that.categoryId,_that.minimumStock,_that.stock,_that.costPrice,_that.sellingPrice,_that.mrp,_that.imageUrl,_that.description);case _:
@@ -186,7 +186,7 @@ return $default(_that.id,_that.sku,_that.name,_that.brand,_that.categoryId,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String sku,  String name,  String brand,  String categoryId,  int minimumStock,  int stock,  int costPrice,  int sellingPrice,  int mrp,  String? imageUrl,  String? description)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String sku,  String name,  String brand,  String categoryId,  int minimumStock,  int stock,  double costPrice,  double sellingPrice,  double mrp,  String? imageUrl,  String? description)  $default,) {final _that = this;
 switch (_that) {
 case _Product():
 return $default(_that.id,_that.sku,_that.name,_that.brand,_that.categoryId,_that.minimumStock,_that.stock,_that.costPrice,_that.sellingPrice,_that.mrp,_that.imageUrl,_that.description);case _:
@@ -206,7 +206,7 @@ return $default(_that.id,_that.sku,_that.name,_that.brand,_that.categoryId,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String sku,  String name,  String brand,  String categoryId,  int minimumStock,  int stock,  int costPrice,  int sellingPrice,  int mrp,  String? imageUrl,  String? description)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String sku,  String name,  String brand,  String categoryId,  int minimumStock,  int stock,  double costPrice,  double sellingPrice,  double mrp,  String? imageUrl,  String? description)?  $default,) {final _that = this;
 switch (_that) {
 case _Product() when $default != null:
 return $default(_that.id,_that.sku,_that.name,_that.brand,_that.categoryId,_that.minimumStock,_that.stock,_that.costPrice,_that.sellingPrice,_that.mrp,_that.imageUrl,_that.description);case _:
@@ -231,9 +231,9 @@ class _Product implements Product {
 @override final  String categoryId;
 @override final  int minimumStock;
 @override final  int stock;
-@override final  int costPrice;
-@override final  int sellingPrice;
-@override final  int mrp;
+@override final  double costPrice;
+@override final  double sellingPrice;
+@override final  double mrp;
 @override final  String? imageUrl;
 @override final  String? description;
 
@@ -270,7 +270,7 @@ abstract mixin class _$ProductCopyWith<$Res> implements $ProductCopyWith<$Res> {
   factory _$ProductCopyWith(_Product value, $Res Function(_Product) _then) = __$ProductCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String sku, String name, String brand, String categoryId, int minimumStock, int stock, int costPrice, int sellingPrice, int mrp, String? imageUrl, String? description
+ String id, String sku, String name, String brand, String categoryId, int minimumStock, int stock, double costPrice, double sellingPrice, double mrp, String? imageUrl, String? description
 });
 
 
@@ -297,9 +297,9 @@ as String,categoryId: null == categoryId ? _self.categoryId : categoryId // igno
 as String,minimumStock: null == minimumStock ? _self.minimumStock : minimumStock // ignore: cast_nullable_to_non_nullable
 as int,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
 as int,costPrice: null == costPrice ? _self.costPrice : costPrice // ignore: cast_nullable_to_non_nullable
-as int,sellingPrice: null == sellingPrice ? _self.sellingPrice : sellingPrice // ignore: cast_nullable_to_non_nullable
-as int,mrp: null == mrp ? _self.mrp : mrp // ignore: cast_nullable_to_non_nullable
-as int,imageUrl: freezed == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
+as double,sellingPrice: null == sellingPrice ? _self.sellingPrice : sellingPrice // ignore: cast_nullable_to_non_nullable
+as double,mrp: null == mrp ? _self.mrp : mrp // ignore: cast_nullable_to_non_nullable
+as double,imageUrl: freezed == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,
   ));

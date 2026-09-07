@@ -1261,9 +1261,9 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                         final name = _nameController.text.trim();
                         final brand = _brandController.text.trim();
                         final sku = _skuController.text.trim();
-                        final mrp = ((double.tryParse(_mrpController.text) ?? 0.0) * 100).round();
-                        final costPrice = ((double.tryParse(_costPriceController.text) ?? 0.0) * 100).round();
-                        final sellingPrice = ((double.tryParse(_sellingPriceController.text) ?? 0.0) * 100).round();
+                        final mrp = double.tryParse(_mrpController.text) ?? 0.0;
+                        final costPrice = double.tryParse(_costPriceController.text) ?? 0.0;
+                        final sellingPrice = double.tryParse(_sellingPriceController.text) ?? 0.0;
                         final stock = int.tryParse(_stockController.text) ?? 0;
                         final minimumStock = int.tryParse(_minStockController.text) ?? 0;
                         final categoryId = _selectedCategoryId!;
@@ -1345,9 +1345,9 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     if (_nameController.text != widget.product.name ||
         _brandController.text != widget.product.brand ||
         _skuController.text != widget.product.sku ||
-        _mrpController.text != (widget.product.mrp / 100).toString() ||
-        _costPriceController.text != (widget.product.costPrice / 100).toString() ||
-        _sellingPriceController.text != (widget.product.sellingPrice / 100).toString() ||
+        (double.tryParse(_mrpController.text) ?? 0.0) != widget.product.mrp ||
+        (double.tryParse(_costPriceController.text) ?? 0.0) != widget.product.costPrice ||
+        (double.tryParse(_sellingPriceController.text) ?? 0.0) != widget.product.sellingPrice ||
         _stockController.text != widget.product.stock.toString() ||
         _minimumStockController.text != widget.product.minimumStock.toString() ||
         _descriptionController.text != (widget.product.description ?? '') ||
@@ -1394,9 +1394,9 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     _nameController = TextEditingController(text: widget.product.name);
     _brandController = TextEditingController(text: widget.product.brand);
     _skuController = TextEditingController(text: widget.product.sku);
-    _mrpController = TextEditingController(text: (widget.product.mrp / 100).toString());
-    _costPriceController = TextEditingController(text: (widget.product.costPrice / 100).toString());
-    _sellingPriceController = TextEditingController(text: (widget.product.sellingPrice / 100).toString());
+    _mrpController = TextEditingController(text: widget.product.mrp % 1 == 0 ? widget.product.mrp.toInt().toString() : widget.product.mrp.toString());
+    _costPriceController = TextEditingController(text: widget.product.costPrice % 1 == 0 ? widget.product.costPrice.toInt().toString() : widget.product.costPrice.toString());
+    _sellingPriceController = TextEditingController(text: widget.product.sellingPrice % 1 == 0 ? widget.product.sellingPrice.toInt().toString() : widget.product.sellingPrice.toString());
     _stockController = TextEditingController(text: widget.product.stock.toString());
     _minimumStockController = TextEditingController(text: widget.product.minimumStock.toString());
     _descriptionController = TextEditingController(text: widget.product.description ?? '');
@@ -2559,9 +2559,9 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                           name: _nameController.text.trim(),
                           brand: _brandController.text.trim(),
                           sku: _skuController.text.trim(),
-                          mrp: ((double.tryParse(_mrpController.text) ?? 0.0) * 100).round(),
-                          costPrice: ((double.tryParse(_costPriceController.text) ?? 0.0) * 100).round(),
-                          sellingPrice: ((double.tryParse(_sellingPriceController.text) ?? 0.0) * 100).round(),
+                          mrp: double.tryParse(_mrpController.text) ?? 0.0,
+                          costPrice: double.tryParse(_costPriceController.text) ?? 0.0,
+                          sellingPrice: double.tryParse(_sellingPriceController.text) ?? 0.0,
                           stock: int.tryParse(_stockController.text) ?? 0,
                           minimumStock: int.tryParse(_minimumStockController.text) ?? widget.product.minimumStock,
                           categoryId: _selectedCategoryId!,

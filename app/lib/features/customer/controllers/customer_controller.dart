@@ -118,9 +118,9 @@ class CustomerDetailNotifier extends AsyncNotifier<CustomerDetailData> {
           brand: 'unknown',
           categoryId: 'unknown',
           minimumStock: 0,
-          sellingPrice: 0,
-          costPrice: 0,
-          mrp: 0,
+          sellingPrice: 0.0,
+          costPrice: 0.0,
+          mrp: 0.0,
           stock: 0,
         ),
       );

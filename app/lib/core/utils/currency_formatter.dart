@@ -7,17 +7,15 @@ class CurrencyFormatter {
     decimalDigits: 0,
   );
 
-  static String format(int priceInPaisa) {
-    final priceInRupees = priceInPaisa / 100;
+  static String format(num priceInRupees) {
     return _indianNumberFormat.format(priceInRupees);
   }
 
-  static String formatDirect(double price) {
+  static String formatDirect(num price) {
     return _indianNumberFormat.format(price);
   }
 
-  static String formatCompact(int priceInPaisa) {
-    final priceInRupees = priceInPaisa / 100;
+  static String formatCompact(num priceInRupees) {
     if (priceInRupees >= 100000) {
       return '₹${(priceInRupees / 100000).toStringAsFixed(1)}L';
     } else if (priceInRupees >= 1000) {
