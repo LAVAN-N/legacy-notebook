@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 13,
+      version: 14,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
@@ -69,6 +69,7 @@ class DatabaseHelper {
         selling_price INTEGER NOT NULL DEFAULT 0,
         mrp INTEGER NOT NULL DEFAULT 0,
         minimum_stock INTEGER NOT NULL DEFAULT 5,
+        stock INTEGER NOT NULL DEFAULT 0,
         image_url TEXT,
         description TEXT
       )
@@ -320,6 +321,7 @@ class DatabaseHelper {
         'selling_price': pr.sellingPrice,
         'mrp': pr.mrp,
         'minimum_stock': pr.minimumStock,
+        'stock': pr.stock,
         'image_url': pr.imageUrl,
         'description': pr.description,
       });

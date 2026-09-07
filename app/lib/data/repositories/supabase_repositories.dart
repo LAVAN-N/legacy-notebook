@@ -1568,6 +1568,7 @@ class SupabaseProductRepository implements ProductRepository {
       'selling_price': product.sellingPrice,
       'mrp': product.mrp,
       'minimum_stock': product.minimumStock,
+      'stock': product.stock,
       'image_url': remoteUrl,
       'description': product.description,
     }).eq('id', product.id);

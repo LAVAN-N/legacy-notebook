@@ -1329,6 +1329,7 @@ class LocalSqliteProductRepository implements ProductRepository {
         'selling_price': sellingPrice,
         'mrp': mrp,
         'minimum_stock': minimumStock,
+        'stock': stock,
         'image_url': imageUrl,
         'description': description,
       });
@@ -1367,6 +1368,7 @@ class LocalSqliteProductRepository implements ProductRepository {
         'selling_price': product.sellingPrice,
         'mrp': product.mrp,
         'minimum_stock': product.minimumStock,
+        'stock': product.stock,
         'image_url': product.imageUrl,
         'description': product.description,
       }, where: 'id = ?', whereArgs: [product.id]);
