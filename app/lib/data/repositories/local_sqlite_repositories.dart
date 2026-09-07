@@ -1357,20 +1357,52 @@ class LocalSqliteProductRepository implements ProductRepository {
   @override
   Future<void> updateProduct(Product product) async {
     final db = await DatabaseHelper.instance.database;
-    await db.update('products', {
-      'sku': product.sku,
-      'name': product.name,
-      'brand': product.brand,
-      'category_id': product.categoryId,
-      'cost_price': product.costPrice,
-      'selling_price': product.sellingPrice,
-      'mrp': product.mrp,
-      'minimum_stock': product.minimumStock,
-      'image_url': product.imageUrl,
-      'description': product.description,
-    }, where: 'id = ?', whereArgs: [product.id]);
+    await db.transaction((txn) async {
+      await txn.update('products', {
+        'sku': product.sku,
+        'name': product.name,
+        'brand': product.brand,
+        'category_id': product.categoryId,
+        'cost_price': product.costPrice,
+        'selling_price': product.sellingPrice,
+        'mrp': product.mrp,
+        'minimum_stock': product.minimumStock,
+        'image_url': product.imageUrl,
+        'description': product.description,
+      }, where: 'id = ?', whereArgs: [product.id]);
+
+      // Calculate current stock from inventory transactions
+      final stockRes = await txn.rawQuery('''
+        SELECT COALESCE(SUM(
+          CASE 
+            WHEN transaction_type = 'PURCHASE' THEN quantity
+            WHEN transaction_type = 'SALE' THEN -quantity
+            WHEN transaction_type = 'ADJUSTMENT' THEN quantity
+            ELSE 0 
+          END
+        ), 0) AS current_stock
+        FROM inventory_transactions
+        WHERE product_id = ?
+      ''', [product.id]);
+
+      final currentStock = (stockRes.first['current_stock'] as num?)?.toInt() ?? 0;
+      final delta = product.stock - currentStock;
+
+      if (delta != 0) {
+        await txn.insert('inventory_transactions', {
+          'id': UuidUtils.generate(),
+          'product_id': product.id,
+          'transaction_type': 'ADJUSTMENT',
+          'quantity': delta,
+          'reference_id': 'MANUAL_EDIT',
+          'remarks': 'Stock adjusted via edit product',
+          'created_by': 'collector_local',
+        });
+      }
+    });
 
     TableBroadcaster.instance.notify('products');
+    TableBroadcaster.instance.notify('inventory_transactions');
   }
 }
 

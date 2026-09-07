@@ -1571,6 +1571,36 @@ class SupabaseProductRepository implements ProductRepository {
       'image_url': remoteUrl,
       'description': product.description,
     }).eq('id', product.id);
+
+    // Calculate current stock from inventory_transactions in Supabase
+    final stockRes = await _client
+        .from('inventory_transactions')
+        .select('transaction_type, quantity')
+        .eq('product_id', product.id);
+
+    int currentStock = 0;
+    for (final tx in stockRes) {
+      final type = tx['transaction_type'] as String?;
+      final qty = (tx['quantity'] as num?)?.toInt() ?? 0;
+      if (type == 'PURCHASE' || type == 'ADJUSTMENT') {
+        currentStock += qty;
+      } else if (type == 'SALE') {
+        currentStock -= qty;
+      }
+    }
+
+    final delta = product.stock - currentStock;
+    if (delta != 0) {
+      await _client.from('inventory_transactions').insert({
+        'id': UuidUtils.generate(),
+        'product_id': product.id,
+        'transaction_type': 'ADJUSTMENT',
+        'quantity': delta,
+        'reference_id': 'MANUAL_EDIT',
+        'remarks': 'Stock adjusted via edit product',
+        'created_by': 'collector_local',
+      });
+    }
   }
 }
 
