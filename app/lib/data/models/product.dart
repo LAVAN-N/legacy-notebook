@@ -12,10 +12,10 @@ abstract class Product with _$Product {
     required String brand,
     required String categoryId,
     required int minimumStock,
-    required int stock, // Current stock quantity count
-    required double costPrice, // Cost price in Rupees (float)
-    required double sellingPrice, // Selling price in Rupees (float)
-    required double mrp, // Maximum Retail Price in Rupees (float)
+    required int stock, // Current stock quantity
+    required int costPrice, // Cost price in paise (₹ × 100)
+    required int sellingPrice, // Selling price in paise (₹ × 100)
+    required int mrp, // Maximum Retail Price in paise (₹ × 100)
     String? imageUrl,
     String? description,
   }) = _Product;

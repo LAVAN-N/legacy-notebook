@@ -56,14 +56,11 @@ CREATE TABLE IF NOT EXISTS products (
     sku TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
     brand TEXT NOT NULL,
-    category_id TEXT NOT NULL,
-    minimum_stock INT NOT NULL DEFAULT 5,
+    category TEXT NOT NULL,
+    minimum_stock INT NOT NULL DEFAULT 1,
     stock INT NOT NULL DEFAULT 0,
-    cost_price NUMERIC NOT NULL DEFAULT 0.0,
-    selling_price NUMERIC NOT NULL DEFAULT 0.0,
-    mrp NUMERIC NOT NULL DEFAULT 0.0,
-    image_url TEXT,
-    description TEXT
+    price INT NOT NULL DEFAULT 0, -- price in rupees
+    image_url TEXT
 );
 
 -- 6. Sales table

@@ -14,9 +14,9 @@ _Product _$ProductFromJson(Map<String, dynamic> json) => _Product(
   categoryId: json['categoryId'] as String,
   minimumStock: (json['minimumStock'] as num).toInt(),
   stock: (json['stock'] as num).toInt(),
-  costPrice: (json['costPrice'] as num).toDouble(),
-  sellingPrice: (json['sellingPrice'] as num).toDouble(),
-  mrp: (json['mrp'] as num).toDouble(),
+  costPrice: (json['costPrice'] as num).toInt(),
+  sellingPrice: (json['sellingPrice'] as num).toInt(),
+  mrp: (json['mrp'] as num).toInt(),
   imageUrl: json['imageUrl'] as String?,
   description: json['description'] as String?,
 );

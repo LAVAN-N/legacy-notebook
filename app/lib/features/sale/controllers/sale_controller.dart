@@ -12,7 +12,7 @@ class SaleItemInput {
     required this.product,
     required this.quantity,
     int? customPrice,
-  }) : price = customPrice ?? product.sellingPrice.round();
+  }) : price = customPrice ?? product.sellingPrice;
 
   final Product product;
   int quantity;
