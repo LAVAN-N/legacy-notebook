@@ -4,6 +4,8 @@ abstract class ProductRepository {
   Future<List<Product>> getProducts();
   Stream<List<Product>> watchProducts();
   Future<Product?> getProductById(String id);
+  Future<List<String>> getBrandsByCategory(String categoryId);
+  Stream<List<String>> watchBrandsByCategory(String categoryId);
   Future<Product> addProduct({
     required String name,
     required String brand,

@@ -1424,6 +1424,64 @@ class SupabaseProductRepository implements ProductRepository {
     return matches.isEmpty ? null : matches.first;
   }
 
+  @override
+  Future<List<String>> getBrandsByCategory(String categoryId) async {
+    final response = await _client
+        .from('products')
+        .select('brand')
+        .eq('category_id', categoryId)
+        .order('brand', ascending: true);
+    final list = (response as List)
+        .map((r) => r['brand'] as String?)
+        .where((b) => b != null && b.trim().isNotEmpty)
+        .map((b) => b!.trim())
+        .toSet()
+        .toList();
+    list.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    return list;
+  }
+
+  @override
+  Stream<List<String>> watchBrandsByCategory(String categoryId) {
+    final controller = StreamController<List<String>>();
+    Future<void> reload() async {
+      try {
+        final list = await getBrandsByCategory(categoryId);
+        if (!controller.isClosed) {
+          controller.add(list);
+        }
+      } catch (e) {
+        if (!controller.isClosed) {
+          controller.addError(e);
+        }
+      }
+    }
+
+    reload();
+
+    final channel = _client.channel('category_brands_${categoryId}_${DateTime.now().microsecondsSinceEpoch}')
+      ..onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'products',
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'category_id',
+          value: categoryId,
+        ),
+        callback: (p) => reload(),
+      )
+      ..subscribe();
+
+    controller.onCancel = () async {
+      await channel.unsubscribe();
+      await _client.removeChannel(channel);
+      await controller.close();
+    };
+
+    return controller.stream;
+  }
+
   String _getCategoryName(String categoryId) {
     final map = {
       'cat-kat': 'Kitchen Appliances',

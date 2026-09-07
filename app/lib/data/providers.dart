@@ -136,6 +136,12 @@ final brandsStreamProvider = StreamProvider<List<String>>((ref) {
   return repo.watchBrands();
 });
 
+/// Category-specific Brands Stream Provider (Database query)
+final categoryBrandsStreamProvider = StreamProvider.autoDispose.family<List<String>, String>((ref, categoryId) {
+  final repo = ref.watch(productRepositoryProvider);
+  return repo.watchBrandsByCategory(categoryId);
+});
+
 /// Proof Types Stream Provider
 final proofTypesStreamProvider = StreamProvider<List<String>>((ref) {
   final repo = ref.watch(configRepositoryProvider);

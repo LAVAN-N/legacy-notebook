@@ -629,6 +629,22 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
     final brandsAsync = ref.watch(brandsStreamProvider);
     final brands = brandsAsync.value ?? _brands;
 
+    // Query category brands directly from DB stream provider
+    final AsyncValue<List<String>>? categoryBrandsAsync = _selectedCategoryId != null
+        ? ref.watch(categoryBrandsStreamProvider(_selectedCategoryId!))
+        : null;
+    final List<String> dbCategoryBrands = categoryBrandsAsync?.value ?? [];
+
+    final Set<String> categoryBrandsSet = {...dbCategoryBrands};
+
+    if (_selectedBrand != null && _selectedBrand!.trim().isNotEmpty) {
+      categoryBrandsSet.add(_selectedBrand!.trim());
+    }
+
+    final List<String> availableBrands = categoryBrandsSet.isNotEmpty
+        ? (categoryBrandsSet.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase())))
+        : (brands.isNotEmpty ? brands : (_selectedBrand != null ? [_selectedBrand!] : <String>[]));
+
     Widget buildSliderLabels(double maxMarkup, AppColors colors) {
       final list = <double>[];
       for (double val = 5.0; val <= maxMarkup; val += 5.0) {
@@ -728,7 +744,25 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                           child: Text(c.name),
                         );
                       }).toList(),
-                      onChanged: (val) => setState(() => _selectedCategoryId = val),
+                      onChanged: (val) async {
+                        setState(() {
+                          _selectedCategoryId = val;
+                        });
+                        if (val != null) {
+                          final productRepo = ref.read(productRepositoryProvider);
+                          final newCatBrands = await productRepo.getBrandsByCategory(val);
+                          if (_selectedBrand != null &&
+                              newCatBrands.isNotEmpty &&
+                              !newCatBrands.contains(_selectedBrand)) {
+                            if (mounted) {
+                              setState(() {
+                                _selectedBrand = null;
+                                _brandController.clear();
+                              });
+                            }
+                          }
+                        }
+                      },
                       validator: (val) => val == null ? 'Category is required' : null,
                     ),
                   ),
@@ -828,13 +862,13 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       menuMaxHeight: 200,
-                      initialValue: brands.contains(_selectedBrand) ? _selectedBrand : null,
+                      initialValue: availableBrands.contains(_selectedBrand) ? _selectedBrand : null,
                       decoration: InputDecoration(
                         labelText: 'Brand *',
                         prefixIcon: Icon(Icons.branding_watermark_outlined, color: colors.primary),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      items: brands.map((b) {
+                      items: availableBrands.map((b) {
                         return DropdownMenuItem(
                           value: b,
                           child: Text(b),
@@ -851,7 +885,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                       validator: (val) => val == null ? 'Brand is required' : null,
                     ),
                   ),
-                  if (_selectedBrand != null && brands.contains(_selectedBrand)) ...[
+                  if (_selectedBrand != null && availableBrands.contains(_selectedBrand)) ...[
                     const SizedBox(width: 4),
                     IconButton(
                       icon: Icon(Icons.edit, color: colors.primary, size: 20),
@@ -1899,6 +1933,22 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     final brandsAsync = ref.watch(brandsStreamProvider);
     final brands = brandsAsync.value ?? _brands;
 
+    // Query category brands directly from DB stream provider
+    final AsyncValue<List<String>>? categoryBrandsAsync = _selectedCategoryId != null
+        ? ref.watch(categoryBrandsStreamProvider(_selectedCategoryId!))
+        : null;
+    final List<String> dbCategoryBrands = categoryBrandsAsync?.value ?? [];
+
+    final Set<String> categoryBrandsSet = {...dbCategoryBrands};
+
+    if (_selectedBrand != null && _selectedBrand!.trim().isNotEmpty) {
+      categoryBrandsSet.add(_selectedBrand!.trim());
+    }
+
+    final List<String> availableBrands = categoryBrandsSet.isNotEmpty
+        ? (categoryBrandsSet.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase())))
+        : (brands.isNotEmpty ? brands : (_selectedBrand != null ? [_selectedBrand!] : <String>[]));
+
     Widget buildSliderLabels(double maxMarkup, AppColors colors) {
       final list = <double>[];
       for (double val = 5.0; val <= maxMarkup; val += 5.0) {
@@ -1998,7 +2048,25 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                           child: Text(c.name),
                         );
                       }).toList(),
-                      onChanged: (val) => setState(() => _selectedCategoryId = val),
+                      onChanged: (val) async {
+                        setState(() {
+                          _selectedCategoryId = val;
+                        });
+                        if (val != null) {
+                          final productRepo = ref.read(productRepositoryProvider);
+                          final newCatBrands = await productRepo.getBrandsByCategory(val);
+                          if (_selectedBrand != null &&
+                              newCatBrands.isNotEmpty &&
+                              !newCatBrands.contains(_selectedBrand)) {
+                            if (mounted) {
+                              setState(() {
+                                _selectedBrand = null;
+                                _brandController.clear();
+                              });
+                            }
+                          }
+                        }
+                      },
                       validator: (val) => val == null ? 'Category is required' : null,
                     ),
                   ),
@@ -2098,13 +2166,13 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       menuMaxHeight: 200,
-                      initialValue: brands.contains(_selectedBrand) ? _selectedBrand : null,
+                      initialValue: availableBrands.contains(_selectedBrand) ? _selectedBrand : null,
                       decoration: InputDecoration(
                         labelText: 'Brand *',
                         prefixIcon: Icon(Icons.branding_watermark_outlined, color: colors.primary),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      items: brands.map((b) {
+                      items: availableBrands.map((b) {
                         return DropdownMenuItem(
                           value: b,
                           child: Text(b),
@@ -2121,7 +2189,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                       validator: (val) => val == null ? 'Brand is required' : null,
                     ),
                   ),
-                  if (_selectedBrand != null && brands.contains(_selectedBrand)) ...[
+                  if (_selectedBrand != null && availableBrands.contains(_selectedBrand)) ...[
                     const SizedBox(width: 4),
                     IconButton(
                       icon: Icon(Icons.edit, color: colors.primary, size: 20),

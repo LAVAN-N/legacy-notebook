@@ -168,6 +168,7 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX idx_collections_customer ON collections(customer_id)');
     await db.execute('CREATE INDEX idx_sales_customer ON sales(customer_id)');
     await db.execute('CREATE INDEX idx_inventory_product ON inventory_transactions(product_id)');
+    await db.execute('CREATE INDEX idx_products_category_brand ON products(category_id, brand)');
 
     // 13. Create Database Views
     await db.execute('''

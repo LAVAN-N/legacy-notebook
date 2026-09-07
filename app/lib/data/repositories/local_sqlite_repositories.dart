@@ -1283,6 +1283,24 @@ class LocalSqliteProductRepository implements ProductRepository {
   }
 
   @override
+  Future<List<String>> getBrandsByCategory(String categoryId) async {
+    final db = await DatabaseHelper.instance.database;
+    final maps = await db.rawQuery(
+      'SELECT DISTINCT brand FROM products WHERE category_id = ? AND brand IS NOT NULL AND TRIM(brand) != "" ORDER BY brand COLLATE NOCASE ASC',
+      [categoryId],
+    );
+    return maps.map((m) => m['brand'] as String).toList();
+  }
+
+  @override
+  Stream<List<String>> watchBrandsByCategory(String categoryId) {
+    return watchQuery(
+      tables: ['products'],
+      query: () => getBrandsByCategory(categoryId),
+    );
+  }
+
+  @override
   Future<Product> addProduct({
     required String name,
     required String brand,

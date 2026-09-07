@@ -937,6 +937,23 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   }
 
   @override
+  Future<List<String>> getBrandsByCategory(String categoryId) async {
+    final list = _products
+        .where((p) => p.categoryId == categoryId && p.brand.trim().isNotEmpty)
+        .map((p) => p.brand.trim())
+        .toSet()
+        .toList();
+    list.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    return list;
+  }
+
+  @override
+  Stream<List<String>> watchBrandsByCategory(String categoryId) async* {
+    yield await getBrandsByCategory(categoryId);
+    yield* _updateController.stream.asyncMap((_) => getBrandsByCategory(categoryId));
+  }
+
+  @override
   Future<Product> addProduct({
     required String name,
     required String brand,
