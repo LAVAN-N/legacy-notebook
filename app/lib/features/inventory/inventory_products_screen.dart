@@ -272,6 +272,7 @@ class _InventoryProductsScreenState
           // Grid
           Expanded(
             child: AppPullToRefresh(
+              enabled: _draggedProducts == null,
               onRefresh: () async {
                 ref.invalidate(productsStreamProvider);
                 ref.invalidate(categoriesStreamProvider);

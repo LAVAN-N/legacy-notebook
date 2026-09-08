@@ -11,6 +11,7 @@ class AppPullToRefresh extends StatefulWidget {
     super.key,
     required this.child,
     required this.onRefresh,
+    this.enabled = true,
     this.color,
     this.backgroundColor,
     this.triggerDistance = 65.0,
@@ -19,6 +20,7 @@ class AppPullToRefresh extends StatefulWidget {
 
   final Widget child;
   final Future<void> Function() onRefresh;
+  final bool enabled;
   final Color? color;
   final Color? backgroundColor;
   final double triggerDistance;
@@ -59,6 +61,18 @@ class _AppPullToRefreshState extends State<AppPullToRefresh>
   }
 
   @override
+  void didUpdateWidget(AppPullToRefresh oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!widget.enabled && oldWidget.enabled) {
+      if (_pullDistance > 0.0) {
+        _dismiss();
+      }
+      _isDragging = false;
+      _dragStartY = null;
+    }
+  }
+
+  @override
   void dispose() {
     _scrollController.dispose();
     _animController.dispose();
@@ -66,14 +80,14 @@ class _AppPullToRefreshState extends State<AppPullToRefresh>
   }
 
   void _onPointerDown(PointerDownEvent event) {
-    if (_isRefreshing) return;
+    if (!widget.enabled || _isRefreshing) return;
     _dragStartY = event.position.dy;
     _isDragging = false;
     _isAtTop = !_scrollController.hasClients || _scrollController.offset <= 0.0;
   }
 
   void _onPointerMove(PointerMoveEvent event) {
-    if (_isRefreshing || _dragStartY == null) return;
+    if (!widget.enabled || _isRefreshing || _dragStartY == null) return;
     
     final currentOffset = _scrollController.hasClients ? _scrollController.offset : 0.0;
 
@@ -116,7 +130,7 @@ class _AppPullToRefreshState extends State<AppPullToRefresh>
 
   void _onPointerUp(PointerUpEvent event) {
     _dragStartY = null;
-    if (_isRefreshing) return;
+    if (!widget.enabled || _isRefreshing) return;
 
     if (_isDragging && _pullDistance >= widget.triggerDistance) {
       _triggerRefresh();
@@ -128,7 +142,7 @@ class _AppPullToRefreshState extends State<AppPullToRefresh>
 
   void _onPointerCancel(PointerCancelEvent event) {
     _dragStartY = null;
-    if (!_isRefreshing && _pullDistance > 0.0) {
+    if ((!widget.enabled || !_isRefreshing) && _pullDistance > 0.0) {
       _dismiss();
     }
     _isDragging = false;
