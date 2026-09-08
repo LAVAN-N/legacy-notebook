@@ -31,6 +31,7 @@ class _InventoryCategoriesScreenState
   String _filterType = 'All'; // All, In stock, Low stock, Out of stock
   final ValueNotifier<bool> _isFabVisible = ValueNotifier<bool>(true);
   List<Category>? _draggedCategories;
+  String? _activeDraggingCategoryId;
 
   @override
   void dispose() {
@@ -387,7 +388,10 @@ class _InventoryCategoriesScreenState
 
   Future<void> _onCategoryDragComplete(List<Category> currentList) async {
     final toSave = _draggedCategories ?? currentList;
-    _draggedCategories = null;
+    setState(() {
+      _draggedCategories = null;
+      _activeDraggingCategoryId = null;
+    });
     HapticFeedback.mediumImpact();
     await ref.read(configRepositoryProvider).saveCategories(toSave);
   }
@@ -401,6 +405,11 @@ class _InventoryCategoriesScreenState
   ) {
     final cardContent = _buildCategoryCard(context, category, colors);
     final cardSize = (MediaQuery.of(context).size.width - 48) / 2;
+    final isBeingDragged = _activeDraggingCategoryId == category.id;
+    final blankSpace = Opacity(
+      opacity: 0.0,
+      child: cardContent,
+    );
 
     return DragTarget<String>(
       key: ValueKey('cat_target_${category.id}'),
@@ -425,6 +434,7 @@ class _InventoryCategoriesScreenState
           delay: const Duration(milliseconds: 200),
           onDragStarted: () {
             setState(() {
+              _activeDraggingCategoryId = category.id;
               _draggedCategories = List<Category>.from(categoryList);
             });
             HapticFeedback.selectionClick();
@@ -452,17 +462,8 @@ class _InventoryCategoriesScreenState
               ),
             ),
           ),
-          childWhenDragging: Container(
-            decoration: BoxDecoration(
-              color: colors.primary.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: colors.primary.withValues(alpha: 0.35),
-                width: 1.5,
-              ),
-            ),
-          ),
-          child: cardContent,
+          childWhenDragging: blankSpace,
+          child: isBeingDragged ? blankSpace : cardContent,
         );
       },
     );
