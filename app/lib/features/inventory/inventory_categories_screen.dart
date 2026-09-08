@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -29,6 +30,7 @@ class _InventoryCategoriesScreenState
   String _searchQuery = '';
   String _filterType = 'All'; // All, In stock, Low stock, Out of stock
   final ValueNotifier<bool> _isFabVisible = ValueNotifier<bool>(true);
+  List<Category>? _draggedCategories;
 
   @override
   void dispose() {
@@ -72,7 +74,8 @@ class _InventoryCategoriesScreenState
     final allProducts = productsAsync.value ?? [];
 
     final categoriesAsync = ref.watch(categoriesStreamProvider);
-    final categories = categoriesAsync.value ?? mockCategoriesList;
+    final rawCategories = categoriesAsync.value ?? mockCategoriesList;
+    final categories = _draggedCategories ?? rawCategories;
 
     // Filter products based on stock filter
     var filteredProducts = allProducts.where((p) {
@@ -353,7 +356,13 @@ class _InventoryCategoriesScreenState
                             itemCount: displayCategories.length,
                             itemBuilder: (context, index) {
                               final category = displayCategories[index];
-                              return _buildCategoryCard(context, category, colors);
+                              return _buildReorderableCategoryItem(
+                                context,
+                                category,
+                                index,
+                                displayCategories,
+                                colors,
+                              );
                             },
                           )),
               ),
@@ -361,6 +370,100 @@ class _InventoryCategoriesScreenState
           ),
         ],
       ),
+    );
+  }
+
+  void _onCategoryReorder(int fromIndex, int toIndex, List<Category> currentList) {
+    if (fromIndex == toIndex) return;
+    setState(() {
+      final list = List<Category>.from(_draggedCategories ?? currentList);
+      final item = list.removeAt(fromIndex);
+      list.insert(toIndex, item);
+      _draggedCategories = list;
+    });
+    HapticFeedback.selectionClick();
+  }
+
+  Future<void> _onCategoryDragComplete(List<Category> currentList) async {
+    final toSave = _draggedCategories ?? currentList;
+    _draggedCategories = null;
+    HapticFeedback.mediumImpact();
+    await ref.read(configRepositoryProvider).saveCategories(toSave);
+  }
+
+  Widget _buildReorderableCategoryItem(
+    BuildContext context,
+    Category category,
+    int index,
+    List<Category> categoryList,
+    AppColors colors,
+  ) {
+    final cardContent = _buildCategoryCard(context, category, colors);
+    final cardSize = (MediaQuery.of(context).size.width - 48) / 2;
+
+    return DragTarget<String>(
+      key: ValueKey('cat_target_${category.id}'),
+      onWillAcceptWithDetails: (details) {
+        final draggedId = details.data;
+        if (draggedId != category.id) {
+          final from = categoryList.indexWhere((c) => c.id == draggedId);
+          final to = categoryList.indexWhere((c) => c.id == category.id);
+          if (from != -1 && to != -1 && from != to) {
+            _onCategoryReorder(from, to, categoryList);
+          }
+        }
+        return true;
+      },
+      onAcceptWithDetails: (details) {
+        _onCategoryDragComplete(categoryList);
+      },
+      builder: (context, candidateData, rejectedData) {
+        return LongPressDraggable<String>(
+          key: ValueKey('cat_drag_${category.id}'),
+          data: category.id,
+          delay: const Duration(milliseconds: 200),
+          onDragStarted: () {
+            setState(() {
+              _draggedCategories = List<Category>.from(categoryList);
+            });
+            HapticFeedback.selectionClick();
+          },
+          onDragEnd: (details) {
+            _onCategoryDragComplete(categoryList);
+          },
+          onDraggableCanceled: (velocity, offset) {
+            _onCategoryDragComplete(categoryList);
+          },
+          feedback: Material(
+            elevation: 10,
+            shadowColor: colors.primary.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(16),
+            color: Colors.transparent,
+            child: SizedBox(
+              width: cardSize,
+              height: cardSize,
+              child: Transform.scale(
+                scale: 1.05,
+                child: Opacity(
+                  opacity: 0.95,
+                  child: cardContent,
+                ),
+              ),
+            ),
+          ),
+          childWhenDragging: Container(
+            decoration: BoxDecoration(
+              color: colors.primary.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: colors.primary.withValues(alpha: 0.35),
+                width: 1.5,
+              ),
+            ),
+          ),
+          child: cardContent,
+        );
+      },
     );
   }
 

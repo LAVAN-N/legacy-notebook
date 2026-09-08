@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/currency_formatter.dart';
@@ -36,6 +37,7 @@ class _InventoryProductsScreenState
   String _filterType = 'All';
   late Category _category;
   final ValueNotifier<bool> _isFabVisible = ValueNotifier<bool>(true);
+  List<Product>? _draggedProducts;
 
   @override
   void dispose() {
@@ -80,11 +82,28 @@ class _InventoryProductsScreenState
     _category = categories.firstWhere((c) => c.id == widget.categoryId,
         orElse: () => Category(id: widget.categoryId, name: 'Products', icon: ''));
 
+    final savedOrderAsync = ref.watch(productOrderStreamProvider(widget.categoryId));
+    final savedOrder = savedOrderAsync.value ?? [];
+
     final productsAsync = ref.watch(productsStreamProvider);
     final allProducts = productsAsync.value ?? [];
 
-    var products =
+    var categoryProducts =
         allProducts.where((p) => p.categoryId == widget.categoryId).toList();
+
+    // Sort by saved product order if available
+    if (savedOrder.isNotEmpty && _draggedProducts == null) {
+      categoryProducts.sort((a, b) {
+        final idxA = savedOrder.indexOf(a.id);
+        final idxB = savedOrder.indexOf(b.id);
+        if (idxA != -1 && idxB != -1) return idxA.compareTo(idxB);
+        if (idxA != -1) return -1;
+        if (idxB != -1) return 1;
+        return 0;
+      });
+    }
+
+    var products = _draggedProducts ?? categoryProducts;
 
     // Apply stock filter
     if (_filterType == 'In stock') {
@@ -107,6 +126,8 @@ class _InventoryProductsScreenState
               p.sku.toLowerCase().contains(query))
           .toList();
     }
+
+    final isReorderable = _searchQuery.isEmpty && _filterType == 'All';
 
     // Default sorting: Newest first (original database/stream order)
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
@@ -305,9 +326,19 @@ class _InventoryProductsScreenState
                         ),
                         itemCount: products.length,
                         itemBuilder: (context, index) {
+                          final product = products[index];
+                          if (isReorderable) {
+                            return _buildReorderableProductItem(
+                              context,
+                              product,
+                              index,
+                              products,
+                              colors,
+                            );
+                          }
                           return _buildProductCard(
                             context,
-                            products[index],
+                            product,
                             colors,
                           );
                         },
@@ -317,6 +348,101 @@ class _InventoryProductsScreenState
           ),
         ],
       ),
+    );
+  }
+
+  void _onProductReorder(int fromIndex, int toIndex, List<Product> currentList) {
+    if (fromIndex == toIndex) return;
+    setState(() {
+      final list = List<Product>.from(_draggedProducts ?? currentList);
+      final item = list.removeAt(fromIndex);
+      list.insert(toIndex, item);
+      _draggedProducts = list;
+    });
+    HapticFeedback.selectionClick();
+  }
+
+  Future<void> _onProductDragComplete(List<Product> currentList) async {
+    final toSave = _draggedProducts ?? currentList;
+    _draggedProducts = null;
+    HapticFeedback.mediumImpact();
+    final orderedIds = toSave.map((p) => p.id).toList();
+    await ref.read(configRepositoryProvider).saveProductOrder(widget.categoryId, orderedIds);
+  }
+
+  Widget _buildReorderableProductItem(
+    BuildContext context,
+    Product product,
+    int index,
+    List<Product> productList,
+    AppColors colors,
+  ) {
+    final cardContent = _buildProductCard(context, product, colors);
+    final cardWidth = (MediaQuery.of(context).size.width - 44) / 2;
+
+    return DragTarget<String>(
+      key: ValueKey('prod_target_${product.id}'),
+      onWillAcceptWithDetails: (details) {
+        final draggedId = details.data;
+        if (draggedId != product.id) {
+          final from = productList.indexWhere((p) => p.id == draggedId);
+          final to = productList.indexWhere((p) => p.id == product.id);
+          if (from != -1 && to != -1 && from != to) {
+            _onProductReorder(from, to, productList);
+          }
+        }
+        return true;
+      },
+      onAcceptWithDetails: (details) {
+        _onProductDragComplete(productList);
+      },
+      builder: (context, candidateData, rejectedData) {
+        return LongPressDraggable<String>(
+          key: ValueKey('prod_drag_${product.id}'),
+          data: product.id,
+          delay: const Duration(milliseconds: 200),
+          onDragStarted: () {
+            setState(() {
+              _draggedProducts = List<Product>.from(productList);
+            });
+            HapticFeedback.selectionClick();
+          },
+          onDragEnd: (details) {
+            _onProductDragComplete(productList);
+          },
+          onDraggableCanceled: (velocity, offset) {
+            _onProductDragComplete(productList);
+          },
+          feedback: Material(
+            elevation: 10,
+            shadowColor: colors.primary.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(16),
+            color: Colors.transparent,
+            child: SizedBox(
+              width: cardWidth,
+              height: 280,
+              child: Transform.scale(
+                scale: 1.05,
+                child: Opacity(
+                  opacity: 0.95,
+                  child: cardContent,
+                ),
+              ),
+            ),
+          ),
+          childWhenDragging: Container(
+            decoration: BoxDecoration(
+              color: colors.primary.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: colors.primary.withValues(alpha: 0.35),
+                width: 1.5,
+              ),
+            ),
+          ),
+          child: cardContent,
+        );
+      },
     );
   }
 

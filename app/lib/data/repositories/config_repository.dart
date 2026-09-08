@@ -27,4 +27,9 @@ abstract class ConfigRepository {
   Future<List<String>> getProofTypes();
   Stream<List<String>> watchProofTypes();
   Future<void> saveProofTypes(List<String> proofTypes);
+
+  // Product Order per category
+  Future<List<String>> getProductOrder(String categoryId);
+  Stream<List<String>> watchProductOrder(String categoryId);
+  Future<void> saveProductOrder(String categoryId, List<String> productIds);
 }

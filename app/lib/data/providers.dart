@@ -148,6 +148,12 @@ final proofTypesStreamProvider = StreamProvider<List<String>>((ref) {
   return repo.watchProofTypes();
 });
 
+/// Product Order Stream Provider per category
+final productOrderStreamProvider = StreamProvider.autoDispose.family<List<String>, String>((ref, categoryId) {
+  final repo = ref.watch(configRepositoryProvider);
+  return repo.watchProductOrder(categoryId);
+});
+
 /// Places Stream Provider
 final placesStreamProvider = StreamProvider<List<Place>>((ref) {
   final repo = ref.watch(configRepositoryProvider);

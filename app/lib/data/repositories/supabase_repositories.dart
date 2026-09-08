@@ -1899,4 +1899,55 @@ class SupabaseConfigRepository implements ConfigRepository {
     final raw = jsonEncode(proofTypes);
     await _writeData('proof_types', raw);
   }
+
+  @override
+  Future<List<String>> getProductOrder(String categoryId) async {
+    final raw = await _readData('product_order_$categoryId');
+    try {
+      final List decoded = jsonDecode(raw);
+      return decoded.map((item) => item as String).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  @override
+  Stream<List<String>> watchProductOrder(String categoryId) {
+    final controller = StreamController<List<String>>();
+    StreamSubscription? localSub;
+    StreamSubscription? remoteSub;
+
+    localSub = _local.watchProductOrder(categoryId).listen((data) {
+      if (!controller.isClosed) controller.add(data);
+    });
+
+    try {
+      remoteSub = _client.from('config').stream(primaryKey: ['id']).eq('id', 'product_order_$categoryId').listen(
+        (list) async {
+          if (list.isNotEmpty && list.first['data'] is List) {
+            final data = list.first['data'] as List;
+            final productIds = data.map((item) => item as String).toList();
+            await _local.saveProductOrder(categoryId, productIds);
+          }
+        },
+        onError: (_) {
+          // Offline -> continue serving local SQLite data
+        },
+        cancelOnError: false,
+      );
+    } catch (_) {}
+
+    controller.onCancel = () {
+      localSub?.cancel();
+      remoteSub?.cancel();
+    };
+
+    return controller.stream;
+  }
+
+  @override
+  Future<void> saveProductOrder(String categoryId, List<String> productIds) async {
+    final raw = jsonEncode(productIds);
+    await _writeData('product_order_$categoryId', raw);
+  }
 }
