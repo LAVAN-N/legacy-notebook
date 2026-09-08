@@ -1366,6 +1366,17 @@ Read before starting. Never edit past entries.
 - **Rule for next agent:** ALWAYS run `git status` and verify that all newly added files are staged and committed to git before ending a development session.
 - **Guardrail:** Run `git status` in the terminal to verify no code files are left untracked.
 
+---
+
+### 2026-09-08 · ScrollController.jumpTo() inside NotificationListener causing StackOverflowError
+- **Context:** Locking child scrollable offset at 0.0 in `AppPullToRefresh` during pull-to-refresh drag and retract gesture.
+- **Mistake:** Invoked `_scrollController.jumpTo(0.0)` synchronously inside `NotificationListener<ScrollNotification>.onNotification`.
+- **Root cause:** `jumpTo` dispatches scroll end / update notifications synchronously as part of scroll activity transitions, which re-triggered the `NotificationListener` callback in an infinite loop, resulting in a `StackOverflowError`.
+- **Fix applied:** Removed `NotificationListener` and `AbsorbPointer`. Strictly isolated the pull-to-refresh state (`_isPullDragging`, `_startedAtTop`) so offset pinning to `0.0` ONLY applies when actively performing a top pull-to-refresh gesture, leaving normal list scrolling and widget interactions untouched.
+- **Rule for next agent:** NEVER execute scroll resets (e.g. `jumpTo(0.0)`) or absorb touches globally in scroll containers unless an active pull gesture is verified to be in progress (`wasPullDragging == true`).
+- **Guardrail:** Verify normal downward list scrolling retains its position on pointer up without resetting to initial offset.
+
+
 
 
 
