@@ -795,9 +795,11 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
               Center(
                 child: GestureDetector(
                   onTap: _openFilePicker,
-                  child: Container(
-                    width: double.infinity,
-                    height: 120,
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Container(
+                      width: double.infinity,
+                      clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(
                       color: colors.primary.withValues(alpha: 0.05),
                       border: Border.all(color: colors.border),
@@ -832,6 +834,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                             ],
                           )
                         : null,
+                    ),
                   ),
                 ),
               ),
@@ -2099,43 +2102,46 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
               Center(
                 child: GestureDetector(
                   onTap: _openFilePicker,
-                  child: Container(
-                    width: double.infinity,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: colors.primary.withValues(alpha: 0.05),
-                      border: Border.all(color: colors.border),
-                      borderRadius: BorderRadius.circular(12),
-                      image: _imagePath != null && _imagePath!.isNotEmpty
-                          ? (_imagePath!.startsWith('assets/')
-                              ? DecorationImage(
-                                  image: AssetImage(_imagePath!),
-                                  fit: BoxFit.cover,
-                                )
-                              : (_imagePath!.startsWith('http')
-                                  ? DecorationImage(
-                                      image: NetworkImage(_imagePath!),
-                                      fit: BoxFit.cover,
-                                    )
-                                  : DecorationImage(
-                                      image: FileImage(File(_imagePath!)),
-                                      fit: BoxFit.cover,
-                                    )))
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Container(
+                      width: double.infinity,
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                        color: colors.primary.withValues(alpha: 0.05),
+                        border: Border.all(color: colors.border),
+                        borderRadius: BorderRadius.circular(12),
+                        image: _imagePath != null && _imagePath!.isNotEmpty
+                            ? (_imagePath!.startsWith('assets/')
+                                ? DecorationImage(
+                                    image: AssetImage(_imagePath!),
+                                    fit: BoxFit.cover,
+                                  )
+                                : (_imagePath!.startsWith('http')
+                                    ? DecorationImage(
+                                        image: NetworkImage(_imagePath!),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : DecorationImage(
+                                        image: FileImage(File(_imagePath!)),
+                                        fit: BoxFit.cover,
+                                      )))
+                            : null,
+                      ),
+                      child: _imagePath == null
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.add_a_photo_outlined, size: 36, color: colors.primary),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Tap to choose product image',
+                                  style: AppTypography.labelMedium.copyWith(color: colors.mutedFg),
+                                ),
+                              ],
+                            )
                           : null,
                     ),
-                    child: _imagePath == null
-                        ? Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.add_a_photo_outlined, size: 36, color: colors.primary),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Tap to choose product image',
-                                style: AppTypography.labelMedium.copyWith(color: colors.mutedFg),
-                              ),
-                            ],
-                          )
-                        : null,
                   ),
                 ),
               ),
@@ -3031,6 +3037,8 @@ class _PhotoCropDialogState extends State<PhotoCropDialog> {
     }
   }
 
+  static const double cropAspectRatio = 16 / 9;
+
   void _handleTransformationChanged() {
     if (_imageWidth == null || _imageHeight == null) return;
 
@@ -3055,14 +3063,15 @@ class _PhotoCropDialogState extends State<PhotoCropDialog> {
     final double leftImg = (size.width - wImg) / 2;
     final double topImg = (size.height - hImg) / 2;
 
-    const double cropSize = 280.0;
-    final double leftCrop = (size.width - cropSize) / 2;
-    final double topCrop = (size.height - cropSize) / 2;
-    final double rightCrop = leftCrop + cropSize;
-    final double bottomCrop = topCrop + cropSize;
+    final double cropWidth = (size.width - 32).clamp(240.0, 360.0);
+    final double cropHeight = cropWidth / cropAspectRatio;
+    final double leftCrop = (size.width - cropWidth) / 2;
+    final double topCrop = (size.height - cropHeight) / 2;
+    final double rightCrop = leftCrop + cropWidth;
+    final double bottomCrop = topCrop + cropHeight;
 
-    final double minScaleX = cropSize / wImg;
-    final double minScaleY = cropSize / hImg;
+    final double minScaleX = cropWidth / wImg;
+    final double minScaleY = cropHeight / hImg;
     final double minScale = minScaleX > minScaleY ? minScaleX : minScaleY;
 
     double newScale = scale;
@@ -3107,7 +3116,6 @@ class _PhotoCropDialogState extends State<PhotoCropDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    const viewportSize = Size(280, 280);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -3130,15 +3138,18 @@ class _PhotoCropDialogState extends State<PhotoCropDialog> {
                     final messenger = ScaffoldMessenger.of(context);
                     try {
                       final size = _viewportSize ?? MediaQuery.of(context).size;
+                      final cropWidth = (size.width - 32).clamp(240.0, 360.0);
+                      final cropHeight = cropWidth / cropAspectRatio;
+                      final currentCropSize = Size(cropWidth, cropHeight);
                       final offset = _viewportOffset ?? Offset(
-                        (size.width - viewportSize.width) / 2,
-                        (size.height - viewportSize.height) / 2,
+                        (size.width - cropWidth) / 2,
+                        (size.height - cropHeight) / 2,
                       );
                       final croppedPath = await cropImage(
                         imagePath: widget.imagePath,
                         transform: _transformationController.value,
                         imageSize: size,
-                        viewportSize: viewportSize,
+                        viewportSize: currentCropSize,
                         viewportOffset: offset,
                       );
                       if (mounted) {
@@ -3162,13 +3173,15 @@ class _PhotoCropDialogState extends State<PhotoCropDialog> {
         builder: (context, constraints) {
           final viewportWidth = constraints.maxWidth;
           final viewportHeight = constraints.maxHeight;
-          final currentViewportSize = Size(viewportWidth, viewportHeight);
+          final currentCropWidth = (viewportWidth - 32).clamp(240.0, 360.0);
+          final currentCropHeight = currentCropWidth / cropAspectRatio;
+          final currentCropSize = Size(currentCropWidth, currentCropHeight);
           final currentViewportOffset = Offset(
-            (viewportWidth - viewportSize.width) / 2,
-            (viewportHeight - viewportSize.height) / 2,
+            (viewportWidth - currentCropWidth) / 2,
+            (viewportHeight - currentCropHeight) / 2,
           );
 
-          _viewportSize = currentViewportSize;
+          _viewportSize = Size(viewportWidth, viewportHeight);
           _viewportOffset = currentViewportOffset;
 
           return Stack(
@@ -3198,8 +3211,8 @@ class _PhotoCropDialogState extends State<PhotoCropDialog> {
                       cutoutRect: Rect.fromLTWH(
                         currentViewportOffset.dx,
                         currentViewportOffset.dy,
-                        viewportSize.width,
-                        viewportSize.height,
+                        currentCropSize.width,
+                        currentCropSize.height,
                       ),
                     ),
                   ),
@@ -3236,7 +3249,7 @@ class _PhotoCropDialogState extends State<PhotoCropDialog> {
                 ),
             ],
           );
-        }
+        },
       ),
     );
   }
@@ -3250,7 +3263,8 @@ class CutoutPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..color = Colors.black.withValues(alpha: 0.7);
     final backgroundPath = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
-    final cutoutPath = Path()..addRect(cutoutRect);
+    final cutoutRRect = RRect.fromRectAndRadius(cutoutRect, const Radius.circular(12));
+    final cutoutPath = Path()..addRRect(cutoutRRect);
     final finalPath = Path.combine(PathOperation.difference, backgroundPath, cutoutPath);
     canvas.drawPath(finalPath, paint);
 
@@ -3258,7 +3272,7 @@ class CutoutPainter extends CustomPainter {
       ..color = Colors.white
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
-    canvas.drawRect(cutoutRect, borderPaint);
+    canvas.drawRRect(cutoutRRect, borderPaint);
   }
 
   @override
@@ -3281,12 +3295,17 @@ Future<String> cropImage({
   final ui.FrameInfo frameInfo = await codec.getNextFrame();
   final ui.Image image = frameInfo.image;
 
+  const double exportScale = 2.0;
+  final outWidth = (viewportSize.width * exportScale).toInt();
+  final outHeight = (viewportSize.height * exportScale).toInt();
+
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(
     recorder,
-    Rect.fromLTWH(0, 0, viewportSize.width, viewportSize.height),
+    Rect.fromLTWH(0, 0, outWidth.toDouble(), outHeight.toDouble()),
   );
 
+  canvas.scale(exportScale, exportScale);
   canvas.translate(-viewportOffset.dx, -viewportOffset.dy);
   canvas.transform(transform.storage);
 
@@ -3298,10 +3317,7 @@ Future<String> cropImage({
   );
 
   final picture = recorder.endRecording();
-  final croppedImage = await picture.toImage(
-    viewportSize.width.toInt(),
-    viewportSize.height.toInt(),
-  );
+  final croppedImage = await picture.toImage(outWidth, outHeight);
 
   final byteData = await croppedImage.toByteData(format: ui.ImageByteFormat.png);
   final croppedBytes = byteData!.buffer.asUint8List();

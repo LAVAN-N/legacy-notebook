@@ -36,15 +36,6 @@ class _ProductDetailsSheet extends ConsumerWidget {
     return colors.success;
   }
 
-  String _getStockStatusLabel(Product product) {
-    if (product.stock == 0) {
-      return 'Out of Stock';
-    } else if (product.stock <= product.minimumStock) {
-      return 'Low Stock Alert';
-    }
-    return 'In Stock';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -154,32 +145,34 @@ class _ProductDetailsSheet extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Product Image Card
-                    Container(
-                      height: 190,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: colors.muted.withValues(alpha: 0.25),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: colors.border.withValues(alpha: 0.6),
+                    AspectRatio(
+                      aspectRatio: 16 / 9,
+                      child: Container(
+                        width: double.infinity,
+                        clipBehavior: Clip.antiAlias,
+                        decoration: BoxDecoration(
+                          color: colors.muted.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: colors.border.withValues(alpha: 0.6),
+                          ),
+                          image: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                              ? (product.imageUrl!.startsWith('assets/')
+                                  ? DecorationImage(
+                                      image: AssetImage(product.imageUrl!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : (product.imageUrl!.startsWith('http')
+                                      ? DecorationImage(
+                                          image: NetworkImage(product.imageUrl!),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : DecorationImage(
+                                          image: FileImage(File(product.imageUrl!)),
+                                          fit: BoxFit.cover,
+                                        )))
+                              : null,
                         ),
-                        image: product.imageUrl != null && product.imageUrl!.isNotEmpty
-                            ? (product.imageUrl!.startsWith('assets/')
-                                ? DecorationImage(
-                                    image: AssetImage(product.imageUrl!),
-                                    fit: BoxFit.contain,
-                                  )
-                                : (product.imageUrl!.startsWith('http')
-                                    ? DecorationImage(
-                                        image: NetworkImage(product.imageUrl!),
-                                        fit: BoxFit.contain,
-                                      )
-                                    : DecorationImage(
-                                        image: FileImage(File(product.imageUrl!)),
-                                        fit: BoxFit.contain,
-                                      )))
-                            : null,
-                      ),
                       child: product.imageUrl == null || product.imageUrl!.isEmpty
                           ? Center(
                               child: Column(
@@ -201,6 +194,7 @@ class _ProductDetailsSheet extends ConsumerWidget {
                               ),
                             )
                           : null,
+                      ),
                     ),
 
                     const SizedBox(height: 16),
@@ -216,13 +210,14 @@ class _ProductDetailsSheet extends ConsumerWidget {
 
                     const SizedBox(height: 6),
 
-                    // Brand & SKU Pills
+                    // Brand, SKU & Stock Pills
                     Wrap(
                       spacing: 8,
                       runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: colors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
@@ -236,7 +231,7 @@ class _ProductDetailsSheet extends ConsumerWidget {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: colors.muted.withValues(alpha: 0.4),
                             borderRadius: BorderRadius.circular(6),
@@ -246,6 +241,20 @@ class _ProductDetailsSheet extends ConsumerWidget {
                             style: AppTypography.labelSmall.copyWith(
                               color: colors.mutedFg,
                               fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _getStockStatusColor(product, colors),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '${product.stock}/${product.minimumStock}',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -342,49 +351,9 @@ class _ProductDetailsSheet extends ConsumerWidget {
                           ),
                           const SizedBox(height: 12),
                           Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Selling Price',
-                                      style: AppTypography.labelSmall.copyWith(
-                                        color: colors.mutedFg,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      CurrencyFormatter.format(product.sellingPrice),
-                                      style: AppTypography.titleLarge.copyWith(
-                                        color: colors.primary,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'MRP',
-                                      style: AppTypography.labelSmall.copyWith(
-                                        color: colors.mutedFg,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      CurrencyFormatter.format(product.mrp),
-                                      style: AppTypography.bodyMedium.copyWith(
-                                        color: colors.mutedFg,
-                                        decoration: TextDecoration.lineThrough,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                              // Cost Price (Left)
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -406,82 +375,51 @@ class _ProductDetailsSheet extends ConsumerWidget {
                                   ],
                                 ),
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Stock & Inventory Status Card
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: colors.border.withValues(alpha: 0.7),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 42,
-                            height: 42,
-                            decoration: BoxDecoration(
-                              color: _getStockStatusColor(product, colors).withValues(alpha: 0.15),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.inventory_rounded,
-                              color: _getStockStatusColor(product, colors),
-                              size: 22,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
+                              // MRP (Middle)
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Text(
-                                      '${product.stock} Units',
-                                      style: AppTypography.titleMedium.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: colors.foreground,
+                                      'MRP',
+                                      style: AppTypography.labelSmall.copyWith(
+                                        color: colors.mutedFg,
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: _getStockStatusColor(product, colors)
-                                            .withValues(alpha: 0.18),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        _getStockStatusLabel(product),
-                                        style: AppTypography.labelSmall.copyWith(
-                                          color: _getStockStatusColor(product, colors),
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 10,
-                                        ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      CurrencyFormatter.format(product.mrp),
+                                      style: AppTypography.bodyMedium.copyWith(
+                                        color: colors.mutedFg,
+                                        decoration: TextDecoration.lineThrough,
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Minimum stock threshold: ${product.minimumStock} units',
-                                  style: AppTypography.bodySmall.copyWith(
-                                    color: colors.mutedFg,
-                                  ),
+                              ),
+                              // Selling Price (Right)
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'Selling Price',
+                                      style: AppTypography.labelSmall.copyWith(
+                                        color: colors.mutedFg,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      CurrencyFormatter.format(product.sellingPrice),
+                                      style: AppTypography.titleLarge.copyWith(
+                                        color: colors.primary,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
