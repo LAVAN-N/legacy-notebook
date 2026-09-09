@@ -14,6 +14,7 @@ import '../../data/models/product.dart';
 import '../../data/models/category.dart';
 import '../../data/providers.dart';
 import 'widgets/add_product_sheet.dart';
+import 'widgets/product_details_sheet.dart';
 
 class InventoryProductsScreen extends ConsumerStatefulWidget {
   final String categoryId;
@@ -59,7 +60,7 @@ class _InventoryProductsScreenState
         try {
           final product =
               allProducts.firstWhere((p) => p.id == widget.initialProductId);
-          showEditProductSheet(context, product);
+          showProductDetailsSheet(context, product);
         } catch (_) {}
       });
     }
@@ -453,7 +454,7 @@ class _InventoryProductsScreenState
     return Card(
       child: InkWell(
         onTap: () {
-          showEditProductSheet(context, product);
+          showProductDetailsSheet(context, product);
         },
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -504,7 +505,7 @@ class _InventoryProductsScreenState
                   fontWeight: FontWeight.w600,
                   color: colors.foreground,
                 ),
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 2),
