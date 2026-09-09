@@ -63,6 +63,10 @@
 	<string>This app needs access to your location to pin the client's address during registration.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>This app needs access to your location to pin the client's address during registration.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to capture product photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to select product photos.</string>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

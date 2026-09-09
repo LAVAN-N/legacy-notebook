@@ -49,6 +49,7 @@ dependencies:
   latlong2: ^0.10.1
   google_maps_flutter_android: ^2.19.13
   google_maps_flutter_platform_interface: ^2.16.1
+  camera: ^0.12.1
 
 dev_dependencies:
   flutter_test:

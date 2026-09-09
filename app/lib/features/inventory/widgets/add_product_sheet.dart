@@ -13,6 +13,7 @@ import '../../../data/mock/mock_data.dart';
 import '../../../data/providers.dart';
 import '../../../data/models/product.dart';
 import '../../../data/models/category.dart';
+import 'product_camera_screen.dart';
 
 void showAddProductSheet(BuildContext context, {String? initialCategoryId}) {
   showModalBottomSheet(
@@ -485,21 +486,30 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                 onTap: () async {
                   navigator.pop();
                   try {
-                    final picker = ImagePicker();
-                    final XFile? image = await picker.pickImage(
-                      source: ImageSource.camera,
-                      imageQuality: 85,
-                    );
-                    if (image != null && mounted) {
-                      final croppedPath = await navigator.push<String>(
-                        MaterialPageRoute(
-                          builder: (context) => PhotoCropDialog(imagePath: image.path),
-                        ),
+                    final photoPath = await openProductCamera(context);
+                    if (photoPath != null && mounted) {
+                      setState(() {
+                        _imagePath = photoPath;
+                      });
+                      return;
+                    }
+                    if (photoPath == null && mounted) {
+                      final picker = ImagePicker();
+                      final XFile? image = await picker.pickImage(
+                        source: ImageSource.camera,
+                        imageQuality: 85,
                       );
-                      if (croppedPath != null && mounted) {
-                        setState(() {
-                          _imagePath = croppedPath;
-                        });
+                      if (image != null && mounted) {
+                        final croppedPath = await navigator.push<String>(
+                          MaterialPageRoute(
+                            builder: (context) => PhotoCropDialog(imagePath: image.path),
+                          ),
+                        );
+                        if (croppedPath != null && mounted) {
+                          setState(() {
+                            _imagePath = croppedPath;
+                          });
+                        }
                       }
                     }
                   } catch (e) {
@@ -1829,21 +1839,30 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                 onTap: () async {
                   navigator.pop();
                   try {
-                    final picker = ImagePicker();
-                    final XFile? image = await picker.pickImage(
-                      source: ImageSource.camera,
-                      imageQuality: 85,
-                    );
-                    if (image != null && mounted) {
-                      final croppedPath = await navigator.push<String>(
-                        MaterialPageRoute(
-                          builder: (context) => PhotoCropDialog(imagePath: image.path),
-                        ),
+                    final photoPath = await openProductCamera(context);
+                    if (photoPath != null && mounted) {
+                      setState(() {
+                        _imagePath = photoPath;
+                      });
+                      return;
+                    }
+                    if (photoPath == null && mounted) {
+                      final picker = ImagePicker();
+                      final XFile? image = await picker.pickImage(
+                        source: ImageSource.camera,
+                        imageQuality: 85,
                       );
-                      if (croppedPath != null && mounted) {
-                        setState(() {
-                          _imagePath = croppedPath;
-                        });
+                      if (image != null && mounted) {
+                        final croppedPath = await navigator.push<String>(
+                          MaterialPageRoute(
+                            builder: (context) => PhotoCropDialog(imagePath: image.path),
+                          ),
+                        );
+                        if (croppedPath != null && mounted) {
+                          setState(() {
+                            _imagePath = croppedPath;
+                          });
+                        }
                       }
                     }
                   } catch (e) {
