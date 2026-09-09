@@ -218,8 +218,8 @@ If stuck in an error loop (3+ attempts on the same failure):
   - `customer_proofs`: `id`, `customer_id`, `proof_type`, `image_url` (Many-to-one with customer)
   - `collections`: `id`, `customer_id`, `visit_datetime`, `status`, `amount`, `reason`, `collected_by`
   - `sales`: `id`, `customer_id`, `sale_datetime`, `sale_type`, `total_amount`, `advance_amount`, `financed_amount`, `sold_by`, `remarks`
-  - `sale_items`: `id`, `sale_id`, `product_id`, `quantity`, `unit_price`, `total_price`
-  - `inventory_transactions`: `id`, `product_id`, `transaction_type`, `quantity`, `reference_id`, `remarks`, `created_by`
+  - `sale_items`: `id`, `sale_id`, `product_id`, `quantity`, `unit_price`, `total_price`, `status`, `collected_amount`, `created_at`
+  - `inventory_transactions`: `id`, `product_id`, `transaction_type`, `quantity`, `reference_id`, `remarks`, `created_by`, `created_at`
 - **Views:**
   - `customer_outstanding_view`: calculates net outstanding.
   - `customer_activity_view`: unified timeline (Collections + Sales).

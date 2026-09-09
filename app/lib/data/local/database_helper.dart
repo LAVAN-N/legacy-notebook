@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 14,
+      version: 15,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
@@ -145,6 +145,7 @@ class DatabaseHelper {
         total_price INTEGER NOT NULL DEFAULT 0,
         status TEXT NOT NULL DEFAULT 'purchased',
         collected_amount INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
         FOREIGN KEY (sale_id) REFERENCES sales (id) ON DELETE CASCADE,
         FOREIGN KEY (product_id) REFERENCES products (id)
       )
@@ -160,6 +161,7 @@ class DatabaseHelper {
         reference_id TEXT,
         remarks TEXT,
         created_by TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
         FOREIGN KEY (product_id) REFERENCES products (id)
       )
     ''');
@@ -169,6 +171,7 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX idx_collections_customer ON collections(customer_id)');
     await db.execute('CREATE INDEX idx_sales_customer ON sales(customer_id)');
     await db.execute('CREATE INDEX idx_inventory_product ON inventory_transactions(product_id)');
+    await db.execute('CREATE INDEX idx_inventory_transactions_created_at ON inventory_transactions(created_at DESC)');
     await db.execute('CREATE INDEX idx_products_category_brand ON products(category_id, brand)');
 
     // 13. Create Database Views

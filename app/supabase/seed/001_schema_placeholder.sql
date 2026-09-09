@@ -84,7 +84,8 @@ CREATE TABLE IF NOT EXISTS sale_items (
     quantity INT NOT NULL CHECK (quantity > 0),
     unit_price INT NOT NULL CHECK (unit_price >= 0),
     total_price INT NOT NULL CHECK (total_price >= 0),
-    status TEXT NOT NULL DEFAULT 'purchased'
+    status TEXT NOT NULL DEFAULT 'purchased',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- 8. Collections table (PAYMENT, PARTIAL_PAYMENT, CARRY_FORWARD)
@@ -106,7 +107,8 @@ CREATE TABLE IF NOT EXISTS inventory_transactions (
     quantity INT NOT NULL,
     reference_id TEXT,
     remarks TEXT,
-    created_by TEXT NOT NULL
+    created_by TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- Indexes for statistics and reports
@@ -114,6 +116,7 @@ CREATE INDEX IF NOT EXISTS idx_sales_customer ON sales(customer_id);
 CREATE INDEX IF NOT EXISTS idx_collections_customer ON collections(customer_id);
 CREATE INDEX IF NOT EXISTS idx_collections_customer_datetime ON collections(customer_id, visit_datetime DESC);
 CREATE INDEX IF NOT EXISTS idx_inventory_product ON inventory_transactions(product_id);
+CREATE INDEX IF NOT EXISTS idx_inventory_created_at ON inventory_transactions(created_at DESC);
 
 -- ─── Security & Row Level Security (RLS) ──────────────────
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;

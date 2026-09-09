@@ -167,6 +167,9 @@ product_id
 quantity
 unit_price
 total_price
+status
+collected_amount
+created_at
 
 Supports:
 
@@ -183,6 +186,7 @@ quantity
 reference_id
 remarks
 created_by
+created_at
 
 Inventory movements should be fully auditable.
 

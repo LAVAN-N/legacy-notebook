@@ -987,11 +987,13 @@ class LocalSqliteSaleRepository implements SaleRepository {
       final finalFinancedAmount = totalAmount - finalAdvanceAmount < 0 ? 0 : totalAmount - finalAdvanceAmount;
       final finalSaleType = lendAmount != null ? 'LEND' : ((finalFinancedAmount == 0) ? 'READY' : 'CREDIT');
 
+      final saleDate = (customDate ?? DateTime.now()).toIso8601String();
+
       // Save sale
       await txn.insert('sales', {
         'id': saleId,
         'customer_id': customerId,
-        'sale_datetime': (customDate ?? DateTime.now()).toIso8601String(),
+        'sale_datetime': saleDate,
         'sale_type': finalSaleType,
         'total_amount': totalAmount,
         'advance_amount': finalAdvanceAmount,
@@ -1040,6 +1042,7 @@ class LocalSqliteSaleRepository implements SaleRepository {
           'unit_price': unitPrice,
           'total_price': itemTotal,
           'collected_amount': itemCollected,
+          'created_at': saleDate,
         });
 
         // Rule 11: Transaction-driven inventory deduct
@@ -1051,6 +1054,7 @@ class LocalSqliteSaleRepository implements SaleRepository {
           'reference_id': saleId,
           'remarks': 'Sale to customer',
           'created_by': soldBy,
+          'created_at': saleDate,
         });
       }
     });
@@ -1213,6 +1217,7 @@ class LocalSqliteSaleRepository implements SaleRepository {
         'reference_id': saleItemId,
         'remarks': 'Customer product return',
         'created_by': processedBy,
+        'created_at': DateTime.now().toIso8601String(),
       });
 
       final unpaidPortion = (item.totalPrice - collectedAmount).clamp(0, item.totalPrice);
@@ -1344,6 +1349,7 @@ class LocalSqliteProductRepository implements ProductRepository {
           'reference_id': 'INIT_PURCHASE',
           'remarks': 'Initial product add stock',
           'created_by': 'collector_local',
+          'created_at': DateTime.now().toIso8601String(),
         });
       }
     });
@@ -1399,6 +1405,7 @@ class LocalSqliteProductRepository implements ProductRepository {
           'reference_id': 'MANUAL_EDIT',
           'remarks': 'Stock adjusted via edit product',
           'created_by': 'collector_local',
+          'created_at': DateTime.now().toIso8601String(),
         });
       }
     });
