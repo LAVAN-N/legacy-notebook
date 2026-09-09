@@ -10,6 +10,7 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/app_pull_to_refresh.dart';
 import '../../core/router/routes.dart';
+import '../../core/config/category_icons.dart';
 import '../../data/mock/mock_data.dart';
 import '../../data/models/product.dart';
 import '../../data/models/category.dart';
@@ -41,21 +42,7 @@ class _InventoryCategoriesScreenState
   }
 
   IconData _getIconForCategory(String iconName) {
-    final iconMap = {
-      'frying-pan': Icons.kitchen,
-      'shirt': Icons.checkroom,
-      'speaker': Icons.speaker,
-      'lightbulb': Icons.lightbulb,
-      'wind': Icons.air,
-      'shopping-bag': Icons.shopping_bag,
-      'phone': Icons.phone_android,
-      'laptop': Icons.laptop,
-      'chair': Icons.chair,
-      'tv': Icons.tv,
-      'book': Icons.book,
-      'toy': Icons.toys,
-    };
-    return iconMap[iconName] ?? Icons.inventory_2;
+    return CategoryIcons.getIcon(iconName);
   }
   Color _getStockColor(Product product, AppColors colors) {
     if (product.stock == 0) {

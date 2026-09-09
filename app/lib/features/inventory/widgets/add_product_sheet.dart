@@ -8,6 +8,7 @@ import 'package:file_picker/file_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/config/category_icons.dart';
 import '../../../data/mock/mock_data.dart';
 import '../../../data/providers.dart';
 import '../../../data/models/product.dart';
@@ -2652,20 +2653,7 @@ class _AddCategoryDialogContentState extends State<_AddCategoryDialogContent> {
     }
   }
 
-  final List<Map<String, dynamic>> _availableIcons = [
-    {'name': 'frying-pan', 'icon': Icons.kitchen, 'keywords': 'kitchen food frying pan cook pot'},
-    {'name': 'shirt', 'icon': Icons.checkroom, 'keywords': 'shirt clothes dress checkroom hanger'},
-    {'name': 'speaker', 'icon': Icons.speaker, 'keywords': 'speaker sound music audio device'},
-    {'name': 'lightbulb', 'icon': Icons.lightbulb, 'keywords': 'lightbulb light bulb electricity idea'},
-    {'name': 'wind', 'icon': Icons.air, 'keywords': 'wind air fan weather AC'},
-    {'name': 'shopping-bag', 'icon': Icons.shopping_bag, 'keywords': 'bag shopping purchase item store'},
-    {'name': 'phone', 'icon': Icons.phone_android, 'keywords': 'phone mobile android screen electronics'},
-    {'name': 'laptop', 'icon': Icons.laptop, 'keywords': 'laptop computer macbook pc screen office'},
-    {'name': 'chair', 'icon': Icons.chair, 'keywords': 'chair furniture seat table sofa home'},
-    {'name': 'tv', 'icon': Icons.tv, 'keywords': 'tv television display monitor video screen'},
-    {'name': 'book', 'icon': Icons.book, 'keywords': 'book read library school education paper'},
-    {'name': 'toy', 'icon': Icons.toys, 'keywords': 'toy game play kids robot controller'},
-  ];
+  final List<CategoryIconItem> _availableIcons = CategoryIcons.availableIcons;
 
   @override
   void dispose() {
@@ -2708,7 +2696,7 @@ class _AddCategoryDialogContentState extends State<_AddCategoryDialogContent> {
           ),
           const SizedBox(height: 12),
           Container(
-            height: 160,
+            height: 180,
             decoration: BoxDecoration(
               border: Border.all(color: widget.colors.border),
               borderRadius: BorderRadius.circular(8),
@@ -2723,32 +2711,35 @@ class _AddCategoryDialogContentState extends State<_AddCategoryDialogContent> {
               itemCount: _availableIcons.length,
               itemBuilder: (context, index) {
                 final item = _availableIcons[index];
-                final name = item['name'] as String;
+                final name = item.name;
                 final isSelected = name == _selectedIconName;
-                return InkWell(
-                  onTap: () {
-                    setState(() {
-                      _selectedIconName = name;
-                    });
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? widget.colors.primary.withValues(alpha: 0.15)
-                          : Colors.transparent,
-                      border: Border.all(
+                return Tooltip(
+                  message: item.label,
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        _selectedIconName = name;
+                      });
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? widget.colors.primary.withValues(alpha: 0.15)
+                            : Colors.transparent,
+                        border: Border.all(
+                          color: isSelected
+                              ? widget.colors.primary
+                              : widget.colors.border,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        item.icon,
                         color: isSelected
                             ? widget.colors.primary
-                            : widget.colors.border,
+                            : widget.colors.mutedFg,
+                        size: 24,
                       ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      item['icon'] as IconData,
-                      color: isSelected
-                          ? widget.colors.primary
-                          : widget.colors.mutedFg,
-                      size: 24,
                     ),
                   ),
                 );
@@ -2856,20 +2847,7 @@ class _EditCategoryDialogContentState extends State<_EditCategoryDialogContent> 
     }
   }
 
-  final List<Map<String, dynamic>> _availableIcons = [
-    {'name': 'frying-pan', 'icon': Icons.kitchen, 'keywords': 'kitchen food frying pan cook pot'},
-    {'name': 'shirt', 'icon': Icons.checkroom, 'keywords': 'shirt clothes dress checkroom hanger'},
-    {'name': 'speaker', 'icon': Icons.speaker, 'keywords': 'speaker sound music audio device'},
-    {'name': 'lightbulb', 'icon': Icons.lightbulb, 'keywords': 'lightbulb light bulb electricity idea'},
-    {'name': 'wind', 'icon': Icons.air, 'keywords': 'wind air fan weather AC'},
-    {'name': 'shopping-bag', 'icon': Icons.shopping_bag, 'keywords': 'bag shopping purchase item store'},
-    {'name': 'phone', 'icon': Icons.phone_android, 'keywords': 'phone mobile android screen electronics'},
-    {'name': 'laptop', 'icon': Icons.laptop, 'keywords': 'laptop computer macbook pc screen office'},
-    {'name': 'chair', 'icon': Icons.chair, 'keywords': 'chair furniture seat table sofa home'},
-    {'name': 'tv', 'icon': Icons.tv, 'keywords': 'tv television display monitor video screen'},
-    {'name': 'book', 'icon': Icons.book, 'keywords': 'book read library school education paper'},
-    {'name': 'toy', 'icon': Icons.toys, 'keywords': 'toy game play kids robot controller'},
-  ];
+  final List<CategoryIconItem> _availableIcons = CategoryIcons.availableIcons;
 
   @override
   void dispose() {
@@ -2912,7 +2890,7 @@ class _EditCategoryDialogContentState extends State<_EditCategoryDialogContent> 
             ),
             const SizedBox(height: 12),
             Container(
-              height: 160,
+              height: 180,
               decoration: BoxDecoration(
                 border: Border.all(color: widget.colors.border),
                 borderRadius: BorderRadius.circular(8),
@@ -2927,32 +2905,35 @@ class _EditCategoryDialogContentState extends State<_EditCategoryDialogContent> 
                 itemCount: _availableIcons.length,
                 itemBuilder: (context, index) {
                   final item = _availableIcons[index];
-                  final name = item['name'] as String;
+                  final name = item.name;
                   final isSelected = name == _selectedIconName;
-                  return InkWell(
-                    onTap: () {
-                      setState(() {
-                        _selectedIconName = name;
-                      });
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? widget.colors.primary.withValues(alpha: 0.15)
-                            : Colors.transparent,
-                        border: Border.all(
+                  return Tooltip(
+                    message: item.label,
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _selectedIconName = name;
+                        });
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? widget.colors.primary.withValues(alpha: 0.15)
+                              : Colors.transparent,
+                          border: Border.all(
+                            color: isSelected
+                                ? widget.colors.primary
+                                : widget.colors.border,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          item.icon,
                           color: isSelected
                               ? widget.colors.primary
-                              : widget.colors.border,
+                              : widget.colors.mutedFg,
+                          size: 24,
                         ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        item['icon'] as IconData,
-                        color: isSelected
-                            ? widget.colors.primary
-                            : widget.colors.mutedFg,
-                        size: 24,
                       ),
                     ),
                   );
