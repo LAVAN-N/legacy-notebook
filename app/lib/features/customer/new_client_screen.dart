@@ -84,14 +84,6 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
   }
 
   @override
-  void deactivate() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(newClientControllerProvider.notifier).resetForm();
-    });
-    super.deactivate();
-  }
-
-  @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();

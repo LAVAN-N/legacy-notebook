@@ -1385,3 +1385,12 @@ Read before starting. Never edit past entries.
 
 
 
+
+### 2026-09-24 · Riverpod ref access in State.deactivate / postFrameCallback unmounted error
+
+- **Context:** Navigating back from `NewClientScreen` to `ClientsScreen`.
+- **Mistake:** Overriding `deactivate()` to call `WidgetsBinding.instance.addPostFrameCallback((_) => ref.read(...))` in a `ConsumerStatefulElement`.
+- **Root cause:** When popping the screen from the navigation stack, `deactivate()` runs and the post-frame callback fires *after* the widget element has already been disposed. Calling `ref.read` on a disposed consumer element throws `Bad state: Using "ref" when a widget is about to or has been unmounted is unsafe.` (`ConsumerStatefulElement._assertNotDisposed`).
+- **Fix applied:** Removed `deactivate()` override. Form state is properly initialized and reset in `initState()` and when submitting or clearing forms.
+- **Rule for next agent:** NEVER call `ref.read` or `ref.watch` inside `deactivate()`, `dispose()`, or `addPostFrameCallback` scheduled during teardown.
+- **Guardrail:** Grep for `deactivate` in consumer stateful widgets and verify no `ref` references exist after element deactivation.
