@@ -1100,6 +1100,28 @@ class SupabaseSaleRepository implements SaleRepository {
   }
 
   @override
+  Future<List<Sale>> getSalesByCustomer(String customerId) async {
+    final maps = await _client.from('sales').select().eq('customer_id', customerId).order('sale_datetime');
+    return maps.map((s) {
+      final remarks = s['remarks'] as String?;
+      final isLend = remarks != null && remarks.startsWith('LEND_DETAILS:');
+      final saleType = isLend ? 'LEND' : s['sale_type'];
+
+      return Sale.fromJson({
+        'id': s['id'],
+        'customerId': s['customer_id'],
+        'saleDatetime': s['sale_datetime'],
+        'saleType': saleType,
+        'totalAmount': s['total_amount'],
+        'advanceAmount': s['advance_amount'],
+        'financedAmount': s['financed_amount'],
+        'soldBy': s['sold_by'],
+        'remarks': remarks,
+      });
+    }).toList();
+  }
+
+  @override
   Future<void> saveSale({
     required String customerId,
     required List<Map<String, dynamic>> items,

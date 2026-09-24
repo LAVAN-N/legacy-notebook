@@ -680,6 +680,10 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
   Future<List<Sale>> getAllSales() async => _sales;
 
   @override
+  Future<List<Sale>> getSalesByCustomer(String customerId) async =>
+      _sales.where((s) => s.customerId == customerId).toList();
+
+  @override
   Future<void> saveSale({
     required String customerId,
     required List<Map<String, dynamic>> items,

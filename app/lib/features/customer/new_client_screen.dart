@@ -413,6 +413,16 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
                   isLoading: formState.isLoading,
                   isEditing: widget.customer != null,
                   onCreateAndSale: () async {
+                    controller.syncFromInputs(
+                      name: _nameController.text,
+                      phone: _phoneController.text,
+                      alternatePhone: _alternatePhoneController.text,
+                      address: _addressController.text,
+                      landmark: _landmarkController.text,
+                      dob: _dobController.text,
+                      occupation: _occupationController.text,
+                      notes: _notesController.text,
+                    );
                     final customer = await controller.createAndSale();
                     if (customer == null) {
                       if (!context.mounted) return;
@@ -462,6 +472,16 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
                     )}?source=create');
                   },
                   onCreateOnly: () async {
+                    controller.syncFromInputs(
+                      name: _nameController.text,
+                      phone: _phoneController.text,
+                      alternatePhone: _alternatePhoneController.text,
+                      address: _addressController.text,
+                      landmark: _landmarkController.text,
+                      dob: _dobController.text,
+                      occupation: _occupationController.text,
+                      notes: _notesController.text,
+                    );
                     final customer = await controller.createOnly();
                     if (customer == null) {
                       if (!context.mounted) return;
@@ -2122,43 +2142,45 @@ class _LocationBlockState extends State<_LocationBlock> {
                       _userInteracted = true;
                     }
                   },
-                  child: GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: LatLng(centerLat, centerLng),
-                      zoom: 16.0,
-                    ),
-                    mapType: _mapType,
-                    myLocationEnabled: false,
-                    myLocationButtonEnabled: false,
-                    zoomControlsEnabled: false,
-                    compassEnabled: false,
-                    mapToolbarEnabled: false,
-                    scrollGesturesEnabled: true,
-                    zoomGesturesEnabled: true,
-                    rotateGesturesEnabled: true,
-                    tiltGesturesEnabled: false,
-                    gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                      Factory<OneSequenceGestureRecognizer>(
-                        () => EagerGestureRecognizer(),
+                  child: RepaintBoundary(
+                    child: GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(centerLat, centerLng),
+                        zoom: 16.0,
                       ),
-                    },
-                    onMapCreated: (mapController) {
-                      _mapController = mapController;
-                    },
-                    onCameraMoveStarted: () {
-                      if (_mapUnlocked) {
-                        _userInteracted = true;
-                      }
-                    },
-                    onCameraMove: (position) {
-                      _cameraCenter = position.target;
-                    },
-                    onCameraIdle: () {
-                      if (_userInteracted && _cameraCenter != null) {
-                        _userInteracted = false;
-                        _updateInlineLocation(_cameraCenter!);
-                      }
-                    },
+                      mapType: _mapType,
+                      myLocationEnabled: false,
+                      myLocationButtonEnabled: false,
+                      zoomControlsEnabled: false,
+                      compassEnabled: false,
+                      mapToolbarEnabled: false,
+                      scrollGesturesEnabled: true,
+                      zoomGesturesEnabled: true,
+                      rotateGesturesEnabled: true,
+                      tiltGesturesEnabled: false,
+                      gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                        Factory<OneSequenceGestureRecognizer>(
+                          () => EagerGestureRecognizer(),
+                        ),
+                      },
+                      onMapCreated: (mapController) {
+                        _mapController = mapController;
+                      },
+                      onCameraMoveStarted: () {
+                        if (_mapUnlocked) {
+                          _userInteracted = true;
+                        }
+                      },
+                      onCameraMove: (position) {
+                        _cameraCenter = position.target;
+                      },
+                      onCameraIdle: () {
+                        if (_userInteracted && _cameraCenter != null) {
+                          _userInteracted = false;
+                          _updateInlineLocation(_cameraCenter!);
+                        }
+                      },
+                    ),
                   ),
                 ),
                 // Map Type Toggle Button (Top Left)

@@ -70,7 +70,7 @@ class CustomerDetailNotifier extends AsyncNotifier<CustomerDetailData> {
       customerRepo.getCustomerTimeline(arg),
       saleRepo.getSaleItemsForCustomer(arg),
       productRepo.getProducts(),
-      saleRepo.getAllSales(),
+      saleRepo.getSalesByCustomer(arg),
     ]);
 
     final customer = results[0] as Customer?;
@@ -80,11 +80,7 @@ class CustomerDetailNotifier extends AsyncNotifier<CustomerDetailData> {
     final timeline = results[2] as List<Activity>;
     final saleItems = results[3] as List<SaleItem>;
     final products = results[4] as List<Product>;
-    final allSales = results[5] as List<Sale>;
-
-    // Filter sales of this customer and sort chronologically (oldest to newest)
-    final customerSales = allSales.where((s) => s.customerId == arg).toList()
-      ..sort((a, b) => a.saleDatetime.compareTo(b.saleDatetime));
+    final customerSales = (results[5] as List<Sale>)..sort((a, b) => a.saleDatetime.compareTo(b.saleDatetime));
 
     final Map<String, DateTime> saleDates = {
       for (final s in customerSales) s.id: s.saleDatetime

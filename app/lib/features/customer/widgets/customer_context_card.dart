@@ -345,25 +345,27 @@ class CustomerContextCard extends ConsumerWidget {
                           child: SizedBox(
                             width: double.infinity,
                             height: 180,
-                            child: GoogleMap(
-                              liteModeEnabled: true,
-                              initialCameraPosition: CameraPosition(
-                                target: LatLng(customer.location!.lat, customer.location!.lng),
-                                zoom: 15.0,
-                              ),
-                              mapType: MapType.normal,
-                              myLocationEnabled: false,
-                              myLocationButtonEnabled: false,
-                              zoomControlsEnabled: false,
-                              mapToolbarEnabled: false,
-                              markers: {
-                                Marker(
-                                  markerId: MarkerId(customer.id),
-                                  position: LatLng(customer.location!.lat, customer.location!.lng),
-                                  infoWindow: InfoWindow(title: customer.name),
+                            child: RepaintBoundary(
+                              child: GoogleMap(
+                                liteModeEnabled: true,
+                                initialCameraPosition: CameraPosition(
+                                  target: LatLng(customer.location!.lat, customer.location!.lng),
+                                  zoom: 15.0,
                                 ),
-                              },
-                              onTap: (_) => _openMap(customer.location!.lat, customer.location!.lng),
+                                mapType: MapType.normal,
+                                myLocationEnabled: false,
+                                myLocationButtonEnabled: false,
+                                zoomControlsEnabled: false,
+                                mapToolbarEnabled: false,
+                                markers: {
+                                  Marker(
+                                    markerId: MarkerId(customer.id),
+                                    position: LatLng(customer.location!.lat, customer.location!.lng),
+                                    infoWindow: InfoWindow(title: customer.name),
+                                  ),
+                                },
+                                onTap: (_) => _openMap(customer.location!.lat, customer.location!.lng),
+                              ),
                             ),
                           ),
                         ),

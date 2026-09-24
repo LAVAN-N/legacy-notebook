@@ -914,6 +914,33 @@ class LocalSqliteSaleRepository implements SaleRepository {
   @override
   Future<List<Sale>> getAllSales() => _getAllSales();
 
+  @override
+  Future<List<Sale>> getSalesByCustomer(String customerId) async {
+    final db = await DatabaseHelper.instance.database;
+    final maps = await db.query(
+      'sales',
+      where: 'customer_id = ?',
+      whereArgs: [customerId],
+      orderBy: 'sale_datetime ASC',
+    );
+    return maps.map((m) {
+      final remarks = m['remarks'] as String?;
+      final dbSaleType = m['sale_type'] as String;
+      final isLend = remarks != null && remarks.startsWith('LEND_DETAILS:');
+      return Sale(
+        id: m['id'] as String,
+        customerId: m['customer_id'] as String,
+        saleDatetime: DateTime.parse(m['sale_datetime'] as String),
+        saleType: isLend ? 'LEND' : dbSaleType,
+        totalAmount: m['total_amount'] as int,
+        advanceAmount: m['advance_amount'] as int,
+        financedAmount: m['financed_amount'] as int,
+        soldBy: m['sold_by'] as String,
+        remarks: remarks,
+      );
+    }).toList();
+  }
+
   Future<List<Sale>> _getAllSales() async {
     final db = await DatabaseHelper.instance.database;
     final maps = await db.query('sales', orderBy: 'sale_datetime DESC');

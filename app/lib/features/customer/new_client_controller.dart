@@ -173,42 +173,75 @@ class NewClientController extends StateNotifier<NewClientFormState> {
     state = state.copyWith(areaId: areaId, errors: {});
   }
 
+  void syncFromInputs({
+    String? name,
+    String? phone,
+    String? alternatePhone,
+    String? address,
+    String? landmark,
+    String? dob,
+    String? occupation,
+    String? notes,
+  }) {
+    state = state.copyWith(
+      name: name != null ? name.trim() : state.name,
+      phone: phone != null ? phone.trim() : state.phone,
+      alternatePhone: alternatePhone != null ? alternatePhone.trim() : state.alternatePhone,
+      address: address != null ? address.trim() : state.address,
+      landmark: landmark != null ? landmark.trim() : state.landmark,
+      dob: dob != null ? dob.trim() : state.dob,
+      occupation: occupation != null ? occupation.trim() : state.occupation,
+      notes: notes != null ? notes.trim() : state.notes,
+    );
+  }
+
   void setName(String name) {
-    state = state.copyWith(name: name, errors: {});
+    if (state.name == name && state.errors['name'] == null) return;
+    final newErrors = Map<String, String>.from(state.errors)..remove('name');
+    state = state.copyWith(name: name, errors: newErrors);
   }
 
   void setPhone(String phone) {
-    // Live format: remove non-digits, then format as "98765 43210"
+    if (state.phone == phone && state.errors['phone'] == null) return;
     final cleaned = phone.replaceAll(RegExp(r'\D'), '');
     String formatted = cleaned;
     if (cleaned.length >= 5) {
       formatted = '${cleaned.substring(0, cleaned.length - 5)} ${cleaned.substring(cleaned.length - 5)}';
     }
-    state = state.copyWith(phone: formatted, errors: {});
+    final newErrors = Map<String, String>.from(state.errors)..remove('phone');
+    state = state.copyWith(phone: formatted, errors: newErrors);
   }
 
   void setAlternatePhone(String phone) {
-    state = state.copyWith(alternatePhone: phone, errors: {});
+    if (state.alternatePhone == phone) return;
+    state = state.copyWith(alternatePhone: phone);
   }
 
   void setAddress(String address) {
-    state = state.copyWith(address: address, errors: {});
+    if (state.address == address && state.errors['address'] == null) return;
+    final newErrors = Map<String, String>.from(state.errors)..remove('address');
+    state = state.copyWith(address: address, errors: newErrors);
   }
 
   void setLandmark(String landmark) {
-    state = state.copyWith(landmark: landmark, errors: {});
+    if (state.landmark == landmark) return;
+    state = state.copyWith(landmark: landmark);
   }
 
   void setDob(String dob) {
-    state = state.copyWith(dob: dob, errors: {});
+    if (state.dob == dob && state.errors['dob'] == null) return;
+    final newErrors = Map<String, String>.from(state.errors)..remove('dob');
+    state = state.copyWith(dob: dob, errors: newErrors);
   }
 
   void setOccupation(String occupation) {
-    state = state.copyWith(occupation: occupation, errors: {});
+    if (state.occupation == occupation) return;
+    state = state.copyWith(occupation: occupation);
   }
 
   void setNotes(String notes) {
-    state = state.copyWith(notes: notes, errors: {});
+    if (state.notes == notes) return;
+    state = state.copyWith(notes: notes);
   }
 
   void addNominee(Nominee nominee) {
