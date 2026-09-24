@@ -118,7 +118,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       WeekdayScroller(
                         selectedDay: data.weekdayName,
                         onTapDay: (day) {
-                          context.go(Routes.weekday(day));
+                          ref.read(dashboardControllerProvider.notifier).selectWeekday(day);
                         },
                       ),
                       const SizedBox(height: AppSpacing.lg),
@@ -164,7 +164,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       // Quick Action Tiles
                       const SectionHeader(title: 'Quick Actions'),
                       const SizedBox(height: AppSpacing.sm),
-                      const QuickActionsRow(),
+                      QuickActionsRow(currentWeekday: data.weekdayName),
                       const SizedBox(height: AppSpacing.lg),
 
                       // Places List

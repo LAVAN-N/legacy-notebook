@@ -59,7 +59,9 @@ class HeroOutstandingCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Today's Route",
+                    weekday.toLowerCase() == currentWeekdayName().toLowerCase()
+                        ? "Today's Route"
+                        : "$weekday's Route",
                     style: AppTypography.labelMedium.copyWith(
                       color: colors.primaryFg.withValues(alpha: 0.7),
                     ),

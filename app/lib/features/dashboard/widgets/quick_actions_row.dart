@@ -5,12 +5,20 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/router/routes.dart';
 import '../../inventory/widgets/add_product_sheet.dart';
 
+import '../../../core/utils/formatters.dart';
+
 class QuickActionsRow extends StatelessWidget {
-  const QuickActionsRow({super.key});
+  const QuickActionsRow({
+    super.key,
+    this.currentWeekday,
+  });
+
+  final String? currentWeekday;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final weekday = currentWeekday ?? currentWeekdayName();
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -22,7 +30,7 @@ class QuickActionsRow extends StatelessWidget {
           color: colors.primary,
           onTap: () {
             // Direct route explorer jump to weekday
-            context.go(Routes.weekday('Thursday'));
+            context.go(Routes.weekday(weekday));
           },
         ),
         _QuickActionItem(

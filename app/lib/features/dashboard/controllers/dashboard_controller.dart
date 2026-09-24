@@ -46,6 +46,41 @@ class DashboardController extends StateNotifier<AsyncValue<DashboardData>> {
   }
 
   final Ref _ref;
+  String? _selectedWeekdayName;
+
+  static const _weekdayNames = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+
+  static String getTodayWeekdayName() {
+    final now = DateTime.now();
+    return _weekdayNames[now.weekday - 1];
+  }
+
+  static String getTodayWeekdayId() {
+    final now = DateTime.now();
+    return 'w-${now.weekday}';
+  }
+
+  static String getWeekdayIdFromName(String name) {
+    final idx = _weekdayNames.indexWhere((w) => w.toLowerCase() == name.toLowerCase());
+    if (idx >= 0) {
+      return 'w-${idx + 1}';
+    }
+    return getTodayWeekdayId();
+  }
+
+  void selectWeekday(String dayName) {
+    if (_selectedWeekdayName == dayName) return;
+    _selectedWeekdayName = dayName;
+    refresh();
+  }
 
   void _init() async {
     developer.log('_init() called', name: 'DashboardController');
@@ -63,8 +98,8 @@ class DashboardController extends StateNotifier<AsyncValue<DashboardData>> {
       final collectionRepo = _ref.read(collectionRepositoryProvider);
       final configRepo = _ref.read(configRepositoryProvider);
 
-      const weekdayId = 'w-4'; // Thursday
-      const weekdayName = 'Thursday';
+      final weekdayName = _selectedWeekdayName ?? getTodayWeekdayName();
+      final weekdayId = getWeekdayIdFromName(weekdayName);
 
       // 1. Fetch all required data points concurrently in 8 parallel HTTP requests
       final batchResults = await Future.wait([
