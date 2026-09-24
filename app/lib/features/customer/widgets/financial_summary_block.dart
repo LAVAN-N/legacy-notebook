@@ -49,14 +49,16 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
     final now = DateTime.now();
     _selectedYear = now.year;
     _selectedMonth = now.month;
+    _monthScrollController = ScrollController();
 
-    // Months list is ordered ascending: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] (Jan to Dec)
-    // Current month index is (now.month - 1).
-    // Each month item slot height is exactly 35.0 (30 height + 5 bottom margin).
-    // Total container height is 170.0 (5 * 35.0 - 5.0 = 170.0).
-    final initialIndex = now.month - 1;
-    final initialOffset = initialIndex * 35.0;
-    _monthScrollController = ScrollController(initialScrollOffset: initialOffset);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _monthScrollController.hasClients) {
+        final initialIndex = now.month - 1;
+        final targetOffset = initialIndex * 35.0;
+        final maxScroll = _monthScrollController.position.maxScrollExtent;
+        _monthScrollController.jumpTo(targetOffset.clamp(0.0, maxScroll));
+      }
+    });
   }
 
   @override
@@ -682,7 +684,8 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                             height: 170,
                             child: ListView.builder(
                               controller: _monthScrollController,
-                              physics: const BouncingScrollPhysics(),
+                              primary: false,
+                              physics: const ClampingScrollPhysics(),
                               padding: EdgeInsets.zero,
                               itemCount: 12,
                               itemBuilder: (context, index) {
@@ -763,7 +766,9 @@ class _FinancialSummaryBlockState extends State<FinancialSummaryBlock> {
                                                 _selectedMonth = targetMonth;
                                                 final targetIndex = targetMonth - 1;
                                                 if (_monthScrollController.hasClients) {
-                                                  _monthScrollController.jumpTo(targetIndex * 35.0);
+                                                  final targetOffset = targetIndex * 35.0;
+                                                  final maxScroll = _monthScrollController.position.maxScrollExtent;
+                                                  _monthScrollController.jumpTo(targetOffset.clamp(0.0, maxScroll));
                                                 }
                                               });
                                             }
