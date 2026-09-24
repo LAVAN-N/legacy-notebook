@@ -34,20 +34,13 @@ class _AppPullToRefreshState extends State<AppPullToRefresh>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   Animation<double>? _anim;
-  
-  // Custom scroll controller to manage list offset and synchronize with gestures
-  late final ScrollController _scrollController;
 
   double _pullDistance = 0.0;
   bool _isRefreshing = false;
-  bool _isPullDragging = false;
-  double? _dragStartY;
-  bool _startedAtTop = false;
 
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 220),
@@ -67,104 +60,17 @@ class _AppPullToRefreshState extends State<AppPullToRefresh>
       if (_pullDistance > 0.0) {
         _dismiss();
       }
-      _isPullDragging = false;
-      _dragStartY = null;
-      _startedAtTop = false;
     }
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
     _animController.dispose();
     super.dispose();
   }
 
-  void _onPointerDown(PointerDownEvent event) {
-    if (!widget.enabled || _isRefreshing) return;
-    _dragStartY = event.position.dy;
-    _isPullDragging = false;
-    _startedAtTop = !_scrollController.hasClients || _scrollController.offset <= 0.0;
-  }
-
-  void _onPointerMove(PointerMoveEvent event) {
-    if (!widget.enabled || _isRefreshing || _dragStartY == null) return;
-    
-    final currentOffset = _scrollController.hasClients ? _scrollController.offset : 0.0;
-
-    if (!_isPullDragging) {
-      if (_startedAtTop && currentOffset <= 0.0) {
-        final deltaY = event.position.dy - _dragStartY!;
-        if (deltaY > 5.0) {
-          // User dragged down from top -> enter pull-to-refresh mode
-          _isPullDragging = true;
-          const friction = 0.45;
-          final newDist = (deltaY - 5.0) * friction;
-          setState(() {
-            _pullDistance = newDist.clamp(0.0, 110.0);
-          });
-          if (_scrollController.hasClients && _scrollController.offset != 0.0) {
-            _scrollController.jumpTo(0.0);
-          }
-        } else if (deltaY < -5.0) {
-          // User is dragging upward from top -> regular scroll down
-          _startedAtTop = false;
-        }
-      }
-    } else {
-      // Actively in pull-to-refresh mode: strict lock on scroll offset
-      final deltaY = event.position.dy - _dragStartY!;
-      const friction = 0.45;
-      final newDist = deltaY > 5.0 ? ((deltaY - 5.0) * friction) : 0.0;
-      
-      setState(() {
-        _pullDistance = newDist.clamp(0.0, 110.0);
-      });
-
-      // Keep scroll offset pinned at 0.0 while dragging up/down in pull mode
-      if (_scrollController.hasClients && _scrollController.offset != 0.0) {
-        _scrollController.jumpTo(0.0);
-      }
-    }
-  }
-
-  void _onPointerUp(PointerUpEvent event) {
-    final wasPullDragging = _isPullDragging;
-    final currentPullDistance = _pullDistance;
-
-    _dragStartY = null;
-    _isPullDragging = false;
-    _startedAtTop = false;
-
-    if (wasPullDragging && _scrollController.hasClients && _scrollController.offset != 0.0) {
-      _scrollController.jumpTo(0.0);
-    }
-
-    if (!widget.enabled || _isRefreshing) return;
-
-    if (wasPullDragging && currentPullDistance >= widget.triggerDistance) {
-      _triggerRefresh();
-    } else if (currentPullDistance > 0.0) {
-      _dismiss();
-    }
-  }
-
-  void _onPointerCancel(PointerCancelEvent event) {
-    final wasPullDragging = _isPullDragging;
-    _dragStartY = null;
-    _isPullDragging = false;
-    _startedAtTop = false;
-
-    if (wasPullDragging && _scrollController.hasClients && _scrollController.offset != 0.0) {
-      _scrollController.jumpTo(0.0);
-    }
-
-    if ((!widget.enabled || !_isRefreshing) && _pullDistance > 0.0) {
-      _dismiss();
-    }
-  }
-
   void _triggerRefresh() async {
+    if (_isRefreshing) return;
     HapticFeedback.lightImpact();
     _anim = Tween<double>(
       begin: _pullDistance,
@@ -195,6 +101,38 @@ class _AppPullToRefreshState extends State<AppPullToRefresh>
     _animController.forward(from: 0.0);
   }
 
+  bool _handleScrollNotification(ScrollNotification notification) {
+    if (!widget.enabled || _isRefreshing) return false;
+
+    if (notification is OverscrollNotification) {
+      if (notification.overscroll < 0) {
+        final delta = -notification.overscroll * 0.45;
+        setState(() {
+          _pullDistance = (_pullDistance + delta).clamp(0.0, 110.0);
+        });
+      }
+    } else if (notification is ScrollUpdateNotification) {
+      if (notification.metrics.extentBefore == 0 && (notification.scrollDelta ?? 0) < 0) {
+        final delta = -(notification.scrollDelta ?? 0) * 0.45;
+        setState(() {
+          _pullDistance = (_pullDistance + delta).clamp(0.0, 110.0);
+        });
+      } else if (_pullDistance > 0 && (notification.scrollDelta ?? 0) > 0) {
+        final delta = (notification.scrollDelta ?? 0) * 0.8;
+        setState(() {
+          _pullDistance = (_pullDistance - delta).clamp(0.0, 110.0);
+        });
+      }
+    } else if (notification is ScrollEndNotification || notification is UserScrollNotification) {
+      if (_pullDistance >= widget.triggerDistance) {
+        _triggerRefresh();
+      } else if (_pullDistance > 0 && !_animController.isAnimating) {
+        _dismiss();
+      }
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -204,21 +142,13 @@ class _AppPullToRefreshState extends State<AppPullToRefresh>
     final progress = (_pullDistance / widget.triggerDistance).clamp(0.0, 1.0);
     final isTriggerMet = _pullDistance >= widget.triggerDistance;
 
-    return Listener(
-      onPointerDown: _onPointerDown,
-      onPointerMove: _onPointerMove,
-      onPointerUp: _onPointerUp,
-      onPointerCancel: _onPointerCancel,
-      behavior: HitTestBehavior.translucent,
+    return NotificationListener<ScrollNotification>(
+      onNotification: _handleScrollNotification,
       child: Stack(
         alignment: Alignment.topCenter,
         clipBehavior: Clip.none,
         children: [
-          // Provide PrimaryScrollController so child lists attach to our controller
-          PrimaryScrollController(
-            controller: _scrollController,
-            child: widget.child,
-          ),
+          widget.child,
 
           // Pull-down Floating Refresh Badge
           if (_pullDistance > 0.0 || _isRefreshing)
