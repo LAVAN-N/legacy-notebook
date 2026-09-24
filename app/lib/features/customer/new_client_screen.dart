@@ -45,7 +45,6 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
   late TextEditingController _notesController;
   late TextEditingController _placeNameController;
   late TextEditingController _areaNameController;
-  bool _isMapInteracting = false;
 
   @override
   void initState() {
@@ -363,11 +362,7 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
         title:
             Text(widget.customer != null ? 'Edit Client' : 'New Credit Sale'),
         body: SingleChildScrollView(
-          physics: _isMapInteracting
-              ? const NeverScrollableScrollPhysics()
-              : const AlwaysScrollableScrollPhysics(
-                  parent: BouncingScrollPhysics(),
-                ),
+          physics: const ClampingScrollPhysics(),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
@@ -400,11 +395,6 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
                   notesController: _notesController,
                   controller: controller,
                   colors: colors,
-                  onMapInteractionChanged: (interacting) {
-                    setState(() {
-                      _isMapInteracting = interacting;
-                    });
-                  },
                 ),
                 const SizedBox(height: AppSpacing.xl),
 
@@ -927,7 +917,6 @@ class _CustomerDetailsSection extends StatelessWidget {
     required this.notesController,
     required this.controller,
     required this.colors,
-    this.onMapInteractionChanged,
   });
 
   final NewClientFormState state;
@@ -941,7 +930,6 @@ class _CustomerDetailsSection extends StatelessWidget {
   final TextEditingController notesController;
   final NewClientController controller;
   final AppColors colors;
-  final ValueChanged<bool>? onMapInteractionChanged;
 
   void _selectDate(BuildContext context, TextEditingController textController,
       Function(String) onDateSelected) async {
@@ -1155,7 +1143,6 @@ class _CustomerDetailsSection extends StatelessWidget {
               location: state.location,
               controller: controller,
               colors: colors,
-              onMapInteractionChanged: onMapInteractionChanged,
             ),
             const SizedBox(height: AppSpacing.md),
 
@@ -1809,13 +1796,11 @@ class _LocationBlock extends StatefulWidget {
     required this.location,
     required this.controller,
     required this.colors,
-    this.onMapInteractionChanged,
   });
 
   final Location? location;
   final NewClientController controller;
   final AppColors colors;
-  final ValueChanged<bool>? onMapInteractionChanged;
 
   @override
   State<_LocationBlock> createState() => _LocationBlockState();
@@ -1835,14 +1820,12 @@ class _LocationBlockState extends State<_LocationBlock> {
     setState(() {
       _mapUnlocked = true;
     });
-    widget.onMapInteractionChanged?.call(true);
   }
 
   void _lockMap() {
     setState(() {
       _mapUnlocked = false;
     });
-    widget.onMapInteractionChanged?.call(false);
   }
 
   void _updateInlineLocation(LatLng target) {
@@ -1908,7 +1891,6 @@ class _LocationBlockState extends State<_LocationBlock> {
 
   @override
   void dispose() {
-    widget.onMapInteractionChanged?.call(false);
     _mapController?.dispose();
     super.dispose();
   }

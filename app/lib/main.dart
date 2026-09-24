@@ -10,10 +10,13 @@ import 'app.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Enable Android View Surface (Hybrid Composition) for Google Maps to guarantee map rendering
+  // Enable modern renderer for Google Maps on Android
   final GoogleMapsFlutterPlatform mapsImplementation = GoogleMapsFlutterPlatform.instance;
   if (mapsImplementation is GoogleMapsFlutterAndroid) {
     mapsImplementation.useAndroidViewSurface = true;
+    try {
+      await mapsImplementation.initializeWithRenderer(AndroidMapRenderer.latest);
+    } catch (_) {}
   }
 
   // Initialize Supabase
