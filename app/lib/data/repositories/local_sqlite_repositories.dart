@@ -1440,6 +1440,13 @@ class LocalSqliteProductRepository implements ProductRepository {
     TableBroadcaster.instance.notify('products');
     TableBroadcaster.instance.notify('inventory_transactions');
   }
+
+  @override
+  Future<void> renameBrand(String oldBrand, String newBrand) async {
+    final db = await DatabaseHelper.instance.database;
+    await db.update('products', {'brand': newBrand}, where: 'brand = ?', whereArgs: [oldBrand]);
+    TableBroadcaster.instance.notify('products');
+  }
 }
 
 class LocalSqliteConfigRepository implements ConfigRepository {

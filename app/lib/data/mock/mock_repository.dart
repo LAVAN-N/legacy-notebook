@@ -1000,6 +1000,16 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
       _syncController();
     }
   }
+
+  @override
+  Future<void> renameBrand(String oldBrand, String newBrand) async {
+    for (int i = 0; i < _products.length; i++) {
+      if (_products[i].brand == oldBrand) {
+        _products[i] = _products[i].copyWith(brand: newBrand);
+      }
+    }
+    _syncController();
+  }
 }
 
 // Global Providers to bind the abstract interfaces

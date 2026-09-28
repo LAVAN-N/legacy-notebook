@@ -1632,6 +1632,11 @@ class SupabaseProductRepository implements ProductRepository {
       });
     }
   }
+
+  @override
+  Future<void> renameBrand(String oldBrand, String newBrand) async {
+    await _client.from('products').update({'brand': newBrand}).eq('brand', oldBrand);
+  }
 }
 
 class SupabaseConfigRepository implements ConfigRepository {

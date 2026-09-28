@@ -20,4 +20,5 @@ abstract class ProductRepository {
     String? imageUrl,
   });
   Future<void> updateProduct(Product product);
+  Future<void> renameBrand(String oldBrand, String newBrand);
 }

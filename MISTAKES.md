@@ -1403,3 +1403,12 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Changed product storage paths to use unique timestamped paths (`${productId}/photo_${DateTime.now().millisecondsSinceEpoch}.$extension`) and explicitly delete the old photo file via `_deleteFile('product-photos', oldImageUrl)` when updated or removed.
 - **Rule for next agent:** ALWAYS use unique, timestamped/versioned storage paths and clean up obsolete storage files when replacing or removing uploaded photos.
 - **Guardrail:** Verify that updating an entity's photo generates a new public URL and clears the old storage file.
+
+### 2026-09-28 · Brand dropdown populated by category product query instead of live config stream
+
+- **Context:** Editing/deleting/selecting brands in `AddProductSheet` and `EditProductSheet`.
+- **Mistake:** Brand dropdown prioritized `getBrandsByCategory` (derived from `SELECT DISTINCT brand FROM products`) over the master `brandsStreamProvider` (`config.brands`).
+- **Root cause:** When a brand was edited or deleted in `config.brands`, existing products in the DB still had the old brand string, so `getBrandsByCategory` kept returning the old brand alongside the new one, making old brands undeletable and creating duplicate entries in the dropdown until the product was saved.
+- **Fix applied:** Added `renameBrand(oldBrand, newBrand)` to `ProductRepository` to rename products across the database immediately on brand edit, and sourced `availableBrands` cleanly from `brandsStreamProvider` merged with `_selectedBrand`.
+- **Rule for next agent:** ALWAYS keep dropdown lists bound to their master configuration streams and propagate renames to referencing table records immediately.
+- **Guardrail:** Verify brand edits update both `config.brands` and `products.brand`, and ensure the old brand is immediately removed from dropdown choices.

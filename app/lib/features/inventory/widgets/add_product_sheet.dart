@@ -204,17 +204,23 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
     
     if (result != null && result.isNotEmpty && result != oldBrand && mounted) {
       final configRepo = ref.read(configRepositoryProvider);
+      final productRepo = ref.read(productRepositoryProvider);
       final currentBrands = await configRepo.getBrands();
       final idx = currentBrands.indexOf(oldBrand);
       if (idx != -1) {
         currentBrands[idx] = result;
-        currentBrands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-        await configRepo.saveBrands(currentBrands);
+      } else if (!currentBrands.contains(result)) {
+        currentBrands.add(result);
       }
-      setState(() {
-        _selectedBrand = result;
-        _brandController.text = result;
-      });
+      currentBrands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      await configRepo.saveBrands(currentBrands);
+      await productRepo.renameBrand(oldBrand, result);
+      if (mounted) {
+        setState(() {
+          _selectedBrand = result;
+          _brandController.text = result;
+        });
+      }
     }
   }
 
@@ -640,21 +646,13 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
     final brandsAsync = ref.watch(brandsStreamProvider);
     final brands = brandsAsync.value ?? _brands;
 
-    // Query category brands directly from DB stream provider
-    final AsyncValue<List<String>>? categoryBrandsAsync = _selectedCategoryId != null
-        ? ref.watch(categoryBrandsStreamProvider(_selectedCategoryId!))
-        : null;
-    final List<String> dbCategoryBrands = categoryBrandsAsync?.value ?? [];
-
-    final Set<String> categoryBrandsSet = {...dbCategoryBrands};
-
+    final Set<String> brandSet = {...brands};
     if (_selectedBrand != null && _selectedBrand!.trim().isNotEmpty) {
-      categoryBrandsSet.add(_selectedBrand!.trim());
+      brandSet.add(_selectedBrand!.trim());
     }
 
-    final List<String> availableBrands = categoryBrandsSet.isNotEmpty
-        ? (categoryBrandsSet.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase())))
-        : (brands.isNotEmpty ? brands : (_selectedBrand != null ? [_selectedBrand!] : <String>[]));
+    final List<String> availableBrands = brandSet.toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
     Widget buildSliderLabels(double maxMarkup, AppColors colors) {
       final list = <double>[];
@@ -755,24 +753,10 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                           child: Text(c.name),
                         );
                       }).toList(),
-                      onChanged: (val) async {
+                      onChanged: (val) {
                         setState(() {
                           _selectedCategoryId = val;
                         });
-                        if (val != null) {
-                          final productRepo = ref.read(productRepositoryProvider);
-                          final newCatBrands = await productRepo.getBrandsByCategory(val);
-                          if (_selectedBrand != null &&
-                              newCatBrands.isNotEmpty &&
-                              !newCatBrands.contains(_selectedBrand)) {
-                            if (mounted) {
-                              setState(() {
-                                _selectedBrand = null;
-                                _brandController.clear();
-                              });
-                            }
-                          }
-                        }
                       },
                       validator: (val) => val == null ? 'Category is required' : null,
                     ),
@@ -1557,17 +1541,23 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     
     if (result != null && result.isNotEmpty && result != oldBrand && mounted) {
       final configRepo = ref.read(configRepositoryProvider);
+      final productRepo = ref.read(productRepositoryProvider);
       final currentBrands = await configRepo.getBrands();
       final idx = currentBrands.indexOf(oldBrand);
       if (idx != -1) {
         currentBrands[idx] = result;
-        currentBrands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-        await configRepo.saveBrands(currentBrands);
+      } else if (!currentBrands.contains(result)) {
+        currentBrands.add(result);
       }
-      setState(() {
-        _selectedBrand = result;
-        _brandController.text = result;
-      });
+      currentBrands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      await configRepo.saveBrands(currentBrands);
+      await productRepo.renameBrand(oldBrand, result);
+      if (mounted) {
+        setState(() {
+          _selectedBrand = result;
+          _brandController.text = result;
+        });
+      }
     }
   }
 
@@ -1956,21 +1946,13 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     final brandsAsync = ref.watch(brandsStreamProvider);
     final brands = brandsAsync.value ?? _brands;
 
-    // Query category brands directly from DB stream provider
-    final AsyncValue<List<String>>? categoryBrandsAsync = _selectedCategoryId != null
-        ? ref.watch(categoryBrandsStreamProvider(_selectedCategoryId!))
-        : null;
-    final List<String> dbCategoryBrands = categoryBrandsAsync?.value ?? [];
-
-    final Set<String> categoryBrandsSet = {...dbCategoryBrands};
-
+    final Set<String> brandSet = {...brands};
     if (_selectedBrand != null && _selectedBrand!.trim().isNotEmpty) {
-      categoryBrandsSet.add(_selectedBrand!.trim());
+      brandSet.add(_selectedBrand!.trim());
     }
 
-    final List<String> availableBrands = categoryBrandsSet.isNotEmpty
-        ? (categoryBrandsSet.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase())))
-        : (brands.isNotEmpty ? brands : (_selectedBrand != null ? [_selectedBrand!] : <String>[]));
+    final List<String> availableBrands = brandSet.toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
     Widget buildSliderLabels(double maxMarkup, AppColors colors) {
       final list = <double>[];
@@ -2071,24 +2053,10 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                           child: Text(c.name),
                         );
                       }).toList(),
-                      onChanged: (val) async {
+                      onChanged: (val) {
                         setState(() {
                           _selectedCategoryId = val;
                         });
-                        if (val != null) {
-                          final productRepo = ref.read(productRepositoryProvider);
-                          final newCatBrands = await productRepo.getBrandsByCategory(val);
-                          if (_selectedBrand != null &&
-                              newCatBrands.isNotEmpty &&
-                              !newCatBrands.contains(_selectedBrand)) {
-                            if (mounted) {
-                              setState(() {
-                                _selectedBrand = null;
-                                _brandController.clear();
-                              });
-                            }
-                          }
-                        }
                       },
                       validator: (val) => val == null ? 'Category is required' : null,
                     ),
