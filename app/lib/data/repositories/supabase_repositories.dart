@@ -453,11 +453,21 @@ class SupabaseCustomerRepository implements CustomerRepository {
     if (phone != null) updates['phone'] = phone;
     if (locationUrl != null) updates['location_url'] = locationUrl;
 
-    if (profileUrl != null && profileUrl.isNotEmpty) {
-      final extension = profileUrl.split('.').last.toLowerCase();
-      final remotePath = '$id/profile.$extension'.toLowerCase();
+    if (profileUrl != null && profileUrl.isNotEmpty && !profileUrl.startsWith('http')) {
+      final existing = await getCustomerById(id);
+      if (existing?.profileUrl != null && existing!.profileUrl!.startsWith('http')) {
+        await _deleteFile('customer-photos', existing.profileUrl!);
+      }
+      final extension = profileUrl.split('.').last.split('?').first.toLowerCase();
+      final remotePath = '$id/profile_${DateTime.now().millisecondsSinceEpoch}.$extension'.toLowerCase();
       final remoteProfileUrl = await _uploadFile('customer-photos', profileUrl, remotePath);
       updates['profile_url'] = remoteProfileUrl;
+    } else if (profileUrl != null && profileUrl.isEmpty) {
+      final existing = await getCustomerById(id);
+      if (existing?.profileUrl != null && existing!.profileUrl!.startsWith('http')) {
+        await _deleteFile('customer-photos', existing.profileUrl!);
+      }
+      updates['profile_url'] = null;
     }
 
     if (updates.isNotEmpty) {
@@ -645,12 +655,12 @@ class SupabaseCustomerRepository implements CustomerRepository {
         }
       }
 
-      // 2. Delete removed profile photo from S3
+      // 2. Delete removed / replaced profile photo from S3
       final oldProfileUrl = existing.profileUrl;
       final newProfileUrl = customer.profileUrl;
       if (oldProfileUrl != null &&
           oldProfileUrl.startsWith('http') &&
-          (newProfileUrl == null || newProfileUrl.isEmpty)) {
+          (newProfileUrl == null || newProfileUrl.isEmpty || !newProfileUrl.startsWith('http'))) {
         await _deleteFile('customer-photos', oldProfileUrl);
       }
     }
@@ -658,7 +668,7 @@ class SupabaseCustomerRepository implements CustomerRepository {
     String? remoteProfileUrl = customer.profileUrl;
     if (remoteProfileUrl != null && remoteProfileUrl.isNotEmpty && !remoteProfileUrl.startsWith('http')) {
       final extension = remoteProfileUrl.split('.').last.split('?').first.toLowerCase();
-      final remotePath = '${customer.id}/profile.$extension'.toLowerCase();
+      final remotePath = '${customer.id}/profile_${DateTime.now().millisecondsSinceEpoch}.$extension'.toLowerCase();
       remoteProfileUrl = await _uploadFile('customer-photos', remoteProfileUrl, remotePath);
     }
 
@@ -1504,16 +1514,6 @@ class SupabaseProductRepository implements ProductRepository {
     return controller.stream;
   }
 
-  String _getCategoryName(String categoryId) {
-    final map = {
-      'cat-kat': 'Kitchen Appliances',
-      'cat-laundry': 'Laundry',
-      'cat-audio': 'Home Audio',
-      'cat-lighting': 'Lighting',
-      'cat-cooling': 'Cooling',
-    };
-    return map[categoryId] ?? 'General';
-  }
 
   @override
   Future<Product> addProduct({
@@ -1532,11 +1532,9 @@ class SupabaseProductRepository implements ProductRepository {
     final productId = UuidUtils.generate();
 
     String? remoteUrl = imageUrl;
-    if (imageUrl != null && imageUrl.isNotEmpty) {
-      final extension = imageUrl.split('.').last.split('?').first;
-      final categoryName = _getCategoryName(categoryId).replaceAll(' ', '_');
-      final productName = name.replaceAll(' ', '_');
-      final remotePath = '$categoryName/$productName.$extension';
+    if (imageUrl != null && imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
+      final extension = imageUrl.split('.').last.split('?').first.toLowerCase();
+      final remotePath = '$productId/photo_${DateTime.now().millisecondsSinceEpoch}.$extension';
       remoteUrl = await _uploadFile('product-photos', imageUrl, remotePath);
     }
 
@@ -1572,13 +1570,22 @@ class SupabaseProductRepository implements ProductRepository {
 
   @override
   Future<void> updateProduct(Product product) async {
+    final existing = await getProductById(product.id);
+    if (existing != null) {
+      final oldImageUrl = existing.imageUrl;
+      final newImageUrl = product.imageUrl;
+      if (oldImageUrl != null &&
+          oldImageUrl.startsWith('http') &&
+          (newImageUrl == null || newImageUrl.isEmpty || !newImageUrl.startsWith('http'))) {
+        await _deleteFile('product-photos', oldImageUrl);
+      }
+    }
+
     String? remoteUrl = product.imageUrl;
-    if (product.imageUrl != null && product.imageUrl!.isNotEmpty && !product.imageUrl!.startsWith('http')) {
-      final extension = product.imageUrl!.split('.').last.split('?').first;
-      final categoryName = _getCategoryName(product.categoryId).replaceAll(' ', '_');
-      final productName = product.name.replaceAll(' ', '_');
-      final remotePath = '$categoryName/$productName.$extension';
-      remoteUrl = await _uploadFile('product-photos', product.imageUrl!, remotePath);
+    if (remoteUrl != null && remoteUrl.isNotEmpty && !remoteUrl.startsWith('http')) {
+      final extension = remoteUrl.split('.').last.split('?').first.toLowerCase();
+      final remotePath = '${product.id}/photo_${DateTime.now().millisecondsSinceEpoch}.$extension';
+      remoteUrl = await _uploadFile('product-photos', remoteUrl, remotePath);
     }
 
     await _client.from('products').update({

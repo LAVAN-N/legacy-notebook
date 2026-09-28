@@ -1394,3 +1394,12 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Removed `deactivate()` override. Form state is properly initialized and reset in `initState()` and when submitting or clearing forms.
 - **Rule for next agent:** NEVER call `ref.read` or `ref.watch` inside `deactivate()`, `dispose()`, or `addPostFrameCallback` scheduled during teardown.
 - **Guardrail:** Grep for `deactivate` in consumer stateful widgets and verify no `ref` references exist after element deactivation.
+
+### 2026-09-28 · Static storage paths causing image cache collision on product photo update
+
+- **Context:** Updating product photos in `SupabaseProductRepository.updateProduct` / `addProduct`.
+- **Mistake:** Constructed storage upload paths with static naming `$categoryName/$productName.$extension` without product ID or unique timestamp/versioning.
+- **Root cause:** When a product's photo was updated, Supabase storage uploaded the new image over the same path, returning an identical public URL. Flutter's image caching engine (`ImageCache` / `NetworkImage`) and Supabase CDN cached the previous image under that URL, so the UI continued displaying the old photo even after a successful update.
+- **Fix applied:** Changed product storage paths to use unique timestamped paths (`${productId}/photo_${DateTime.now().millisecondsSinceEpoch}.$extension`) and explicitly delete the old photo file via `_deleteFile('product-photos', oldImageUrl)` when updated or removed.
+- **Rule for next agent:** ALWAYS use unique, timestamped/versioned storage paths and clean up obsolete storage files when replacing or removing uploaded photos.
+- **Guardrail:** Verify that updating an entity's photo generates a new public URL and clears the old storage file.
