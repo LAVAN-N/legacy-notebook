@@ -70,7 +70,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: Routes.inventoryCategoryPattern,
             builder: (context, state) {
-              final categoryId = state.pathParameters['categoryId'] ?? '';
+              final rawCatId = state.pathParameters['categoryId'] ?? '';
+              final categoryId = Uri.decodeComponent(rawCatId);
               final productId = state.uri.queryParameters['productId'];
               return InventoryProductsScreen(
                 categoryId: categoryId,

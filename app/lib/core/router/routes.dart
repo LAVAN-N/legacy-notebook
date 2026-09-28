@@ -23,6 +23,6 @@ class Routes {
   static String collect(String day, String placeId, String areaId, String customerId) => '/weekday/$day/place/$placeId/area/$areaId/customer/$customerId/collect';
   static String sale(String day, String placeId, String areaId, String customerId) => '/weekday/$day/place/$placeId/area/$areaId/customer/$customerId/sale';
   
-  static String inventoryCategory(String categoryId) => '/inventory/$categoryId';
-  static String inventoryProduct(String categoryId, String productId) => '/inventory/$categoryId/$productId';
+  static String inventoryCategory(String categoryId) => '/inventory/${Uri.encodeComponent(categoryId)}';
+  static String inventoryProduct(String categoryId, String productId) => '/inventory/${Uri.encodeComponent(categoryId)}/$productId';
 }

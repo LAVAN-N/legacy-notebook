@@ -1412,3 +1412,12 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Added `renameBrand(oldBrand, newBrand)` to `ProductRepository` to rename products across the database immediately on brand edit, and sourced `availableBrands` cleanly from `brandsStreamProvider` merged with `_selectedBrand`.
 - **Rule for next agent:** ALWAYS keep dropdown lists bound to their master configuration streams and propagate renames to referencing table records immediately.
 - **Guardrail:** Verify brand edits update both `config.brands` and `products.brand`, and ensure the old brand is immediately removed from dropdown choices.
+
+### 2026-09-28 · Slash in category ID breaking GoRouter pattern matching
+
+- **Context:** Viewing category products or editing/deleting categories with names containing slashes (e.g. `pan/pot` -> `cat-pan/pot`).
+- **Mistake:** Generated category IDs directly from words without sanitizing slashes/special characters, and passed unencoded category IDs to `Routes.inventoryCategory(categoryId)`.
+- **Root cause:** GoRouter treats unencoded `/` in path parameters as route segment delimiters, turning `/inventory/cat-pan/pot` into a 3-segment path that fails matching the 2-segment pattern `/inventory/:categoryId` with a Page Not Found error. In addition, un-guarded `firstWhere` lookups without `orElse` threw `Bad state: No element`.
+- **Fix applied:** Added `Uri.encodeComponent` / `Uri.decodeComponent` in `Routes.inventoryCategory` and `app_router.dart`, sanitized category slug generation to alphanumeric hyphens (`cat-pan-pot`), and replaced unchecked `firstWhere` with null-safe lookups.
+- **Rule for next agent:** ALWAYS URL-encode dynamic route parameters containing potential symbols or slashes, and slugify generated IDs into alphanumeric characters.
+- **Guardrail:** Verify category slugs contain only `[a-z0-9-]` and router parameters decode correctly.

@@ -268,7 +268,11 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
   void _showEditCategorySheet(BuildContext context, String categoryId) {
     final categoriesAsync = ref.read(categoriesStreamProvider);
     final categories = categoriesAsync.value ?? [];
-    final category = categories.firstWhere((c) => c.id == categoryId);
+    final category = categories.cast<Category?>().firstWhere(
+      (c) => c?.id == categoryId,
+      orElse: () => null,
+    );
+    if (category == null) return;
     final colors = Theme.of(context).extension<AppColors>()!;
 
     showModalBottomSheet(
@@ -310,7 +314,11 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
   void _showDeleteCategoryDialog(BuildContext context, String categoryId) async {
     final categoriesAsync = ref.read(categoriesStreamProvider);
     final categories = categoriesAsync.value ?? [];
-    final category = categories.firstWhere((c) => c.id == categoryId);
+    final category = categories.cast<Category?>().firstWhere(
+      (c) => c?.id == categoryId,
+      orElse: () => null,
+    );
+    if (category == null) return;
     final colors = Theme.of(context).extension<AppColors>()!;
     
     final confirm = await showDialog<bool>(
@@ -1605,7 +1613,11 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
   void _showEditCategorySheet(BuildContext context, String categoryId) {
     final categoriesAsync = ref.read(categoriesStreamProvider);
     final categories = categoriesAsync.value ?? [];
-    final category = categories.firstWhere((c) => c.id == categoryId);
+    final category = categories.cast<Category?>().firstWhere(
+      (c) => c?.id == categoryId,
+      orElse: () => null,
+    );
+    if (category == null) return;
     final colors = Theme.of(context).extension<AppColors>()!;
 
     showModalBottomSheet(
@@ -1647,7 +1659,11 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
   void _showDeleteCategoryDialog(BuildContext context, String categoryId) async {
     final categoriesAsync = ref.read(categoriesStreamProvider);
     final categories = categoriesAsync.value ?? [];
-    final category = categories.firstWhere((c) => c.id == categoryId);
+    final category = categories.cast<Category?>().firstWhere(
+      (c) => c?.id == categoryId,
+      orElse: () => null,
+    );
+    if (category == null) return;
     final colors = Theme.of(context).extension<AppColors>()!;
     
     final confirm = await showDialog<bool>(
@@ -2761,8 +2777,13 @@ class _AddCategoryDialogContentState extends State<_AddCategoryDialogContent> {
                     return;
                   }
                   final cleanName = name.trim();
-                  final firstWord = cleanName.split(RegExp(r'\s+')).first;
-                  final catId = 'cat-${firstWord.toLowerCase()}';
+                  final slug = cleanName
+                      .toLowerCase()
+                      .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+                      .replaceAll(RegExp(r'^-+|-+$'), '');
+                  final catId = slug.isNotEmpty
+                      ? 'cat-$slug'
+                      : 'cat-${DateTime.now().millisecondsSinceEpoch}';
                   final newCategory = Category(
                     id: catId,
                     name: cleanName,

@@ -176,8 +176,9 @@ List<BreadcrumbItem> _buildBreadcrumbs(BuildContext context, GoRouterState state
   
   if (path.startsWith('/inventory/')) {
     breadcrumbs.add(BreadcrumbItem(label: 'Inventory', route: '/inventory'));
-    final categoryId = params['categoryId'];
-    if (categoryId != null && categoryId.isNotEmpty) {
+    final rawCategoryId = params['categoryId'];
+    if (rawCategoryId != null && rawCategoryId.isNotEmpty) {
+      final categoryId = Uri.decodeComponent(rawCategoryId);
       breadcrumbs.add(BreadcrumbItem(label: categoryId));
     }
     return breadcrumbs;
