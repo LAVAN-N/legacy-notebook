@@ -18,8 +18,8 @@ class SplashState {
 class SplashController extends StateNotifier<SplashState> {
   SplashController() : super(const SplashState(isSplashVisible: true));
 
-  static const _minimumDuration = Duration(milliseconds: 3000); // 3.0s minimum display
-  static const _maximumDuration = Duration(milliseconds: 4000); // 4.0s maximum safety limit
+  static const _minimumDuration = Duration(milliseconds: 2400); // 2.4s entrance and display
+  static const _maximumDuration = Duration(milliseconds: 3500); // 3.5s maximum safety limit
 
   bool _timerStarted = false;
 
