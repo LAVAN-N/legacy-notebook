@@ -36,16 +36,19 @@ class _ProductDetailsSheet extends ConsumerWidget {
     return colors.success;
   }
 
-  String _formatDetailsDate(String? raw) {
-    if (raw == null || raw.isEmpty) return 'Recent';
+  Map<String, String> _formatDetailsDateTime(String? raw) {
+    if (raw == null || raw.isEmpty) return {'date': 'Recent', 'time': ''};
     final dt = DateTime.tryParse(raw);
-    if (dt == null) return raw;
+    if (dt == null) return {'date': raw, 'time': ''};
     final local = dt.toLocal();
     final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     final hour = local.hour > 12 ? local.hour - 12 : (local.hour == 0 ? 12 : local.hour);
     final ampm = local.hour >= 12 ? 'PM' : 'AM';
     final minute = local.minute.toString().padLeft(2, '0');
-    return '${local.day} ${months[local.month - 1]} ${local.year}, $hour:$minute $ampm';
+    return {
+      'date': '${local.day} ${months[local.month - 1]} ${local.year}',
+      'time': '$hour:$minute $ampm',
+    };
   }
 
   @override
@@ -272,7 +275,7 @@ class _ProductDetailsSheet extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          Container(width: 1, height: 28, color: colors.border),
+                          Container(width: 1, height: 38, color: colors.border),
                           Expanded(
                             child: Padding(
                               padding: const EdgeInsets.only(left: 10),
@@ -304,7 +307,7 @@ class _ProductDetailsSheet extends ConsumerWidget {
                               ),
                             ),
                           ),
-                          Container(width: 1, height: 28, color: colors.border),
+                          Container(width: 1, height: 38, color: colors.border),
                           Expanded(
                             child: Padding(
                               padding: const EdgeInsets.only(left: 10),
@@ -325,15 +328,33 @@ class _ProductDetailsSheet extends ConsumerWidget {
                                     ],
                                   ),
                                   const SizedBox(height: 3),
-                                  Text(
-                                    _formatDetailsDate(product.updatedAt),
-                                    style: AppTypography.bodySmall.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: colors.foreground,
-                                      fontSize: 11,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                  Builder(
+                                    builder: (context) {
+                                      final dtInfo = _formatDetailsDateTime(product.updatedAt);
+                                      return Wrap(
+                                        direction: Axis.vertical,
+                                        spacing: 1,
+                                        children: [
+                                          Text(
+                                            dtInfo['date']!,
+                                            style: AppTypography.bodySmall.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              color: colors.foreground,
+                                              fontSize: 10.5,
+                                            ),
+                                          ),
+                                          if (dtInfo['time']!.isNotEmpty)
+                                            Text(
+                                              dtInfo['time']!,
+                                              style: AppTypography.labelSmall.copyWith(
+                                                fontWeight: FontWeight.w500,
+                                                color: colors.mutedFg,
+                                                fontSize: 9.5,
+                                              ),
+                                            ),
+                                        ],
+                                      );
+                                    },
                                   ),
                                 ],
                               ),
@@ -580,24 +601,128 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
     super.dispose();
   }
 
-  Widget _buildSingleImage(String path) {
+  void _showElevatedImage(BuildContext context, String imagePath, String title) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.85),
+      builder: (dialogContext) {
+        return Dialog(
+          elevation: 24,
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header bar
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.8),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.zoom_in_rounded, color: Colors.white70, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: () => Navigator.pop(dialogContext),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Elevated interactive view
+              Flexible(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(dialogContext).size.height * 0.72,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        blurRadius: 30,
+                        spreadRadius: 6,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: InteractiveViewer(
+                    minScale: 1.0,
+                    maxScale: 4.0,
+                    child: Center(
+                      child: _buildSingleImage(imagePath, fit: BoxFit.contain),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSingleImage(String path, {BoxFit fit = BoxFit.cover}) {
+    if (path.startsWith('assets/')) {
+      return Image.asset(
+        path,
+        fit: fit,
+        width: double.infinity,
+        height: double.infinity,
+      );
+    } else if (path.startsWith('http')) {
+      return Image.network(
+        path,
+        fit: fit,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (_, __, ___) => _buildPlaceholder(),
+      );
+    } else {
+      return Image.file(
+        File(path),
+        fit: fit,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (_, __, ___) => _buildPlaceholder(),
+      );
+    }
+  }
+
+  Widget _buildPlaceholder() {
     return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        image: path.startsWith('assets/')
-            ? DecorationImage(
-                image: AssetImage(path),
-                fit: BoxFit.cover,
-              )
-            : (path.startsWith('http')
-                ? DecorationImage(
-                    image: NetworkImage(path),
-                    fit: BoxFit.cover,
-                  )
-                : DecorationImage(
-                    image: FileImage(File(path)),
-                    fit: BoxFit.cover,
-                  )),
+      color: widget.colors.muted.withValues(alpha: 0.2),
+      child: Center(
+        child: Icon(
+          Icons.broken_image_outlined,
+          color: widget.colors.mutedFg,
+          size: 32,
+        ),
       ),
     );
   }
@@ -639,20 +764,221 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
       );
     }
 
+    // Side-by-side showcase for 2 images: 1st landscape (16:9) + 2nd portrait (9:16)
+    if (widget.images.length == 2) {
+      final img1 = widget.images[0];
+      final img2 = widget.images[1];
+      return SizedBox(
+        height: 190,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Photo 1 (16:9 Landscape - flex 16)
+            Expanded(
+              flex: 16,
+              child: GestureDetector(
+                onTap: () => _showElevatedImage(
+                  context,
+                  img1,
+                  'Photo 1 • Landscape (16:9)',
+                ),
+                child: Container(
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    color: widget.colors.muted.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: widget.colors.border.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      _buildSingleImage(img1, fit: BoxFit.cover),
+                      // 16:9 Badge top left
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.crop_16_9, size: 11, color: Colors.white),
+                              SizedBox(width: 4),
+                              Text(
+                                '16:9 Landscape',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Elevate button bottom right
+                      Positioned(
+                        bottom: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.65),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.fullscreen_rounded,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Photo 2 (9:16 Portrait contrast - flex 10)
+            Expanded(
+              flex: 10,
+              child: GestureDetector(
+                onTap: () => _showElevatedImage(
+                  context,
+                  img2,
+                  'Photo 2 • Portrait (9:16)',
+                ),
+                child: Container(
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    color: widget.colors.muted.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: widget.colors.border.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      _buildSingleImage(img2, fit: BoxFit.cover),
+                      // 9:16 Badge top left
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.crop_portrait, size: 11, color: Colors.white),
+                              SizedBox(width: 4),
+                              Text(
+                                '9:16 Portrait',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Elevate button bottom right
+                      Positioned(
+                        bottom: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.65),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.fullscreen_rounded,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     if (widget.images.length == 1) {
+      final img = widget.images.first;
       return AspectRatio(
         aspectRatio: 16 / 9,
-        child: Container(
-          width: double.infinity,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: widget.colors.muted.withValues(alpha: 0.25),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: widget.colors.border.withValues(alpha: 0.6),
+        child: GestureDetector(
+          onTap: () => _showElevatedImage(
+            context,
+            img,
+            'Photo • Landscape (16:9)',
+          ),
+          child: Container(
+            width: double.infinity,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: widget.colors.muted.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: widget.colors.border.withValues(alpha: 0.6),
+              ),
+            ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _buildSingleImage(img, fit: BoxFit.cover),
+                // Elevate button bottom right
+                Positioned(
+                  bottom: 10,
+                  right: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.fullscreen_rounded,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'Elevate',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          child: _buildSingleImage(widget.images.first),
         ),
       );
     }
@@ -678,7 +1004,15 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
                 setState(() => _currentIndex = idx);
               },
               itemBuilder: (context, index) {
-                return _buildSingleImage(widget.images[index]);
+                final curPath = widget.images[index];
+                return GestureDetector(
+                  onTap: () => _showElevatedImage(
+                    context,
+                    curPath,
+                    'Photo ${index + 1}',
+                  ),
+                  child: _buildSingleImage(curPath),
+                );
               },
             ),
             // Page Indicator Badge

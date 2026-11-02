@@ -7,9 +7,12 @@ import 'package:flutter/services.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 
-/// Opens the custom product camera with real-time 16:9 viewfinder guide.
+/// Opens the custom product camera with real-time viewfinder guide.
 /// Returns the cropped file path on successful capture, or null on cancel.
-Future<String?> openProductCamera(BuildContext context) async {
+Future<String?> openProductCamera(
+  BuildContext context, {
+  double targetAspectRatio = 16 / 9,
+}) async {
   try {
     final cameras = await availableCameras();
     if (cameras.isEmpty) {
@@ -18,7 +21,10 @@ Future<String?> openProductCamera(BuildContext context) async {
     if (!context.mounted) return null;
     return await Navigator.of(context).push<String>(
       MaterialPageRoute(
-        builder: (context) => ProductCameraScreen(cameras: cameras),
+        builder: (context) => ProductCameraScreen(
+          cameras: cameras,
+          targetAspectRatio: targetAspectRatio,
+        ),
       ),
     );
   } catch (e) {
@@ -29,8 +35,13 @@ Future<String?> openProductCamera(BuildContext context) async {
 
 class ProductCameraScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
+  final double targetAspectRatio;
 
-  const ProductCameraScreen({super.key, required this.cameras});
+  const ProductCameraScreen({
+    super.key,
+    required this.cameras,
+    this.targetAspectRatio = 16 / 9,
+  });
 
   @override
   State<ProductCameraScreen> createState() => _ProductCameraScreenState();
@@ -45,8 +56,6 @@ class _ProductCameraScreenState extends State<ProductCameraScreen>
   bool _isCapturing = false;
   String? _capturedImagePath;
   String? _errorMessage;
-
-  static const double targetAspectRatio = 16 / 9;
 
   @override
   void initState() {
@@ -237,9 +246,16 @@ class _ProductCameraScreenState extends State<ProductCameraScreen>
     final double cropW = (relW * imgW).clamp(10.0, imgW - cropX);
     final double cropH = (relH * imgH).clamp(10.0, imgH - cropY);
 
-    // Output high quality 16:9 crop
-    final outW = cropW.clamp(480.0, 1920.0).toInt();
-    final outH = (outW / targetAspectRatio).toInt();
+    // Output high quality crop
+    final int outW;
+    final int outH;
+    if (widget.targetAspectRatio >= 1.0) {
+      outW = cropW.clamp(480.0, 1920.0).toInt();
+      outH = (outW / widget.targetAspectRatio).toInt();
+    } else {
+      outH = cropH.clamp(480.0, 1920.0).toInt();
+      outW = (outH * widget.targetAspectRatio).toInt();
+    }
 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(
@@ -273,9 +289,17 @@ class _ProductCameraScreenState extends State<ProductCameraScreen>
     final colors = Theme.of(context).extension<AppColors>()!;
     final screenSize = MediaQuery.of(context).size;
 
-    // Viewfinder 16:9 cutout geometry
-    final cutoutWidth = (screenSize.width - 40).clamp(240.0, 420.0);
-    final cutoutHeight = cutoutWidth / targetAspectRatio;
+    // Viewfinder cutout geometry
+    final double cutoutWidth;
+    final double cutoutHeight;
+    if (widget.targetAspectRatio >= 1.0) {
+      cutoutWidth = (screenSize.width - 40).clamp(240.0, 420.0);
+      cutoutHeight = cutoutWidth / widget.targetAspectRatio;
+    } else {
+      // Portrait ratio (e.g. 9/16)
+      cutoutHeight = (screenSize.height * 0.55).clamp(280.0, 520.0);
+      cutoutWidth = cutoutHeight * widget.targetAspectRatio;
+    }
     final cutoutRect = Rect.fromCenter(
       center: Offset(screenSize.width / 2, screenSize.height * 0.45),
       width: cutoutWidth,
@@ -416,10 +440,18 @@ class _ProductCameraScreenState extends State<ProductCameraScreen>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.crop_16_9, size: 16, color: colors.primary),
+                      Icon(
+                        widget.targetAspectRatio < 1.0
+                            ? Icons.crop_portrait
+                            : Icons.crop_16_9,
+                        size: 16,
+                        color: colors.primary,
+                      ),
                       const SizedBox(width: 8),
                       Text(
-                        'Align product within 16:9 frame',
+                        widget.targetAspectRatio < 1.0
+                            ? 'Align product within portrait frame'
+                            : 'Align product within 16:9 frame',
                         style: AppTypography.labelSmall.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w500,
@@ -486,7 +518,7 @@ class _ProductCameraScreenState extends State<ProductCameraScreen>
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: AspectRatio(
-                aspectRatio: targetAspectRatio,
+                aspectRatio: widget.targetAspectRatio,
                 child: Container(
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(

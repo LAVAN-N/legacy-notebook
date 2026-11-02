@@ -332,7 +332,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
   final _stockController = TextEditingController(text: '0');
   final _minStockController = TextEditingController(text: '5');
   final _mfgDateController = TextEditingController(text: 'JAN 2026');
-  final _warrantyController = TextEditingController(text: '1.0');
+  final _warrantyController = TextEditingController(text: '0');
   final _descriptionController = TextEditingController();
   double _markupPercent = 25.0;
   bool _isSubmitting = false;
@@ -349,7 +349,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
         _imagePath != null ||
         _imagePath2 != null ||
         _mfgDateController.text != 'JAN 2026' ||
-        (_warrantyController.text != '1.0' && _warrantyController.text.isNotEmpty)) {
+        (_warrantyController.text != '0' && _warrantyController.text.isNotEmpty)) {
       return true;
     }
     return false;
@@ -794,7 +794,8 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                 onTap: () async {
                   navigator.pop();
                   try {
-                    final photoPath = await openProductCamera(context);
+                    final double targetRatio = slot == 2 ? (9 / 16) : (16 / 9);
+                    final photoPath = await openProductCamera(context, targetAspectRatio: targetRatio);
                     if (photoPath != null && mounted) {
                       setState(() {
                         if (slot == 1) {
@@ -814,7 +815,10 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                       if (image != null && mounted) {
                         final croppedPath = await navigator.push<String>(
                           MaterialPageRoute(
-                            builder: (context) => PhotoCropDialog(imagePath: image.path),
+                            builder: (context) => PhotoCropDialog(
+                              imagePath: image.path,
+                              cropAspectRatio: targetRatio,
+                            ),
                           ),
                         );
                         if (croppedPath != null && mounted) {
@@ -842,6 +846,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                 onTap: () async {
                   navigator.pop();
                   try {
+                    final double targetRatio = slot == 2 ? (9 / 16) : (16 / 9);
                     final picker = ImagePicker();
                     final XFile? image = await picker.pickImage(
                       source: ImageSource.gallery,
@@ -850,7 +855,10 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                     if (image != null && mounted) {
                       final croppedPath = await navigator.push<String>(
                         MaterialPageRoute(
-                          builder: (context) => PhotoCropDialog(imagePath: image.path),
+                          builder: (context) => PhotoCropDialog(
+                            imagePath: image.path,
+                            cropAspectRatio: targetRatio,
+                          ),
                         ),
                       );
                       if (croppedPath != null && mounted) {
@@ -877,6 +885,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                 onTap: () async {
                   navigator.pop();
                   try {
+                    final double targetRatio = slot == 2 ? (9 / 16) : (16 / 9);
                     FilePickerResult? result =
                         await FilePicker.platform.pickFiles(
                       type: FileType.custom,
@@ -885,7 +894,10 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                     if (result != null && result.files.single.path != null && mounted) {
                       final croppedPath = await navigator.push<String>(
                         MaterialPageRoute(
-                          builder: (context) => PhotoCropDialog(imagePath: result.files.single.path!),
+                          builder: (context) => PhotoCropDialog(
+                            imagePath: result.files.single.path!,
+                            cropAspectRatio: targetRatio,
+                          ),
                         ),
                       );
                       if (croppedPath != null && mounted) {
@@ -1152,7 +1164,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                     child: _buildImageSlot(
                       context: context,
                       slotNumber: 1,
-                      label: 'Photo 1',
+                      label: 'Photo 1 (16:9)',
                       imagePath: _imagePath,
                       onTap: () => _openFilePicker(slot: 1),
                       onRemove: () => setState(() => _imagePath = null),
@@ -1164,7 +1176,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                     child: _buildImageSlot(
                       context: context,
                       slotNumber: 2,
-                      label: 'Photo 2',
+                      label: 'Photo 2 (Portrait)',
                       imagePath: _imagePath2,
                       onTap: () => _openFilePicker(slot: 2),
                       onRemove: () => setState(() => _imagePath2 = null),
@@ -1553,43 +1565,84 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
               ),
               const SizedBox(height: 12),
 
+              // Warranty Field with 0.5 incrementor (below Min stock)
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: TextFormField(
-                      controller: _mfgDateController,
-                      readOnly: true,
-                      onTap: () => _pickMfgDate(context, _mfgDateController),
-                      decoration: InputDecoration(
-                        labelText: 'Mfg Date *',
-                        hintText: 'JAN 2026',
-                        prefixIcon: Icon(Icons.calendar_month_outlined, color: colors.primary),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      validator: (val) => (val == null || val.trim().isEmpty) ? 'Mfg date is required' : null,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
                       controller: _warrantyController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       decoration: InputDecoration(
                         labelText: 'Warranty (Years) *',
-                        hintText: 'e.g. 1.0 or 1.5',
+                        hintText: '0',
                         prefixIcon: Icon(Icons.verified_outlined, color: colors.primary),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       ),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      onTap: () {
+                        if (_warrantyController.text == '0') {
+                          _warrantyController.selection = TextSelection.fromPosition(
+                            TextPosition(offset: _warrantyController.text.length),
+                          );
+                        }
+                      },
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) return 'Warranty is required';
                         final parsed = double.tryParse(val.trim());
-                        if (parsed == null || parsed < 0) return 'Enter valid years';
+                        if (parsed == null) return 'Enter a valid number';
+                        if (parsed < 0) return 'Warranty cannot be negative';
                         return null;
                       },
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  Container(
+                    height: 56,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: colors.border),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.remove),
+                          onPressed: () {
+                            final current = double.tryParse(_warrantyController.text) ?? 0.0;
+                            if (current >= 0.5) {
+                              final next = current - 0.5;
+                              _warrantyController.text = (next % 1 == 0) ? next.toInt().toString() : next.toStringAsFixed(1);
+                            } else if (current > 0) {
+                              _warrantyController.text = '0';
+                            }
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add),
+                          onPressed: () {
+                            final current = double.tryParse(_warrantyController.text) ?? 0.0;
+                            final next = current + 0.5;
+                            _warrantyController.text = (next % 1 == 0) ? next.toInt().toString() : next.toStringAsFixed(1);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
+              ),
+              const SizedBox(height: 12),
+
+              // Mfg Date Field
+              TextFormField(
+                controller: _mfgDateController,
+                readOnly: true,
+                onTap: () => _pickMfgDate(context, _mfgDateController),
+                decoration: InputDecoration(
+                  labelText: 'Mfg Date *',
+                  hintText: 'JAN 2026',
+                  prefixIcon: Icon(Icons.calendar_month_outlined, color: colors.primary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                validator: (val) => (val == null || val.trim().isEmpty) ? 'Mfg date is required' : null,
               ),
               const SizedBox(height: 12),
 
@@ -1805,7 +1858,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
           ? (widget.product.warranty % 1 == 0
               ? widget.product.warranty.toInt().toString()
               : widget.product.warranty.toString())
-          : '1.0',
+          : '0',
     );
     _descriptionController = TextEditingController(text: widget.product.description ?? '');
 
@@ -2266,7 +2319,8 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                 onTap: () async {
                   navigator.pop();
                   try {
-                    final photoPath = await openProductCamera(context);
+                    final double targetRatio = slot == 2 ? (9 / 16) : (16 / 9);
+                    final photoPath = await openProductCamera(context, targetAspectRatio: targetRatio);
                     if (photoPath != null && mounted) {
                       setState(() {
                         if (slot == 1) {
@@ -2286,7 +2340,10 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                       if (image != null && mounted) {
                         final croppedPath = await navigator.push<String>(
                           MaterialPageRoute(
-                            builder: (context) => PhotoCropDialog(imagePath: image.path),
+                            builder: (context) => PhotoCropDialog(
+                              imagePath: image.path,
+                              cropAspectRatio: targetRatio,
+                            ),
                           ),
                         );
                         if (croppedPath != null && mounted) {
@@ -2314,6 +2371,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                 onTap: () async {
                   navigator.pop();
                   try {
+                    final double targetRatio = slot == 2 ? (9 / 16) : (16 / 9);
                     final picker = ImagePicker();
                     final XFile? image = await picker.pickImage(
                       source: ImageSource.gallery,
@@ -2322,7 +2380,10 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                     if (image != null && mounted) {
                       final croppedPath = await navigator.push<String>(
                         MaterialPageRoute(
-                          builder: (context) => PhotoCropDialog(imagePath: image.path),
+                          builder: (context) => PhotoCropDialog(
+                            imagePath: image.path,
+                            cropAspectRatio: targetRatio,
+                          ),
                         ),
                       );
                       if (croppedPath != null && mounted) {
@@ -2349,6 +2410,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                 onTap: () async {
                   navigator.pop();
                   try {
+                    final double targetRatio = slot == 2 ? (9 / 16) : (16 / 9);
                     FilePickerResult? result =
                         await FilePicker.platform.pickFiles(
                       type: FileType.custom,
@@ -2357,7 +2419,10 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                     if (result != null && result.files.single.path != null && mounted) {
                       final croppedPath = await navigator.push<String>(
                         MaterialPageRoute(
-                          builder: (context) => PhotoCropDialog(imagePath: result.files.single.path!),
+                          builder: (context) => PhotoCropDialog(
+                            imagePath: result.files.single.path!,
+                            cropAspectRatio: targetRatio,
+                          ),
                         ),
                       );
                       if (croppedPath != null && mounted) {
@@ -2587,7 +2652,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                     child: _buildImageSlot(
                       context: context,
                       slotNumber: 1,
-                      label: 'Photo 1',
+                      label: 'Photo 1 (16:9)',
                       imagePath: _imagePath,
                       onTap: () => _openFilePicker(slot: 1),
                       onRemove: () => setState(() => _imagePath = null),
@@ -2599,7 +2664,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                     child: _buildImageSlot(
                       context: context,
                       slotNumber: 2,
-                      label: 'Photo 2',
+                      label: 'Photo 2 (Portrait)',
                       imagePath: _imagePath2,
                       onTap: () => _openFilePicker(slot: 2),
                       onRemove: () => setState(() => _imagePath2 = null),
@@ -2988,43 +3053,84 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
               ),
               const SizedBox(height: 12),
 
+              // Warranty Field with 0.5 incrementor (below Min stock)
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: TextFormField(
-                      controller: _mfgDateController,
-                      readOnly: true,
-                      onTap: () => _pickMfgDate(context, _mfgDateController),
-                      decoration: InputDecoration(
-                        labelText: 'Mfg Date *',
-                        hintText: 'JAN 2026',
-                        prefixIcon: Icon(Icons.calendar_month_outlined, color: colors.primary),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      validator: (val) => (val == null || val.trim().isEmpty) ? 'Mfg date is required' : null,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
                       controller: _warrantyController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       decoration: InputDecoration(
                         labelText: 'Warranty (Years) *',
-                        hintText: 'e.g. 1.0 or 1.5',
+                        hintText: '0',
                         prefixIcon: Icon(Icons.verified_outlined, color: colors.primary),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       ),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      onTap: () {
+                        if (_warrantyController.text == '0') {
+                          _warrantyController.selection = TextSelection.fromPosition(
+                            TextPosition(offset: _warrantyController.text.length),
+                          );
+                        }
+                      },
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) return 'Warranty is required';
                         final parsed = double.tryParse(val.trim());
-                        if (parsed == null || parsed < 0) return 'Enter valid years';
+                        if (parsed == null) return 'Enter a valid number';
+                        if (parsed < 0) return 'Warranty cannot be negative';
                         return null;
                       },
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  Container(
+                    height: 56,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: colors.border),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.remove),
+                          onPressed: () {
+                            final current = double.tryParse(_warrantyController.text) ?? 0.0;
+                            if (current >= 0.5) {
+                              final next = current - 0.5;
+                              _warrantyController.text = (next % 1 == 0) ? next.toInt().toString() : next.toStringAsFixed(1);
+                            } else if (current > 0) {
+                              _warrantyController.text = '0';
+                            }
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add),
+                          onPressed: () {
+                            final current = double.tryParse(_warrantyController.text) ?? 0.0;
+                            final next = current + 0.5;
+                            _warrantyController.text = (next % 1 == 0) ? next.toInt().toString() : next.toStringAsFixed(1);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
+              ),
+              const SizedBox(height: 12),
+
+              // Mfg Date Field
+              TextFormField(
+                controller: _mfgDateController,
+                readOnly: true,
+                onTap: () => _pickMfgDate(context, _mfgDateController),
+                decoration: InputDecoration(
+                  labelText: 'Mfg Date *',
+                  hintText: 'JAN 2026',
+                  prefixIcon: Icon(Icons.calendar_month_outlined, color: colors.primary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                validator: (val) => (val == null || val.trim().isEmpty) ? 'Mfg date is required' : null,
               ),
               const SizedBox(height: 12),
 
@@ -3530,7 +3636,13 @@ class _EditCategoryDialogContentState extends State<_EditCategoryDialogContent> 
 
 class PhotoCropDialog extends StatefulWidget {
   final String imagePath;
-  const PhotoCropDialog({super.key, required this.imagePath});
+  final double cropAspectRatio;
+
+  const PhotoCropDialog({
+    super.key,
+    required this.imagePath,
+    this.cropAspectRatio = 16 / 9,
+  });
 
   @override
   State<PhotoCropDialog> createState() => _PhotoCropDialogState();
@@ -3579,8 +3691,6 @@ class _PhotoCropDialogState extends State<PhotoCropDialog> {
     }
   }
 
-  static const double cropAspectRatio = 16 / 9;
-
   void _handleTransformationChanged() {
     if (_imageWidth == null || _imageHeight == null) return;
 
@@ -3605,8 +3715,15 @@ class _PhotoCropDialogState extends State<PhotoCropDialog> {
     final double leftImg = (size.width - wImg) / 2;
     final double topImg = (size.height - hImg) / 2;
 
-    final double cropWidth = (size.width - 32).clamp(240.0, 360.0);
-    final double cropHeight = cropWidth / cropAspectRatio;
+    final double cropWidth;
+    final double cropHeight;
+    if (widget.cropAspectRatio >= 1.0) {
+      cropWidth = (size.width - 32).clamp(240.0, 360.0);
+      cropHeight = cropWidth / widget.cropAspectRatio;
+    } else {
+      cropHeight = (size.height * 0.55).clamp(280.0, 480.0);
+      cropWidth = cropHeight * widget.cropAspectRatio;
+    }
     final double leftCrop = (size.width - cropWidth) / 2;
     final double topCrop = (size.height - cropHeight) / 2;
     final double rightCrop = leftCrop + cropWidth;
@@ -3680,8 +3797,15 @@ class _PhotoCropDialogState extends State<PhotoCropDialog> {
                     final messenger = ScaffoldMessenger.of(context);
                     try {
                       final size = _viewportSize ?? MediaQuery.of(context).size;
-                      final cropWidth = (size.width - 32).clamp(240.0, 360.0);
-                      final cropHeight = cropWidth / cropAspectRatio;
+                      final double cropWidth;
+                      final double cropHeight;
+                      if (widget.cropAspectRatio >= 1.0) {
+                        cropWidth = (size.width - 32).clamp(240.0, 360.0);
+                        cropHeight = cropWidth / widget.cropAspectRatio;
+                      } else {
+                        cropHeight = (size.height * 0.55).clamp(280.0, 480.0);
+                        cropWidth = cropHeight * widget.cropAspectRatio;
+                      }
                       final currentCropSize = Size(cropWidth, cropHeight);
                       final offset = _viewportOffset ?? Offset(
                         (size.width - cropWidth) / 2,
@@ -3715,8 +3839,15 @@ class _PhotoCropDialogState extends State<PhotoCropDialog> {
         builder: (context, constraints) {
           final viewportWidth = constraints.maxWidth;
           final viewportHeight = constraints.maxHeight;
-          final currentCropWidth = (viewportWidth - 32).clamp(240.0, 360.0);
-          final currentCropHeight = currentCropWidth / cropAspectRatio;
+          final double currentCropWidth;
+          final double currentCropHeight;
+          if (widget.cropAspectRatio >= 1.0) {
+            currentCropWidth = (viewportWidth - 32).clamp(240.0, 360.0);
+            currentCropHeight = currentCropWidth / widget.cropAspectRatio;
+          } else {
+            currentCropHeight = (viewportHeight * 0.55).clamp(280.0, 480.0);
+            currentCropWidth = currentCropHeight * widget.cropAspectRatio;
+          }
           final currentCropSize = Size(currentCropWidth, currentCropHeight);
           final currentViewportOffset = Offset(
             (viewportWidth - currentCropWidth) / 2,
