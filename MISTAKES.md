@@ -1441,3 +1441,12 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Updated `MockRepository.addProduct` signature and `Product` constructor call to accept `imageUrl2`, `mfgDate`, `warranty`, and `updatedAt`.
 - **Rule for next agent:** ALWAYS grep for all classes implementing an abstract repository (`implements <Repository>`) and update every implementation when altering an interface method signature.
 - **Guardrail:** Check `local_sqlite_repositories.dart`, `supabase_repositories.dart`, and `mock_repository.dart` whenever touching any file in `lib/data/repositories/`.
+
+### 2026-11-02 · Target matching ambiguity in edit_file causing duplicate class definitions
+- **Context:** Added `UpperCaseTextFormatter` and `SegmentedSkuField` to `add_product_sheet.dart`.
+- **Mistake:** Used a generic target to insert new classes which matched multiple function terminations in the file, resulting in duplicate declarations of `_SegmentedSkuFieldState`.
+- **Root cause:** `edit_file` replaces all occurrences if the target string appears multiple times in the file.
+- **Fix applied:** Cleaned up and removed the redundant class declarations, keeping a single declaration of `SegmentedSkuField` and `_SegmentedSkuFieldState`.
+- **Rule for next agent:** ALWAYS use sufficiently large, unique target context blocks in `edit_file` to prevent accidental multi-site replacements.
+- **Guardrail:** Verify replacement count reported by `edit_file` matches expected occurrences (1 if defining a new class).
+

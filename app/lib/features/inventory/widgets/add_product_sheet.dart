@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
@@ -37,6 +38,240 @@ void showEditProductSheet(BuildContext context, Product product) {
       return _EditProductSheet(product: product);
     },
   );
+}
+
+class SkuCardTextInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (oldValue.text == newValue.text) {
+      return newValue;
+    }
+
+    final bool isDeleting = newValue.text.length < oldValue.text.length;
+
+    String raw = newValue.text.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toUpperCase();
+    if (raw.length > 9) {
+      raw = raw.substring(0, 9);
+    }
+
+    if (isDeleting) {
+      if (oldValue.text.endsWith('-') &&
+          newValue.text == oldValue.text.substring(0, oldValue.text.length - 1)) {
+        if (raw.isNotEmpty) {
+          raw = raw.substring(0, raw.length - 1);
+        }
+      }
+    }
+
+    final StringBuffer buffer = StringBuffer();
+    for (int i = 0; i < raw.length; i++) {
+      if (i == 3 || i == 6) {
+        buffer.write('-');
+      }
+      buffer.write(raw[i]);
+    }
+
+    if (!isDeleting) {
+      if (raw.length == 3 || raw.length == 6) {
+        buffer.write('-');
+      }
+    }
+
+    final String formatted = buffer.toString();
+
+    int cursorPosition = formatted.length;
+    if (newValue.selection.end < newValue.text.length) {
+      final String textBeforeCursor = newValue.text.substring(0, newValue.selection.end);
+      final int rawCharsBefore = textBeforeCursor.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').length;
+      int rawCount = 0;
+      int newCursor = 0;
+      for (int i = 0; i < formatted.length; i++) {
+        if (formatted[i] != '-') {
+          rawCount++;
+        }
+        if (rawCount == rawCharsBefore) {
+          newCursor = i + 1;
+          break;
+        }
+      }
+      cursorPosition = newCursor.clamp(0, formatted.length);
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: cursorPosition),
+    );
+  }
+}
+
+class SegmentedSkuField extends StatefulWidget {
+  final TextEditingController controller;
+  final AppColors colors;
+  final Set<String>? existingSkus;
+  final ValueChanged<String>? onChanged;
+
+  const SegmentedSkuField({
+    super.key,
+    required this.controller,
+    required this.colors,
+    this.existingSkus,
+    this.onChanged,
+  });
+
+  @override
+  State<SegmentedSkuField> createState() => _SegmentedSkuFieldState();
+}
+
+class _SegmentedSkuFieldState extends State<SegmentedSkuField> {
+  @override
+  void initState() {
+    super.initState();
+    _formatInitialText();
+  }
+
+  void _formatInitialText() {
+    final raw = widget.controller.text.trim();
+    if (raw.isNotEmpty && !raw.contains('-')) {
+      final clean = raw.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toUpperCase();
+      final buf = StringBuffer();
+      for (int i = 0; i < clean.length && i < 9; i++) {
+        if (i == 3 || i == 6) buf.write('-');
+        buf.write(clean[i]);
+      }
+      widget.controller.text = buf.toString();
+    }
+  }
+
+  bool _isValidSku(String text) {
+    return RegExp(r'^[A-Z0-9]{3}-[A-Z0-9]{3}-[A-Z0-9]{3}$').hasMatch(text.trim());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = widget.colors;
+    final text = widget.controller.text.trim().toUpperCase();
+    final isComplete = _isValidSku(text);
+    final isDuplicate = widget.existingSkus != null && widget.existingSkus!.contains(text);
+
+    return TextFormField(
+      controller: widget.controller,
+      textCapitalization: TextCapitalization.characters,
+      keyboardType: TextInputType.text,
+      style: AppTypography.titleMedium.copyWith(
+        fontWeight: FontWeight.w700,
+        letterSpacing: 2.5,
+        color: colors.foreground,
+      ),
+      inputFormatters: [
+        SkuCardTextInputFormatter(),
+      ],
+      decoration: InputDecoration(
+        labelText: 'SKU *',
+        hintText: 'PRE-COK-10L',
+        hintStyle: AppTypography.titleMedium.copyWith(
+          color: colors.mutedFg.withValues(alpha: 0.35),
+          fontWeight: FontWeight.w600,
+          letterSpacing: 2.5,
+        ),
+        prefixIcon: Icon(Icons.qr_code_outlined, color: colors.primary),
+        suffixIcon: Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isDuplicate)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: colors.danger.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: colors.danger.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.error_outline_rounded, size: 12, color: colors.danger),
+                      const SizedBox(width: 4),
+                      Text(
+                        'EXISTS',
+                        style: TextStyle(
+                          color: colors.danger,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else if (isComplete)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: colors.success.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: colors.success.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check_circle_rounded, size: 12, color: colors.success),
+                      const SizedBox(width: 4),
+                      Text(
+                        'VALID',
+                        style: TextStyle(
+                          color: colors.success,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: colors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: colors.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: Text(
+                    '3-3-3',
+                    style: TextStyle(
+                      color: colors.primary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      validator: (val) {
+        if (val == null || val.trim().isEmpty) {
+          return 'SKU is required (e.g. PRE-COK-10L)';
+        }
+        final raw = val.trim().toUpperCase();
+        if (!RegExp(r'^[A-Z0-9]{3}-[A-Z0-9]{3}-[A-Z0-9]{3}$').hasMatch(raw)) {
+          return 'SKU must have 3 parts of 3 chars (e.g. PRE-COK-10L)';
+        }
+        if (widget.existingSkus != null && widget.existingSkus!.contains(raw)) {
+          return 'SKU "$raw" already exists in database';
+        }
+        return null;
+      },
+      onChanged: (val) {
+        setState(() {});
+        widget.onChanged?.call(val);
+      },
+    );
+  }
 }
 
 Future<void> _pickMfgDate(BuildContext context, TextEditingController controller) async {
@@ -1013,6 +1248,11 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
     final List<String> availableBrands = brandSet.toList()
       ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
+    final Set<String> existingSkus = allProducts
+        .map((p) => p.sku.trim().toUpperCase())
+        .where((s) => s.isNotEmpty)
+        .toSet();
+
     Widget buildSliderLabels(double maxMarkup, AppColors colors) {
       final list = <double>[];
       for (double val = 5.0; val <= maxMarkup; val += 5.0) {
@@ -1251,14 +1491,10 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
               ),
               const SizedBox(height: 12),
 
-              TextFormField(
+              SegmentedSkuField(
                 controller: _skuController,
-                decoration: InputDecoration(
-                  labelText: 'SKU *',
-                  prefixIcon: Icon(Icons.qr_code_outlined, color: colors.primary),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                validator: (val) => (val == null || val.trim().isEmpty) ? 'SKU is required' : null,
+                colors: colors,
+                existingSkus: existingSkus,
               ),
               const SizedBox(height: 12),
 
@@ -1679,13 +1915,23 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                           return;
                         }
 
+                        final sku = _skuController.text.trim();
+                        if (existingSkus.contains(sku.toUpperCase())) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Cannot save: SKU "$sku" already exists in database'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                          return;
+                        }
+
                         if (_isSubmitting) return;
                         setState(() => _isSubmitting = true);
 
                         final repo = ref.read(productRepositoryProvider);
                         final name = _nameController.text.trim();
                         final brand = _brandController.text.trim();
-                        final sku = _skuController.text.trim();
                         final mrp = ((double.tryParse(_mrpController.text) ?? 0.0) * 100).round();
                         final costPrice = ((double.tryParse(_costPriceController.text) ?? 0.0) * 100).round();
                         final sellingPrice = ((double.tryParse(_sellingPriceController.text) ?? 0.0) * 100).round();
@@ -2501,6 +2747,12 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     final List<String> availableBrands = brandSet.toList()
       ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
+    final Set<String> existingSkus = allProducts
+        .where((p) => p.id != widget.product.id)
+        .map((p) => p.sku.trim().toUpperCase())
+        .where((s) => s.isNotEmpty)
+        .toSet();
+
     Widget buildSliderLabels(double maxMarkup, AppColors colors) {
       final list = <double>[];
       for (double val = 5.0; val <= maxMarkup; val += 5.0) {
@@ -2739,14 +2991,10 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
               ),
               const SizedBox(height: 12),
 
-              TextFormField(
+              SegmentedSkuField(
                 controller: _skuController,
-                decoration: InputDecoration(
-                  labelText: 'SKU *',
-                  prefixIcon: Icon(Icons.qr_code_outlined, color: colors.primary),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                validator: (val) => (val == null || val.trim().isEmpty) ? 'SKU is required' : null,
+                colors: colors,
+                existingSkus: existingSkus,
               ),
               const SizedBox(height: 12),
 
@@ -3160,6 +3408,17 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                     ),
                     onPressed: _isSubmitting ? null : () async {
                       if (_formKey.currentState!.validate()) {
+                        final sku = _skuController.text.trim();
+                        if (existingSkus.contains(sku.toUpperCase())) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Cannot save: SKU "$sku" already exists on another product'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                          return;
+                        }
+
                         if (_isSubmitting) return;
                         setState(() => _isSubmitting = true);
 
