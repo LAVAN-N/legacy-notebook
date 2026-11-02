@@ -143,6 +143,11 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
             labelText: 'Brand Name',
             border: OutlineInputBorder(),
           ),
+          onSubmitted: (val) {
+            if (val.trim().isNotEmpty) {
+              Navigator.pop(context, val.trim());
+            }
+          },
         ),
         actions: [
           TextButton(
@@ -150,24 +155,34 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
             child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, addCtrl.text.trim()),
+            onPressed: () {
+              if (addCtrl.text.trim().isNotEmpty) {
+                Navigator.pop(context, addCtrl.text.trim());
+              }
+            },
             child: const Text('Add'),
           ),
         ],
       ),
     );
     
-    if (result != null && result.isNotEmpty && mounted) {
+    if (result != null && result.trim().isNotEmpty && mounted) {
+      final trimmed = result.trim();
       final configRepo = ref.read(configRepositoryProvider);
       final currentBrands = await configRepo.getBrands();
-      if (!currentBrands.contains(result)) {
-        currentBrands.add(result);
+      final existing = currentBrands.cast<String?>().firstWhere(
+        (b) => b?.toLowerCase() == trimmed.toLowerCase(),
+        orElse: () => null,
+      );
+      final finalBrand = existing ?? trimmed;
+      if (existing == null) {
+        currentBrands.add(finalBrand);
         currentBrands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
         await configRepo.saveBrands(currentBrands);
       }
       setState(() {
-        _selectedBrand = result;
-        _brandController.text = result;
+        _selectedBrand = finalBrand;
+        _brandController.text = finalBrand;
       });
     }
   }
@@ -249,9 +264,11 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
     
     if (confirm == true && mounted) {
       final configRepo = ref.read(configRepositoryProvider);
+      final productRepo = ref.read(productRepositoryProvider);
       final currentBrands = await configRepo.getBrands();
       currentBrands.remove(brand);
       await configRepo.saveBrands(currentBrands);
+      await productRepo.renameBrand(brand, '');
       if (!context.mounted) return;
       setState(() {
         if (_selectedBrand == brand) {
@@ -651,10 +668,39 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
     final categoriesAsync = ref.watch(categoriesStreamProvider);
     final categories = categoriesAsync.value ?? mockCategoriesList;
 
+    final productsAsync = ref.watch(productsStreamProvider);
+    final allProducts = productsAsync.value ?? [];
+
     final brandsAsync = ref.watch(brandsStreamProvider);
     final brands = brandsAsync.value ?? _brands;
 
-    final Set<String> brandSet = {...brands};
+    // Sourced by selected category's own products
+    final categoryProducts = _selectedCategoryId != null
+        ? allProducts.where((p) => p.categoryId == _selectedCategoryId).toList()
+        : <Product>[];
+
+    final Set<String> brandSet = {};
+    if (categoryProducts.isNotEmpty) {
+      for (final p in categoryProducts) {
+        final b = p.brand.trim();
+        if (b.isNotEmpty) {
+          brandSet.add(b);
+        }
+      }
+    }
+
+    // Fallback: show all brands only if the category has no products (or no category selected yet)
+    if (brandSet.isEmpty) {
+      brandSet.addAll(brands.map((b) => b.trim()).where((b) => b.isNotEmpty));
+      for (final p in allProducts) {
+        final b = p.brand.trim();
+        if (b.isNotEmpty) {
+          brandSet.add(b);
+        }
+      }
+    }
+
+    // Always preserve current selected brand so dropdown value remains valid
     if (_selectedBrand != null && _selectedBrand!.trim().isNotEmpty) {
       brandSet.add(_selectedBrand!.trim());
     }
@@ -749,7 +795,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      initialValue: categories.any((c) => c.id == _selectedCategoryId) ? _selectedCategoryId : null,
+                      value: categories.any((c) => c.id == _selectedCategoryId) ? _selectedCategoryId : null,
                       decoration: InputDecoration(
                         labelText: 'Category *',
                         prefixIcon: Icon(Icons.category_outlined, color: colors.primary),
@@ -764,6 +810,19 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                       onChanged: (val) {
                         setState(() {
                           _selectedCategoryId = val;
+                          if (val != null) {
+                            final newCatProducts = allProducts.where((p) => p.categoryId == val).toList();
+                            if (newCatProducts.isNotEmpty) {
+                              final newCatBrands = newCatProducts
+                                  .map((p) => p.brand.trim())
+                                  .where((b) => b.isNotEmpty)
+                                  .toSet();
+                              if (_selectedBrand != null && !newCatBrands.contains(_selectedBrand!.trim())) {
+                                _selectedBrand = null;
+                                _brandController.clear();
+                              }
+                            }
+                          }
                         });
                       },
                       validator: (val) => val == null ? 'Category is required' : null,
@@ -868,7 +927,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       menuMaxHeight: 200,
-                      initialValue: availableBrands.contains(_selectedBrand) ? _selectedBrand : null,
+                      value: availableBrands.contains(_selectedBrand) ? _selectedBrand : null,
                       decoration: InputDecoration(
                         labelText: 'Brand *',
                         prefixIcon: Icon(Icons.branding_watermark_outlined, color: colors.primary),
@@ -1488,6 +1547,11 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
             labelText: 'Brand Name',
             border: OutlineInputBorder(),
           ),
+          onSubmitted: (val) {
+            if (val.trim().isNotEmpty) {
+              Navigator.pop(context, val.trim());
+            }
+          },
         ),
         actions: [
           TextButton(
@@ -1495,24 +1559,34 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
             child: Text('Cancel', style: TextStyle(color: colors.mutedFg)),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, addCtrl.text.trim()),
+            onPressed: () {
+              if (addCtrl.text.trim().isNotEmpty) {
+                Navigator.pop(context, addCtrl.text.trim());
+              }
+            },
             child: const Text('Add'),
           ),
         ],
       ),
     );
     
-    if (result != null && result.isNotEmpty && mounted) {
+    if (result != null && result.trim().isNotEmpty && mounted) {
+      final trimmed = result.trim();
       final configRepo = ref.read(configRepositoryProvider);
       final currentBrands = await configRepo.getBrands();
-      if (!currentBrands.contains(result)) {
-        currentBrands.add(result);
+      final existing = currentBrands.cast<String?>().firstWhere(
+        (b) => b?.toLowerCase() == trimmed.toLowerCase(),
+        orElse: () => null,
+      );
+      final finalBrand = existing ?? trimmed;
+      if (existing == null) {
+        currentBrands.add(finalBrand);
         currentBrands.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
         await configRepo.saveBrands(currentBrands);
       }
       setState(() {
-        _selectedBrand = result;
-        _brandController.text = result;
+        _selectedBrand = finalBrand;
+        _brandController.text = finalBrand;
       });
     }
   }
@@ -1594,9 +1668,11 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     
     if (confirm == true && mounted) {
       final configRepo = ref.read(configRepositoryProvider);
+      final productRepo = ref.read(productRepositoryProvider);
       final currentBrands = await configRepo.getBrands();
       currentBrands.remove(brand);
       await configRepo.saveBrands(currentBrands);
+      await productRepo.renameBrand(brand, '');
       if (!context.mounted) return;
       setState(() {
         if (_selectedBrand == brand) {
@@ -1959,10 +2035,39 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     final categoriesAsync = ref.watch(categoriesStreamProvider);
     final categories = categoriesAsync.value ?? mockCategoriesList;
 
+    final productsAsync = ref.watch(productsStreamProvider);
+    final allProducts = productsAsync.value ?? [];
+
     final brandsAsync = ref.watch(brandsStreamProvider);
     final brands = brandsAsync.value ?? _brands;
 
-    final Set<String> brandSet = {...brands};
+    // Sourced by selected category's own products
+    final categoryProducts = _selectedCategoryId != null
+        ? allProducts.where((p) => p.categoryId == _selectedCategoryId).toList()
+        : <Product>[];
+
+    final Set<String> brandSet = {};
+    if (categoryProducts.isNotEmpty) {
+      for (final p in categoryProducts) {
+        final b = p.brand.trim();
+        if (b.isNotEmpty) {
+          brandSet.add(b);
+        }
+      }
+    }
+
+    // Fallback: show all brands only if the category has no products (or no category selected yet)
+    if (brandSet.isEmpty) {
+      brandSet.addAll(brands.map((b) => b.trim()).where((b) => b.isNotEmpty));
+      for (final p in allProducts) {
+        final b = p.brand.trim();
+        if (b.isNotEmpty) {
+          brandSet.add(b);
+        }
+      }
+    }
+
+    // Always preserve current selected brand so dropdown value remains valid
     if (_selectedBrand != null && _selectedBrand!.trim().isNotEmpty) {
       brandSet.add(_selectedBrand!.trim());
     }
@@ -2057,7 +2162,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      initialValue: categories.any((c) => c.id == _selectedCategoryId) ? _selectedCategoryId : null,
+                      value: categories.any((c) => c.id == _selectedCategoryId) ? _selectedCategoryId : null,
                       decoration: InputDecoration(
                         labelText: 'Category *',
                         prefixIcon: Icon(Icons.category_outlined, color: colors.primary),
@@ -2072,6 +2177,19 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                       onChanged: (val) {
                         setState(() {
                           _selectedCategoryId = val;
+                          if (val != null) {
+                            final newCatProducts = allProducts.where((p) => p.categoryId == val).toList();
+                            if (newCatProducts.isNotEmpty) {
+                              final newCatBrands = newCatProducts
+                                  .map((p) => p.brand.trim())
+                                  .where((b) => b.isNotEmpty)
+                                  .toSet();
+                              if (_selectedBrand != null && !newCatBrands.contains(_selectedBrand!.trim())) {
+                                _selectedBrand = null;
+                                _brandController.clear();
+                              }
+                            }
+                          }
                         });
                       },
                       validator: (val) => val == null ? 'Category is required' : null,
@@ -2176,7 +2294,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       menuMaxHeight: 200,
-                      initialValue: availableBrands.contains(_selectedBrand) ? _selectedBrand : null,
+                      value: availableBrands.contains(_selectedBrand) ? _selectedBrand : null,
                       decoration: InputDecoration(
                         labelText: 'Brand *',
                         prefixIcon: Icon(Icons.branding_watermark_outlined, color: colors.primary),
