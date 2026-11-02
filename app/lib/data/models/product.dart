@@ -17,7 +17,11 @@ abstract class Product with _$Product {
     required int sellingPrice, // Selling price in paise (₹ × 100)
     required int mrp, // Maximum Retail Price in paise (₹ × 100)
     String? imageUrl,
+    String? imageUrl2,
     String? description,
+    @Default('JAN 2026') String mfgDate,
+    @Default(0.0) double warranty,
+    String? updatedAt,
   }) = _Product;
 
   factory Product.fromJson(Map<String, dynamic> json) => _$ProductFromJson(json);

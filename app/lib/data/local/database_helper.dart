@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 15,
+      version: 16,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
@@ -71,7 +71,11 @@ class DatabaseHelper {
         minimum_stock INTEGER NOT NULL DEFAULT 5,
         stock INTEGER NOT NULL DEFAULT 0,
         image_url TEXT,
-        description TEXT
+        image_url2 TEXT,
+        description TEXT,
+        mfg_date TEXT NOT NULL DEFAULT 'JAN 2026',
+        warranty REAL NOT NULL DEFAULT 0,
+        updated_at TEXT
       )
     ''');
 
@@ -217,7 +221,11 @@ class DatabaseHelper {
         p.mrp,
         p.minimum_stock,
         p.image_url,
+        p.image_url2,
         p.description,
+        p.mfg_date,
+        p.warranty,
+        p.updated_at,
         COALESCE(SUM(
           CASE 
             WHEN it.transaction_type = 'PURCHASE' THEN it.quantity
@@ -326,7 +334,11 @@ class DatabaseHelper {
         'minimum_stock': pr.minimumStock,
         'stock': pr.stock,
         'image_url': pr.imageUrl,
+        'image_url2': pr.imageUrl2,
         'description': pr.description,
+        'mfg_date': pr.mfgDate,
+        'warranty': pr.warranty,
+        'updated_at': pr.updatedAt ?? '2026-01-15T10:00:00.000Z',
       });
 
       if (pr.stock > 0) {
@@ -433,8 +445,51 @@ class DatabaseHelper {
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    await _dropAll(db);
-    await _createDB(db, newVersion);
+    if (oldVersion < 16) {
+      try {
+        await db.execute('ALTER TABLE products ADD COLUMN image_url2 TEXT;');
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE products ADD COLUMN mfg_date TEXT NOT NULL DEFAULT 'JAN 2026';");
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE products ADD COLUMN warranty REAL NOT NULL DEFAULT 0;');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE products ADD COLUMN updated_at TEXT;');
+      } catch (_) {}
+      await db.execute('DROP VIEW IF EXISTS product_stock_view;');
+      await db.execute('''
+        CREATE VIEW product_stock_view AS
+        SELECT 
+          p.id AS product_id,
+          p.sku,
+          p.name,
+          p.brand,
+          p.category_id,
+          p.cost_price,
+          p.selling_price,
+          p.mrp,
+          p.minimum_stock,
+          p.image_url,
+          p.image_url2,
+          p.description,
+          p.mfg_date,
+          p.warranty,
+          p.updated_at,
+          COALESCE(SUM(
+            CASE 
+              WHEN it.transaction_type = 'PURCHASE' THEN it.quantity
+              WHEN it.transaction_type = 'SALE' THEN -it.quantity
+              WHEN it.transaction_type = 'ADJUSTMENT' THEN it.quantity
+              ELSE 0 
+            END
+          ), 0) AS current_stock
+        FROM products p
+        LEFT JOIN inventory_transactions it ON it.product_id = p.id
+        GROUP BY p.id;
+      ''');
+    }
   }
 
   Future _dropAll(Database db) async {

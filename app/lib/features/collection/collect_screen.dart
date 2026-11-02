@@ -29,6 +29,7 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
   String? _selectedSaleItemId;
+  bool _isSubmitting = false;
 
   bool get _isDirty {
     final state = ref.read(collectControllerProvider(widget.customerId));
@@ -73,6 +74,7 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
   }
 
   void _exitScreen() {
+    if (!mounted) return;
     if (Navigator.canPop(context)) {
       Navigator.pop(context);
     } else {
@@ -98,26 +100,41 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
   }
 
   void _onSave() async {
+    if (_isSubmitting) return;
+    setState(() => _isSubmitting = true);
     AppHaptics.mediumImpact();
-    final notifier = ref.read(collectControllerProvider(widget.customerId).notifier);
-    final success = await notifier.saveCollection();
 
-    if (success && mounted) {
-      final state = ref.read(collectControllerProvider(widget.customerId));
-      final customerName = state.customer.name;
+    try {
+      final notifier = ref.read(collectControllerProvider(widget.customerId).notifier);
+      final success = await notifier.saveCollection();
 
-      ConfirmSnackbar.show(
-        context,
-        message: 'Collected ${rupees(state.amount)} for $customerName',
-        onUndo: () {
-          // Simply call undo on the mock repo or display undo alert
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Transaction undo requested.')),
-          );
-        },
-      );
+      if (success && mounted) {
+        final state = ref.read(collectControllerProvider(widget.customerId));
+        final customerName = state.customer.name;
+
+        ConfirmSnackbar.show(
+          context,
+          message: 'Collected ${rupees(state.amount)} for $customerName',
+          onUndo: () {
+            // Simply call undo on the mock repo or display undo alert
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Transaction undo requested.')),
+            );
+          },
+        );
+        if (mounted) {
+          _exitScreen();
+        }
+      }
+    } catch (e) {
       if (mounted) {
-        _exitScreen();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving collection: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
       }
     }
   }
@@ -503,8 +520,8 @@ class _CollectScreenState extends ConsumerState<CollectScreen> {
 
             // Save / Confirm Action Button
             ElevatedButton(
-              onPressed: state.isSaving ? null : _onSave,
-              child: state.isSaving
+              onPressed: (state.isSaving || _isSubmitting) ? null : _onSave,
+              child: (state.isSaving || _isSubmitting)
                   ? const WaveDotLoader(color: Colors.white, dotSize: 6, spacing: 4)
                   : const Text('SAVE VISIT RECORD'),
             ),

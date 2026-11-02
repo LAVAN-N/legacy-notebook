@@ -34,6 +34,7 @@ class _PurchasedProductGroupCardState extends ConsumerState<PurchasedProductGrou
   late bool _isExpanded;
   late AnimationController _controller;
   late Animation<double> _iconTurns;
+  final Set<String> _settlingItemIds = {};
 
   @override
   void initState() {
@@ -374,18 +375,27 @@ class _PurchasedProductGroupCardState extends ConsumerState<PurchasedProductGrou
                                   children: [
                                     if (canSettle)
                                       ElevatedButton(
-                                        onPressed: () async {
-                                          final notifier = ref.read(customerDetailControllerProvider(widget.customerId).notifier);
-                                          await notifier.settleProduct(item.saleItemId);
-                                          if (context.mounted) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(
-                                                content: Text('${item.productName} marked as settled.'),
-                                                behavior: SnackBarBehavior.floating,
-                                              ),
-                                            );
-                                          }
-                                        },
+                                        onPressed: _settlingItemIds.contains(item.saleItemId)
+                                            ? null
+                                            : () async {
+                                                setState(() => _settlingItemIds.add(item.saleItemId));
+                                                try {
+                                                  final notifier = ref.read(customerDetailControllerProvider(widget.customerId).notifier);
+                                                  await notifier.settleProduct(item.saleItemId);
+                                                  if (context.mounted) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text('${item.productName} marked as settled.'),
+                                                        behavior: SnackBarBehavior.floating,
+                                                      ),
+                                                    );
+                                                  }
+                                                } finally {
+                                                  if (mounted) {
+                                                    setState(() => _settlingItemIds.remove(item.saleItemId));
+                                                  }
+                                                }
+                                              },
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: colors.success,
                                           foregroundColor: Colors.white,
@@ -393,7 +403,13 @@ class _PurchasedProductGroupCardState extends ConsumerState<PurchasedProductGrou
                                           minimumSize: Size.zero,
                                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                         ),
-                                        child: const Text('Settle', style: TextStyle(fontSize: 10)),
+                                        child: _settlingItemIds.contains(item.saleItemId)
+                                            ? const SizedBox(
+                                                width: 10,
+                                                height: 10,
+                                                child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.white),
+                                              )
+                                            : const Text('Settle', style: TextStyle(fontSize: 10)),
                                       ),
                                     OutlinedButton(
                                       onPressed: () {
@@ -442,6 +458,7 @@ class _PurchasedProductGroupCardState extends ConsumerState<PurchasedProductGrou
     showDialog(
       context: context,
       builder: (ctx) {
+        bool isSubmittingReturn = false;
         return StatefulBuilder(
           builder: (context, setState) {
             final hasOtherOutstandings = otherOutstandingProducts.isNotEmpty;
@@ -535,40 +552,56 @@ class _PurchasedProductGroupCardState extends ConsumerState<PurchasedProductGrou
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(ctx),
+                  onPressed: isSubmittingReturn ? null : () => Navigator.pop(ctx),
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () async {
-                    Navigator.pop(ctx);
-                    final notifier = ref.read(customerDetailControllerProvider(widget.customerId).notifier);
-                    await notifier.returnProduct(
-                      item.saleItemId,
-                      item.collectedAmount,
-                      'Owner',
-                      tallyOut: tallyOut,
-                      tallySaleItemId: tallyOut && selectedTallyProduct != null ? selectedTallyProduct.saleItemId : null,
-                      tallyProductName: tallyOut && selectedTallyProduct != null ? selectedTallyProduct.productName : null,
-                      tallyAmount: tallyOut ? tallyAmount : null,
-                    );
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            tallyOut
-                                ? '${item.productName} returned. Credit applied to outstanding.'
-                                : '${item.productName} returned. Saved to returned credit.',
-                          ),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  },
+                  onPressed: isSubmittingReturn
+                      ? null
+                      : () async {
+                          setState(() => isSubmittingReturn = true);
+                          try {
+                            final nav = Navigator.of(ctx);
+                            if (nav.canPop()) {
+                              nav.pop();
+                            }
+                            final notifier = ref.read(customerDetailControllerProvider(widget.customerId).notifier);
+                            await notifier.returnProduct(
+                              item.saleItemId,
+                              item.collectedAmount,
+                              'Owner',
+                              tallyOut: tallyOut,
+                              tallySaleItemId: tallyOut && selectedTallyProduct != null ? selectedTallyProduct.saleItemId : null,
+                              tallyProductName: tallyOut && selectedTallyProduct != null ? selectedTallyProduct.productName : null,
+                              tallyAmount: tallyOut ? tallyAmount : null,
+                            );
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    tallyOut
+                                        ? '${item.productName} returned. Credit applied to outstanding.'
+                                        : '${item.productName} returned. Saved to returned credit.',
+                                  ),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          } catch (_) {
+                            // Error handled or logged
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colors.danger,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Confirm Return'),
+                  child: isSubmittingReturn
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Confirm Return'),
                 ),
               ],
             );

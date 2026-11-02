@@ -491,6 +491,8 @@ class NewClientController extends StateNotifier<NewClientFormState> {
   }
 
   Future<Customer?> createAndSale() async {
+    if (state.isLoading) return null;
+
     final errors = _validate();
     if (errors.isNotEmpty) {
       state = state.copyWith(errors: errors);
@@ -563,6 +565,8 @@ class NewClientController extends StateNotifier<NewClientFormState> {
   }
 
   Future<Customer?> createOnly() async {
+    if (state.isLoading) return null;
+
     final errors = _validate();
     if (errors.isNotEmpty) {
       state = state.copyWith(errors: errors);

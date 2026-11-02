@@ -45,6 +45,7 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
   late TextEditingController _notesController;
   late TextEditingController _placeNameController;
   late TextEditingController _areaNameController;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -392,138 +393,156 @@ class _NewClientScreenState extends ConsumerState<NewClientScreen> {
 
                 // Action Buttons
                 _ActionButtons(
-                  isLoading: formState.isLoading,
+                  isLoading: formState.isLoading || _isSubmitting,
                   isEditing: widget.customer != null,
                   onCreateAndSale: () async {
-                    controller.syncFromInputs(
-                      name: _nameController.text,
-                      phone: _phoneController.text,
-                      alternatePhone: _alternatePhoneController.text,
-                      address: _addressController.text,
-                      landmark: _landmarkController.text,
-                      dob: _dobController.text,
-                      occupation: _occupationController.text,
-                      notes: _notesController.text,
-                    );
-                    final customer = await controller.createAndSale();
-                    if (customer == null) {
+                    if (_isSubmitting) return;
+                    setState(() => _isSubmitting = true);
+                    try {
+                      controller.syncFromInputs(
+                        name: _nameController.text,
+                        phone: _phoneController.text,
+                        alternatePhone: _alternatePhoneController.text,
+                        address: _addressController.text,
+                        landmark: _landmarkController.text,
+                        dob: _dobController.text,
+                        occupation: _occupationController.text,
+                        notes: _notesController.text,
+                      );
+                      final customer = await controller.createAndSale();
+                      if (customer == null) {
+                        if (!context.mounted) return;
+                        final formErrors =
+                            ref.read(newClientControllerProvider).errors;
+                        final message = formErrors['submit'] ??
+                            (formErrors.values.isNotEmpty
+                                ? formErrors.values.first
+                                : 'Please fill all required fields correctly');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(message),
+                            backgroundColor: colors.destructive,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        return;
+                      }
                       if (!context.mounted) return;
-                      final formErrors =
-                          ref.read(newClientControllerProvider).errors;
-                      final message = formErrors['submit'] ??
-                          (formErrors.values.isNotEmpty
-                              ? formErrors.values.first
-                              : 'Please fill all required fields correctly');
+
+                      // Capture ref dependencies before showing snackbar
+                      final repository = ref.read(customerRepositoryProvider);
+                      final notifier =
+                          ref.read(newClientControllerProvider.notifier);
+
+                      // Show snackbar
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(message),
-                          backgroundColor: colors.destructive,
+                          content: const Text('Customer added · UNDO'),
+                          action: SnackBarAction(
+                            label: 'UNDO',
+                            onPressed: () async {
+                              await repository.undoCustomer(customer.id);
+                              notifier.resetForm();
+                            },
+                          ),
+                          duration: const Duration(seconds: 3),
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
-                      return;
+                      // Navigate to sale screen
+                      context.go('${Routes.sale(
+                        formState.selectedWeekday,
+                        formState.placeId,
+                        formState.areaId,
+                        customer.id,
+                      )}?source=create');
+                    } finally {
+                      if (mounted) {
+                        setState(() => _isSubmitting = false);
+                      }
                     }
-                    if (!context.mounted) return;
-
-                    // Capture ref dependencies before showing snackbar
-                    final repository = ref.read(customerRepositoryProvider);
-                    final notifier =
-                        ref.read(newClientControllerProvider.notifier);
-
-                    // Show snackbar
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Customer added · UNDO'),
-                        action: SnackBarAction(
-                          label: 'UNDO',
-                          onPressed: () async {
-                            await repository.undoCustomer(customer.id);
-                            notifier.resetForm();
-                          },
-                        ),
-                        duration: const Duration(seconds: 3),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                    // Navigate to sale screen
-                    context.go('${Routes.sale(
-                      formState.selectedWeekday,
-                      formState.placeId,
-                      formState.areaId,
-                      customer.id,
-                    )}?source=create');
                   },
                   onCreateOnly: () async {
-                    controller.syncFromInputs(
-                      name: _nameController.text,
-                      phone: _phoneController.text,
-                      alternatePhone: _alternatePhoneController.text,
-                      address: _addressController.text,
-                      landmark: _landmarkController.text,
-                      dob: _dobController.text,
-                      occupation: _occupationController.text,
-                      notes: _notesController.text,
-                    );
-                    final customer = await controller.createOnly();
-                    if (customer == null) {
+                    if (_isSubmitting) return;
+                    setState(() => _isSubmitting = true);
+                    try {
+                      controller.syncFromInputs(
+                        name: _nameController.text,
+                        phone: _phoneController.text,
+                        alternatePhone: _alternatePhoneController.text,
+                        address: _addressController.text,
+                        landmark: _landmarkController.text,
+                        dob: _dobController.text,
+                        occupation: _occupationController.text,
+                        notes: _notesController.text,
+                      );
+                      final customer = await controller.createOnly();
+                      if (customer == null) {
+                        if (!context.mounted) return;
+                        final formErrors =
+                            ref.read(newClientControllerProvider).errors;
+                        final message = formErrors['submit'] ??
+                            (formErrors.values.isNotEmpty
+                                ? formErrors.values.first
+                                : 'Please fill all required fields correctly');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(message),
+                            backgroundColor: colors.destructive,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        return;
+                      }
                       if (!context.mounted) return;
-                      final formErrors =
-                          ref.read(newClientControllerProvider).errors;
-                      final message = formErrors['submit'] ??
-                          (formErrors.values.isNotEmpty
-                              ? formErrors.values.first
-                              : 'Please fill all required fields correctly');
+
+                      if (widget.customer != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content:
+                                Text('Customer details updated successfully'),
+                            duration: Duration(seconds: 2),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context);
+                        }
+                        return;
+                      }
+
+                      // Capture ref dependencies before showing snackbar
+                      final repository = ref.read(customerRepositoryProvider);
+                      final notifier =
+                          ref.read(newClientControllerProvider.notifier);
+
+                      // Show snackbar
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(message),
-                          backgroundColor: colors.destructive,
+                          content: const Text('Customer added · UNDO'),
+                          action: SnackBarAction(
+                            label: 'UNDO',
+                            onPressed: () async {
+                              await repository.undoCustomer(customer.id);
+                              notifier.resetForm();
+                            },
+                          ),
+                          duration: const Duration(seconds: 3),
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
-                      return;
+                      // Navigate to customer detail
+                      context.go(Routes.customer(
+                        formState.selectedWeekday,
+                        formState.placeId,
+                        formState.areaId,
+                        customer.id,
+                      ));
+                    } finally {
+                      if (mounted) {
+                        setState(() => _isSubmitting = false);
+                      }
                     }
-                    if (!context.mounted) return;
-
-                    if (widget.customer != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content:
-                              Text('Customer details updated successfully'),
-                          duration: Duration(seconds: 2),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                      Navigator.pop(context);
-                      return;
-                    }
-
-                    // Capture ref dependencies before showing snackbar
-                    final repository = ref.read(customerRepositoryProvider);
-                    final notifier =
-                        ref.read(newClientControllerProvider.notifier);
-
-                    // Show snackbar
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Customer added · UNDO'),
-                        action: SnackBarAction(
-                          label: 'UNDO',
-                          onPressed: () async {
-                            await repository.undoCustomer(customer.id);
-                            notifier.resetForm();
-                          },
-                        ),
-                        duration: const Duration(seconds: 3),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                    // Navigate to customer detail
-                    context.go(Routes.customer(
-                      formState.selectedWeekday,
-                      formState.placeId,
-                      formState.areaId,
-                      customer.id,
-                    ));
                   },
                   colors: colors,
                 ),
@@ -1366,6 +1385,8 @@ class _AddPlaceSheet extends StatefulWidget {
 }
 
 class _AddPlaceSheetState extends State<_AddPlaceSheet> {
+  bool _isPopping = false;
+
   @override
   void dispose() {
     widget.controller.clear();
@@ -1396,9 +1417,15 @@ class _AddPlaceSheetState extends State<_AddPlaceSheet> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context, widget.controller.text);
-                },
+                onPressed: _isPopping
+                    ? null
+                    : () {
+                        if (_isPopping) return;
+                        setState(() => _isPopping = true);
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context, widget.controller.text);
+                        }
+                      },
                 child: const Text('Add place'),
               ),
             ),
@@ -1420,6 +1447,8 @@ class _AddAreaSheet extends StatefulWidget {
 }
 
 class _AddAreaSheetState extends State<_AddAreaSheet> {
+  bool _isPopping = false;
+
   @override
   void dispose() {
     widget.controller.clear();
@@ -1450,9 +1479,15 @@ class _AddAreaSheetState extends State<_AddAreaSheet> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context, widget.controller.text);
-                },
+                onPressed: _isPopping
+                    ? null
+                    : () {
+                        if (_isPopping) return;
+                        setState(() => _isPopping = true);
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context, widget.controller.text);
+                        }
+                      },
                 child: const Text('Add area'),
               ),
             ),

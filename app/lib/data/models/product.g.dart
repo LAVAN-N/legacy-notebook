@@ -18,7 +18,11 @@ _Product _$ProductFromJson(Map<String, dynamic> json) => _Product(
   sellingPrice: (json['sellingPrice'] as num).toInt(),
   mrp: (json['mrp'] as num).toInt(),
   imageUrl: json['imageUrl'] as String?,
+  imageUrl2: json['imageUrl2'] as String?,
   description: json['description'] as String?,
+  mfgDate: json['mfgDate'] as String? ?? 'JAN 2026',
+  warranty: (json['warranty'] as num?)?.toDouble() ?? 0.0,
+  updatedAt: json['updatedAt'] as String?,
 );
 
 Map<String, dynamic> _$ProductToJson(_Product instance) => <String, dynamic>{
@@ -33,5 +37,9 @@ Map<String, dynamic> _$ProductToJson(_Product instance) => <String, dynamic>{
   'sellingPrice': instance.sellingPrice,
   'mrp': instance.mrp,
   'imageUrl': instance.imageUrl,
+  'imageUrl2': instance.imageUrl2,
   'description': instance.description,
+  'mfgDate': instance.mfgDate,
+  'warranty': instance.warranty,
+  'updatedAt': instance.updatedAt,
 };

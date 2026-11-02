@@ -36,6 +36,18 @@ class _ProductDetailsSheet extends ConsumerWidget {
     return colors.success;
   }
 
+  String _formatDetailsDate(String? raw) {
+    if (raw == null || raw.isEmpty) return 'Recent';
+    final dt = DateTime.tryParse(raw);
+    if (dt == null) return raw;
+    final local = dt.toLocal();
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final hour = local.hour > 12 ? local.hour - 12 : (local.hour == 0 ? 12 : local.hour);
+    final ampm = local.hour >= 12 ? 'PM' : 'AM';
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '${local.day} ${months[local.month - 1]} ${local.year}, $hour:$minute $ampm';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -51,6 +63,14 @@ class _ProductDetailsSheet extends ConsumerWidget {
     final marginPercent = product.costPrice > 0
         ? (((product.sellingPrice - product.costPrice) / product.costPrice) * 100).round()
         : 0;
+
+    final imageList = <String>[];
+    if (product.imageUrl != null && product.imageUrl!.trim().isNotEmpty) {
+      imageList.add(product.imageUrl!.trim());
+    }
+    if (product.imageUrl2 != null && product.imageUrl2!.trim().isNotEmpty) {
+      imageList.add(product.imageUrl2!.trim());
+    }
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
@@ -144,58 +164,8 @@ class _ProductDetailsSheet extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Product Image Card
-                    AspectRatio(
-                      aspectRatio: 16 / 9,
-                      child: Container(
-                        width: double.infinity,
-                        clipBehavior: Clip.antiAlias,
-                        decoration: BoxDecoration(
-                          color: colors.muted.withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: colors.border.withValues(alpha: 0.6),
-                          ),
-                          image: product.imageUrl != null && product.imageUrl!.isNotEmpty
-                              ? (product.imageUrl!.startsWith('assets/')
-                                  ? DecorationImage(
-                                      image: AssetImage(product.imageUrl!),
-                                      fit: BoxFit.cover,
-                                    )
-                                  : (product.imageUrl!.startsWith('http')
-                                      ? DecorationImage(
-                                          image: NetworkImage(product.imageUrl!),
-                                          fit: BoxFit.cover,
-                                        )
-                                      : DecorationImage(
-                                          image: FileImage(File(product.imageUrl!)),
-                                          fit: BoxFit.cover,
-                                        )))
-                              : null,
-                        ),
-                      child: product.imageUrl == null || product.imageUrl!.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.inventory_2_outlined,
-                                    color: colors.mutedFg,
-                                    size: 48,
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    'No Image Available',
-                                    style: AppTypography.labelSmall.copyWith(
-                                      color: colors.mutedFg,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : null,
-                      ),
-                    ),
+                    // Product Image Carousel / Card
+                    _ProductImageCarousel(images: imageList, colors: colors),
 
                     const SizedBox(height: 16),
 
@@ -259,6 +229,118 @@ class _ProductDetailsSheet extends ConsumerWidget {
                           ),
                         ),
                       ],
+                    ),
+
+                    // Meta Row: Mfg Date, Warranty, Updated At
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: colors.muted.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: colors.border.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.calendar_month_outlined, size: 13, color: colors.primary),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Mfg Date',
+                                      style: AppTypography.labelSmall.copyWith(
+                                        color: colors.mutedFg,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  product.mfgDate.isNotEmpty ? product.mfgDate : 'JAN 2026',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: colors.foreground,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(width: 1, height: 28, color: colors.border),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 10),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.verified_outlined, size: 13, color: colors.primary),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Warranty',
+                                        style: AppTypography.labelSmall.copyWith(
+                                          color: colors.mutedFg,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    '${product.warranty > 0 ? (product.warranty % 1 == 0 ? product.warranty.toInt() : product.warranty) : '0'} Yrs',
+                                    style: AppTypography.bodySmall.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: colors.foreground,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Container(width: 1, height: 28, color: colors.border),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 10),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.access_time_rounded, size: 13, color: colors.primary),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Updated At',
+                                        style: AppTypography.labelSmall.copyWith(
+                                          color: colors.mutedFg,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    _formatDetailsDate(product.updatedAt),
+                                    style: AppTypography.bodySmall.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: colors.foreground,
+                                      fontSize: 11,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
 
                     const SizedBox(height: 16),
@@ -466,6 +548,180 @@ class _ProductDetailsSheet extends ConsumerWidget {
                     fontSize: 15,
                   ),
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProductImageCarousel extends StatefulWidget {
+  final List<String> images;
+  final AppColors colors;
+
+  const _ProductImageCarousel({
+    required this.images,
+    required this.colors,
+  });
+
+  @override
+  State<_ProductImageCarousel> createState() => _ProductImageCarouselState();
+}
+
+class _ProductImageCarouselState extends State<_ProductImageCarousel> {
+  int _currentIndex = 0;
+  final PageController _pageController = PageController();
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildSingleImage(String path) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        image: path.startsWith('assets/')
+            ? DecorationImage(
+                image: AssetImage(path),
+                fit: BoxFit.cover,
+              )
+            : (path.startsWith('http')
+                ? DecorationImage(
+                    image: NetworkImage(path),
+                    fit: BoxFit.cover,
+                  )
+                : DecorationImage(
+                    image: FileImage(File(path)),
+                    fit: BoxFit.cover,
+                  )),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.images.isEmpty) {
+      return AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: widget.colors.muted.withValues(alpha: 0.25),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: widget.colors.border.withValues(alpha: 0.6),
+            ),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.inventory_2_outlined,
+                  color: widget.colors.mutedFg,
+                  size: 48,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'No Image Available',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: widget.colors.mutedFg,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (widget.images.length == 1) {
+      return AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Container(
+          width: double.infinity,
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: widget.colors.muted.withValues(alpha: 0.25),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: widget.colors.border.withValues(alpha: 0.6),
+            ),
+          ),
+          child: _buildSingleImage(widget.images.first),
+        ),
+      );
+    }
+
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: Container(
+        width: double.infinity,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: widget.colors.muted.withValues(alpha: 0.25),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: widget.colors.border.withValues(alpha: 0.6),
+          ),
+        ),
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: _pageController,
+              itemCount: widget.images.length,
+              onPageChanged: (idx) {
+                setState(() => _currentIndex = idx);
+              },
+              itemBuilder: (context, index) {
+                return _buildSingleImage(widget.images[index]);
+              },
+            ),
+            // Page Indicator Badge
+            Positioned(
+              bottom: 10,
+              right: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.65),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${_currentIndex + 1} / ${widget.images.length}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            // Dots indicator at center bottom
+            Positioned(
+              bottom: 12,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(widget.images.length, (idx) {
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: _currentIndex == idx ? 16 : 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: _currentIndex == idx
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  );
+                }),
               ),
             ),
           ],

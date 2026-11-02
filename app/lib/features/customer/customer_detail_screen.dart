@@ -14,6 +14,7 @@ import '../../core/widgets/app_pull_to_refresh.dart';
 import '../../core/router/routes.dart';
 import '../../data/models/activity.dart';
 import '../../data/models/outstanding.dart';
+import '../../core/utils/idempotency.dart';
 import 'controllers/customer_controller.dart';
 import '../dashboard/controllers/dashboard_controller.dart';
 import 'widgets/customer_context_card.dart';
@@ -41,6 +42,7 @@ class CustomerDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
+  final _navDebouncer = TapDebouncer(interval: const Duration(milliseconds: 700));
   bool _isCalendarView = false;
   int _activityLimit = 5;
   double _maxSafeAreaBottom = 0.0;
@@ -439,6 +441,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                           opacity: 0.85,
                           child: ElevatedButton.icon(
                             onPressed: () async {
+                              if (!_navDebouncer.allowTap()) return;
                               final source = GoRouterState.of(context)
                                   .uri
                                   .queryParameters['source'];
@@ -466,6 +469,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                           onPressed: outstanding.outstandingAmount <= 0
                               ? null
                               : () async {
+                                  if (!_navDebouncer.allowTap()) return;
                                   final source = GoRouterState.of(context)
                                       .uri
                                       .queryParameters['source'];

@@ -74,6 +74,28 @@ class _InventoryProductsScreenState
     return colors.success;
   }
 
+  String _formatUpdatedAt(String? raw) {
+    if (raw == null || raw.isEmpty) return 'Recent';
+    final dt = DateTime.tryParse(raw);
+    if (dt == null) return raw;
+    final local = dt.toLocal();
+    final now = DateTime.now();
+    final diff = now.difference(local);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
+    if (diff.inDays == 0 && now.day == local.day) {
+      final hour = local.hour > 12 ? local.hour - 12 : (local.hour == 0 ? 12 : local.hour);
+      final ampm = local.hour >= 12 ? 'PM' : 'AM';
+      final minute = local.minute.toString().padLeft(2, '0');
+      return '$hour:$minute $ampm';
+    }
+    if (diff.inDays < 7) {
+      return '${diff.inDays}d ago';
+    }
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${local.day} ${months[local.month - 1]}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -463,38 +485,70 @@ class _InventoryProductsScreenState
             children: [
               // Image placeholder
               Expanded(
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: colors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    image: product.imageUrl != null &&
-                            product.imageUrl!.isNotEmpty
-                        ? (product.imageUrl!.startsWith('assets/')
-                            ? DecorationImage(
-                                image: AssetImage(product.imageUrl!),
-                                fit: BoxFit.cover,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: colors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          image: product.imageUrl != null &&
+                                  product.imageUrl!.isNotEmpty
+                              ? (product.imageUrl!.startsWith('assets/')
+                                  ? DecorationImage(
+                                      image: AssetImage(product.imageUrl!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : (product.imageUrl!.startsWith('http')
+                                      ? DecorationImage(
+                                          image: NetworkImage(product.imageUrl!),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : DecorationImage(
+                                          image: FileImage(File(product.imageUrl!)),
+                                          fit: BoxFit.cover,
+                                        )))
+                              : null,
+                        ),
+                        child: product.imageUrl == null || product.imageUrl!.isEmpty
+                            ? Center(
+                                child: Icon(
+                                  Icons.inventory_2,
+                                  color: colors.primary,
+                                  size: 40,
+                                ),
                               )
-                            : (product.imageUrl!.startsWith('http')
-                                ? DecorationImage(
-                                    image: NetworkImage(product.imageUrl!),
-                                    fit: BoxFit.cover,
-                                  )
-                                : DecorationImage(
-                                    image: FileImage(File(product.imageUrl!)),
-                                    fit: BoxFit.cover,
-                                  )))
-                        : null,
-                  ),
-                  child: product.imageUrl == null || product.imageUrl!.isEmpty
-                      ? Center(
-                          child: Icon(
-                            Icons.inventory_2,
-                            color: colors.primary,
-                            size: 40,
+                            : null,
+                      ),
+                    ),
+                    if (product.imageUrl2 != null && product.imageUrl2!.isNotEmpty)
+                      Positioned(
+                        top: 6,
+                        right: 6,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(4),
                           ),
-                        )
-                      : null,
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.photo_library, size: 10, color: Colors.white),
+                              SizedBox(width: 3),
+                              Text(
+                                '2',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(height: 6),
@@ -509,14 +563,41 @@ class _InventoryProductsScreenState
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 2),
-              // Brand
-              Text(
-                product.brand,
-                style: AppTypography.bodySmall.copyWith(
-                  color: colors.mutedFg,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              // Brand & Updated at timestamp
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      product.brand,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: colors.mutedFg,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.access_time_rounded,
+                        size: 9,
+                        color: colors.mutedFg.withValues(alpha: 0.7),
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        _formatUpdatedAt(product.updatedAt),
+                        style: AppTypography.labelSmall.copyWith(
+                          color: colors.mutedFg.withValues(alpha: 0.8),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
               const SizedBox(height: 6),
               // Price and Stock badge Row

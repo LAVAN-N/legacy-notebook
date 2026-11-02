@@ -1421,3 +1421,15 @@ Read before starting. Never edit past entries.
 - **Fix applied:** Added `Uri.encodeComponent` / `Uri.decodeComponent` in `Routes.inventoryCategory` and `app_router.dart`, sanitized category slug generation to alphanumeric hyphens (`cat-pan-pot`), and replaced unchecked `firstWhere` with null-safe lookups.
 - **Rule for next agent:** ALWAYS URL-encode dynamic route parameters containing potential symbols or slashes, and slugify generated IDs into alphanumeric characters.
 - **Guardrail:** Verify category slugs contain only `[a-z0-9-]` and router parameters decode correctly.
+
+### 2026-11-02 · Unbounded concurrent save requests and rapid multi-tap crashes
+- **Context:** User rapidly clicking "Save", "Collect", "New Sale", "Add Product", or "Return" buttons before asynchronous backend operations complete.
+- **Mistake:** Save/update button `onPressed` handlers lacked in-flight disabling (`_isSubmitting ? null : ...`), leading to multiple concurrent asynchronous operations, duplicated database transactions/records, and popping non-existent routes (`There is nothing to pop` or `route._scopeKey.currentState != null`).
+- **Root cause:** Missing idempotency and tap-debouncing locks at the UI, controller, and repository layers, allowing rapid multi-clicks to fire repeated network or SQLite write executions in parallel.
+- **Fix applied:** Implemented defense-in-depth:
+  1. `IdempotencyLock` and `TapDebouncer` core utility to debounce duplicate executions within cooldown periods (800ms) and lock in-flight entity actions.
+  2. Immediate local `_isSubmitting = true` state guarding UI buttons (`onPressed: _isSubmitting ? null : ...`) with loading spinners across `SaleScreen`, `CollectScreen`, `NewClientScreen`, `AddProductSheet`, `EditProductSheet`, and `PurchasedProductGroupCard`.
+  3. Safe `Navigator.canPop(context)` and `mounted` checks before popping to prevent `There is nothing to pop` assertions.
+  4. Repository-level execution wrapping via `IdempotencyLock.instance.run(...)` inside `saveSale`, `saveCollection`, `addProduct`, `updateProduct`, `returnProduct`, and `addCustomer`.
+- **Rule for next agent:** ALWAYS disable save/action buttons immediately (`onPressed: _isSubmitting ? null : ...`) during async operations, wrap async saves in `try/finally` resetting `_isSubmitting = false`, and verify `Navigator.canPop(context)` before popping.
+- **Guardrail:** Grep for `onPressed:` in form/modal actions and ensure buttons evaluate submission/loading state before triggering asynchronous operations.

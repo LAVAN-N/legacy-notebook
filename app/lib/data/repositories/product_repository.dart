@@ -18,6 +18,10 @@ abstract class ProductRepository {
     required int minimumStock,
     String? description,
     String? imageUrl,
+    String? imageUrl2,
+    String mfgDate = 'JAN 2026',
+    double warranty = 0.0,
+    String? updatedAt,
   });
   Future<void> updateProduct(Product product);
   Future<void> renameBrand(String oldBrand, String newBrand);

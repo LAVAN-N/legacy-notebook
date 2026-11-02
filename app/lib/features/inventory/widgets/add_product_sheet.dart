@@ -39,6 +39,274 @@ void showEditProductSheet(BuildContext context, Product product) {
   );
 }
 
+Future<void> _pickMfgDate(BuildContext context, TextEditingController controller) async {
+  final theme = Theme.of(context);
+  final colors = theme.extension<AppColors>()!;
+  final months = [
+    'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+    'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'
+  ];
+
+  String currentMonth = 'JAN';
+  int currentYear = 2026;
+  final parts = controller.text.trim().split(RegExp(r'\s+'));
+  if (parts.length >= 2) {
+    final m = parts[0].toUpperCase();
+    if (months.contains(m)) currentMonth = m;
+    final y = int.tryParse(parts[1]);
+    if (y != null && y >= 2015 && y <= 2040) currentYear = y;
+  }
+
+  int selectedYear = currentYear;
+  String selectedMonth = currentMonth;
+
+  await showModalBottomSheet(
+    context: context,
+    backgroundColor: colors.background,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (sheetContext) {
+      return StatefulBuilder(
+        builder: (context, setModalState) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: colors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Select Mfg Date',
+                        style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(sheetContext),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Year Picker Bar
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: colors.primary.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: colors.border),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.chevron_left),
+                          onPressed: () {
+                            setModalState(() {
+                              selectedYear--;
+                            });
+                          },
+                        ),
+                        Text(
+                          '$selectedYear',
+                          style: AppTypography.titleLarge.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colors.primary,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.chevron_right),
+                          onPressed: () {
+                            setModalState(() {
+                              selectedYear++;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Month 4x3 Grid
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 2.0,
+                    ),
+                    itemCount: months.length,
+                    itemBuilder: (context, idx) {
+                      final month = months[idx];
+                      final isSelected = month == selectedMonth;
+                      return InkWell(
+                        onTap: () {
+                          setModalState(() {
+                            selectedMonth = month;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: isSelected ? colors.primary : colors.surface,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected ? colors.primary : colors.border,
+                            ),
+                          ),
+                          child: Text(
+                            month,
+                            style: TextStyle(
+                              color: isSelected ? colors.primaryFg : colors.foreground,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 48),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () {
+                      controller.text = '$selectedMonth $selectedYear';
+                      Navigator.pop(sheetContext);
+                    },
+                    child: const Text('Apply Mfg Date'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+Widget _buildImageSlot({
+  required BuildContext context,
+  required int slotNumber,
+  required String label,
+  required String? imagePath,
+  required VoidCallback onTap,
+  required VoidCallback onRemove,
+  required AppColors colors,
+}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 110,
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: colors.primary.withValues(alpha: 0.05),
+            border: Border.all(color: colors.border),
+            borderRadius: BorderRadius.circular(12),
+            image: imagePath != null && imagePath.isNotEmpty
+                ? (imagePath.startsWith('assets/')
+                    ? DecorationImage(
+                        image: AssetImage(imagePath),
+                        fit: BoxFit.cover,
+                      )
+                    : (imagePath.startsWith('http')
+                        ? DecorationImage(
+                            image: NetworkImage(imagePath),
+                            fit: BoxFit.cover,
+                          )
+                        : DecorationImage(
+                            image: FileImage(File(imagePath)),
+                            fit: BoxFit.cover,
+                          )))
+                : null,
+          ),
+          child: imagePath == null
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_a_photo_outlined, size: 28, color: colors.primary),
+                    const SizedBox(height: 6),
+                    Text(
+                      label,
+                      style: AppTypography.labelMedium.copyWith(
+                        color: colors.foreground,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Tap to add',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: colors.mutedFg,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                )
+              : Align(
+                  alignment: Alignment.topRight,
+                  child: Container(
+                    margin: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '#$slotNumber',
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+        ),
+      ),
+      if (imagePath != null) ...[
+        const SizedBox(height: 4),
+        Align(
+          alignment: Alignment.centerRight,
+          child: InkWell(
+            onTap: onRemove,
+            borderRadius: BorderRadius.circular(4),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.delete_outline, size: 13, color: colors.danger),
+                  const SizedBox(width: 2),
+                  Text(
+                    'Remove',
+                    style: AppTypography.labelSmall.copyWith(color: colors.danger, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ] else ...[
+        const SizedBox(height: 4),
+      ],
+    ],
+  );
+}
+
 class _AddProductSheet extends ConsumerStatefulWidget {
   final String? initialCategoryId;
   const _AddProductSheet({this.initialCategoryId});
@@ -51,6 +319,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
   final _formKey = GlobalKey<FormState>();
   String? _selectedCategoryId;
   String? _imagePath;
+  String? _imagePath2;
   String? _selectedBrand;
   List<String> _brands = [];
   
@@ -62,8 +331,11 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
   final _sellingPriceController = TextEditingController();
   final _stockController = TextEditingController(text: '0');
   final _minStockController = TextEditingController(text: '5');
+  final _mfgDateController = TextEditingController(text: 'JAN 2026');
+  final _warrantyController = TextEditingController(text: '1.0');
   final _descriptionController = TextEditingController();
   double _markupPercent = 25.0;
+  bool _isSubmitting = false;
 
   bool get _isDirty {
     if (_nameController.text.isNotEmpty ||
@@ -74,7 +346,10 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
         _sellingPriceController.text.isNotEmpty ||
         (_stockController.text != '0' && _stockController.text.isNotEmpty) ||
         _descriptionController.text.isNotEmpty ||
-        _imagePath != null) {
+        _imagePath != null ||
+        _imagePath2 != null ||
+        _mfgDateController.text != 'JAN 2026' ||
+        (_warrantyController.text != '1.0' && _warrantyController.text.isNotEmpty)) {
       return true;
     }
     return false;
@@ -468,11 +743,13 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
     _sellingPriceController.dispose();
     _stockController.dispose();
     _minStockController.dispose();
+    _mfgDateController.dispose();
+    _warrantyController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
 
-  void _openFilePicker() async {
+  void _openFilePicker({required int slot}) async {
     final colors = Theme.of(context).extension<AppColors>()!;
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
@@ -502,7 +779,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                 child: Row(
                   children: [
                     Text(
-                      'Choose Product Image',
+                      'Choose Photo #$slot',
                       style: AppTypography.titleMedium
                           .copyWith(fontWeight: FontWeight.bold),
                     ),
@@ -520,7 +797,11 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                     final photoPath = await openProductCamera(context);
                     if (photoPath != null && mounted) {
                       setState(() {
-                        _imagePath = photoPath;
+                        if (slot == 1) {
+                          _imagePath = photoPath;
+                        } else {
+                          _imagePath2 = photoPath;
+                        }
                       });
                       return;
                     }
@@ -538,7 +819,11 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                         );
                         if (croppedPath != null && mounted) {
                           setState(() {
-                            _imagePath = croppedPath;
+                            if (slot == 1) {
+                              _imagePath = croppedPath;
+                            } else {
+                              _imagePath2 = croppedPath;
+                            }
                           });
                         }
                       }
@@ -570,7 +855,11 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                       );
                       if (croppedPath != null && mounted) {
                         setState(() {
-                          _imagePath = croppedPath;
+                          if (slot == 1) {
+                            _imagePath = croppedPath;
+                          } else {
+                            _imagePath2 = croppedPath;
+                          }
                         });
                       }
                     }
@@ -601,7 +890,11 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                       );
                       if (croppedPath != null && mounted) {
                         setState(() {
-                          _imagePath = croppedPath;
+                          if (slot == 1) {
+                            _imagePath = croppedPath;
+                          } else {
+                            _imagePath2 = croppedPath;
+                          }
                         });
                       }
                     }
@@ -853,62 +1146,33 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
               ),
               const SizedBox(height: 8),
 
-              Center(
-                child: GestureDetector(
-                  onTap: _openFilePicker,
-                  child: AspectRatio(
-                    aspectRatio: 16 / 9,
-                    child: Container(
-                      width: double.infinity,
-                      clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      color: colors.primary.withValues(alpha: 0.05),
-                      border: Border.all(color: colors.border),
-                      borderRadius: BorderRadius.circular(12),
-                      image: _imagePath != null && _imagePath!.isNotEmpty
-                          ? (_imagePath!.startsWith('assets/')
-                              ? DecorationImage(
-                                  image: AssetImage(_imagePath!),
-                                  fit: BoxFit.cover,
-                                )
-                              : (_imagePath!.startsWith('http')
-                                  ? DecorationImage(
-                                      image: NetworkImage(_imagePath!),
-                                      fit: BoxFit.cover,
-                                    )
-                                  : DecorationImage(
-                                      image: FileImage(File(_imagePath!)),
-                                      fit: BoxFit.cover,
-                                    )))
-                          : null,
-                    ),
-                    child: _imagePath == null
-                        ? Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.add_a_photo_outlined, size: 36, color: colors.primary),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Tap to choose product image',
-                                style: AppTypography.labelMedium.copyWith(color: colors.mutedFg),
-                              ),
-                            ],
-                          )
-                        : null,
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildImageSlot(
+                      context: context,
+                      slotNumber: 1,
+                      label: 'Photo 1',
+                      imagePath: _imagePath,
+                      onTap: () => _openFilePicker(slot: 1),
+                      onRemove: () => setState(() => _imagePath = null),
+                      colors: colors,
                     ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildImageSlot(
+                      context: context,
+                      slotNumber: 2,
+                      label: 'Photo 2',
+                      imagePath: _imagePath2,
+                      onTap: () => _openFilePicker(slot: 2),
+                      onRemove: () => setState(() => _imagePath2 = null),
+                      colors: colors,
+                    ),
+                  ),
+                ],
               ),
-              if (_imagePath != null) ...[
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: () => setState(() => _imagePath = null),
-                    icon: Icon(Icons.delete_outline, size: 14, color: colors.danger),
-                    label: Text('Remove photo', style: AppTypography.labelLarge.copyWith(color: colors.danger)),
-                  ),
-                ),
-              ],
               const SizedBox(height: 16),
 
               TextFormField(
@@ -1289,6 +1553,46 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
               ),
               const SizedBox(height: 12),
 
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _mfgDateController,
+                      readOnly: true,
+                      onTap: () => _pickMfgDate(context, _mfgDateController),
+                      decoration: InputDecoration(
+                        labelText: 'Mfg Date *',
+                        hintText: 'JAN 2026',
+                        prefixIcon: Icon(Icons.calendar_month_outlined, color: colors.primary),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      validator: (val) => (val == null || val.trim().isEmpty) ? 'Mfg date is required' : null,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _warrantyController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: 'Warranty (Years) *',
+                        hintText: 'e.g. 1.0 or 1.5',
+                        prefixIcon: Icon(Icons.verified_outlined, color: colors.primary),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      validator: (val) {
+                        if (val == null || val.trim().isEmpty) return 'Warranty is required';
+                        final parsed = double.tryParse(val.trim());
+                        if (parsed == null || parsed < 0) return 'Enter valid years';
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
               TextFormField(
                 controller: _descriptionController,
                 maxLines: 3,
@@ -1313,7 +1617,7 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                       minimumSize: const Size(140, 48),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    onPressed: () async {
+                    onPressed: _isSubmitting ? null : () async {
                       if (_formKey.currentState!.validate()) {
                         if (_selectedCategoryId == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -1321,6 +1625,9 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                           );
                           return;
                         }
+
+                        if (_isSubmitting) return;
+                        setState(() => _isSubmitting = true);
 
                         final repo = ref.read(productRepositoryProvider);
                         final name = _nameController.text.trim();
@@ -1352,8 +1659,13 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                             minimumStock: minimumStock,
                             description: description,
                             imageUrl: _imagePath,
+                            imageUrl2: _imagePath2,
+                            mfgDate: _mfgDateController.text.trim().isNotEmpty ? _mfgDateController.text.trim() : 'JAN 2026',
+                            warranty: double.tryParse(_warrantyController.text.trim()) ?? 0.0,
                           );
-                          navigator.pop();
+                          if (navigator.canPop()) {
+                            navigator.pop();
+                          }
                           messenger.showSnackBar(
                             SnackBar(
                               content: Text('Product "$name" added successfully'),
@@ -1364,10 +1676,23 @@ class _AddProductSheetState extends ConsumerState<_AddProductSheet> {
                           messenger.showSnackBar(
                             SnackBar(content: Text('Error adding product: $e')),
                           );
+                        } finally {
+                          if (mounted) {
+                            setState(() => _isSubmitting = false);
+                          }
                         }
                       }
                     },
-                    child: const Text('Add product'),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Add product'),
                   ),
                 ],
               ),
@@ -1392,6 +1717,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
   final _formKey = GlobalKey<FormState>();
   String? _selectedCategoryId;
   String? _imagePath;
+  String? _imagePath2;
   String? _selectedBrand;
   List<String> _brands = [];
   
@@ -1403,8 +1729,11 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
   late final TextEditingController _sellingPriceController;
   late final TextEditingController _stockController;
   late final TextEditingController _minimumStockController;
+  late final TextEditingController _mfgDateController;
+  late final TextEditingController _warrantyController;
   late final TextEditingController _descriptionController;
   double _markupPercent = 25.0;
+  bool _isSubmitting = false;
 
   bool get _isDirty {
     if (_nameController.text != widget.product.name ||
@@ -1417,6 +1746,9 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
         _minimumStockController.text != widget.product.minimumStock.toString() ||
         _descriptionController.text != (widget.product.description ?? '') ||
         _imagePath != widget.product.imageUrl ||
+        _imagePath2 != widget.product.imageUrl2 ||
+        _mfgDateController.text != widget.product.mfgDate ||
+        _warrantyController.text != widget.product.warranty.toString() ||
         _selectedCategoryId != widget.product.categoryId) {
       return true;
     }
@@ -1456,6 +1788,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     super.initState();
     _selectedCategoryId = widget.product.categoryId;
     _imagePath = widget.product.imageUrl;
+    _imagePath2 = widget.product.imageUrl2;
     _nameController = TextEditingController(text: widget.product.name);
     _brandController = TextEditingController(text: widget.product.brand);
     _skuController = TextEditingController(text: widget.product.sku);
@@ -1464,6 +1797,16 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     _sellingPriceController = TextEditingController(text: (widget.product.sellingPrice / 100).toString());
     _stockController = TextEditingController(text: widget.product.stock.toString());
     _minimumStockController = TextEditingController(text: widget.product.minimumStock.toString());
+    _mfgDateController = TextEditingController(
+      text: widget.product.mfgDate.isNotEmpty ? widget.product.mfgDate : 'JAN 2026',
+    );
+    _warrantyController = TextEditingController(
+      text: widget.product.warranty > 0
+          ? (widget.product.warranty % 1 == 0
+              ? widget.product.warranty.toInt().toString()
+              : widget.product.warranty.toString())
+          : '1.0',
+    );
     _descriptionController = TextEditingController(text: widget.product.description ?? '');
 
     _selectedBrand = widget.product.brand;
@@ -1872,11 +2215,13 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
     _sellingPriceController.dispose();
     _stockController.dispose();
     _minimumStockController.dispose();
+    _mfgDateController.dispose();
+    _warrantyController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
 
-  void _openFilePicker() async {
+  void _openFilePicker({required int slot}) async {
     final colors = Theme.of(context).extension<AppColors>()!;
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
@@ -1906,7 +2251,7 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                 child: Row(
                   children: [
                     Text(
-                      'Choose Product Image',
+                      'Choose Photo $slot',
                       style: AppTypography.titleMedium
                           .copyWith(fontWeight: FontWeight.bold),
                     ),
@@ -1924,7 +2269,11 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                     final photoPath = await openProductCamera(context);
                     if (photoPath != null && mounted) {
                       setState(() {
-                        _imagePath = photoPath;
+                        if (slot == 1) {
+                          _imagePath = photoPath;
+                        } else {
+                          _imagePath2 = photoPath;
+                        }
                       });
                       return;
                     }
@@ -1942,7 +2291,11 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                         );
                         if (croppedPath != null && mounted) {
                           setState(() {
-                            _imagePath = croppedPath;
+                            if (slot == 1) {
+                              _imagePath = croppedPath;
+                            } else {
+                              _imagePath2 = croppedPath;
+                            }
                           });
                         }
                       }
@@ -1974,7 +2327,11 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                       );
                       if (croppedPath != null && mounted) {
                         setState(() {
-                          _imagePath = croppedPath;
+                          if (slot == 1) {
+                            _imagePath = croppedPath;
+                          } else {
+                            _imagePath2 = croppedPath;
+                          }
                         });
                       }
                     }
@@ -2005,7 +2362,11 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                       );
                       if (croppedPath != null && mounted) {
                         setState(() {
-                          _imagePath = croppedPath;
+                          if (slot == 1) {
+                            _imagePath = croppedPath;
+                          } else {
+                            _imagePath2 = croppedPath;
+                          }
                         });
                       }
                     }
@@ -2220,62 +2581,33 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
               ),
               const SizedBox(height: 8),
 
-              Center(
-                child: GestureDetector(
-                  onTap: _openFilePicker,
-                  child: AspectRatio(
-                    aspectRatio: 16 / 9,
-                    child: Container(
-                      width: double.infinity,
-                      clipBehavior: Clip.antiAlias,
-                      decoration: BoxDecoration(
-                        color: colors.primary.withValues(alpha: 0.05),
-                        border: Border.all(color: colors.border),
-                        borderRadius: BorderRadius.circular(12),
-                        image: _imagePath != null && _imagePath!.isNotEmpty
-                            ? (_imagePath!.startsWith('assets/')
-                                ? DecorationImage(
-                                    image: AssetImage(_imagePath!),
-                                    fit: BoxFit.cover,
-                                  )
-                                : (_imagePath!.startsWith('http')
-                                    ? DecorationImage(
-                                        image: NetworkImage(_imagePath!),
-                                        fit: BoxFit.cover,
-                                      )
-                                    : DecorationImage(
-                                        image: FileImage(File(_imagePath!)),
-                                        fit: BoxFit.cover,
-                                      )))
-                            : null,
-                      ),
-                      child: _imagePath == null
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.add_a_photo_outlined, size: 36, color: colors.primary),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Tap to choose product image',
-                                  style: AppTypography.labelMedium.copyWith(color: colors.mutedFg),
-                                ),
-                              ],
-                            )
-                          : null,
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildImageSlot(
+                      context: context,
+                      slotNumber: 1,
+                      label: 'Photo 1',
+                      imagePath: _imagePath,
+                      onTap: () => _openFilePicker(slot: 1),
+                      onRemove: () => setState(() => _imagePath = null),
+                      colors: colors,
                     ),
                   ),
-                ),
-              ),
-              if (_imagePath != null) ...[
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: () => setState(() => _imagePath = null),
-                    icon: Icon(Icons.delete_outline, size: 14, color: colors.danger),
-                    label: Text('Remove photo', style: AppTypography.labelLarge.copyWith(color: colors.danger)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildImageSlot(
+                      context: context,
+                      slotNumber: 2,
+                      label: 'Photo 2',
+                      imagePath: _imagePath2,
+                      onTap: () => _openFilePicker(slot: 2),
+                      onRemove: () => setState(() => _imagePath2 = null),
+                      colors: colors,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
               const SizedBox(height: 16),
 
               TextFormField(
@@ -2656,6 +2988,46 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
               ),
               const SizedBox(height: 12),
 
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _mfgDateController,
+                      readOnly: true,
+                      onTap: () => _pickMfgDate(context, _mfgDateController),
+                      decoration: InputDecoration(
+                        labelText: 'Mfg Date *',
+                        hintText: 'JAN 2026',
+                        prefixIcon: Icon(Icons.calendar_month_outlined, color: colors.primary),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      validator: (val) => (val == null || val.trim().isEmpty) ? 'Mfg date is required' : null,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _warrantyController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: 'Warranty (Years) *',
+                        hintText: 'e.g. 1.0 or 1.5',
+                        prefixIcon: Icon(Icons.verified_outlined, color: colors.primary),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      validator: (val) {
+                        if (val == null || val.trim().isEmpty) return 'Warranty is required';
+                        final parsed = double.tryParse(val.trim());
+                        if (parsed == null || parsed < 0) return 'Enter valid years';
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
               TextFormField(
                 controller: _descriptionController,
                 maxLines: 3,
@@ -2680,8 +3052,11 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                       minimumSize: const Size(140, 48),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    onPressed: () async {
+                    onPressed: _isSubmitting ? null : () async {
                       if (_formKey.currentState!.validate()) {
+                        if (_isSubmitting) return;
+                        setState(() => _isSubmitting = true);
+
                         final repo = ref.read(productRepositoryProvider);
                         final updated = widget.product.copyWith(
                           name: _nameController.text.trim(),
@@ -2697,6 +3072,12 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                               ? null 
                               : _descriptionController.text.trim(),
                           imageUrl: _imagePath,
+                          imageUrl2: _imagePath2,
+                          mfgDate: _mfgDateController.text.trim().isNotEmpty 
+                              ? _mfgDateController.text.trim() 
+                              : 'JAN 2026',
+                          warranty: double.tryParse(_warrantyController.text.trim()) ?? 0.0,
+                          updatedAt: DateTime.now().toIso8601String(),
                         );
  
                         final navigator = Navigator.of(context);
@@ -2704,7 +3085,9 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
  
                         try {
                           await repo.updateProduct(updated);
-                          navigator.pop();
+                          if (navigator.canPop()) {
+                            navigator.pop();
+                          }
                           messenger.showSnackBar(
                             SnackBar(
                               content: Text('Product "${updated.name}" updated successfully'),
@@ -2715,10 +3098,23 @@ class _EditProductSheetState extends ConsumerState<_EditProductSheet> {
                           messenger.showSnackBar(
                             SnackBar(content: Text('Error updating product: $e')),
                           );
+                        } finally {
+                          if (mounted) {
+                            setState(() => _isSubmitting = false);
+                          }
                         }
                       }
                     },
-                    child: const Text('Save Changes'),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Save Changes'),
                   ),
                 ],
               ),
@@ -2747,6 +3143,7 @@ class _AddCategoryDialogContent extends StatefulWidget {
 class _AddCategoryDialogContentState extends State<_AddCategoryDialogContent> {
   final _nameController = TextEditingController();
   String _selectedIconName = 'frying-pan';
+  bool _isSubmitting = false;
 
   bool get _isDirty {
     return _nameController.text.isNotEmpty;
@@ -2886,7 +3283,7 @@ class _AddCategoryDialogContentState extends State<_AddCategoryDialogContent> {
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(100, 44),
                 ),
-                onPressed: () {
+                onPressed: _isSubmitting ? null : () {
                   final name = _nameController.text.trim();
                   if (name.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -2894,6 +3291,9 @@ class _AddCategoryDialogContentState extends State<_AddCategoryDialogContent> {
                     );
                     return;
                   }
+                  if (_isSubmitting) return;
+                  setState(() => _isSubmitting = true);
+
                   final cleanName = name.trim();
                   final slug = cleanName
                       .toLowerCase()
@@ -2910,7 +3310,13 @@ class _AddCategoryDialogContentState extends State<_AddCategoryDialogContent> {
                   );
                   widget.onSave(newCategory);
                 },
-                child: const Text('Save'),
+                child: _isSubmitting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('Save'),
               ),
             ],
           ),
@@ -2939,6 +3345,7 @@ class _EditCategoryDialogContent extends StatefulWidget {
 class _EditCategoryDialogContentState extends State<_EditCategoryDialogContent> {
   late final TextEditingController _nameController;
   late String _selectedIconName;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -3085,7 +3492,7 @@ class _EditCategoryDialogContentState extends State<_EditCategoryDialogContent> 
                   style: FilledButton.styleFrom(
                     minimumSize: const Size(100, 44),
                   ),
-                  onPressed: () {
+                  onPressed: _isSubmitting ? null : () {
                     final name = _nameController.text.trim();
                     if (name.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -3093,13 +3500,22 @@ class _EditCategoryDialogContentState extends State<_EditCategoryDialogContent> 
                       );
                       return;
                     }
+                    if (_isSubmitting) return;
+                    setState(() => _isSubmitting = true);
+
                     final updatedCategory = widget.category.copyWith(
                       name: name,
                       icon: _selectedIconName,
                     );
                     widget.onSave(updatedCategory);
                   },
-                  child: const Text('Save'),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Save'),
                 ),
               ],
             ),

@@ -24,6 +24,7 @@ import 'config_repository.dart';
 import 'local_sqlite_repositories.dart';
 import '../models/category.dart';
 import '../../core/utils/uuid.dart';
+import '../../core/utils/idempotency.dart';
 
 Future<String> _uploadFile(String bucket, String localPath, String remotePath) async {
   final client = Supabase.instance.client;
@@ -533,105 +534,110 @@ class SupabaseCustomerRepository implements CustomerRepository {
     Location? location,
     String? profileUrl,
   }) async {
-    final allRes = await _client.from('customers').select('id');
-    int maxId = 0;
-    for (final row in allRes) {
-      final rawId = row['id']?.toString() ?? '';
-      final numPart = rawId.replaceAll('CU-', '');
-      final parsed = int.tryParse(numPart);
-      if (parsed != null && parsed > maxId) {
-        maxId = parsed;
-      }
-    }
-    final nextIdNum = maxId + 1;
-    final customerId = 'CU-${nextIdNum.toString().padLeft(3, '0')}';
-
-    final wCode = weekdayId.replaceAll('w-', 'W').toUpperCase();
-    final pCode = placeId.replaceAll('p-', 'P').toUpperCase();
-    final aCode = areaId.replaceAll('a-', 'A').toUpperCase();
-    final paddedId = nextIdNum.toString().padLeft(3, '0');
-    final code = '$wCode-$pCode-$aCode-$paddedId';
-
-    String? remoteProfileUrl;
-    if (profileUrl != null && profileUrl.isNotEmpty) {
-      final extension = profileUrl.split('.').last.split('?').first.toLowerCase();
-      final remotePath = '$customerId/profile.$extension'.toLowerCase();
-      remoteProfileUrl = await _uploadFile('customer-photos', profileUrl, remotePath);
-    }
-
-    final updatedNominees = (nominees ?? []).map((n) {
-      return n.copyWith(
-        id: n.id.isNotEmpty ? n.id : 'nom_${DateTime.now().microsecondsSinceEpoch}',
-      );
-    }).toList();
-
-    final List<IdProof> uploadedProofs = [];
-    if (idProofs != null) {
-      for (var p in idProofs) {
-        final localPath = p.document?.localUri ?? '';
-        String remoteUrl = localPath;
-        if (localPath.isNotEmpty) {
-          final extension = localPath.split('.').last.toLowerCase();
-          final sanitizedName = name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
-          final sanitizedType = p.type.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
-          final remotePath = '$customerId/${sanitizedName}_$sanitizedType.$extension'.toLowerCase();
-          remoteUrl = await _uploadFile('customer-proofs', localPath, remotePath);
+    final result = await IdempotencyLock.instance.run('add_customer_${phone}_$name', () async {
+      final allRes = await _client.from('customers').select('id');
+      int maxId = 0;
+      for (final row in allRes) {
+        final rawId = row['id']?.toString() ?? '';
+        final numPart = rawId.replaceAll('CU-', '');
+        final parsed = int.tryParse(numPart);
+        if (parsed != null && parsed > maxId) {
+          maxId = parsed;
         }
-        uploadedProofs.add(p.copyWith(
-          id: p.id.isNotEmpty ? p.id : 'proof_${DateTime.now().microsecondsSinceEpoch}',
-          document: p.document?.copyWith(localUri: remoteUrl) ?? IdProofDocument(
-            filename: 'proof',
-            mimeType: 'image/jpeg',
-            sizeBytes: 0,
-            localUri: remoteUrl,
-          ),
-        ));
       }
-    }
+      final nextIdNum = maxId + 1;
+      final customerId = 'CU-${nextIdNum.toString().padLeft(3, '0')}';
 
-    final customerData = {
-      'id': customerId,
-      'customer_code': code,
-      'name': name,
-      'phone': phone,
-      'alternate_phone': alternatePhone,
-      'address': address,
-      'landmark': landmark,
-      'profile_url': remoteProfileUrl,
-      'location_url': location?.lat != null ? 'https://maps.google.com/?q=${location!.lat},${location.lng}' : null,
-      'latitude': location?.lat,
-      'longitude': location?.lng,
-      'weekday_id': weekdayId,
-      'place_id': placeId,
-      'area_id': areaId,
-      'status': 'ACTIVE',
-      'dob': dob,
-      'occupation': occupation,
-      'notes': notes,
-      'created_by': 'collector_local',
-      'nominees': updatedNominees.map((n) => n.toJson()).toList(),
-      'id_proofs': uploadedProofs.map((p) => p.toJson()).toList(),
-    };
+      final wCode = weekdayId.replaceAll('w-', 'W').toUpperCase();
+      final pCode = placeId.replaceAll('p-', 'P').toUpperCase();
+      final aCode = areaId.replaceAll('a-', 'A').toUpperCase();
+      final paddedId = nextIdNum.toString().padLeft(3, '0');
+      final code = '$wCode-$pCode-$aCode-$paddedId';
 
-    await _client.from('customers').insert(customerData);
+      String? remoteProfileUrl;
+      if (profileUrl != null && profileUrl.isNotEmpty) {
+        final extension = profileUrl.split('.').last.split('?').first.toLowerCase();
+        final remotePath = '$customerId/profile.$extension'.toLowerCase();
+        remoteProfileUrl = await _uploadFile('customer-photos', profileUrl, remotePath);
+      }
 
-    if (openingBalance > 0) {
-      final saleId = 'sale_ob_$customerId';
-      await _client.from('sales').insert({
-        'id': saleId,
-        'customer_id': customerId,
-        'sale_datetime': DateTime.now().toIso8601String(),
-        'sale_type': 'CREDIT',
-        'total_amount': openingBalance,
-        'advance_amount': 0,
-        'financed_amount': openingBalance,
-        'sold_by': 'system',
-        'remarks': 'Opening Balance',
-      });
-    }
+      final updatedNominees = (nominees ?? []).map((n) {
+        return n.copyWith(
+          id: n.id.isNotEmpty ? n.id : 'nom_${DateTime.now().microsecondsSinceEpoch}',
+        );
+      }).toList();
 
-    final created = await getCustomerById(customerId);
-    return created!;
+      final List<IdProof> uploadedProofs = [];
+      if (idProofs != null) {
+        for (var p in idProofs) {
+          final localPath = p.document?.localUri ?? '';
+          String remoteUrl = localPath;
+          if (localPath.isNotEmpty) {
+            final extension = localPath.split('.').last.toLowerCase();
+            final sanitizedName = name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+            final sanitizedType = p.type.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+            final remotePath = '$customerId/${sanitizedName}_$sanitizedType.$extension'.toLowerCase();
+            remoteUrl = await _uploadFile('customer-proofs', localPath, remotePath);
+          }
+          uploadedProofs.add(p.copyWith(
+            id: p.id.isNotEmpty ? p.id : 'proof_${DateTime.now().microsecondsSinceEpoch}',
+            document: p.document?.copyWith(localUri: remoteUrl) ?? IdProofDocument(
+              filename: 'proof',
+              mimeType: 'image/jpeg',
+              sizeBytes: 0,
+              localUri: remoteUrl,
+            ),
+          ));
+        }
+      }
+
+      final customerData = {
+        'id': customerId,
+        'customer_code': code,
+        'name': name,
+        'phone': phone,
+        'alternate_phone': alternatePhone,
+        'address': address,
+        'landmark': landmark,
+        'profile_url': remoteProfileUrl,
+        'location_url': location?.lat != null ? 'https://maps.google.com/?q=${location!.lat},${location.lng}' : null,
+        'latitude': location?.lat,
+        'longitude': location?.lng,
+        'weekday_id': weekdayId,
+        'place_id': placeId,
+        'area_id': areaId,
+        'status': 'ACTIVE',
+        'dob': dob,
+        'occupation': occupation,
+        'notes': notes,
+        'created_by': 'collector_local',
+        'nominees': updatedNominees.map((n) => n.toJson()).toList(),
+        'id_proofs': uploadedProofs.map((p) => p.toJson()).toList(),
+      };
+
+      await _client.from('customers').insert(customerData);
+
+      if (openingBalance > 0) {
+        final saleId = 'sale_ob_$customerId';
+        await _client.from('sales').insert({
+          'id': saleId,
+          'customer_id': customerId,
+          'sale_datetime': DateTime.now().toIso8601String(),
+          'sale_type': 'CREDIT',
+          'total_amount': openingBalance,
+          'advance_amount': 0,
+          'financed_amount': openingBalance,
+          'sold_by': 'system',
+          'remarks': 'Opening Balance',
+        });
+      }
+
+      final created = await getCustomerById(customerId);
+      return created!;
+    });
+    if (result != null) return result;
+    final all = await getAllCustomers();
+    return all.firstWhere((c) => c.phone == phone && c.name == name);
   }
 
   @override
@@ -999,35 +1005,37 @@ class SupabaseCollectionRepository implements CollectionRepository {
     DateTime? customDate,
     Map<String, int>? allocations,
   }) async {
-    final date = customDate ?? DateTime.now();
-    final adjustedAmount = (status == 'CARRY_FORWARD') ? 0.0 : amount;
+    await IdempotencyLock.instance.run('save_collection_$customerId', () async {
+      final date = customDate ?? DateTime.now();
+      final adjustedAmount = (status == 'CARRY_FORWARD') ? 0.0 : amount;
 
-    String finalReason = reason ?? '';
-    if (allocations != null && allocations.isNotEmpty) {
-      finalReason += '&allocations=${jsonEncode(allocations)}';
-    }
+      String finalReason = reason ?? '';
+      if (allocations != null && allocations.isNotEmpty) {
+        finalReason += '&allocations=${jsonEncode(allocations)}';
+      }
 
-    await _client.from('collections').insert({
-      'id': UuidUtils.generate(),
-      'customer_id': customerId,
-      'visit_datetime': date.toIso8601String(),
-      'status': status,
-      'amount': adjustedAmount,
-      'reason': finalReason,
-      'collected_by': collectedBy,
-    });
+      await _client.from('collections').insert({
+        'id': UuidUtils.generate(),
+        'customer_id': customerId,
+        'visit_datetime': date.toIso8601String(),
+        'status': status,
+        'amount': adjustedAmount,
+        'reason': finalReason,
+        'collected_by': collectedBy,
+      });
 
-    if (allocations != null && allocations.isNotEmpty) {
-      for (var entry in allocations.entries) {
-        final itemMaps = await _client.from('sale_items').select('collected_amount').eq('id', entry.key);
-        if (itemMaps.isNotEmpty) {
-          final current = (itemMaps.first['collected_amount'] as num?)?.toInt() ?? 0;
-          await _client.from('sale_items').update({
-            'collected_amount': current + entry.value,
-          }).eq('id', entry.key);
+      if (allocations != null && allocations.isNotEmpty) {
+        for (var entry in allocations.entries) {
+          final itemMaps = await _client.from('sale_items').select('collected_amount').eq('id', entry.key);
+          if (itemMaps.isNotEmpty) {
+            final current = (itemMaps.first['collected_amount'] as num?)?.toInt() ?? 0;
+            await _client.from('sale_items').update({
+              'collected_amount': current + entry.value,
+            }).eq('id', entry.key);
+          }
         }
       }
-    }
+    });
   }
 
   @override
@@ -1144,97 +1152,99 @@ class SupabaseSaleRepository implements SaleRepository {
     int? lendAmount,
     int appliedCredit = 0,
   }) async {
-    final saleId = UuidUtils.generate();
-    final date = customDate ?? DateTime.now();
+    await IdempotencyLock.instance.run('save_sale_$customerId', () async {
+      final saleId = UuidUtils.generate();
+      final date = customDate ?? DateTime.now();
 
-    int totalAmount = 0;
-    if (lendAmount != null) {
-      totalAmount = lendAmount;
-    } else {
-      for (var item in items) {
-        totalAmount += (item['quantity'] as int) * (item['unitPrice'] as int);
+      int totalAmount = 0;
+      if (lendAmount != null) {
+        totalAmount = lendAmount;
+      } else {
+        for (var item in items) {
+          totalAmount += (item['quantity'] as int) * (item['unitPrice'] as int);
+        }
       }
-    }
-    totalAmount = totalAmount - discount + creditCharge;
+      totalAmount = totalAmount - discount + creditCharge;
 
-    // Fetch customer's credit from Supabase
-    final custRes = await _client.from('customers').select('credit').eq('id', customerId).single();
-    final currentCredit = custRes['credit'] as int? ?? 0;
-    final int creditUsed = appliedCredit.clamp(0, currentCredit < totalAmount ? currentCredit : totalAmount);
+      // Fetch customer's credit from Supabase
+      final custRes = await _client.from('customers').select('credit').eq('id', customerId).single();
+      final currentCredit = custRes['credit'] as int? ?? 0;
+      final int creditUsed = appliedCredit.clamp(0, currentCredit < totalAmount ? currentCredit : totalAmount);
 
-    if (creditUsed > 0) {
-      await _client.from('customers').update({'credit': currentCredit - creditUsed}).eq('id', customerId);
-    }
+      if (creditUsed > 0) {
+        await _client.from('customers').update({'credit': currentCredit - creditUsed}).eq('id', customerId);
+      }
 
-    final finalAdvanceAmount = advanceAmount + creditUsed;
-    final finalFinancedAmount = totalAmount - finalAdvanceAmount < 0 ? 0 : totalAmount - finalAdvanceAmount;
-    final finalSaleType = lendAmount != null ? 'LEND' : (finalFinancedAmount == 0 ? 'READY' : 'CREDIT');
+      final finalAdvanceAmount = advanceAmount + creditUsed;
+      final finalFinancedAmount = totalAmount - finalAdvanceAmount < 0 ? 0 : totalAmount - finalAdvanceAmount;
+      final finalSaleType = lendAmount != null ? 'LEND' : (finalFinancedAmount == 0 ? 'READY' : 'CREDIT');
 
-    // 1. Save Sale
-    await _client.from('sales').insert({
-      'id': saleId,
-      'customer_id': customerId,
-      'sale_datetime': date.toIso8601String(),
-      'sale_type': finalSaleType,
-      'total_amount': totalAmount,
-      'advance_amount': finalAdvanceAmount,
-      'financed_amount': finalFinancedAmount,
-      'sold_by': soldBy,
-      'remarks': creditUsed > 0 
-          ? '${remarks ?? ""}\n(Credit used: ₹$creditUsed)'.trim() 
-          : remarks,
+      // 1. Save Sale
+      await _client.from('sales').insert({
+        'id': saleId,
+        'customer_id': customerId,
+        'sale_datetime': date.toIso8601String(),
+        'sale_type': finalSaleType,
+        'total_amount': totalAmount,
+        'advance_amount': finalAdvanceAmount,
+        'financed_amount': finalFinancedAmount,
+        'sold_by': soldBy,
+        'remarks': creditUsed > 0 
+            ? '${remarks ?? ""}\n(Credit used: ₹$creditUsed)'.trim() 
+            : remarks,
+      });
+
+      // 2. Save Sale Items and Inventory Transactions
+      final int totalBaseAmount = items.fold<int>(0, (sum, i) => sum + ((i['quantity'] as int) * (i['unitPrice'] as int)));
+      final int netAdjustment = creditCharge - discount;
+
+      int remainingAdvance = finalAdvanceAmount;
+      int adjustmentRemaining = netAdjustment;
+      for (int i = 0; i < items.length; i++) {
+        final item = items[i];
+        final productId = item['productId'] as String;
+        final qty = item['quantity'] as int;
+        final baseUnitPrice = item['unitPrice'] as int;
+        final baseItemTotal = qty * baseUnitPrice;
+
+        final int itemAdjustment = (i == items.length - 1)
+            ? adjustmentRemaining
+            : (totalBaseAmount > 0 ? ((baseItemTotal * netAdjustment) / totalBaseAmount).round() : 0);
+        adjustmentRemaining -= itemAdjustment;
+
+        final itemTotal = baseItemTotal + itemAdjustment;
+        final unitPrice = qty > 0 ? (itemTotal / qty).round() : itemTotal;
+
+        final customAlloc = item['allocatedAmount'] as int?;
+        final itemCollected = customAlloc != null
+            ? customAlloc.clamp(0, itemTotal)
+            : (remainingAdvance >= itemTotal ? itemTotal : remainingAdvance);
+        if (customAlloc == null) {
+          remainingAdvance -= itemCollected;
+        }
+
+        await _client.from('sale_items').insert({
+          'id': UuidUtils.generate(),
+          'sale_id': saleId,
+          'product_id': productId,
+          'quantity': qty,
+          'unit_price': unitPrice,
+          'total_price': itemTotal,
+          'status': 'purchased',
+          'collected_amount': itemCollected,
+        });
+
+        await _client.from('inventory_transactions').insert({
+          'id': UuidUtils.generate(),
+          'product_id': productId,
+          'transaction_type': 'SALE',
+          'quantity': qty,
+          'reference_id': saleId,
+          'remarks': 'Sale purchase item transaction',
+          'created_by': soldBy,
+        });
+      }
     });
-
-    // 2. Save Sale Items and Inventory Transactions
-    final int totalBaseAmount = items.fold<int>(0, (sum, i) => sum + ((i['quantity'] as int) * (i['unitPrice'] as int)));
-    final int netAdjustment = creditCharge - discount;
-
-    int remainingAdvance = finalAdvanceAmount;
-    int adjustmentRemaining = netAdjustment;
-    for (int i = 0; i < items.length; i++) {
-      final item = items[i];
-      final productId = item['productId'] as String;
-      final qty = item['quantity'] as int;
-      final baseUnitPrice = item['unitPrice'] as int;
-      final baseItemTotal = qty * baseUnitPrice;
-
-      final int itemAdjustment = (i == items.length - 1)
-          ? adjustmentRemaining
-          : (totalBaseAmount > 0 ? ((baseItemTotal * netAdjustment) / totalBaseAmount).round() : 0);
-      adjustmentRemaining -= itemAdjustment;
-
-      final itemTotal = baseItemTotal + itemAdjustment;
-      final unitPrice = qty > 0 ? (itemTotal / qty).round() : itemTotal;
-
-      final customAlloc = item['allocatedAmount'] as int?;
-      final itemCollected = customAlloc != null
-          ? customAlloc.clamp(0, itemTotal)
-          : (remainingAdvance >= itemTotal ? itemTotal : remainingAdvance);
-      if (customAlloc == null) {
-        remainingAdvance -= itemCollected;
-      }
-
-      await _client.from('sale_items').insert({
-        'id': UuidUtils.generate(),
-        'sale_id': saleId,
-        'product_id': productId,
-        'quantity': qty,
-        'unit_price': unitPrice,
-        'total_price': itemTotal,
-        'status': 'purchased',
-        'collected_amount': itemCollected,
-      });
-
-      await _client.from('inventory_transactions').insert({
-        'id': UuidUtils.generate(),
-        'product_id': productId,
-        'transaction_type': 'SALE',
-        'quantity': qty,
-        'reference_id': saleId,
-        'remarks': 'Sale purchase item transaction',
-        'created_by': soldBy,
-      });
-    }
   }
 
   @override
@@ -1280,108 +1290,112 @@ class SupabaseSaleRepository implements SaleRepository {
     String? tallyProductName,
     int? tallyAmount,
   }) async {
-    await _client.from('sale_items').update({'status': 'returned'}).eq('id', saleItemId);
+    await IdempotencyLock.instance.run('return_product_$saleItemId', () async {
+      await _client.from('sale_items').update({'status': 'returned'}).eq('id', saleItemId);
 
-    final itemRes = await _client.from('sale_items').select().eq('id', saleItemId).single();
-    final saleId = itemRes['sale_id'] as String;
-    final productId = itemRes['product_id'] as String;
-    final quantity = itemRes['quantity'] as int;
-    final totalPrice = itemRes['total_price'] as int;
+      final itemRes = await _client.from('sale_items').select().eq('id', saleItemId).single();
+      final saleId = itemRes['sale_id'] as String;
+      final productId = itemRes['product_id'] as String;
+      final quantity = itemRes['quantity'] as int;
+      final totalPrice = itemRes['total_price'] as int;
 
-    final saleRes = await _client.from('sales').select().eq('id', saleId).single();
-    final customerId = saleRes['customer_id'] as String;
-    final totalAmount = saleRes['total_amount'] as int;
-    final financedAmount = saleRes['financed_amount'] as int;
+      final saleRes = await _client.from('sales').select().eq('id', saleId).single();
+      final customerId = saleRes['customer_id'] as String;
+      final totalAmount = saleRes['total_amount'] as int;
+      final financedAmount = saleRes['financed_amount'] as int;
 
-    int actualTallyAmount = 0;
-    int creditRemainder = collectedAmount;
+      int actualTallyAmount = 0;
+      int creditRemainder = collectedAmount;
 
-    if (tallyOut) {
-      if (tallyAmount != null) {
-        actualTallyAmount = tallyAmount;
-      } else {
-        final salesRes = await _client.from('sales').select('financed_amount').eq('customer_id', customerId);
-        final totalFinanced = (salesRes as List).fold<int>(0, (sum, s) => sum + (s['financed_amount'] as int));
+      if (tallyOut) {
+        if (tallyAmount != null) {
+          actualTallyAmount = tallyAmount;
+        } else {
+          final salesRes = await _client.from('sales').select('financed_amount').eq('customer_id', customerId);
+          final totalFinanced = (salesRes as List).fold<int>(0, (sum, s) => sum + (s['financed_amount'] as int));
 
-        final colRes = await _client.from('collections').select('amount').eq('customer_id', customerId).inFilter('status', ['PAYMENT', 'PARTIAL_PAYMENT']);
-        final totalCollected = (colRes as List).fold<int>(0, (sum, c) => sum + ((c['amount'] as num).toInt()));
-        final outstanding = totalFinanced - totalCollected;
+          final colRes = await _client.from('collections').select('amount').eq('customer_id', customerId).inFilter('status', ['PAYMENT', 'PARTIAL_PAYMENT']);
+          final totalCollected = (colRes as List).fold<int>(0, (sum, c) => sum + ((c['amount'] as num).toInt()));
+          final outstanding = totalFinanced - totalCollected;
 
-        final unpaidPortion = totalPrice - collectedAmount;
-        final otherOutstanding = outstanding - unpaidPortion;
-        final actualOtherOutstanding = otherOutstanding < 0 ? 0 : otherOutstanding;
-        actualTallyAmount = collectedAmount < actualOtherOutstanding ? collectedAmount : actualOtherOutstanding;
-      }
-      creditRemainder = collectedAmount - actualTallyAmount;
-    }
-
-    final productRes = await _client.from('products').select('name').eq('id', productId).single();
-    final productName = productRes['name'] as String? ?? 'Product';
-
-    if (actualTallyAmount > 0) {
-      final reasonText = tallyProductName != null
-          ? 'Return Tally Out: $productName applied to $tallyProductName'
-          : 'Return Tally Out: $productName';
-
-      final Map<String, int> allocationMap = {};
-      if (tallySaleItemId != null) {
-        allocationMap[tallySaleItemId] = actualTallyAmount;
+          final unpaidPortion = totalPrice - collectedAmount;
+          final otherOutstanding = outstanding - unpaidPortion;
+          final actualOtherOutstanding = otherOutstanding < 0 ? 0 : otherOutstanding;
+          actualTallyAmount = collectedAmount < actualOtherOutstanding ? collectedAmount : actualOtherOutstanding;
+        }
+        creditRemainder = collectedAmount - actualTallyAmount;
       }
 
-      final finalReason = reasonText + (tallySaleItemId != null ? '&allocations=${jsonEncode(allocationMap)}' : '');
+      final productRes = await _client.from('products').select('name').eq('id', productId).single();
+      final productName = productRes['name'] as String? ?? 'Product';
 
-      await _client.from('collections').insert({
-        'id': UuidUtils.generate(),
-        'customer_id': customerId,
-        'visit_datetime': DateTime.now().toIso8601String(),
-        'status': 'PAYMENT',
-        'amount': actualTallyAmount.toDouble(),
-        'reason': finalReason,
-        'collected_by': processedBy,
-      });
+      if (actualTallyAmount > 0) {
+        final reasonText = tallyProductName != null
+            ? 'Return Tally Out: $productName applied to $tallyProductName'
+            : 'Return Tally Out: $productName';
 
-      if (tallySaleItemId != null) {
-        final itemMaps = await _client.from('sale_items').select('collected_amount').eq('id', tallySaleItemId);
-        if (itemMaps.isNotEmpty) {
-          final current = (itemMaps.first['collected_amount'] as num?)?.toInt() ?? 0;
-          await _client.from('sale_items').update({
-            'collected_amount': current + actualTallyAmount,
-          }).eq('id', tallySaleItemId);
+        final Map<String, int> allocationMap = {};
+        if (tallySaleItemId != null) {
+          allocationMap[tallySaleItemId] = actualTallyAmount;
+        }
+
+        final finalReason = reasonText + (tallySaleItemId != null ? '&allocations=${jsonEncode(allocationMap)}' : '');
+
+        await _client.from('collections').insert({
+          'id': UuidUtils.generate(),
+          'customer_id': customerId,
+          'visit_datetime': DateTime.now().toIso8601String(),
+          'status': 'PAYMENT',
+          'amount': actualTallyAmount.toDouble(),
+          'reason': finalReason,
+          'collected_by': processedBy,
+        });
+
+        if (tallySaleItemId != null) {
+          final itemMaps = await _client.from('sale_items').select('collected_amount').eq('id', tallySaleItemId);
+          if (itemMaps.isNotEmpty) {
+            final current = (itemMaps.first['collected_amount'] as num?)?.toInt() ?? 0;
+            await _client.from('sale_items').update({
+              'collected_amount': current + actualTallyAmount,
+            }).eq('id', tallySaleItemId);
+          }
         }
       }
-    }
 
-    if (creditRemainder > 0) {
-      final custRes = await _client.from('customers').select('credit').eq('id', customerId).single();
-      final currentCredit = custRes['credit'] as int? ?? 0;
-      await _client.from('customers').update({'credit': currentCredit + creditRemainder}).eq('id', customerId);
-    }
+      if (creditRemainder > 0) {
+        final custRes = await _client.from('customers').select('credit').eq('id', customerId).single();
+        final currentCredit = custRes['credit'] as int? ?? 0;
+        await _client.from('customers').update({'credit': currentCredit + creditRemainder}).eq('id', customerId);
+      }
 
-    final unpaidPortion = (totalPrice - collectedAmount).clamp(0, totalPrice);
-    final financedReduction = unpaidPortion;
+      final unpaidPortion = (totalPrice - collectedAmount).clamp(0, totalPrice);
+      final financedReduction = unpaidPortion;
 
-    final nextTotal = (totalAmount - unpaidPortion).clamp(0, 9999999);
-    final nextFinanced = (financedAmount - financedReduction).clamp(0, 9999999);
+      final nextTotal = (totalAmount - unpaidPortion).clamp(0, 9999999);
+      final nextFinanced = (financedAmount - financedReduction).clamp(0, 9999999);
 
-    await _client.from('sales').update({
-      'total_amount': nextTotal,
-      'financed_amount': nextFinanced,
-    }).eq('id', saleId);
+      await _client.from('sales').update({
+        'total_amount': nextTotal,
+        'financed_amount': nextFinanced,
+      }).eq('id', saleId);
 
-    await _client.from('inventory_transactions').insert({
-      'id': UuidUtils.generate(),
-      'product_id': productId,
-      'transaction_type': 'ADJUSTMENT',
-      'quantity': quantity,
-      'reference_id': saleItemId,
-      'remarks': 'Customer return adjustment',
-      'created_by': processedBy,
+      await _client.from('inventory_transactions').insert({
+        'id': UuidUtils.generate(),
+        'product_id': productId,
+        'transaction_type': 'ADJUSTMENT',
+        'quantity': quantity,
+        'reference_id': saleItemId,
+        'remarks': 'Customer return adjustment',
+        'created_by': processedBy,
+      });
     });
   }
 
   @override
   Future<void> settleProduct(String saleItemId) async {
-    await _client.from('sale_items').update({'status': 'settled'}).eq('id', saleItemId);
+    await IdempotencyLock.instance.run('settle_product_$saleItemId', () async {
+      await _client.from('sale_items').update({'status': 'settled'}).eq('id', saleItemId);
+    });
   }
 }
 
@@ -1403,7 +1417,11 @@ class SupabaseProductRepository implements ProductRepository {
       'sellingPrice': m['selling_price'] ?? 0,
       'mrp': m['mrp'] ?? 0,
       'imageUrl': m['image_url'],
+      'imageUrl2': m['image_url2'],
       'description': m['description'],
+      'mfgDate': m['mfg_date'] ?? 'JAN 2026',
+      'warranty': (m['warranty'] as num?)?.toDouble() ?? 0.0,
+      'updatedAt': m['updated_at'],
     })).toList();
   }
 
@@ -1528,109 +1546,149 @@ class SupabaseProductRepository implements ProductRepository {
     required int minimumStock,
     String? description,
     String? imageUrl,
+    String? imageUrl2,
+    String mfgDate = 'JAN 2026',
+    double warranty = 0.0,
+    String? updatedAt,
   }) async {
-    final productId = UuidUtils.generate();
+    final result = await IdempotencyLock.instance.run('add_product_${sku}_$name', () async {
+      final productId = UuidUtils.generate();
 
-    String? remoteUrl = imageUrl;
-    if (imageUrl != null && imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
-      final extension = imageUrl.split('.').last.split('?').first.toLowerCase();
-      final remotePath = '$productId/photo_${DateTime.now().millisecondsSinceEpoch}.$extension';
-      remoteUrl = await _uploadFile('product-photos', imageUrl, remotePath);
-    }
+      String? remoteUrl = imageUrl;
+      if (imageUrl != null && imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
+        final extension = imageUrl.split('.').last.split('?').first.toLowerCase();
+        final remotePath = '$productId/photo_1_${DateTime.now().millisecondsSinceEpoch}.$extension';
+        remoteUrl = await _uploadFile('product-photos', imageUrl, remotePath);
+      }
 
-    await _client.from('products').insert({
-      'id': productId,
-      'sku': sku,
-      'name': name,
-      'brand': brand,
-      'category_id': categoryId,
-      'cost_price': costPrice,
-      'selling_price': sellingPrice,
-      'mrp': mrp,
-      'minimum_stock': minimumStock,
-      'image_url': remoteUrl,
-      'description': description,
-    });
+      String? remoteUrl2 = imageUrl2;
+      if (imageUrl2 != null && imageUrl2.isNotEmpty && !imageUrl2.startsWith('http')) {
+        final extension = imageUrl2.split('.').last.split('?').first.toLowerCase();
+        final remotePath = '$productId/photo_2_${DateTime.now().millisecondsSinceEpoch}.$extension';
+        remoteUrl2 = await _uploadFile('product-photos', imageUrl2, remotePath);
+      }
 
-    if (stock > 0) {
-      await _client.from('inventory_transactions').insert({
-        'id': UuidUtils.generate(),
-        'product_id': productId,
-        'transaction_type': 'PURCHASE',
-        'quantity': stock,
-        'reference_id': 'INIT_PURCHASE',
-        'remarks': 'Initial product add stock',
-        'created_by': 'collector_local',
+      final now = DateTime.now().toIso8601String();
+      await _client.from('products').insert({
+        'id': productId,
+        'sku': sku,
+        'name': name,
+        'brand': brand,
+        'category_id': categoryId,
+        'cost_price': costPrice,
+        'selling_price': sellingPrice,
+        'mrp': mrp,
+        'minimum_stock': minimumStock,
+        'image_url': remoteUrl,
+        'image_url2': remoteUrl2,
+        'description': description,
+        'mfg_date': mfgDate,
+        'warranty': warranty,
+        'updated_at': updatedAt ?? now,
       });
-    }
 
-    final prod = await getProductById(productId);
-    return prod!;
+      if (stock > 0) {
+        await _client.from('inventory_transactions').insert({
+          'id': UuidUtils.generate(),
+          'product_id': productId,
+          'transaction_type': 'PURCHASE',
+          'quantity': stock,
+          'reference_id': 'INIT_PURCHASE',
+          'remarks': 'Initial product add stock',
+          'created_by': 'collector_local',
+        });
+      }
+
+      final prod = await getProductById(productId);
+      return prod!;
+    });
+    if (result != null) return result;
+    return (await getProducts()).first;
   }
 
   @override
   Future<void> updateProduct(Product product) async {
-    final existing = await getProductById(product.id);
-    if (existing != null) {
-      final oldImageUrl = existing.imageUrl;
-      final newImageUrl = product.imageUrl;
-      if (oldImageUrl != null &&
-          oldImageUrl.startsWith('http') &&
-          (newImageUrl == null || newImageUrl.isEmpty || !newImageUrl.startsWith('http'))) {
-        await _deleteFile('product-photos', oldImageUrl);
+    await IdempotencyLock.instance.run('update_product_${product.id}', () async {
+      final existing = await getProductById(product.id);
+      if (existing != null) {
+        final oldImageUrl = existing.imageUrl;
+        final newImageUrl = product.imageUrl;
+        if (oldImageUrl != null &&
+            oldImageUrl.startsWith('http') &&
+            (newImageUrl == null || newImageUrl.isEmpty || !newImageUrl.startsWith('http'))) {
+          await _deleteFile('product-photos', oldImageUrl);
+        }
+        final oldImageUrl2 = existing.imageUrl2;
+        final newImageUrl2 = product.imageUrl2;
+        if (oldImageUrl2 != null &&
+            oldImageUrl2.startsWith('http') &&
+            (newImageUrl2 == null || newImageUrl2.isEmpty || !newImageUrl2.startsWith('http'))) {
+          await _deleteFile('product-photos', oldImageUrl2);
+        }
       }
-    }
 
-    String? remoteUrl = product.imageUrl;
-    if (remoteUrl != null && remoteUrl.isNotEmpty && !remoteUrl.startsWith('http')) {
-      final extension = remoteUrl.split('.').last.split('?').first.toLowerCase();
-      final remotePath = '${product.id}/photo_${DateTime.now().millisecondsSinceEpoch}.$extension';
-      remoteUrl = await _uploadFile('product-photos', remoteUrl, remotePath);
-    }
-
-    await _client.from('products').update({
-      'sku': product.sku,
-      'name': product.name,
-      'brand': product.brand,
-      'category_id': product.categoryId,
-      'cost_price': product.costPrice,
-      'selling_price': product.sellingPrice,
-      'mrp': product.mrp,
-      'minimum_stock': product.minimumStock,
-      'stock': product.stock,
-      'image_url': remoteUrl,
-      'description': product.description,
-    }).eq('id', product.id);
-
-    // Calculate current stock from inventory_transactions in Supabase
-    final stockRes = await _client
-        .from('inventory_transactions')
-        .select('transaction_type, quantity')
-        .eq('product_id', product.id);
-
-    int currentStock = 0;
-    for (final tx in stockRes) {
-      final type = tx['transaction_type'] as String?;
-      final qty = (tx['quantity'] as num?)?.toInt() ?? 0;
-      if (type == 'PURCHASE' || type == 'ADJUSTMENT') {
-        currentStock += qty;
-      } else if (type == 'SALE') {
-        currentStock -= qty;
+      String? remoteUrl = product.imageUrl;
+      if (remoteUrl != null && remoteUrl.isNotEmpty && !remoteUrl.startsWith('http')) {
+        final extension = remoteUrl.split('.').last.split('?').first.toLowerCase();
+        final remotePath = '${product.id}/photo_1_${DateTime.now().millisecondsSinceEpoch}.$extension';
+        remoteUrl = await _uploadFile('product-photos', remoteUrl, remotePath);
       }
-    }
 
-    final delta = product.stock - currentStock;
-    if (delta != 0) {
-      await _client.from('inventory_transactions').insert({
-        'id': UuidUtils.generate(),
-        'product_id': product.id,
-        'transaction_type': 'ADJUSTMENT',
-        'quantity': delta,
-        'reference_id': 'MANUAL_EDIT',
-        'remarks': 'Stock adjusted via edit product',
-        'created_by': 'collector_local',
-      });
-    }
+      String? remoteUrl2 = product.imageUrl2;
+      if (remoteUrl2 != null && remoteUrl2.isNotEmpty && !remoteUrl2.startsWith('http')) {
+        final extension = remoteUrl2.split('.').last.split('?').first.toLowerCase();
+        final remotePath = '${product.id}/photo_2_${DateTime.now().millisecondsSinceEpoch}.$extension';
+        remoteUrl2 = await _uploadFile('product-photos', remoteUrl2, remotePath);
+      }
+
+      await _client.from('products').update({
+        'sku': product.sku,
+        'name': product.name,
+        'brand': product.brand,
+        'category_id': product.categoryId,
+        'cost_price': product.costPrice,
+        'selling_price': product.sellingPrice,
+        'mrp': product.mrp,
+        'minimum_stock': product.minimumStock,
+        'stock': product.stock,
+        'image_url': remoteUrl,
+        'image_url2': remoteUrl2,
+        'description': product.description,
+        'mfg_date': product.mfgDate,
+        'warranty': product.warranty,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', product.id);
+
+      // Calculate current stock from inventory_transactions in Supabase
+      final stockRes = await _client
+          .from('inventory_transactions')
+          .select('transaction_type, quantity')
+          .eq('product_id', product.id);
+
+      int currentStock = 0;
+      for (final tx in stockRes) {
+        final type = tx['transaction_type'] as String?;
+        final qty = (tx['quantity'] as num?)?.toInt() ?? 0;
+        if (type == 'PURCHASE' || type == 'ADJUSTMENT') {
+          currentStock += qty;
+        } else if (type == 'SALE') {
+          currentStock -= qty;
+        }
+      }
+
+      final delta = product.stock - currentStock;
+      if (delta != 0) {
+        await _client.from('inventory_transactions').insert({
+          'id': UuidUtils.generate(),
+          'product_id': product.id,
+          'transaction_type': 'ADJUSTMENT',
+          'quantity': delta,
+          'reference_id': 'MANUAL_EDIT',
+          'remarks': 'Stock adjusted via edit product',
+          'created_by': 'collector_local',
+        });
+      }
+    });
   }
 
   @override

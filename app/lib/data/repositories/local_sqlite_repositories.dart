@@ -18,6 +18,7 @@ import '../models/category.dart';
 import '../local/database_helper.dart';
 
 import '../../core/utils/uuid.dart';
+import '../../core/utils/idempotency.dart';
 import 'customer_repository.dart';
 import 'route_repository.dart';
 import 'collection_repository.dart';
@@ -468,75 +469,80 @@ class LocalSqliteCustomerRepository implements CustomerRepository {
     Location? location,
     String? profileUrl,
   }) async {
-    final db = await DatabaseHelper.instance.database;
-    final idResult = await db.rawQuery("SELECT id FROM customers WHERE id LIKE 'CU-%'");
-    int maxId = 0;
-    for (final row in idResult) {
-      final rawId = row['id']?.toString() ?? '';
-      final numPart = rawId.replaceAll('CU-', '');
-      final parsed = int.tryParse(numPart);
-      if (parsed != null && parsed > maxId) {
-        maxId = parsed;
+    final result = await IdempotencyLock.instance.run('add_customer_${phone}_$name', () async {
+      final db = await DatabaseHelper.instance.database;
+      final idResult = await db.rawQuery("SELECT id FROM customers WHERE id LIKE 'CU-%'");
+      int maxId = 0;
+      for (final row in idResult) {
+        final rawId = row['id']?.toString() ?? '';
+        final numPart = rawId.replaceAll('CU-', '');
+        final parsed = int.tryParse(numPart);
+        if (parsed != null && parsed > maxId) {
+          maxId = parsed;
+        }
       }
-    }
-    final nextIdNum = maxId + 1;
-    final customerId = 'CU-${nextIdNum.toString().padLeft(3, '0')}';
+      final nextIdNum = maxId + 1;
+      final customerId = 'CU-${nextIdNum.toString().padLeft(3, '0')}';
 
-    final wCode = weekdayId.replaceAll('w-', 'W').toUpperCase();
-    final pCode = placeId.replaceAll('p-', 'P').toUpperCase();
-    final aCode = areaId.replaceAll('a-', 'A').toUpperCase();
-    final paddedId = nextIdNum.toString().padLeft(3, '0');
-    final customerCode = '$wCode-$pCode-$aCode-$paddedId';
+      final wCode = weekdayId.replaceAll('w-', 'W').toUpperCase();
+      final pCode = placeId.replaceAll('p-', 'P').toUpperCase();
+      final aCode = areaId.replaceAll('a-', 'A').toUpperCase();
+      final paddedId = nextIdNum.toString().padLeft(3, '0');
+      final customerCode = '$wCode-$pCode-$aCode-$paddedId';
 
-    final customerMap = {
-      'id': customerId,
-      'customer_code': customerCode,
-      'name': name,
-      'phone': phone,
-      'alternate_phone': alternatePhone,
-      'address': address,
-      'landmark': landmark,
-      'profile_url': profileUrl,
-      'location_url': location != null ? 'https://maps.google.com/?q=${location.lat},${location.lng}' : null,
-      'latitude': location?.lat,
-      'longitude': location?.lng,
-      'weekday_id': weekdayId,
-      'place_id': placeId,
-      'area_id': areaId,
-      'status': 'ACTIVE',
-      'dob': dob,
-      'occupation': occupation,
-      'notes': notes,
-      'created_by': 'collector_local',
-      'nominees': jsonEncode((nominees ?? []).map((n) => n.toJson()).toList()),
-      'id_proofs': jsonEncode((idProofs ?? []).map((p) => p.toJson()).toList()),
-    };
+      final customerMap = {
+        'id': customerId,
+        'customer_code': customerCode,
+        'name': name,
+        'phone': phone,
+        'alternate_phone': alternatePhone,
+        'address': address,
+        'landmark': landmark,
+        'profile_url': profileUrl,
+        'location_url': location != null ? 'https://maps.google.com/?q=${location.lat},${location.lng}' : null,
+        'latitude': location?.lat,
+        'longitude': location?.lng,
+        'weekday_id': weekdayId,
+        'place_id': placeId,
+        'area_id': areaId,
+        'status': 'ACTIVE',
+        'dob': dob,
+        'occupation': occupation,
+        'notes': notes,
+        'created_by': 'collector_local',
+        'nominees': jsonEncode((nominees ?? []).map((n) => n.toJson()).toList()),
+        'id_proofs': jsonEncode((idProofs ?? []).map((p) => p.toJson()).toList()),
+      };
 
-    await db.transaction((txn) async {
-      await txn.insert('customers', customerMap);
+      await db.transaction((txn) async {
+        await txn.insert('customers', customerMap);
 
-      // Handle opening balance as initial credit sale
-      if (openingBalance > 0) {
-        final saleId = 'sale_ob_$customerId';
-        await txn.insert('sales', {
-          'id': saleId,
-          'customer_id': customerId,
-          'sale_datetime': DateTime.now().toIso8601String(),
-          'sale_type': 'CREDIT',
-          'total_amount': openingBalance,
-          'advance_amount': 0,
-          'financed_amount': openingBalance,
-          'sold_by': 'system',
-          'remarks': 'Opening balance',
-        });
-      }
+        // Handle opening balance as initial credit sale
+        if (openingBalance > 0) {
+          final saleId = 'sale_ob_$customerId';
+          await txn.insert('sales', {
+            'id': saleId,
+            'customer_id': customerId,
+            'sale_datetime': DateTime.now().toIso8601String(),
+            'sale_type': 'CREDIT',
+            'total_amount': openingBalance,
+            'advance_amount': 0,
+            'financed_amount': openingBalance,
+            'sold_by': 'system',
+            'remarks': 'Opening balance',
+          });
+        }
+      });
+
+      TableBroadcaster.instance.notify('customers');
+      TableBroadcaster.instance.notify('sales');
+
+      final created = await getCustomerById(customerId);
+      return created!;
     });
-
-    TableBroadcaster.instance.notify('customers');
-    TableBroadcaster.instance.notify('sales');
-
-    final created = await getCustomerById(customerId);
-    return created!;
+    if (result != null) return result;
+    final all = await getAllCustomers();
+    return all.firstWhere((c) => c.phone == phone && c.name == name);
   }
 
   @override
@@ -832,40 +838,42 @@ class LocalSqliteCollectionRepository implements CollectionRepository {
     DateTime? customDate,
     Map<String, int>? allocations,
   }) async {
-    final db = await DatabaseHelper.instance.database;
-    final collectionId = UuidUtils.generate();
+    await IdempotencyLock.instance.run('save_collection_$customerId', () async {
+      final db = await DatabaseHelper.instance.database;
+      final collectionId = UuidUtils.generate();
 
-    final adjustedAmount = (status == 'CARRY_FORWARD') ? 0.0 : amount;
+      final adjustedAmount = (status == 'CARRY_FORWARD') ? 0.0 : amount;
 
-    // Append allocations to reason
-    String finalReason = reason ?? '';
-    if (allocations != null && allocations.isNotEmpty) {
-      finalReason += '&allocations=${jsonEncode(allocations)}';
-    }
+      // Append allocations to reason
+      String finalReason = reason ?? '';
+      if (allocations != null && allocations.isNotEmpty) {
+        finalReason += '&allocations=${jsonEncode(allocations)}';
+      }
 
-    await db.transaction((txn) async {
-      await txn.insert('collections', {
-        'id': collectionId,
-        'customer_id': customerId,
-        'visit_datetime': (customDate ?? DateTime.now()).toIso8601String(),
-        'status': status,
-        'amount': adjustedAmount,
-        'reason': finalReason,
-        'collected_by': collectedBy,
+      await db.transaction((txn) async {
+        await txn.insert('collections', {
+          'id': collectionId,
+          'customer_id': customerId,
+          'visit_datetime': (customDate ?? DateTime.now()).toIso8601String(),
+          'status': status,
+          'amount': adjustedAmount,
+          'reason': finalReason,
+          'collected_by': collectedBy,
+        });
+
+        if (allocations != null && allocations.isNotEmpty) {
+          for (var entry in allocations.entries) {
+            await txn.rawUpdate(
+              'UPDATE sale_items SET collected_amount = collected_amount + ? WHERE id = ?',
+              [entry.value, entry.key],
+            );
+          }
+        }
       });
 
-      if (allocations != null && allocations.isNotEmpty) {
-        for (var entry in allocations.entries) {
-          await txn.rawUpdate(
-            'UPDATE sale_items SET collected_amount = collected_amount + ? WHERE id = ?',
-            [entry.value, entry.key],
-          );
-        }
-      }
+      TableBroadcaster.instance.notify('collections');
+      TableBroadcaster.instance.notify('sale_items');
     });
-
-    TableBroadcaster.instance.notify('collections');
-    TableBroadcaster.instance.notify('sale_items');
   }
 
   @override
@@ -975,119 +983,121 @@ class LocalSqliteSaleRepository implements SaleRepository {
     int? lendAmount,
     int appliedCredit = 0,
   }) async {
-    final db = await DatabaseHelper.instance.database;
-    final saleId = UuidUtils.generate();
+    await IdempotencyLock.instance.run('save_sale_$customerId', () async {
+      final db = await DatabaseHelper.instance.database;
+      final saleId = UuidUtils.generate();
 
-    // Calculate totals
-    int totalAmount = 0;
-    if (lendAmount != null) {
-      totalAmount = lendAmount;
-    } else {
-      for (var item in items) {
-        final qty = item['quantity'] as int;
-        final unitPrice = item['unitPrice'] as int;
-        totalAmount += qty * unitPrice;
+      // Calculate totals
+      int totalAmount = 0;
+      if (lendAmount != null) {
+        totalAmount = lendAmount;
+      } else {
+        for (var item in items) {
+          final qty = item['quantity'] as int;
+          final unitPrice = item['unitPrice'] as int;
+          totalAmount += qty * unitPrice;
+        }
       }
-    }
-    totalAmount -= discount;
-    totalAmount += creditCharge;
+      totalAmount -= discount;
+      totalAmount += creditCharge;
 
-    // Business Rule 5: Enforce advance <= totalAmount
-    if (advanceAmount > totalAmount) {
-      throw ArgumentError('Advance amount (₹${advanceAmount / 100}) cannot exceed sale total (₹${totalAmount / 100})');
-    }
-
-    await db.transaction((txn) async {
-      final customerMaps = await txn.query('customers', where: 'id = ?', whereArgs: [customerId]);
-      if (customerMaps.isEmpty) throw Exception('Customer not found');
-      final int currentCredit = customerMaps.first['credit'] as int? ?? 0;
-
-      final int creditUsed = appliedCredit.clamp(0, currentCredit < totalAmount ? currentCredit : totalAmount);
-
-      if (creditUsed > 0) {
-        await txn.update('customers', {
-          'credit': currentCredit - creditUsed,
-        }, where: 'id = ?', whereArgs: [customerId]);
+      // Business Rule 5: Enforce advance <= totalAmount
+      if (advanceAmount > totalAmount) {
+        throw ArgumentError('Advance amount (₹${advanceAmount / 100}) cannot exceed sale total (₹${totalAmount / 100})');
       }
 
-      final finalAdvanceAmount = advanceAmount + creditUsed;
-      final finalFinancedAmount = totalAmount - finalAdvanceAmount < 0 ? 0 : totalAmount - finalAdvanceAmount;
-      final finalSaleType = lendAmount != null ? 'LEND' : ((finalFinancedAmount == 0) ? 'READY' : 'CREDIT');
+      await db.transaction((txn) async {
+        final customerMaps = await txn.query('customers', where: 'id = ?', whereArgs: [customerId]);
+        if (customerMaps.isEmpty) throw Exception('Customer not found');
+        final int currentCredit = customerMaps.first['credit'] as int? ?? 0;
 
-      final saleDate = (customDate ?? DateTime.now()).toIso8601String();
+        final int creditUsed = appliedCredit.clamp(0, currentCredit < totalAmount ? currentCredit : totalAmount);
 
-      // Save sale
-      await txn.insert('sales', {
-        'id': saleId,
-        'customer_id': customerId,
-        'sale_datetime': saleDate,
-        'sale_type': finalSaleType,
-        'total_amount': totalAmount,
-        'advance_amount': finalAdvanceAmount,
-        'financed_amount': finalFinancedAmount,
-        'sold_by': soldBy,
-        'remarks': creditUsed > 0 
-            ? '${remarks ?? ""}\n(Credit used: ₹$creditUsed)'.trim() 
-            : remarks,
-      });
-
-      // Save sale items and log inventory transactions
-      final int totalBaseAmount = items.fold<int>(0, (sum, i) => sum + ((i['quantity'] as int) * (i['unitPrice'] as int)));
-      final int netAdjustment = creditCharge - discount;
-
-      int remainingAdvance = finalAdvanceAmount;
-      int adjustmentRemaining = netAdjustment;
-      for (int i = 0; i < items.length; i++) {
-        final item = items[i];
-        final productId = item['productId'] as String;
-        final qty = item['quantity'] as int;
-        final baseUnitPrice = item['unitPrice'] as int;
-        final baseItemTotal = qty * baseUnitPrice;
-        final itemId = UuidUtils.generate();
-
-        final int itemAdjustment = (i == items.length - 1)
-            ? adjustmentRemaining
-            : (totalBaseAmount > 0 ? ((baseItemTotal * netAdjustment) / totalBaseAmount).round() : 0);
-        adjustmentRemaining -= itemAdjustment;
-
-        final itemTotal = baseItemTotal + itemAdjustment;
-        final unitPrice = qty > 0 ? (itemTotal / qty).round() : itemTotal;
-
-        final customAlloc = item['allocatedAmount'] as int?;
-        final itemCollected = customAlloc != null
-            ? customAlloc.clamp(0, itemTotal)
-            : (remainingAdvance >= itemTotal ? itemTotal : remainingAdvance);
-        if (customAlloc == null) {
-          remainingAdvance -= itemCollected;
+        if (creditUsed > 0) {
+          await txn.update('customers', {
+            'credit': currentCredit - creditUsed,
+          }, where: 'id = ?', whereArgs: [customerId]);
         }
 
-        await txn.insert('sale_items', {
-          'id': itemId,
-          'sale_id': saleId,
-          'product_id': productId,
-          'quantity': qty,
-          'unit_price': unitPrice,
-          'total_price': itemTotal,
-          'collected_amount': itemCollected,
-          'created_at': saleDate,
+        final finalAdvanceAmount = advanceAmount + creditUsed;
+        final finalFinancedAmount = totalAmount - finalAdvanceAmount < 0 ? 0 : totalAmount - finalAdvanceAmount;
+        final finalSaleType = lendAmount != null ? 'LEND' : ((finalFinancedAmount == 0) ? 'READY' : 'CREDIT');
+
+        final saleDate = (customDate ?? DateTime.now()).toIso8601String();
+
+        // Save sale
+        await txn.insert('sales', {
+          'id': saleId,
+          'customer_id': customerId,
+          'sale_datetime': saleDate,
+          'sale_type': finalSaleType,
+          'total_amount': totalAmount,
+          'advance_amount': finalAdvanceAmount,
+          'financed_amount': finalFinancedAmount,
+          'sold_by': soldBy,
+          'remarks': creditUsed > 0 
+              ? '${remarks ?? ""}\n(Credit used: ₹$creditUsed)'.trim() 
+              : remarks,
         });
 
-        // Rule 11: Transaction-driven inventory deduct
-        await txn.insert('inventory_transactions', {
-          'id': UuidUtils.generate(),
-          'product_id': productId,
-          'transaction_type': 'SALE',
-          'quantity': qty,
-          'reference_id': saleId,
-          'remarks': 'Sale to customer',
-          'created_by': soldBy,
-          'created_at': saleDate,
-        });
-      }
+        // Save sale items and log inventory transactions
+        final int totalBaseAmount = items.fold<int>(0, (sum, i) => sum + ((i['quantity'] as int) * (i['unitPrice'] as int)));
+        final int netAdjustment = creditCharge - discount;
+
+        int remainingAdvance = finalAdvanceAmount;
+        int adjustmentRemaining = netAdjustment;
+        for (int i = 0; i < items.length; i++) {
+          final item = items[i];
+          final productId = item['productId'] as String;
+          final qty = item['quantity'] as int;
+          final baseUnitPrice = item['unitPrice'] as int;
+          final baseItemTotal = qty * baseUnitPrice;
+          final itemId = UuidUtils.generate();
+
+          final int itemAdjustment = (i == items.length - 1)
+              ? adjustmentRemaining
+              : (totalBaseAmount > 0 ? ((baseItemTotal * netAdjustment) / totalBaseAmount).round() : 0);
+          adjustmentRemaining -= itemAdjustment;
+
+          final itemTotal = baseItemTotal + itemAdjustment;
+          final unitPrice = qty > 0 ? (itemTotal / qty).round() : itemTotal;
+
+          final customAlloc = item['allocatedAmount'] as int?;
+          final itemCollected = customAlloc != null
+              ? customAlloc.clamp(0, itemTotal)
+              : (remainingAdvance >= itemTotal ? itemTotal : remainingAdvance);
+          if (customAlloc == null) {
+            remainingAdvance -= itemCollected;
+          }
+
+          await txn.insert('sale_items', {
+            'id': itemId,
+            'sale_id': saleId,
+            'product_id': productId,
+            'quantity': qty,
+            'unit_price': unitPrice,
+            'total_price': itemTotal,
+            'collected_amount': itemCollected,
+            'created_at': saleDate,
+          });
+
+          // Rule 11: Transaction-driven inventory deduct
+          await txn.insert('inventory_transactions', {
+            'id': UuidUtils.generate(),
+            'product_id': productId,
+            'transaction_type': 'SALE',
+            'quantity': qty,
+            'reference_id': saleId,
+            'remarks': 'Sale to customer',
+            'created_by': soldBy,
+            'created_at': saleDate,
+          });
+        }
+      });
+
+      TableBroadcaster.instance.notify('sales');
+      TableBroadcaster.instance.notify('inventory_transactions');
     });
-
-    TableBroadcaster.instance.notify('sales');
-    TableBroadcaster.instance.notify('inventory_transactions');
   }
 
   @override
@@ -1139,142 +1149,146 @@ class LocalSqliteSaleRepository implements SaleRepository {
     String? tallyProductName,
     int? tallyAmount,
   }) async {
-    final db = await DatabaseHelper.instance.database;
-    
-    await db.transaction((txn) async {
-      final itemMaps = await txn.query('sale_items', where: 'id = ?', whereArgs: [saleItemId]);
-      if (itemMaps.isEmpty) throw Exception('Sale item not found');
-      final r = itemMaps.first;
-      final item = SaleItem.fromJson({
-        'id': r['id'],
-        'saleId': r['sale_id'],
-        'productId': r['product_id'],
-        'quantity': r['quantity'],
-        'unitPrice': r['unit_price'],
-        'totalPrice': r['total_price'],
-        'status': r['status'] ?? 'purchased',
-        'collectedAmount': r['collected_amount'] ?? 0,
-      });
+    await IdempotencyLock.instance.run('return_product_$saleItemId', () async {
+      final db = await DatabaseHelper.instance.database;
       
-      final saleMaps = await txn.query('sales', where: 'id = ?', whereArgs: [item.saleId]);
-      if (saleMaps.isEmpty) throw Exception('Parent sale not found');
-      final saleMap = saleMaps.first;
-      final customerId = saleMap['customer_id'] as String;
-      final int totalAmount = saleMap['total_amount'] as int;
-      final int financedAmount = saleMap['financed_amount'] as int;
-
-      await txn.update('sale_items', {
-        'status': 'returned',
-      }, where: 'id = ?', whereArgs: [saleItemId]);
-
-      int actualTallyAmount = 0;
-      int creditRemainder = collectedAmount;
-
-      if (tallyOut) {
-        if (tallyAmount != null) {
-          actualTallyAmount = tallyAmount;
-        } else {
-          final financedResult = await txn.rawQuery(
-            'SELECT SUM(financed_amount) AS total FROM sales WHERE customer_id = ?',
-            [customerId],
-          );
-          final collectionResult = await txn.rawQuery(
-            'SELECT SUM(amount) AS total FROM collections WHERE customer_id = ? AND status IN (\'PAYMENT\', \'PARTIAL_PAYMENT\')',
-            [customerId],
-          );
-          final totalFinanced = Sqflite.firstIntValue(financedResult) ?? 0;
-          final totalCollected = Sqflite.firstIntValue(collectionResult) ?? 0;
-          final outstanding = totalFinanced - totalCollected;
-
-          final unpaidPortion = item.totalPrice - collectedAmount;
-          final otherOutstanding = outstanding - unpaidPortion;
-          final actualOtherOutstanding = otherOutstanding < 0 ? 0 : otherOutstanding;
-          actualTallyAmount = collectedAmount < actualOtherOutstanding ? collectedAmount : actualOtherOutstanding;
-        }
-        creditRemainder = collectedAmount - actualTallyAmount;
-      }
-
-      final productMaps = await txn.query('products', where: 'id = ?', whereArgs: [item.productId]);
-      final productName = productMaps.isNotEmpty ? productMaps.first['name'] as String : 'Product';
-
-      if (actualTallyAmount > 0) {
-        final reasonText = tallyProductName != null
-            ? 'Return Tally Out: $productName applied to $tallyProductName'
-            : 'Return Tally Out: $productName';
+      await db.transaction((txn) async {
+        final itemMaps = await txn.query('sale_items', where: 'id = ?', whereArgs: [saleItemId]);
+        if (itemMaps.isEmpty) throw Exception('Sale item not found');
+        final r = itemMaps.first;
+        final item = SaleItem.fromJson({
+          'id': r['id'],
+          'saleId': r['sale_id'],
+          'productId': r['product_id'],
+          'quantity': r['quantity'],
+          'unitPrice': r['unit_price'],
+          'totalPrice': r['total_price'],
+          'status': r['status'] ?? 'purchased',
+          'collectedAmount': r['collected_amount'] ?? 0,
+        });
         
-        final Map<String, int> allocationMap = {};
-        if (tallySaleItemId != null) {
-          allocationMap[tallySaleItemId] = actualTallyAmount;
+        final saleMaps = await txn.query('sales', where: 'id = ?', whereArgs: [item.saleId]);
+        if (saleMaps.isEmpty) throw Exception('Parent sale not found');
+        final saleMap = saleMaps.first;
+        final customerId = saleMap['customer_id'] as String;
+        final int totalAmount = saleMap['total_amount'] as int;
+        final int financedAmount = saleMap['financed_amount'] as int;
+
+        await txn.update('sale_items', {
+          'status': 'returned',
+        }, where: 'id = ?', whereArgs: [saleItemId]);
+
+        int actualTallyAmount = 0;
+        int creditRemainder = collectedAmount;
+
+        if (tallyOut) {
+          if (tallyAmount != null) {
+            actualTallyAmount = tallyAmount;
+          } else {
+            final financedResult = await txn.rawQuery(
+              'SELECT SUM(financed_amount) AS total FROM sales WHERE customer_id = ?',
+              [customerId],
+            );
+            final collectionResult = await txn.rawQuery(
+              'SELECT SUM(amount) AS total FROM collections WHERE customer_id = ? AND status IN (\'PAYMENT\', \'PARTIAL_PAYMENT\')',
+              [customerId],
+            );
+            final totalFinanced = Sqflite.firstIntValue(financedResult) ?? 0;
+            final totalCollected = Sqflite.firstIntValue(collectionResult) ?? 0;
+            final outstanding = totalFinanced - totalCollected;
+
+            final unpaidPortion = item.totalPrice - collectedAmount;
+            final otherOutstanding = outstanding - unpaidPortion;
+            final actualOtherOutstanding = otherOutstanding < 0 ? 0 : otherOutstanding;
+            actualTallyAmount = collectedAmount < actualOtherOutstanding ? collectedAmount : actualOtherOutstanding;
+          }
+          creditRemainder = collectedAmount - actualTallyAmount;
         }
 
-        final finalReason = reasonText + (tallySaleItemId != null ? '&allocations=${jsonEncode(allocationMap)}' : '');
+        final productMaps = await txn.query('products', where: 'id = ?', whereArgs: [item.productId]);
+        final productName = productMaps.isNotEmpty ? productMaps.first['name'] as String : 'Product';
 
-        await txn.insert('collections', {
+        if (actualTallyAmount > 0) {
+          final reasonText = tallyProductName != null
+              ? 'Return Tally Out: $productName applied to $tallyProductName'
+              : 'Return Tally Out: $productName';
+          
+          final Map<String, int> allocationMap = {};
+          if (tallySaleItemId != null) {
+            allocationMap[tallySaleItemId] = actualTallyAmount;
+          }
+
+          final finalReason = reasonText + (tallySaleItemId != null ? '&allocations=${jsonEncode(allocationMap)}' : '');
+
+          await txn.insert('collections', {
+            'id': UuidUtils.generate(),
+            'customer_id': customerId,
+            'visit_datetime': DateTime.now().toIso8601String(),
+            'status': 'PAYMENT',
+            'amount': actualTallyAmount.toDouble(),
+            'reason': finalReason,
+            'collected_by': processedBy,
+          });
+
+          if (tallySaleItemId != null) {
+            await txn.rawUpdate(
+              'UPDATE sale_items SET collected_amount = collected_amount + ? WHERE id = ?',
+              [actualTallyAmount, tallySaleItemId],
+            );
+          }
+        }
+
+        if (creditRemainder > 0) {
+          final customerMaps = await txn.query('customers', where: 'id = ?', whereArgs: [customerId]);
+          if (customerMaps.isEmpty) throw Exception('Customer not found');
+          final int currentCredit = customerMaps.first['credit'] as int? ?? 0;
+          await txn.update('customers', {
+            'credit': currentCredit + creditRemainder,
+          }, where: 'id = ?', whereArgs: [customerId]);
+        }
+
+        await txn.insert('inventory_transactions', {
           'id': UuidUtils.generate(),
-          'customer_id': customerId,
-          'visit_datetime': DateTime.now().toIso8601String(),
-          'status': 'PAYMENT',
-          'amount': actualTallyAmount.toDouble(),
-          'reason': finalReason,
-          'collected_by': processedBy,
+          'product_id': item.productId,
+          'transaction_type': 'ADJUSTMENT',
+          'quantity': item.quantity,
+          'reference_id': saleItemId,
+          'remarks': 'Customer product return',
+          'created_by': processedBy,
+          'created_at': DateTime.now().toIso8601String(),
         });
 
-        if (tallySaleItemId != null) {
-          await txn.rawUpdate(
-            'UPDATE sale_items SET collected_amount = collected_amount + ? WHERE id = ?',
-            [actualTallyAmount, tallySaleItemId],
-          );
-        }
-      }
+        final unpaidPortion = (item.totalPrice - collectedAmount).clamp(0, item.totalPrice);
+        final financedReduction = unpaidPortion;
 
-      if (creditRemainder > 0) {
-        final customerMaps = await txn.query('customers', where: 'id = ?', whereArgs: [customerId]);
-        if (customerMaps.isEmpty) throw Exception('Customer not found');
-        final int currentCredit = customerMaps.first['credit'] as int? ?? 0;
-        await txn.update('customers', {
-          'credit': currentCredit + creditRemainder,
-        }, where: 'id = ?', whereArgs: [customerId]);
-      }
+        final newTotalAmount = totalAmount - unpaidPortion < 0 ? 0 : totalAmount - unpaidPortion;
+        final newFinancedAmount = financedAmount - financedReduction < 0 ? 0 : financedAmount - financedReduction;
 
-      await txn.insert('inventory_transactions', {
-        'id': UuidUtils.generate(),
-        'product_id': item.productId,
-        'transaction_type': 'ADJUSTMENT',
-        'quantity': item.quantity,
-        'reference_id': saleItemId,
-        'remarks': 'Customer product return',
-        'created_by': processedBy,
-        'created_at': DateTime.now().toIso8601String(),
+        await txn.update('sales', {
+          'total_amount': newTotalAmount,
+          'financed_amount': newFinancedAmount,
+        }, where: 'id = ?', whereArgs: [item.saleId]);
       });
 
-      final unpaidPortion = (item.totalPrice - collectedAmount).clamp(0, item.totalPrice);
-      final financedReduction = unpaidPortion;
-
-      final newTotalAmount = totalAmount - unpaidPortion < 0 ? 0 : totalAmount - unpaidPortion;
-      final newFinancedAmount = financedAmount - financedReduction < 0 ? 0 : financedAmount - financedReduction;
-
-      await txn.update('sales', {
-        'total_amount': newTotalAmount,
-        'financed_amount': newFinancedAmount,
-      }, where: 'id = ?', whereArgs: [item.saleId]);
+      TableBroadcaster.instance.notify('sales');
+      TableBroadcaster.instance.notify('sale_items');
+      TableBroadcaster.instance.notify('customers');
+      TableBroadcaster.instance.notify('collections');
+      TableBroadcaster.instance.notify('inventory_transactions');
     });
-
-    TableBroadcaster.instance.notify('sales');
-    TableBroadcaster.instance.notify('sale_items');
-    TableBroadcaster.instance.notify('customers');
-    TableBroadcaster.instance.notify('collections');
-    TableBroadcaster.instance.notify('inventory_transactions');
   }
 
   @override
   Future<void> settleProduct(String saleItemId) async {
-    final db = await DatabaseHelper.instance.database;
-    await db.update('sale_items', {
-      'status': 'settled',
-    }, where: 'id = ?', whereArgs: [saleItemId]);
-    
-    TableBroadcaster.instance.notify('sale_items');
-    TableBroadcaster.instance.notify('sales');
+    await IdempotencyLock.instance.run('settle_product_$saleItemId', () async {
+      final db = await DatabaseHelper.instance.database;
+      await db.update('sale_items', {
+        'status': 'settled',
+      }, where: 'id = ?', whereArgs: [saleItemId]);
+      
+      TableBroadcaster.instance.notify('sale_items');
+      TableBroadcaster.instance.notify('sales');
+    });
   }
 }
 
@@ -1298,7 +1312,11 @@ class LocalSqliteProductRepository implements ProductRepository {
       sellingPrice: m['selling_price'] as int,
       mrp: m['mrp'] as int,
       imageUrl: m['image_url'] as String?,
+      imageUrl2: m['image_url2'] as String?,
       description: m['description'] as String?,
+      mfgDate: m['mfg_date'] as String? ?? 'JAN 2026',
+      warranty: (m['warranty'] as num?)?.toDouble() ?? 0.0,
+      updatedAt: m['updated_at'] as String?,
     )).toList();
   }
 
@@ -1345,100 +1363,119 @@ class LocalSqliteProductRepository implements ProductRepository {
     required int minimumStock,
     String? description,
     String? imageUrl,
+    String? imageUrl2,
+    String mfgDate = 'JAN 2026',
+    double warranty = 0.0,
+    String? updatedAt,
   }) async {
-    final db = await DatabaseHelper.instance.database;
-    final productId = UuidUtils.generate();
+    final result = await IdempotencyLock.instance.run('add_product_${sku}_$name', () async {
+      final db = await DatabaseHelper.instance.database;
+      final productId = UuidUtils.generate();
+      final now = DateTime.now().toIso8601String();
 
-    await db.transaction((txn) async {
-      // 1. Insert product
-      await txn.insert('products', {
-        'id': productId,
-        'sku': sku,
-        'name': name,
-        'brand': brand,
-        'category_id': categoryId,
-        'cost_price': costPrice,
-        'selling_price': sellingPrice,
-        'mrp': mrp,
-        'minimum_stock': minimumStock,
-        'stock': stock,
-        'image_url': imageUrl,
-        'description': description,
+      await db.transaction((txn) async {
+        // 1. Insert product
+        await txn.insert('products', {
+          'id': productId,
+          'sku': sku,
+          'name': name,
+          'brand': brand,
+          'category_id': categoryId,
+          'cost_price': costPrice,
+          'selling_price': sellingPrice,
+          'mrp': mrp,
+          'minimum_stock': minimumStock,
+          'stock': stock,
+          'image_url': imageUrl,
+          'image_url2': imageUrl2,
+          'description': description,
+          'mfg_date': mfgDate,
+          'warranty': warranty,
+          'updated_at': updatedAt ?? now,
+        });
+
+        // 2. Insert inventory purchase transaction for opening stock
+        if (stock > 0) {
+          await txn.insert('inventory_transactions', {
+            'id': UuidUtils.generate(),
+            'product_id': productId,
+            'transaction_type': 'PURCHASE',
+            'quantity': stock,
+            'reference_id': 'INIT_PURCHASE',
+            'remarks': 'Initial product add stock',
+            'created_by': 'collector_local',
+            'created_at': DateTime.now().toIso8601String(),
+          });
+        }
       });
 
-      // 2. Insert inventory purchase transaction for opening stock
-      if (stock > 0) {
-        await txn.insert('inventory_transactions', {
-          'id': UuidUtils.generate(),
-          'product_id': productId,
-          'transaction_type': 'PURCHASE',
-          'quantity': stock,
-          'reference_id': 'INIT_PURCHASE',
-          'remarks': 'Initial product add stock',
-          'created_by': 'collector_local',
-          'created_at': DateTime.now().toIso8601String(),
-        });
-      }
+      TableBroadcaster.instance.notify('products');
+      TableBroadcaster.instance.notify('inventory_transactions');
+
+      final created = await getProductById(productId);
+      return created!;
     });
-
-    TableBroadcaster.instance.notify('products');
-    TableBroadcaster.instance.notify('inventory_transactions');
-
-    final created = await getProductById(productId);
-    return created!;
+    if (result != null) return result;
+    return (await getProducts()).first;
   }
 
   @override
   Future<void> updateProduct(Product product) async {
-    final db = await DatabaseHelper.instance.database;
-    await db.transaction((txn) async {
-      await txn.update('products', {
-        'sku': product.sku,
-        'name': product.name,
-        'brand': product.brand,
-        'category_id': product.categoryId,
-        'cost_price': product.costPrice,
-        'selling_price': product.sellingPrice,
-        'mrp': product.mrp,
-        'minimum_stock': product.minimumStock,
-        'stock': product.stock,
-        'image_url': product.imageUrl,
-        'description': product.description,
-      }, where: 'id = ?', whereArgs: [product.id]);
+    await IdempotencyLock.instance.run('update_product_${product.id}', () async {
+      final db = await DatabaseHelper.instance.database;
+      await db.transaction((txn) async {
+        await txn.update('products', {
+          'sku': product.sku,
+          'name': product.name,
+          'brand': product.brand,
+          'category_id': product.categoryId,
+          'cost_price': product.costPrice,
+          'selling_price': product.sellingPrice,
+          'mrp': product.mrp,
+          'minimum_stock': product.minimumStock,
+          'stock': product.stock,
+          'image_url': product.imageUrl,
+          'image_url2': product.imageUrl2,
+          'description': product.description,
+          'mfg_date': product.mfgDate,
+          'warranty': product.warranty,
+          'updated_at': DateTime.now().toIso8601String(),
+        }, where: 'id = ?', whereArgs: [product.id]);
 
-      // Calculate current stock from inventory transactions
-      final stockRes = await txn.rawQuery('''
-        SELECT COALESCE(SUM(
-          CASE 
-            WHEN transaction_type = 'PURCHASE' THEN quantity
-            WHEN transaction_type = 'SALE' THEN -quantity
-            WHEN transaction_type = 'ADJUSTMENT' THEN quantity
-            ELSE 0 
-          END
-        ), 0) AS current_stock
-        FROM inventory_transactions
-        WHERE product_id = ?
-      ''', [product.id]);
+        // Calculate current stock from inventory transactions
+        final stockRes = await txn.rawQuery('''
+          SELECT COALESCE(SUM(
+            CASE 
+              WHEN transaction_type = 'PURCHASE' THEN quantity
+              WHEN transaction_type = 'SALE' THEN -quantity
+              WHEN transaction_type = 'ADJUSTMENT' THEN quantity
+              ELSE 0 
+            END
+          ), 0) AS current_stock
+          FROM inventory_transactions
+          WHERE product_id = ?
+        ''', [product.id]);
 
-      final currentStock = (stockRes.first['current_stock'] as num?)?.toInt() ?? 0;
-      final delta = product.stock - currentStock;
+        final currentStock = (stockRes.first['current_stock'] as num?)?.toInt() ?? 0;
+        final delta = product.stock - currentStock;
 
-      if (delta != 0) {
-        await txn.insert('inventory_transactions', {
-          'id': UuidUtils.generate(),
-          'product_id': product.id,
-          'transaction_type': 'ADJUSTMENT',
-          'quantity': delta,
-          'reference_id': 'MANUAL_EDIT',
-          'remarks': 'Stock adjusted via edit product',
-          'created_by': 'collector_local',
-          'created_at': DateTime.now().toIso8601String(),
-        });
-      }
+        if (delta != 0) {
+          await txn.insert('inventory_transactions', {
+            'id': UuidUtils.generate(),
+            'product_id': product.id,
+            'transaction_type': 'ADJUSTMENT',
+            'quantity': delta,
+            'reference_id': 'MANUAL_EDIT',
+            'remarks': 'Stock adjusted via edit product',
+            'created_by': 'collector_local',
+            'created_at': DateTime.now().toIso8601String(),
+          });
+        }
+      });
+
+      TableBroadcaster.instance.notify('products');
+      TableBroadcaster.instance.notify('inventory_transactions');
     });
-
-    TableBroadcaster.instance.notify('products');
-    TableBroadcaster.instance.notify('inventory_transactions');
   }
 
   @override

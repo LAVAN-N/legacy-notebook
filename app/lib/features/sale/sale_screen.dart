@@ -35,6 +35,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
   final TextEditingController _remarksController = TextEditingController();
   final TextEditingController _lendAmountController = TextEditingController();
   String? _selectedProductId;
+  bool _isSubmitting = false;
 
   bool get _isDirty {
     final state = ref.read(saleControllerProvider(widget.customerId));
@@ -85,6 +86,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
   }
 
   void _exitScreen() {
+    if (!mounted) return;
     if (Navigator.canPop(context)) {
       Navigator.pop(context);
     } else {
@@ -110,24 +112,39 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
   }
 
   void _onSave() async {
+    if (_isSubmitting) return;
+    setState(() => _isSubmitting = true);
     AppHaptics.mediumImpact();
-    final notifier = ref.read(saleControllerProvider(widget.customerId).notifier);
-    final success = await notifier.saveSale();
 
-    if (success && mounted) {
-      final state = ref.read(saleControllerProvider(widget.customerId));
-      ConfirmSnackbar.show(
-        context,
-        message: 'Successfully recorded ${state.saleType} Sale for ${state.customer.name}',
-        onUndo: () {
-          // Simply log undo requested
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Sale transaction undo requested.')),
-          );
-        },
-      );
+    try {
+      final notifier = ref.read(saleControllerProvider(widget.customerId).notifier);
+      final success = await notifier.saveSale();
+
+      if (success && mounted) {
+        final state = ref.read(saleControllerProvider(widget.customerId));
+        ConfirmSnackbar.show(
+          context,
+          message: 'Successfully recorded ${state.saleType} Sale for ${state.customer.name}',
+          onUndo: () {
+            // Simply log undo requested
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Sale transaction undo requested.')),
+            );
+          },
+        );
+        if (mounted) {
+          _exitScreen();
+        }
+      }
+    } catch (e) {
       if (mounted) {
-        _exitScreen();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving sale: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
       }
     }
   }
@@ -708,8 +725,8 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
 
             // Action Trigger button
             ElevatedButton(
-              onPressed: state.isSaving ? null : _onSave,
-              child: state.isSaving
+              onPressed: (state.isSaving || _isSubmitting) ? null : _onSave,
+              child: (state.isSaving || _isSubmitting)
                   ? const WaveDotLoader(color: Colors.white, dotSize: 6, spacing: 4)
                   : const Text('RECORD COMPLETED SALE'),
             ),
