@@ -970,6 +970,10 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
     required int minimumStock,
     String? description,
     String? imageUrl,
+    String? imageUrl2,
+    String mfgDate = 'JAN 2026',
+    double warranty = 0.0,
+    String? updatedAt,
   }) async {
     final product = Product(
       id: 'pr-${DateTime.now().millisecondsSinceEpoch}',
@@ -983,7 +987,11 @@ class MockRepository implements CustomerRepository, RouteRepository, CollectionR
       sellingPrice: sellingPrice,
       mrp: mrp,
       imageUrl: imageUrl,
+      imageUrl2: imageUrl2,
       description: description,
+      mfgDate: mfgDate,
+      warranty: warranty,
+      updatedAt: updatedAt ?? DateTime.now().toIso8601String(),
     );
     _products.add(product);
     _ref.read(syncProvider.notifier).incrementPending();

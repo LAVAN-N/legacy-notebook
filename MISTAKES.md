@@ -1433,3 +1433,11 @@ Read before starting. Never edit past entries.
   4. Repository-level execution wrapping via `IdempotencyLock.instance.run(...)` inside `saveSale`, `saveCollection`, `addProduct`, `updateProduct`, `returnProduct`, and `addCustomer`.
 - **Rule for next agent:** ALWAYS disable save/action buttons immediately (`onPressed: _isSubmitting ? null : ...`) during async operations, wrap async saves in `try/finally` resetting `_isSubmitting = false`, and verify `Navigator.canPop(context)` before popping.
 - **Guardrail:** Grep for `onPressed:` in form/modal actions and ensure buttons evaluate submission/loading state before triggering asynchronous operations.
+
+### 2026-11-02 · Interface method signature mismatch in MockRepository
+- **Context:** Added `imageUrl2`, `mfgDate`, `warranty`, and `updatedAt` to `ProductRepository.addProduct`.
+- **Mistake:** Updated `ProductRepository`, `LocalSqliteProductRepository`, and `SupabaseProductRepository`, but forgot to update `MockRepository.addProduct`, causing a compiler error `MockRepository.addProduct has fewer named arguments than those of overridden method`.
+- **Root cause:** When modifying an abstract repository interface, failed to update all three implementations (local, supabase, mock) in the same pass.
+- **Fix applied:** Updated `MockRepository.addProduct` signature and `Product` constructor call to accept `imageUrl2`, `mfgDate`, `warranty`, and `updatedAt`.
+- **Rule for next agent:** ALWAYS grep for all classes implementing an abstract repository (`implements <Repository>`) and update every implementation when altering an interface method signature.
+- **Guardrail:** Check `local_sqlite_repositories.dart`, `supabase_repositories.dart`, and `mock_repository.dart` whenever touching any file in `lib/data/repositories/`.
